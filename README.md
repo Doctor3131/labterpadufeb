@@ -10,10 +10,10 @@ This is a Laravel-based web application for managing the integrated laboratory o
 
 ## Requirements
 
-- PHP >= 8.1
-- Composer
-- Node.js & NPM
-- MySQL/PostgreSQL
+-   PHP >= 8.1
+-   Composer
+-   Node.js & NPM
+-   MySQL/PostgreSQL
 
 ## Installation
 
