@@ -8,14 +8,6 @@ use App\Models\Lab;
 class DashboardController extends Controller
 {
     /**
-     * Apply auth middleware to all methods
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    /**
      * Show dashboard based on user role
      */
     public function index()
