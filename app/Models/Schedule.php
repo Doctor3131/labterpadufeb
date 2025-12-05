@@ -10,10 +10,10 @@ class Schedule extends Model
     use HasFactory;
 
     protected $fillable = [
+        'lab_id',
         'day',
         'start_time',
         'end_time',
-        'room',
         'course',
         'lecturer',
         'komting',
@@ -28,6 +28,14 @@ class Schedule extends Model
         'end_time' => 'datetime:H:i',
         'student_count' => 'integer',
     ];
+
+    /**
+     * Get the lab associated with this schedule
+     */
+    public function lab()
+    {
+        return $this->belongsTo(Lab::class);
+    }
 
     /**
      * Get the booking that created this schedule

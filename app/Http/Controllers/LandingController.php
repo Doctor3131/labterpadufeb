@@ -12,8 +12,9 @@ class LandingController extends Controller
      */
     public function index()
     {
-        // Get schedules grouped by day
-        $schedules = Schedule::orderBy('start_time')
+        // Get schedules grouped by day with lab relationship
+        $schedules = Schedule::with('lab')
+            ->orderBy('start_time')
             ->get()
             ->groupBy('day');
 

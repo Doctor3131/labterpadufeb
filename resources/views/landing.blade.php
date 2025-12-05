@@ -112,7 +112,7 @@
                                     </td>
                                     <td class="px-4 lg:px-6 py-4">
                                         <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-xs lg:text-sm">
-                                            {{ $schedule->room }}
+                                            {{ $schedule->lab->name }}
                                         </span>
                                     </td>
                                     <td class="px-4 lg:px-6 py-4 text-slate-700">{{ $schedule->course }}</td>

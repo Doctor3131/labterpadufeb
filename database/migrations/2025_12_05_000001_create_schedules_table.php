@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('lab_id')->constrained()->onDelete('cascade'); // Relasi ke labs
             $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']);
             $table->time('start_time');
             $table->time('end_time');
-            $table->string('room'); // e.g., EL. 301
             $table->string('course'); // Mata Kuliah
             $table->string('lecturer'); // Dosen
             $table->string('komting')->nullable(); // PIC Mahasiswa
