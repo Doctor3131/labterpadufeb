@@ -3,19 +3,20 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Lab;
+use App\Models\Schedule;
 
 class LandingController extends Controller
 {
     /**
-     * Show landing page with lab information
+     * Show landing page with schedule information
      */
     public function index()
     {
-        $labs = Lab::where('status', '!=', 'maintenance')
-                   ->orderBy('name')
-                   ->get();
+        // Get schedules grouped by day
+        $schedules = Schedule::orderBy('start_time')
+            ->get()
+            ->groupBy('day');
 
-        return view('landing', compact('labs'));
+        return view('landing', compact('schedules'));
     }
 }
