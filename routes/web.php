@@ -4,9 +4,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\BookingController;
 
 // Public Routes
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+// Booking Routes (Public - No Authentication Required)
+Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
+Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+Route::get('/booking/success/{id}', [BookingController::class, 'success'])->name('booking.success');
+Route::post('/booking/available-labs', [BookingController::class, 'getAvailableLabs'])->name('booking.available-labs');
+Route::post('/booking/check-availability', [BookingController::class, 'checkAvailability'])->name('booking.check-availability');
 
 // Auth Routes
 Route::middleware('guest')->group(function () {

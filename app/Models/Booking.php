@@ -10,24 +10,40 @@ class Booking extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
         'lab_id',
-        'day',
+        'booking_type',
+        'nama_peminjam',
+        'program_studi',
+        'nim',
+        'no_telpon',
+        'alamat',
+        'jenis_kegiatan',
+        'jabatan',
+        'kebutuhan_peralatan',
+        'nama_kegiatan',
+        'mata_kuliah',
+        'dosen_pengampu',
+        'nip_dosen',
+        'software_digunakan',
+        'is_recurring',
+        'tanggal',
         'start_time',
         'end_time',
-        'course',
-        'description',
-        'student_count',
+        'jumlah_peserta',
+        'document_path',
         'status',
+        'approved_by',
         'admin_notes',
         'approved_at',
     ];
 
     protected $casts = [
+        'tanggal' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
         'approved_at' => 'datetime',
-        'student_count' => 'integer',
+        'jumlah_peserta' => 'integer',
+        'is_recurring' => 'boolean',
     ];
 
     /**
@@ -44,6 +60,14 @@ class Booking extends Model
     public function lab()
     {
         return $this->belongsTo(Lab::class);
+    }
+
+    /**
+     * Get the admin who approved this booking
+     */
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**
@@ -68,5 +92,39 @@ class Booking extends Model
     public function isPending()
     {
         return $this->status === 'pending';
+    }
+
+    /**
+     * Get the day name from date
+     */
+    public function getDayAttribute()
+    {
+        $days = [
+            'Sunday' => 'Minggu',
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu',
+        ];
+        
+        return $days[$this->tanggal->format('l')];
+    }
+
+    /**
+     * Check if this is a perkuliahan booking
+     */
+    public function isPerkuliahan()
+    {
+        return in_array($this->booking_type, ['perkuliahan_tetap', 'perkuliahan_tidak_tetap']);
+    }
+
+    /**
+     * Check if this is a non-perkuliahan booking
+     */
+    public function isNonPerkuliahan()
+    {
+        return $this->booking_type === 'non_perkuliahan';
     }
 }

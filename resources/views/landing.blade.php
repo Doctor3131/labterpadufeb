@@ -26,7 +26,7 @@
 
                 <!-- Center: Primary CTA (Hidden on mobile, shown on desktop) -->
                 <div class="hidden lg:block">
-                    <a href="{{ route('login') }}" class="inline-flex items-center px-8 py-3 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600 transition shadow-lg shadow-yellow-500/20">
+                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600 transition shadow-lg shadow-yellow-500/20">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
@@ -34,13 +34,10 @@
                     </a>
                 </div>
 
-                <!-- Right: Auth Buttons -->
+                <!-- Right: Auth Button -->
                 <div class="flex items-center space-x-3">
-                    <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 text-slate-700 font-medium hover:text-yellow-600 transition">
-                        Login
-                    </a>
-                    <a href="{{ route('register') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white transition">
-                        Daftar
+                    <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white transition">
+                        Login Asisten Lab
                     </a>
                 </div>
             </div>
@@ -62,7 +59,7 @@
 
             <!-- Mobile CTA -->
             <div class="lg:hidden mt-8 text-center">
-                <a href="{{ route('login') }}" class="inline-flex items-center px-8 py-3 bg-white text-yellow-600 font-semibold rounded-full hover:bg-yellow-50 transition shadow-xl">
+                <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 bg-white text-yellow-600 font-semibold rounded-full hover:bg-yellow-50 transition shadow-xl">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
