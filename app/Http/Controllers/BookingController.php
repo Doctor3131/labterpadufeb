@@ -19,35 +19,15 @@ class BookingController extends Controller
     }
 
     /**
-     * Get available labs based on capacity
+     * Get available labs based on date, time, and capacity
+     * Returns only labs that are truly available (considering schedule conflicts)
      */
     public function getAvailableLabs(Request $request)
     {
         $jumlahPeserta = $request->jumlah_peserta;
-        
-        // Smart capacity matching dengan pembulatan ke atas
-        $labs = Lab::where('capacity', '>=', $jumlahPeserta)
-            ->orderBy('capacity', 'asc') // Urutkan dari terkecil agar dapat yang paling pas
-            ->get();
-        
-        return response()->json($labs);
-    }
-
-    /**
-     * Check lab availability for specific date and time
-     */
-    public function checkAvailability(Request $request)
-    {
-        $labId = $request->lab_id;
         $tanggal = $request->tanggal;
         $startTime = $request->start_time;
         $endTime = $request->end_time;
-        
-        $lab = Lab::find($labId);
-        
-        if (!$lab) {
-            return response()->json(['available' => false, 'message' => 'Lab tidak ditemukan']);
-        }
         
         // Get day name from date
         $days = [
@@ -61,14 +41,20 @@ class BookingController extends Controller
         ];
         $dayName = $days[date('l', strtotime($tanggal))];
         
-        // Check if lab is available using the model method
-        $isAvailable = $lab->isAvailable($dayName, $startTime, $endTime);
+        // Get labs with sufficient capacity
+        $labs = Lab::where('capacity', '>=', $jumlahPeserta)
+            ->orderBy('capacity', 'asc')
+            ->get();
         
-        return response()->json([
-            'available' => $isAvailable,
-            'message' => $isAvailable ? 'Lab tersedia' : 'Lab sudah terpakai pada jadwal tersebut'
-        ]);
+        // Filter labs that are available at the requested time
+        $availableLabs = $labs->filter(function ($lab) use ($dayName, $startTime, $endTime, $tanggal) {
+            return $lab->isAvailable($dayName, $startTime, $endTime, $tanggal);
+        });
+        
+        return response()->json($availableLabs->values());
     }
+
+
 
     /**
      * Store a new booking request

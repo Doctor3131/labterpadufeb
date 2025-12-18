@@ -82,16 +82,19 @@ class DatabaseSeeder extends Seeder
 
         // Seed Schedules - SENIN
         $seninSchedules = [
-            ['EL. 301', '07:00', '09:30', 'Statistik Bisnis', 'Dr. Ahyar Yuniawan, S.E., M.Si.', 'Reza Akmal Wibowo', 23],
-            ['EL. 301', '07:00', '09:30', 'Statistik Bisnis', 'Nana Yuriant Setyawan, S.E., MBA', 'Mufa Nur Falah', 23],
+            ['EL. 301', '07:00', '09:30', 'Statistik Bisnis - Kelas A', 'Dr. Ahyar Yuniawan, S.E., M.Si.', 'Reza Akmal Wibowo', 23],
+            ['EL. 306', '07:00', '09:30', 'Statistik Bisnis - Kelas B', 'Nana Yuriant Setyawan, S.E., MBA', 'Mufa Nur Falah', 23],
             ['EL. 301', '10:00', '12:30', 'Statistik Bisnis II', 'Dr. Ahyar Yuniawan, S.E., M.Si.', 'Nur Adila', 42],
             ['EL. 306', '10:00', '13:00', 'Matematika Bisnis', 'Danes Quirira Octavio, S.E., M.Sc.', null, null],
             ['EL. 306', '13:00', '15:30', 'Statistika Bisnis', 'Danes Quirira Octavio, S.E., M.Sc.', 'Christian Dennis Wibowo', 45],
             ['EL. 301', '13:00', '15:30', 'Praktikum Pengauditan', 'Dr. Totok Dewayanto, S.E., M.Si., Akt.', null, null],
-            ['EL. 307', '13:00', '15:30', 'Kecerdasan Buatan', 'ardiaz', null, 40],
-            ['EL. 301', '15:40', '17:20', 'Internet of Things', 'Moh. Najikhul Fajri S.E., M.SE.', 'Raden Hanif Khairullah Arladiningrat', 50],
+            ['EL. 307', '13:00', '15:30', 'Kecerdasan Buatan', 'Ardiaz Ajie Aryandika S.Kom., MBA', null, 40],
             ['EL. 301', '15:40', '17:20', 'Internet of Things', 'Moh. Najikhul Fajri S.E., M.SE.', 'Raden Hanif Khairullah Arladiningrat', 50],
         ];
+
+        // Semester dates: Dec 2025 - Jun 2026 (Genap 2025/2026)
+        $semesterStart = '2025-12-01';
+        $semesterEnd = '2026-06-30';
 
         foreach ($seninSchedules as $schedule) {
             $lab = Lab::where('name', $schedule[0])->first();
@@ -99,6 +102,8 @@ class DatabaseSeeder extends Seeder
                 Schedule::create([
                     'lab_id' => $lab->id,
                     'day' => 'Senin',
+                    'start_date' => $semesterStart,
+                    'end_date' => $semesterEnd,
                     'start_time' => $schedule[1],
                     'end_time' => $schedule[2],
                     'course' => $schedule[3],
@@ -125,6 +130,8 @@ class DatabaseSeeder extends Seeder
                 Schedule::create([
                     'lab_id' => $lab->id,
                     'day' => 'Rabu',
+                    'start_date' => $semesterStart,
+                    'end_date' => $semesterEnd,
                     'start_time' => $schedule[1],
                     'end_time' => $schedule[2],
                     'course' => $schedule[3],
@@ -152,6 +159,8 @@ class DatabaseSeeder extends Seeder
                 Schedule::create([
                     'lab_id' => $lab->id,
                     'day' => 'Kamis',
+                    'start_date' => $semesterStart,
+                    'end_date' => $semesterEnd,
                     'start_time' => $schedule[1],
                     'end_time' => $schedule[2],
                     'course' => $schedule[3],
@@ -162,5 +171,46 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // Sample Bookings (One-time events) for testing dynamic schedules
+        \App\Models\Booking::create([
+            'booking_type' => 'non_perkuliahan',
+            'nama_peminjam' => 'Ahmad Faizal',
+            'program_studi' => 'Manajemen',
+            'nim' => '12010122140001',
+            'no_telpon' => '081234567890',
+            'alamat' => 'Semarang',
+            'lab_id' => Lab::where('name', 'EL. 309')->first()->id,
+            'tanggal' => '2025-12-23', // Senin minggu depan
+            'start_time' => '14:00',
+            'end_time' => '16:00',
+            'jumlah_peserta' => 30,
+            'jenis_kegiatan' => 'Workshop',
+            'nama_kegiatan' => 'Workshop Data Analytics with Python',
+            'kebutuhan_peralatan' => 'Proyektor, Sound System',
+            'status' => 'approved',
+            'approved_by' => 1,
+            'approved_at' => now(),
+        ]);
+
+        \App\Models\Booking::create([
+            'booking_type' => 'perkuliahan_tidak_tetap',
+            'nama_peminjam' => 'Dr. Budi Santoso',
+            'program_studi' => 'Akuntansi',
+            'nim' => '199001011234',
+            'no_telpon' => '081298765432',
+            'lab_id' => Lab::where('name', 'EL. 301')->first()->id,
+            'tanggal' => '2025-12-19', // Jumat minggu ini
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'jumlah_peserta' => 45,
+            'mata_kuliah' => 'Sistem Informasi Manajemen',
+            'dosen_pengampu' => 'Dr. Budi Santoso, S.E., M.M.',
+            'nip_dosen' => '199001011234',
+            'software_digunakan' => 'Microsoft Excel, Power BI',
+            'status' => 'approved',
+            'approved_by' => 1,
+            'approved_at' => now(),
+        ]);
     }
 }

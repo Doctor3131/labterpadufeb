@@ -224,35 +224,9 @@
                     <h3 class="text-xl font-bold text-gray-800 mb-6">Jadwal & Laboratorium</h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Step 1: Tanggal -->
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jumlah Peserta *</label>
-                            <input type="number" name="jumlah_peserta" id="jumlahPeserta" value="{{ old('jumlah_peserta') }}" min="1" required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            @error('jumlah_peserta')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                            <p class="text-xs text-gray-500 mt-1">Lab akan disarankan berdasarkan jumlah peserta</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Laboratorium *</label>
-                            <select name="lab_id" id="labSelect" required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                                <option value="">Pilih Lab</option>
-                                @foreach($labs as $lab)
-                                    <option value="{{ $lab->id }}" data-capacity="{{ $lab->capacity }}" {{ old('lab_id') == $lab->id ? 'selected' : '' }}>
-                                        {{ $lab->name }} (Kapasitas: {{ $lab->capacity }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('lab_id')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                            <div id="labRecommendation" class="text-xs mt-1"></div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Tanggal *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">1. Tanggal Peminjaman *</label>
                             <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -261,9 +235,10 @@
                             @enderror
                         </div>
 
+                        <!-- Step 2: Jam -->
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">2. Jam Mulai *</label>
                                 <input type="time" name="start_time" id="startTime" value="{{ old('start_time') }}" required
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                 @error('start_time')
@@ -280,8 +255,28 @@
                             </div>
                         </div>
 
-                        <div class="md:col-span-2">
-                            <div id="availabilityStatus" class="hidden p-4 rounded-lg mt-2"></div>
+                        <!-- Step 3: Jumlah Peserta -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">3. Jumlah Peserta *</label>
+                            <input type="number" name="jumlah_peserta" id="jumlahPeserta" value="{{ old('jumlah_peserta') }}" min="1" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            @error('jumlah_peserta')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-gray-500 mt-1">Isi tanggal, jam, dan jumlah peserta untuk melihat lab yang tersedia</p>
+                        </div>
+
+                        <!-- Step 4: Lab (Auto-populated) -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">4. Laboratorium Tersedia *</label>
+                            <select name="lab_id" id="labSelect" required disabled
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                <option value="">Isi tanggal, jam, dan peserta terlebih dahulu</option>
+                            </select>
+                            @error('lab_id')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                            <div id="labStatus" class="text-xs mt-1 text-gray-500">Lab akan muncul setelah Anda mengisi tanggal, jam, dan jumlah peserta</div>
                         </div>
                     </div>
                 </div>
@@ -341,84 +336,97 @@
             });
         });
 
-        // Smart lab capacity matching
+        // Get references to form elements
+        const tanggalInput = document.getElementById('tanggal');
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
         const jumlahPesertaInput = document.getElementById('jumlahPeserta');
         const labSelect = document.getElementById('labSelect');
-        const labRecommendation = document.getElementById('labRecommendation');
+        const labStatus = document.getElementById('labStatus');
 
-        jumlahPesertaInput.addEventListener('input', function() {
-            const peserta = parseInt(this.value);
-            if (!peserta || peserta < 1) {
-                labRecommendation.innerHTML = '';
+        // Function to fetch available labs
+        function fetchAvailableLabs() {
+            const tanggal = tanggalInput.value;
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            const jumlahPeserta = jumlahPesertaInput.value;
+
+            // Check if all required fields are filled
+            if (!tanggal || !startTime || !endTime || !jumlahPeserta) {
+                labSelect.disabled = true;
+                labSelect.innerHTML = '<option value="">Isi tanggal, jam, dan peserta terlebih dahulu</option>';
+                labStatus.className = 'text-xs mt-1 text-gray-500';
+                labStatus.textContent = 'Lab akan muncul setelah Anda mengisi tanggal, jam, dan jumlah peserta';
                 return;
             }
 
-            // Get all lab options
-            const labOptions = Array.from(labSelect.querySelectorAll('option[data-capacity]'));
-            
-            // Filter labs that can accommodate the participants
-            const suitableLabs = labOptions.filter(opt => {
-                const capacity = parseInt(opt.dataset.capacity);
-                return capacity >= peserta;
-            }).sort((a, b) => {
-                return parseInt(a.dataset.capacity) - parseInt(b.dataset.capacity);
-            });
-
-            if (suitableLabs.length > 0) {
-                const bestLab = suitableLabs[0];
-                const capacity = parseInt(bestLab.dataset.capacity);
-                labRecommendation.innerHTML = `<span class="text-green-600">✓ Direkomendasikan: ${bestLab.textContent}</span>`;
-                
-                // Auto-select the recommended lab
-                labSelect.value = bestLab.value;
-            } else {
-                labRecommendation.innerHTML = '<span class="text-red-600">⚠ Jumlah peserta melebihi kapasitas semua lab yang tersedia</span>';
-            }
-        });
-
-        // Check availability when date/time/lab changes
-        function checkAvailability() {
-            const labId = labSelect.value;
-            const tanggal = document.getElementById('tanggal').value;
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            const availabilityStatus = document.getElementById('availabilityStatus');
-
-            if (!labId || !tanggal || !startTime || !endTime) {
-                availabilityStatus.classList.add('hidden');
+            // Validate time range
+            if (endTime <= startTime) {
+                labSelect.disabled = true;
+                labSelect.innerHTML = '<option value="">Jam selesai harus lebih besar dari jam mulai</option>';
+                labStatus.className = 'text-xs mt-1 text-red-600';
+                labStatus.textContent = 'Jam selesai harus lebih besar dari jam mulai';
                 return;
             }
 
-            fetch('{{ route("booking.check-availability") }}', {
+            // Show loading state
+            labSelect.disabled = true;
+            labSelect.innerHTML = '<option value="">Mencari lab yang tersedia...</option>';
+            labStatus.className = 'text-xs mt-1 text-blue-600';
+            labStatus.textContent = '⏳ Sedang mencari lab yang tersedia...';
+
+            // Fetch available labs from server
+            fetch('{{ route("booking.available-labs") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
-                    lab_id: labId,
                     tanggal: tanggal,
                     start_time: startTime,
-                    end_time: endTime
+                    end_time: endTime,
+                    jumlah_peserta: jumlahPeserta
                 })
             })
             .then(response => response.json())
-            .then(data => {
-                availabilityStatus.classList.remove('hidden');
-                if (data.available) {
-                    availabilityStatus.className = 'p-4 rounded-lg mt-2 bg-green-50 border border-green-200 text-green-700';
-                    availabilityStatus.innerHTML = `✓ ${data.message}`;
+            .then(labs => {
+                if (labs.length === 0) {
+                    labSelect.innerHTML = '<option value="">Tidak ada lab yang tersedia</option>';
+                    labSelect.disabled = true;
+                    labStatus.className = 'text-xs mt-1 text-red-600';
+                    labStatus.textContent = '❌ Tidak ada lab yang tersedia untuk waktu dan kapasitas yang dipilih';
                 } else {
-                    availabilityStatus.className = 'p-4 rounded-lg mt-2 bg-red-50 border border-red-200 text-red-700';
-                    availabilityStatus.innerHTML = `⚠ ${data.message}`;
+                    labSelect.innerHTML = '<option value="">Pilih Laboratorium</option>';
+                    labs.forEach(lab => {
+                        const option = document.createElement('option');
+                        option.value = lab.id;
+                        option.textContent = `${lab.name} (Kapasitas: ${lab.capacity})`;
+                        labSelect.appendChild(option);
+                    });
+                    labSelect.disabled = false;
+                    labStatus.className = 'text-xs mt-1 text-green-600';
+                    labStatus.textContent = `✓ ${labs.length} lab tersedia untuk waktu dan kapasitas yang Anda pilih`;
                 }
+            })
+            .catch(error => {
+                console.error('Error fetching labs:', error);
+                labSelect.innerHTML = '<option value="">Error memuat lab</option>';
+                labSelect.disabled = true;
+                labStatus.className = 'text-xs mt-1 text-red-600';
+                labStatus.textContent = '❌ Terjadi kesalahan saat memuat lab';
             });
         }
 
-        labSelect.addEventListener('change', checkAvailability);
-        document.getElementById('tanggal').addEventListener('change', checkAvailability);
-        document.getElementById('startTime').addEventListener('change', checkAvailability);
-        document.getElementById('endTime').addEventListener('change', checkAvailability);
+        // Add event listeners to trigger lab fetching
+        tanggalInput.addEventListener('change', fetchAvailableLabs);
+        startTimeInput.addEventListener('change', fetchAvailableLabs);
+        endTimeInput.addEventListener('change', fetchAvailableLabs);
+        jumlahPesertaInput.addEventListener('input', function() {
+            // Debounce to avoid too many requests
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(fetchAvailableLabs, 500);
+        });
     </script>
 </body>
 </html>
