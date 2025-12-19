@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\AdminController;
 
 // Public Routes
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -22,15 +23,24 @@ Route::get('/schedules', function () {
 Route::get('/schedules/week', [App\Http\Controllers\ScheduleController::class, 'getWeekSchedules'])->name('schedules.week');
 
 // Auth Routes
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
-});
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 
-// Protected Routes
+// Protected Routes (Admin/Super Admin only)
 Route::middleware('auth')->group(function () {
+    // Redirect /dashboard to admin dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    
+    // Admin Booking Management
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/bookings/{id}', [AdminController::class, 'show'])->name('admin.booking.show');
+    Route::post('/admin/bookings/{id}/approve', [AdminController::class, 'approve'])->name('admin.booking.approve');
+    Route::post('/admin/bookings/{id}/reject', [AdminController::class, 'reject'])->name('admin.booking.reject');
+});
+
+// Super Admin Only Routes
+Route::middleware(['auth', 'super_admin'])->group(function () {
+    Route::get('/admin/users/create', [AuthController::class, 'showRegister'])->name('admin.users.create');
+    Route::post('/admin/users', [AuthController::class, 'register'])->name('admin.users.store');
 });

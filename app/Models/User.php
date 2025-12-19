@@ -53,18 +53,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is admin
+     * Check if user is super admin
      */
-    public function isAdmin(): bool
+    public function isSuperAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'super_admin';
     }
 
     /**
-     * Check if user is mahasiswa
+     * Check if user is admin (aslab)
      */
-    public function isMahasiswa(): bool
+    public function isAdmin(): bool
     {
-        return $this->role === 'mahasiswa';
+        return $this->role === 'admin' || $this->role === 'super_admin';
     }
 }

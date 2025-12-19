@@ -16,7 +16,7 @@ class ScheduleController extends Controller
     {
         try {
             // Get week offset (0 = current week, 1 = next week, -1 = previous week)
-            $weekOffset = (int) $request->input('week_offset', 0);
+            $weekOffset = (int)  $request->input('week_offset', 0);
             
             // Calculate start of week (Monday)
             $startOfWeek = Carbon::now('Asia/Jakarta')

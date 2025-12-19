@@ -61,12 +61,19 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Log incoming request
+        \Log::info('Booking store method called', [
+            'booking_type' => $request->booking_type,
+            'all_data' => $request->except(['_token', 'document'])
+        ]);
+
+        try {
+            $validated = $request->validate([
             'booking_type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan',
             'nama_peminjam' => 'required|string|max:255',
             'program_studi' => 'required|string|max:255',
-            'nim' => 'required|string|max:50',
-            'no_telpon' => 'required|string|max:20',
+            'nim' => 'required|string|size:14|regex:/^[0-9]{14}$/',
+            'no_telpon' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
             'alamat' => 'nullable|string',
             'lab_id' => 'required|exists:labs,id',
             'tanggal' => 'required|date',
@@ -88,6 +95,8 @@ class BookingController extends Controller
             'software_digunakan' => 'nullable|string|max:255',
         ]);
 
+        \Log::info('Validation passed');
+
         // Handle document upload
         if ($request->hasFile('document')) {
             $path = $request->file('document')->store('booking-documents', 'public');
@@ -100,6 +109,25 @@ class BookingController extends Controller
         // Create booking
         $booking = Booking::create($validated);
 
+        // Log for debugging
+        \Log::info('Booking created successfully', [
+            'booking_id' => $booking->id,
+            'redirect_to' => route('booking.success', $booking->id)
+        ]);
+
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', [
+                'errors' => $e->errors()
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Booking creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+        }
         return redirect()->route('booking.success', $booking->id)
             ->with('success', 'Permintaan peminjaman berhasil diajukan!');
     }

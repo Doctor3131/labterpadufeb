@@ -12,13 +12,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
-        $labs = Lab::orderBy('name')->get();
-
-        if ($user && $user->isAdmin()) {
-            return view('dashboard.admin', compact('labs'));
-        }
-
-        return view('dashboard.mahasiswa', compact('labs'));
+        // All authenticated users go to admin dashboard
+        return redirect()->route('admin.dashboard');
     }
 }

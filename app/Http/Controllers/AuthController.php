@@ -15,7 +15,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('admin.dashboard');
         }
         return view('auth.login');
     }
@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('admin.dashboard'));
         }
 
         return back()->withErrors([
@@ -41,18 +41,15 @@ class AuthController extends Controller
     }
 
     /**
-     * Show register form
+     * Show register form (only for super_admin - protected by middleware)
      */
     public function showRegister()
     {
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
         return view('auth.register');
     }
 
     /**
-     * Handle register request
+     * Handle register request (only super_admin - protected by middleware)
      */
     public function register(Request $request)
     {
@@ -60,18 +57,18 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:admin,super_admin',
         ]);
 
-        $user = User::create([
+        User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'mahasiswa', // Default role
+            'role' => $validated['role'],
         ]);
 
-        Auth::login($user);
-
-        return redirect()->route('dashboard');
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'User baru berhasil dibuat!');
     }
 
     /**

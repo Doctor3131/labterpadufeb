@@ -18,20 +18,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Admin User
+        // Create Super Admin User
         User::create([
-            'name' => 'Admin FEB',
+            'name' => 'Super Admin',
+            'email' => 'superadmin@feb.ac.id',
+            'password' => Hash::make('password'),
+            'role' => 'super_admin',
+        ]);
+
+        // Create Admin/Aslab Users
+        User::create([
+            'name' => 'Admin Aslab 1',
             'email' => 'admin@feb.ac.id',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
-
-        // Create Mahasiswa Users
+        
         User::create([
-            'name' => 'Mahasiswa Test',
-            'email' => 'mahasiswa@feb.ac.id',
+            'name' => 'Admin Aslab 2',
+            'email' => 'aslab@feb.ac.id',
             'password' => Hash::make('password'),
-            'role' => 'mahasiswa',
+            'role' => 'admin',
         ]);
 
         // Create Labs

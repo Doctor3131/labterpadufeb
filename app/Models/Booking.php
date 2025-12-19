@@ -32,6 +32,7 @@ class Booking extends Model
         'jumlah_peserta',
         'document_path',
         'status',
+        'rejection_reason',
         'approved_by',
         'admin_notes',
         'approved_at',

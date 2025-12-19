@@ -75,18 +75,8 @@
                     Masuk
                 </button>
 
-                <!-- Register Link -->
-                <div class="text-center mt-6">
-                    <p class="text-sm text-gray-600">
-                        Belum punya akun? 
-                        <a href="{{ route('register') }}" class="text-yellow-600 hover:text-yellow-700 font-medium">
-                            Daftar di sini
-                        </a>
-                    </p>
-                </div>
-
                 <!-- Back to Home -->
-                <div class="text-center mt-4">
+                <div class="text-center mt-6">
                     <a href="{{ route('landing') }}" class="text-sm text-gray-500 hover:text-gray-700">
                         ← Kembali ke Beranda
                     </a>
