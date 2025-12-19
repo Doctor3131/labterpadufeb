@@ -14,37 +14,33 @@
         <div class="container mx-auto px-4 lg:px-8">
             <div class="flex items-center justify-between h-16 lg:h-20">
                 <!-- Left: Brand -->
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
+                <a href="{{ route('landing') }}" class="flex items-center space-x-3 group cursor-pointer">
+                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
                         <span class="text-white font-bold text-xl">L</span>
                     </div>
                     <div>
-                        <h1 class="text-xl lg:text-2xl font-bold text-yellow-600">Lab<span class="font-light">FEB</span></h1>
-                        <p class="text-xs text-slate-500 hidden lg:block">Lab Terpadu FEB UNDIP</p>
+                        <h1 class="text-xl lg:text-2xl font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">Lab<span class="font-light">FEB</span></h1>
+                        <p class="text-xs text-slate-500 hidden lg:block group-hover:text-slate-700 transition-colors duration-200">Lab Terpadu FEB UNDIP</p>
                     </div>
-                </div>
+                </a>
 
-                <!-- Center: Primary CTA (Hidden on mobile, shown on desktop) -->
-                <div class="hidden lg:block">
-                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600 transition shadow-lg shadow-yellow-500/20">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Ajukan Peminjaman
-                    </a>
-                </div>
-
-                <!-- Right: Auth Button -->
-                <div class="flex items-center space-x-3">
-                    <a href="{{ route('schedules.index') }}" class="hidden lg:inline-flex items-center px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 transition">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Right: Navigation Links -->
+                <div class="flex items-center space-x-3 lg:space-x-4">
+                    <a href="{{ route('schedules.index') }}" class="inline-flex items-center px-3 lg:px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
+                        <svg class="w-4 h-4 lg:w-5 lg:h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         Jadwal
                     </a>
-                    <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white transition">
-                        Login Asisten Lab
-                    </a>
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                            Dashboard Asisten Lab
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                            Login Asisten Lab
+                        </a>
+                    @endauth
                 </div>
             </div>
         </div>
@@ -58,19 +54,19 @@
                 <h2 class="text-3xl lg:text-5xl font-bold mb-4 lg:mb-6 leading-tight drop-shadow-md">
                     Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium Terpadu
                 </h2>
-                <p class="text-lg lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow">
+                <p class="text-lg lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-8 lg:mb-10">
                     Pantau jadwal praktikum dan ajukan penggunaan fasilitas laboratorium secara terintegrasi
                 </p>
-            </div>
-
-            <!-- Mobile CTA -->
-            <div class="lg:hidden mt-8 text-center">
-                <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 bg-white text-yellow-600 font-semibold rounded-full hover:bg-yellow-50 transition shadow-xl">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Ajukan Peminjaman
-                </a>
+                
+                <!-- CTA Button - Center untuk semua device -->
+                <div class="flex justify-center">
+                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-10 py-4 lg:px-12 lg:py-5 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-base lg:text-lg hover:scale-105">
+                        <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Ajukan Peminjaman
+                    </a>
+                </div>
             </div>
         </div>
     </section>
