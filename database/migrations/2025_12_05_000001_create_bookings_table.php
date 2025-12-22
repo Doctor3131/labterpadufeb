@@ -41,7 +41,7 @@ return new class extends Migration
             // Detail Perkuliahan
             $table->string('mata_kuliah')->nullable(); // untuk perkuliahan
             $table->string('dosen_pengampu')->nullable(); // Nama dosen/instruktur
-            $table->string('nip_dosen')->nullable();
+            $table->string('nip_dosen', 18)->nullable(); // Max 18 digit
             $table->string('software_digunakan')->nullable();
             $table->boolean('is_recurring')->default(false); // true untuk perkuliahan tetap
             

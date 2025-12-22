@@ -222,6 +222,8 @@
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen *</label>
                                 <input type="text" name="nip_dosen" id="nip_dosen" value="{{ old('nip_dosen') }}"
+                                    maxlength="18" pattern="[0-9]{1,18}"
+                                    placeholder="Maksimal 18 digit"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">

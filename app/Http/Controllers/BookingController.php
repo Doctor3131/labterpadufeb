@@ -93,7 +93,7 @@ class BookingController extends Controller
             // Perkuliahan fields
             'mata_kuliah' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
             'dosen_pengampu' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
-            'nip_dosen' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:50',
+            'nip_dosen' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:18|regex:/^[0-9]+$/',
             'software_digunakan' => 'nullable|string|max:255',
         ]);
 
@@ -141,10 +141,12 @@ class BookingController extends Controller
         // Log for debugging
         \Log::info('Booking created successfully', [
             'booking_id' => $booking->id,
-            'redirect_to' => route('booking.success', $booking->id)
+            'tracking_token' => $booking->tracking_token,
+            'redirect_to' => route('booking.success', $booking->tracking_token)
         ]);
 
-        return redirect()->route('booking.success', $booking->id)
+        // ✅ Redirect using tracking_token (secure)
+        return redirect()->route('booking.success', $booking->tracking_token)
             ->with('success', 'Permintaan peminjaman berhasil diajukan!');
             
     } catch (\Illuminate\Validation\ValidationException $e) {
@@ -162,11 +164,20 @@ class BookingController extends Controller
     }
 
     /**
-     * Show success page
+     * Show success page using tracking token (secure)
      */
-    public function success($id)
+    public function success($token)
     {
-        $booking = Booking::with('lab')->findOrFail($id);
+        // Validate token format (MD5 hash = 32 characters hexadecimal)
+        if (!preg_match('/^[a-f0-9]{32}$/i', $token)) {
+            abort(404, 'Invalid tracking token format');
+        }
+        
+        // Find booking by tracking token instead of ID for security
+        $booking = Booking::with('lab')
+            ->where('tracking_token', $token)
+            ->firstOrFail();
+            
         return view('booking.success', compact('booking'));
     }
 }

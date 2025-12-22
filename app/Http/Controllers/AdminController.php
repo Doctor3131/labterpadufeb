@@ -118,11 +118,21 @@ class AdminController extends Controller
      */
     public function reject(Request $request, $id)
     {
+        \Log::info('Reject booking called', [
+            'booking_id' => $id,
+            'reason' => $request->rejection_reason
+        ]);
+
         $request->validate([
             'rejection_reason' => 'required|string|max:500'
         ]);
 
         $booking = Booking::findOrFail($id);
+        
+        \Log::info('Booking found', [
+            'booking_id' => $booking->id,
+            'current_status' => $booking->status
+        ]);
         
         DB::transaction(function () use ($booking, $request) {
             // Delete related schedule if exists
@@ -135,19 +145,14 @@ class AdminController extends Controller
                 'status' => 'rejected',
                 'rejection_reason' => $request->rejection_reason
             ]);
+            
+            \Log::info('Booking rejected successfully', [
+                'booking_id' => $booking->id,
+                'new_status' => $booking->status
+            ]);
         });
 
-        // Send rejection email (DISABLED - Uncomment saat email sudah ready)
-        // try {
-        //     Mail::to($booking->email)->send(new BookingRejected($booking));
-        // } catch (\Exception $e) {
-        //     \Log::warning('Failed to send booking rejection email', [
-        //         'booking_id' => $booking->id,
-        //         'error' => $e->getMessage()
-        //     ]);
-        // }
-
         return redirect()->route('admin.dashboard')
-            ->with('success', 'Peminjaman ditolak.');
+            ->with('success', 'Peminjaman berhasil ditolak.');
     }
 }

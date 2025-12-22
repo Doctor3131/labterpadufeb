@@ -117,54 +117,111 @@
             </div>
 
             <!-- Tracking Link Box -->
-            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6 text-left">
-                <h4 class="font-bold text-green-800 mb-3 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                    </svg>
-                    Link Tracking Peminjaman
-                </h4>
-                <p class="text-sm text-green-700 mb-3">
-                    <strong>⚠️ PENTING:</strong> Simpan link ini untuk mengecek status peminjaman Anda!
-                </p>
-                <div class="bg-white rounded-lg p-3 border border-green-300 mb-3">
-                    <input type="text" 
-                           value="{{ route('booking.track', $booking->tracking_token) }}" 
-                           id="trackingLink" 
-                           readonly 
-                           class="w-full text-sm text-gray-700 bg-transparent border-none focus:outline-none">
+            <div class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-xl p-6 mb-6 text-left">
+                <div class="flex items-start mb-4">
+                    <div class="flex-shrink-0 bg-red-500 rounded-full p-2 mr-3">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-red-900 text-lg mb-2">⚠️ PERINGATAN PENTING!</h4>
+                        <p class="text-red-800 font-semibold">
+                            Wajib simpan salah satu dari opsi berikut untuk melacak status peminjaman Anda!
+                        </p>
+                    </div>
                 </div>
-                <div class="flex gap-2 mb-3">
-                    <button onclick="copyTrackingLink()" 
-                            class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                        📋 Salin Link
-                    </button>
-                    <a href="{{ route('booking.track', $booking->tracking_token) }}" 
-                       target="_blank"
-                       class="flex-1 bg-white hover:bg-gray-50 text-green-700 border-2 border-green-600 px-4 py-2 rounded-lg text-sm font-semibold text-center transition-colors">
-                        🔍 Buka Tracking
-                    </a>
-                </div>
-                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mt-3">
-                    <p class="text-xs text-yellow-800">
-                        💡 <strong>Tips Menyimpan Link:</strong>
+
+                <!-- Option 1: Full Link -->
+                <div class="bg-white border-2 border-gray-300 rounded-lg p-4 mb-4 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center mb-3">
+                        <div class="bg-gray-700 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</div>
+                        <h5 class="font-bold text-gray-800 text-lg">Opsi 1: Simpan Link Tracking Lengkap</h5>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-3">
+                        <strong>Rekomendasi:</strong> Link lengkap lebih mudah - tinggal klik untuk cek status!
                     </p>
-                    <ul class="text-xs text-yellow-700 mt-1 space-y-1">
-                        <li>• Salin link dan kirim ke WhatsApp pribadi Anda</li>
-                        <li>• Screenshot halaman ini dan simpan di galeri</li>
-                        <li>• Bookmark halaman tracking di browser</li>
+                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-300 mb-3">
+                        <input type="text" 
+                               value="{{ route('booking.track', $booking->tracking_token) }}" 
+                               id="trackingLink" 
+                               readonly 
+                               class="w-full text-sm text-gray-700 bg-transparent border-none focus:outline-none select-all">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="copyTrackingLink()" 
+                                id="copyLinkBtn"
+                                class="flex-1 bg-gray-700 hover:bg-gray-800 text-white px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center shadow-md hover:shadow-lg">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            Salin Link Lengkap
+                        </button>
+                        <a href="{{ route('booking.track', $booking->tracking_token) }}" 
+                           target="_blank"
+                           class="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-600 px-4 py-3 rounded-lg font-bold text-center transition-all flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Buka Tracking
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Option 2: Token Only -->
+                <div class="bg-white border-2 border-gray-300 rounded-lg p-4 mb-4 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center mb-3">
+                        <div class="bg-gray-700 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</div>
+                        <h5 class="font-bold text-gray-800 text-lg">Opsi 2: Simpan Kode Token Saja</h5>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-3">
+                        Token lebih pendek & mudah dicatat. Nanti masukkan di halaman beranda untuk tracking.
+                    </p>
+                    <div class="bg-gray-100 rounded-lg p-4 border-2 border-gray-300 mb-3">
+                        <p class="text-xs text-gray-600 font-semibold mb-2">KODE TRACKING ANDA:</p>
+                        <input type="text" 
+                               value="{{ $booking->tracking_token }}" 
+                               id="trackingToken" 
+                               readonly 
+                               class="w-full text-center text-xl font-mono font-bold text-gray-900 bg-transparent border-none focus:outline-none select-all uppercase tracking-wider">
+                    </div>
+                    <button onclick="copyToken()" 
+                            id="copyTokenBtn"
+                            class="w-full bg-gray-700 hover:bg-gray-800 text-white px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center shadow-md hover:shadow-lg">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        Salin Kode Token
+                    </button>
+                </div>
+
+                <!-- Tips Box -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4">
+                    <p class="text-xs text-yellow-800 font-bold mb-2">
+                        💡 TIPS MENYIMPAN:
+                    </p>
+                    <ul class="text-xs text-yellow-800 space-y-1">
+                        <li>✅ Screenshot halaman ini dan simpan di galeri</li>
+                        <li>✅ Kirim link/token ke WhatsApp/email pribadi Anda</li>
+                        <li>✅ Catat di notes/memo HP Anda</li>
+                        <li>✅ Bookmark halaman tracking di browser</li>
                     </ul>
                 </div>
             </div>
 
             <!-- Information Box -->
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 text-left">
-                <h4 class="font-bold text-blue-800 mb-2">ℹ️ Informasi Penting</h4>
+                <h4 class="font-bold text-blue-800 mb-2 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Informasi Penting
+                </h4>
                 <ul class="text-sm text-blue-700 space-y-1">
                     <li>• Permintaan Anda akan diproses oleh Asisten Lab</li>
-                    <li>• <strong>Gunakan link tracking di atas</strong> untuk cek status kapan saja</li>
-                    <li>• Status akan berubah: Pending → Approved/Rejected</li>
-                    <li>• Mohon menunggu konfirmasi sebelum menggunakan laboratorium</li>
+                    <li>• Anda akan menerima notifikasi via email jika tersedia</li>
+                    <li>• Gunakan link/token tracking untuk cek status kapan saja</li>
+                    <li>• Status akan berubah: <span class="font-bold">Pending → Approved/Rejected</span></li>
                     <li>• Jika ada pertanyaan, hubungi administrasi Lab Terpadu FEB UNDIP</li>
                 </ul>
             </div>
@@ -185,23 +242,58 @@
 
     <script>
         function copyTrackingLink() {
-            const input = document.getElementById('trackingLink');
-            input.select();
-            input.setSelectionRange(0, 99999); // For mobile devices
+            const linkInput = document.getElementById('trackingLink');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999);
             
-            navigator.clipboard.writeText(input.value).then(() => {
-                // Show success feedback
-                const button = event.target;
-                const originalText = button.innerHTML;
-                button.innerHTML = '✅ Link Disalin!';
-                button.classList.add('bg-green-800');
+            navigator.clipboard.writeText(linkInput.value).then(function() {
+                const btn = document.getElementById('copyLinkBtn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = `
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Link Tersalin!
+                `;
+                btn.classList.remove('bg-gray-700', 'hover:bg-gray-800');
+                btn.classList.add('bg-gray-900');
                 
                 setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.classList.remove('bg-green-800');
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-gray-900');
+                    btn.classList.add('bg-gray-700', 'hover:bg-gray-800');
                 }, 2000);
-            }).catch(err => {
-                alert('Gagal menyalin link. Silakan salin manual.');
+            }, function(err) {
+                document.execCommand('copy');
+                alert('✅ Link tracking berhasil disalin!');
+            });
+        }
+
+        function copyToken() {
+            const tokenInput = document.getElementById('trackingToken');
+            tokenInput.select();
+            tokenInput.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(tokenInput.value).then(function() {
+                const btn = document.getElementById('copyTokenBtn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = `
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Token Tersalin!
+                `;
+                btn.classList.remove('bg-gray-700', 'hover:bg-gray-800');
+                btn.classList.add('bg-gray-900');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-gray-900');
+                    btn.classList.add('bg-gray-700', 'hover:bg-gray-800');
+                }, 2000);
+            }, function(err) {
+                document.execCommand('copy');
+                alert('✅ Kode token berhasil disalin!');
             });
         }
     </script>

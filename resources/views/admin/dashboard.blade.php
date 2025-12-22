@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Dashboard Admin - Lab Terpadu FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -28,7 +31,7 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 pb-32">
+<body class="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
     <!-- Modern Navbar -->
     <nav class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-yellow-500">
         <div class="container mx-auto px-6 py-4">
@@ -68,9 +71,9 @@
                         </svg>
                         <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
                     </div>
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg">
+                        <button type="submit" onclick="return confirm('Yakin ingin logout?')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                             </svg>
@@ -317,147 +320,6 @@
                     <p class="text-gray-500">Semua peminjaman telah disetujui</p>
                 </div>
             @endforelse
-        </div>
-    </div>
-
-    <!-- STICKY BOTTOM BAR - Professional Stats Dashboard -->
-    <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 shadow-2xl border-t-4 border-yellow-500 z-40 backdrop-blur-xl">
-        <div class="container mx-auto px-6 py-5 max-w-7xl">
-            <div class="grid grid-cols-3 gap-6">
-                
-                <!-- Pending Stats Card -->
-                <div class="relative group">
-                    <div class="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
-                    <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 border border-yellow-500/30 hover:border-yellow-500 transition-all cursor-pointer transform hover:scale-105 duration-300" onclick="showTab('pending')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="relative">
-                                    <div class="absolute inset-0 bg-yellow-500 rounded-xl blur-sm"></div>
-                                    <div class="relative bg-gradient-to-br from-yellow-400 to-yellow-600 p-3 rounded-xl shadow-xl">
-                                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Pending</p>
-                                    <p class="text-3xl font-black text-white tabular-nums">{{ $pendingBookings->count() }}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                @if($pendingBookings->count() > 0)
-                                    <div class="flex flex-col items-end space-y-1">
-                                        <span class="px-3 py-1.5 bg-yellow-500 text-white text-xs font-bold rounded-lg shadow-lg animate-pulse">
-                                            Action Required
-                                        </span>
-                                        <span class="text-xs text-yellow-400 font-semibold">Needs Review</span>
-                                    </div>
-                                @else
-                                    <span class="text-gray-500 text-xs font-medium">All Clear ✓</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Approved Stats Card -->
-                <div class="relative group">
-                    <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
-                    <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 border border-green-500/30 hover:border-green-500 transition-all cursor-pointer transform hover:scale-105 duration-300" onclick="showTab('approved')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="relative">
-                                    <div class="absolute inset-0 bg-green-500 rounded-xl blur-sm"></div>
-                                    <div class="relative bg-gradient-to-br from-green-400 to-green-600 p-3 rounded-xl shadow-xl">
-                                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Approved</p>
-                                    <p class="text-3xl font-black text-white tabular-nums">{{ $approvedBookings->count() }}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="flex flex-col items-end space-y-1">
-                                    <span class="inline-flex items-center px-3 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-lg border border-green-500/30">
-                                        <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                        Active
-                                    </span>
-                                    <span class="text-xs text-green-400 font-semibold">Bookings Live</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Rejected Stats Card -->
-                <div class="relative group">
-                    <div class="absolute inset-0 bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
-                    <div class="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 border border-red-500/30 hover:border-red-500 transition-all cursor-pointer transform hover:scale-105 duration-300" onclick="showTab('rejected')">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="relative">
-                                    <div class="absolute inset-0 bg-red-500 rounded-xl blur-sm"></div>
-                                    <div class="relative bg-gradient-to-br from-red-400 to-red-600 p-3 rounded-xl shadow-xl">
-                                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Rejected</p>
-                                    <p class="text-3xl font-black text-white tabular-nums">{{ $rejectedBookings->count() }}</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="flex flex-col items-end space-y-1">
-                                    <span class="inline-flex items-center px-3 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded-lg border border-red-500/30">
-                                        <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                        </svg>
-                                        Declined
-                                    </span>
-                                    <span class="text-xs text-red-400 font-semibold">Not Approved</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-
-            <!-- Enhanced Footer Info -->
-            <div class="mt-4 flex items-center justify-between text-xs border-t border-gray-700/50 pt-4">
-                <div class="flex items-center space-x-6">
-                    <span class="inline-flex items-center text-gray-300 font-medium">
-                        <span class="relative flex h-2.5 w-2.5 mr-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                        </span>
-                        System Online
-                    </span>
-                    <span class="text-white font-bold">
-                        <span class="text-gray-400 font-normal">Total:</span> 
-                        {{ $pendingBookings->count() + $approvedBookings->count() + $rejectedBookings->count() }} Bookings
-                    </span>
-                    <span class="text-gray-400">
-                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
-                    </span>
-                </div>
-                <span class="text-gray-400">
-                    <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                    </svg>
-                    {{ now()->locale('id')->isoFormat('HH:mm:ss') }} WIB
-                </span>
-            </div>
         </div>
     </div>
 
