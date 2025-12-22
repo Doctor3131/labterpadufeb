@@ -6,6 +6,8 @@ use App\Models\Booking;
 use App\Models\Lab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingConfirmation;
 
 class BookingController extends Controller
 {
@@ -80,7 +82,7 @@ class BookingController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'jumlah_peserta' => 'required|integer|min:1',
-            'document' => 'nullable|file|mimes:pdf|max:5120', // Max 5MB
+            'document' => 'nullable|file|mimes:pdf|max:2048', // Max 2MB
             
             // Non-perkuliahan fields
             'jenis_kegiatan' => 'required_if:booking_type,non_perkuliahan',
@@ -106,8 +108,35 @@ class BookingController extends Controller
         // Set is_recurring for perkuliahan tetap
         $validated['is_recurring'] = $request->booking_type === 'perkuliahan_tetap';
 
+        // Generate unique tracking token
+        $validated['tracking_token'] = bin2hex(random_bytes(16));
+
+        // Extract day from tanggal for ALL bookings (required field)
+        $date = \Carbon\Carbon::parse($validated['tanggal']);
+        $dayMap = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu'
+        ];
+        $validated['day'] = $dayMap[$date->dayOfWeek];
+
         // Create booking
         $booking = Booking::create($validated);
+
+        // Send confirmation email (DISABLED - Uncomment saat email sudah ready)
+        // try {
+        //     Mail::to($booking->email)->send(new BookingConfirmation($booking));
+        // } catch (\Exception $e) {
+        //     \Log::warning('Failed to send booking confirmation email', [
+        //         'booking_id' => $booking->id,
+        //         'error' => $e->getMessage()
+        //     ]);
+        //     // Continue even if email fails
+        // }
 
         // Log for debugging
         \Log::info('Booking created successfully', [
@@ -115,8 +144,10 @@ class BookingController extends Controller
             'redirect_to' => route('booking.success', $booking->id)
         ]);
 
+        return redirect()->route('booking.success', $booking->id)
+            ->with('success', 'Permintaan peminjaman berhasil diajukan!');
             
-        } catch (\Illuminate\Validation\ValidationException $e) {
+    } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed', [
                 'errors' => $e->errors()
             ]);
@@ -128,8 +159,6 @@ class BookingController extends Controller
             ]);
             return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
         }
-        return redirect()->route('booking.success', $booking->id)
-            ->with('success', 'Permintaan peminjaman berhasil diajukan!');
     }
 
     /**

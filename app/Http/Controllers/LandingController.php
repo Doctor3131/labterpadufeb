@@ -32,8 +32,8 @@ class LandingController extends Controller
         $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $endOfWeek = $startOfWeek->copy()->endOfWeek(Carbon::SUNDAY);
         
-        // Get recurring schedules (from schedules table)
-        $recurringSchedules = Schedule::with('lab')
+        // Get recurring schedules (from schedules table) - eager load booking
+        $recurringSchedules = Schedule::with(['lab', 'booking'])
             ->where(function ($query) use ($startOfWeek, $endOfWeek) {
                 $query->where(function ($q) use ($startOfWeek, $endOfWeek) {
                     $q->whereNull('start_date')

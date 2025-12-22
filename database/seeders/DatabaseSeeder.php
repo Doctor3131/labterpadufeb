@@ -115,8 +115,8 @@ class DatabaseSeeder extends Seeder
                     'end_time' => $schedule[2],
                     'course' => $schedule[3],
                     'lecturer' => $schedule[4],
-                    'komting' => $schedule[5] ?? null,
-                    'student_count' => $schedule[6] ?? null,
+                    'komting' => $schedule[5], // Add komting to regular schedules
+                    'student_count' => $schedule[6], // Add student_count to regular schedules
                     'type' => 'regular',
                 ]);
             }
@@ -143,8 +143,8 @@ class DatabaseSeeder extends Seeder
                     'end_time' => $schedule[2],
                     'course' => $schedule[3],
                     'lecturer' => $schedule[4],
-                    'komting' => $schedule[5] ?? null,
-                    'student_count' => $schedule[6] ?? null,
+                    'komting' => $schedule[5],
+                    'student_count' => $schedule[6],
                     'type' => 'regular',
                 ]);
             }
@@ -172,15 +172,15 @@ class DatabaseSeeder extends Seeder
                     'end_time' => $schedule[2],
                     'course' => $schedule[3],
                     'lecturer' => $schedule[4],
-                    'komting' => $schedule[5] ?? null,
-                    'student_count' => $schedule[6] ?? null,
+                    'komting' => $schedule[5],
+                    'student_count' => $schedule[6],
                     'type' => 'regular',
                 ]);
             }
         }
 
         // Sample Bookings (One-time events) for testing dynamic schedules
-        \App\Models\Booking::create([
+        $booking1 = \App\Models\Booking::create([
             'booking_type' => 'non_perkuliahan',
             'nama_peminjam' => 'Ahmad Faizal',
             'program_studi' => 'Manajemen',
@@ -188,26 +188,44 @@ class DatabaseSeeder extends Seeder
             'no_telpon' => '081234567890',
             'alamat' => 'Semarang',
             'lab_id' => Lab::where('name', 'EL. 309')->first()->id,
-            'tanggal' => '2025-12-23', // Senin minggu depan
+            'tanggal' => '2025-12-23',
+            'day' => 'Selasa',
             'start_time' => '14:00',
             'end_time' => '16:00',
             'jumlah_peserta' => 30,
             'jenis_kegiatan' => 'Workshop',
             'nama_kegiatan' => 'Workshop Data Analytics with Python',
             'kebutuhan_peralatan' => 'Proyektor, Sound System',
+            'tracking_token' => bin2hex(random_bytes(16)),
             'status' => 'approved',
             'approved_by' => 1,
             'approved_at' => now(),
         ]);
 
-        \App\Models\Booking::create([
+        // Create schedule for booking 1 using timezone-aware date handling
+        $booking1Date = \Carbon\Carbon::parse($booking1->tanggal)->timezone('Asia/Jakarta');
+        Schedule::create([
+            'lab_id' => $booking1->lab_id,
+            'day' => $booking1->day,
+            'start_date' => $booking1Date->toDateString(), // Y-m-d format only
+            'end_date' => $booking1Date->toDateString(),
+            'start_time' => $booking1->start_time,
+            'end_time' => $booking1->end_time,
+            'course' => $booking1->nama_kegiatan,
+            'lecturer' => $booking1->nama_peminjam,
+            'type' => 'booking_onetime',
+            'booking_id' => $booking1->id,
+        ]);
+
+        $booking2 = \App\Models\Booking::create([
             'booking_type' => 'perkuliahan_tidak_tetap',
             'nama_peminjam' => 'Dr. Budi Santoso',
             'program_studi' => 'Akuntansi',
             'nim' => '199001011234',
             'no_telpon' => '081298765432',
             'lab_id' => Lab::where('name', 'EL. 301')->first()->id,
-            'tanggal' => '2025-12-19', // Jumat minggu ini
+            'tanggal' => '2025-12-19',
+            'day' => 'Jumat',
             'start_time' => '08:00',
             'end_time' => '10:00',
             'jumlah_peserta' => 45,
@@ -215,9 +233,25 @@ class DatabaseSeeder extends Seeder
             'dosen_pengampu' => 'Dr. Budi Santoso, S.E., M.M.',
             'nip_dosen' => '199001011234',
             'software_digunakan' => 'Microsoft Excel, Power BI',
+            'tracking_token' => bin2hex(random_bytes(16)),
             'status' => 'approved',
             'approved_by' => 1,
             'approved_at' => now(),
+        ]);
+
+        // Create schedule for booking 2 using timezone-aware date handling
+        $booking2Date = \Carbon\Carbon::parse($booking2->tanggal)->timezone('Asia/Jakarta');
+        Schedule::create([
+            'lab_id' => $booking2->lab_id,
+            'day' => $booking2->day,
+            'start_date' => $booking2Date->toDateString(), // Y-m-d format only
+            'end_date' => $booking2Date->toDateString(),
+            'start_time' => $booking2->start_time,
+            'end_time' => $booking2->end_time,
+            'course' => $booking2->mata_kuliah,
+            'lecturer' => $booking2->dosen_pengampu,
+            'type' => 'booking_onetime',
+            'booking_id' => $booking2->id,
         ]);
     }
 }

@@ -17,6 +17,7 @@ class Booking extends Model
         'nim',
         'no_telpon',
         'alamat',
+        'tracking_token',
         'jenis_kegiatan',
         'jabatan',
         'kebutuhan_peralatan',
@@ -26,6 +27,7 @@ class Booking extends Model
         'nip_dosen',
         'software_digunakan',
         'is_recurring',
+        'day',
         'tanggal',
         'start_time',
         'end_time',
@@ -95,23 +97,7 @@ class Booking extends Model
         return $this->status === 'pending';
     }
 
-    /**
-     * Get the day name from date
-     */
-    public function getDayAttribute()
-    {
-        $days = [
-            'Sunday' => 'Minggu',
-            'Monday' => 'Senin',
-            'Tuesday' => 'Selasa',
-            'Wednesday' => 'Rabu',
-            'Thursday' => 'Kamis',
-            'Friday' => 'Jumat',
-            'Saturday' => 'Sabtu',
-        ];
-        
-        return $days[$this->tanggal->format('l')];
-    }
+
 
     /**
      * Check if this is a perkuliahan booking

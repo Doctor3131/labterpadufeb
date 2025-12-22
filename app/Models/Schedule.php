@@ -12,21 +12,21 @@ class Schedule extends Model
     protected $fillable = [
         'lab_id',
         'day',
+        'start_date',
+        'end_date',
         'start_time',
         'end_time',
         'course',
         'lecturer',
-        'komting',
-        'phone',
-        'student_count',
         'type',
         'booking_id',
     ];
 
     protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
-        'student_count' => 'integer',
     ];
 
     /**
@@ -43,6 +43,53 @@ class Schedule extends Model
     public function booking()
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    /**
+     * Get komting - from column if set, otherwise from booking if exists
+     */
+    public function getKomtingAttribute()
+    {
+        // Priority 1: Check if komting column has value (for regular schedules)
+        if (isset($this->attributes['komting']) && !empty($this->attributes['komting'])) {
+            return $this->attributes['komting'];
+        }
+        
+        // Priority 2: Get from booking relationship (for booking schedules)
+        if ($this->type === 'booking' && $this->booking) {
+            return $this->booking->nama_peminjam;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get phone - from booking if exists, otherwise null
+     */
+    public function getPhoneAttribute()
+    {
+        if ($this->type === 'booking' && $this->booking) {
+            return $this->booking->no_telpon;
+        }
+        return null;
+    }
+
+    /**
+     * Get student count - from column if set, otherwise from booking if exists
+     */
+    public function getStudentCountAttribute()
+    {
+        // Priority 1: Check if student_count column has value (for regular schedules)
+        if (isset($this->attributes['student_count']) && !empty($this->attributes['student_count'])) {
+            return $this->attributes['student_count'];
+        }
+        
+        // Priority 2: Get from booking relationship (for booking schedules)
+        if ($this->type === 'booking' && $this->booking) {
+            return $this->booking->jumlah_peserta;
+        }
+        
+        return null;
     }
 
     /**

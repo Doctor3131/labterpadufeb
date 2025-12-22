@@ -13,18 +13,21 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lab_id')->constrained()->onDelete('cascade'); // Relasi ke labs
+            $table->foreignId('lab_id')->constrained()->onDelete('cascade');
             $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']);
+            $table->date('start_date')->nullable(); // Tanggal mulai semester/periode
+            $table->date('end_date')->nullable(); // Tanggal akhir semester/periode
             $table->time('start_time');
             $table->time('end_time');
             $table->string('course'); // Mata Kuliah
             $table->string('lecturer'); // Dosen
-            $table->string('komting')->nullable(); // PIC Mahasiswa
-            $table->string('phone')->nullable(); // No HP
-            $table->integer('student_count')->nullable(); // Jumlah Mahasiswa
-            $table->enum('type', ['regular', 'booking'])->default('regular'); // regular = jadwal tetap, booking = dari peminjaman
-            $table->unsignedBigInteger('booking_id')->nullable(); // Link ke bookings jika dari peminjaman
+            $table->enum('type', ['regular', 'booking_recurring', 'booking_onetime'])->default('regular');
+            $table->foreignId('booking_id')->nullable()->constrained('bookings')->onDelete('cascade');
             $table->timestamps();
+            
+            // Indexes untuk performance
+            $table->index(['lab_id', 'day', 'start_time']);
+            $table->index('booking_id');
         });
     }
 

@@ -340,10 +340,14 @@
                             <label for="document" class="cursor-pointer">
                                 <div class="text-4xl mb-2">📄</div>
                                 <div class="text-gray-700 font-semibold mb-1">Klik untuk upload dokumen</div>
-                                <div class="text-sm text-gray-500">PDF maksimal 5MB</div>
+                                <div class="text-sm text-gray-500 mb-1">PDF maksimal 2MB</div>
+                                <div class="text-xs text-gray-400">Jika file terlalu besar, silakan compress terlebih dahulu</div>
                                 <div id="file-name" class="text-sm text-yellow-600 font-medium mt-2"></div>
                             </label>
                         </div>
+                        @error('document')
+                            <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Summary -->
@@ -628,8 +632,26 @@
         // File Upload
         function setupFileUpload() {
             document.getElementById('document').addEventListener('change', function(e) {
-                const fileName = e.target.files[0]?.name;
-                document.getElementById('file-name').textContent = fileName ? `Terpilih: ${fileName}` : '';
+                const file = e.target.files[0];
+                const fileNameDisplay = document.getElementById('file-name');
+                
+                if (file) {
+                    // Check file size (2MB = 2097152 bytes)
+                    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+                    
+                    if (file.size > maxSize) {
+                        alert('⚠️ File terlalu besar!\n\nUkuran file: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB\nMaksimal: 2 MB\n\nSilakan compress file PDF Anda terlebih dahulu.');
+                        this.value = ''; // Clear the file input
+                        fileNameDisplay.textContent = '';
+                        return;
+                    }
+                    
+                    const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                    fileNameDisplay.textContent = `✓ Terpilih: ${file.name} (${fileSizeMB} MB)`;
+                    fileNameDisplay.classList.add('text-green-600');
+                } else {
+                    fileNameDisplay.textContent = '';
+                }
             });
         }
 

@@ -18,5 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->renderable(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, $request) {
+            if ($request->is('booking*')) {
+                return back()->withErrors([
+                    'document' => 'File yang Anda upload terlalu besar. Maksimal ukuran file adalah 2MB. Silakan compress file PDF Anda terlebih dahulu.'
+                ])->withInput();
+            }
+            
+            return response()->view('errors.post-too-large', [], 413);
+        });
     })->create();

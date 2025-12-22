@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use App\Mail\BookingApproved;
+use App\Mail\BookingRejected;
 
 class AdminController extends Controller
 {
@@ -47,7 +52,62 @@ class AdminController extends Controller
     public function approve($id)
     {
         $booking = Booking::findOrFail($id);
-        $booking->update(['status' => 'approved']);
+        
+        DB::transaction(function () use ($booking) {
+            // Update booking status
+            $booking->update([
+                'status' => 'approved',
+                'approved_by' => auth()->id(),
+                'approved_at' => now()
+            ]);
+
+            // Create schedule entry from approved booking
+            // Important: Use Carbon with Asia/Jakarta timezone to get correct day
+            $bookingDate = \Carbon\Carbon::parse($booking->tanggal)->timezone('Asia/Jakarta');
+            
+            $scheduleData = [
+                'lab_id' => $booking->lab_id,
+                'day' => $booking->day, // Use day from booking (already correct)
+                'start_time' => $booking->start_time,
+                'end_time' => $booking->end_time,
+                'booking_id' => $booking->id,
+            ];
+
+            // Tentukan type dan fields berdasarkan booking_type
+            if ($booking->is_recurring) {
+                // Perkuliahan tetap - recurring schedule
+                $scheduleData['type'] = 'booking_recurring';
+                $scheduleData['start_date'] = $bookingDate->toDateString(); // Format: Y-m-d
+                $scheduleData['end_date'] = null; // Recurring tanpa batas
+                $scheduleData['course'] = $booking->mata_kuliah;
+                $scheduleData['lecturer'] = $booking->dosen_pengampu;
+            } else {
+                // One-time booking (perkuliahan tidak tetap atau non-perkuliahan)
+                $scheduleData['type'] = 'booking_onetime';
+                $scheduleData['start_date'] = $bookingDate->toDateString(); // Format: Y-m-d
+                $scheduleData['end_date'] = $bookingDate->toDateString();
+                
+                if ($booking->booking_type === 'non_perkuliahan') {
+                    $scheduleData['course'] = $booking->nama_kegiatan;
+                    $scheduleData['lecturer'] = $booking->nama_peminjam;
+                } else {
+                    $scheduleData['course'] = $booking->mata_kuliah;
+                    $scheduleData['lecturer'] = $booking->dosen_pengampu;
+                }
+            }
+
+            Schedule::create($scheduleData);
+        });
+
+        // Send approval email (DISABLED - Uncomment saat email sudah ready)
+        // try {
+        //     Mail::to($booking->email)->send(new BookingApproved($booking));
+        // } catch (\Exception $e) {
+        //     \Log::warning('Failed to send booking approval email', [
+        //         'booking_id' => $booking->id,
+        //         'error' => $e->getMessage()
+        //     ]);
+        // }
 
         return redirect()->route('admin.dashboard')
             ->with('success', 'Peminjaman berhasil disetujui!');
@@ -63,10 +123,29 @@ class AdminController extends Controller
         ]);
 
         $booking = Booking::findOrFail($id);
-        $booking->update([
-            'status' => 'rejected',
-            'rejection_reason' => $request->rejection_reason
-        ]);
+        
+        DB::transaction(function () use ($booking, $request) {
+            // Delete related schedule if exists
+            if ($booking->schedule) {
+                $booking->schedule->delete();
+            }
+            
+            // Update booking status
+            $booking->update([
+                'status' => 'rejected',
+                'rejection_reason' => $request->rejection_reason
+            ]);
+        });
+
+        // Send rejection email (DISABLED - Uncomment saat email sudah ready)
+        // try {
+        //     Mail::to($booking->email)->send(new BookingRejected($booking));
+        // } catch (\Exception $e) {
+        //     \Log::warning('Failed to send booking rejection email', [
+        //         'booking_id' => $booking->id,
+        //         'error' => $e->getMessage()
+        //     ]);
+        // }
 
         return redirect()->route('admin.dashboard')
             ->with('success', 'Peminjaman ditolak.');

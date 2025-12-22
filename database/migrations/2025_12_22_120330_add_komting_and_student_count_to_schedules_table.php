@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('schedules', function (Blueprint $table) {
-            $table->date('start_date')->nullable()->after('day'); // Tanggal mulai semester/periode
-            $table->date('end_date')->nullable()->after('start_date'); // Tanggal akhir semester/periode
+            $table->string('komting')->nullable()->after('booking_id');
+            $table->integer('student_count')->nullable()->after('komting');
         });
     }
 
@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('schedules', function (Blueprint $table) {
-            $table->dropColumn(['start_date', 'end_date']);
+            $table->dropColumn(['komting', 'student_count']);
         });
     }
 };

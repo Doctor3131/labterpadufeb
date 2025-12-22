@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('program_studi');
             $table->string('nim');
             $table->string('no_telpon');
-            $table->string('alamat')->nullable(); // Alamat tempat tinggal
+            $table->text('alamat')->nullable(); // Alamat tempat tinggal
             
             // Detail Peminjaman Non-Perkuliahan
             $table->enum('jenis_kegiatan', [
@@ -46,6 +46,7 @@ return new class extends Migration
             $table->boolean('is_recurring')->default(false); // true untuk perkuliahan tetap
             
             // Jadwal
+            $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']); // Hari untuk recurring
             $table->date('tanggal'); // Tanggal peminjaman
             $table->time('start_time');
             $table->time('end_time');
@@ -56,11 +57,21 @@ return new class extends Migration
             
             // Status & Approval
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('rejection_reason')->nullable(); // Alasan penolakan
+            $table->string('tracking_token', 32)->unique(); // Token untuk tracking tanpa login
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->text('admin_notes')->nullable();
             $table->timestamp('approved_at')->nullable();
             
             $table->timestamps();
+            
+            // Indexes untuk performance
+            $table->index('status');
+            $table->index('nim');
+
+            $table->index('tanggal');
+            $table->index('tracking_token');
+            $table->index(['lab_id', 'tanggal', 'start_time']); // Composite untuk cek ketersediaan
         });
     }
 
