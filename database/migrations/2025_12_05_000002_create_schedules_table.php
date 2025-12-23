@@ -19,8 +19,8 @@ return new class extends Migration
             $table->date('end_date')->nullable(); // Tanggal akhir semester/periode
             $table->time('start_time');
             $table->time('end_time');
-            $table->string('course'); // Mata Kuliah
-            $table->string('lecturer'); // Dosen
+            $table->string('course')->nullable(); // Mata Kuliah
+            $table->string('lecturer')->nullable(); // Dosen
             $table->enum('type', ['regular', 'booking_recurring', 'booking_onetime'])->default('regular');
             $table->foreignId('booking_id')->nullable()->constrained('bookings')->onDelete('cascade');
             $table->timestamps();

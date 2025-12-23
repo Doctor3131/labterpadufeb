@@ -26,8 +26,8 @@ class BookingController extends Controller
      */
     public function getAvailableLabs(Request $request)
     {
-        $jumlahPeserta = $request->jumlah_peserta;
-        $tanggal = $request->tanggal;
+        $participantCount = $request->participant_count;
+        $date = $request->booking_date;
         $startTime = $request->start_time;
         $endTime = $request->end_time;
         
@@ -41,16 +41,16 @@ class BookingController extends Controller
             'Friday' => 'Jumat',
             'Saturday' => 'Sabtu',
         ];
-        $dayName = $days[date('l', strtotime($tanggal))];
+        $dayName = $days[date('l', strtotime($date))];
         
         // Get labs with sufficient capacity
-        $labs = Lab::where('capacity', '>=', $jumlahPeserta)
+        $labs = Lab::where('capacity', '>=', $participantCount)
             ->orderBy('capacity', 'asc')
             ->get();
         
         // Filter labs that are available at the requested time
-        $availableLabs = $labs->filter(function ($lab) use ($dayName, $startTime, $endTime, $tanggal) {
-            return $lab->isAvailable($dayName, $startTime, $endTime, $tanggal);
+        $availableLabs = $labs->filter(function ($lab) use ($dayName, $startTime, $endTime, $date) {
+            return $lab->isAvailable($dayName, $startTime, $endTime, $date);
         });
         
         return response()->json($availableLabs->values());
@@ -72,36 +72,36 @@ class BookingController extends Controller
         try {
             $validated = $request->validate([
             'booking_type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan',
-            'nama_peminjam' => 'required|string|max:255',
-            'program_studi' => 'required|string|max:255',
+            'pic_name' => 'required|string|max:255',
+            'study_program' => 'required|string|max:255',
             'nim' => 'required|string|size:14|regex:/^[0-9]{14}$/',
-            'no_telpon' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
-            'alamat' => 'nullable|string',
+            'phone_number' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
+            'address' => 'nullable|string',
             'lab_id' => 'required|exists:labs,id',
-            'tanggal' => 'required|date',
+            'booking_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'jumlah_peserta' => 'required|integer|min:1',
+            'participant_count' => 'required|integer|min:1',
             'document' => 'nullable|file|mimes:pdf|max:2048', // Max 2MB
             
             // Non-perkuliahan fields
-            'jenis_kegiatan' => 'required_if:booking_type,non_perkuliahan',
-            'jabatan' => 'nullable|string|max:255',
-            'kebutuhan_peralatan' => 'nullable|string',
-            'nama_kegiatan' => 'required_if:booking_type,non_perkuliahan|string|max:255',
+            'activity_type' => 'required_if:booking_type,non_perkuliahan',
+            'position' => 'nullable|string|max:255',
+            'equipment_needs' => 'nullable|string',
+            'activity_name' => 'required_if:booking_type,non_perkuliahan|string|max:255',
             
             // Perkuliahan fields
-            'mata_kuliah' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
-            'dosen_pengampu' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
-            'nip_dosen' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:18|regex:/^[0-9]+$/',
-            'software_digunakan' => 'nullable|string|max:255',
+            'course_name' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
+            'lecturer_name' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
+            'lecturer_nip' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:18|regex:/^[0-9]+$/',
+            'software_needs' => 'nullable|string|max:255',
         ]);
 
         \Log::info('Validation passed');
 
         // Check for schedule conflicts
         $lab = Lab::findOrFail($validated['lab_id']);
-        $date = \Carbon\Carbon::parse($validated['tanggal']);
+        $date = \Carbon\Carbon::parse($validated['booking_date']);
         $dayMap = [
             0 => 'Minggu',
             1 => 'Senin',
@@ -113,7 +113,7 @@ class BookingController extends Controller
         ];
         $day = $dayMap[$date->dayOfWeek];
 
-        if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['tanggal'])) {
+        if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['booking_date'])) {
             return back()->withErrors([
                 'time_conflict' => 'Ruangan ' . $lab->name . ' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda (' . $validated['start_time'] . ' - ' . $validated['end_time'] . '). Silakan pilih waktu atau ruangan lain.'
             ])->withInput();

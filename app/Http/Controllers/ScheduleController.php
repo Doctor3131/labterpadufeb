@@ -94,6 +94,7 @@ class ScheduleController extends Controller
                         'lecturer' => $schedule->lecturer,
                         'komting' => $schedule->komting,
                         'student_count' => $schedule->student_count,
+                        'booking_type' => $schedule->booking ? $schedule->booking->booking_type : null,
                     ];
                 }
             }

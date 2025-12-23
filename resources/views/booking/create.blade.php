@@ -190,13 +190,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap *</label>
-                            <input type="text" name="nama_peminjam" id="nama_peminjam" value="{{ old('nama_peminjam') }}" required
+                            <input type="text" name="pic_name" id="pic_name" value="{{ old('pic_name') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi *</label>
-                            <input type="text" name="program_studi" id="program_studi" value="{{ old('program_studi') }}" required
+                            <input type="text" name="study_program" id="study_program" value="{{ old('study_program') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
@@ -210,7 +210,7 @@
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon * <span class="text-xs text-gray-500">(10-15 digit)</span></label>
-                            <input type="text" name="no_telpon" id="no_telpon" value="{{ old('no_telpon') }}" required
+                            <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number') }}" required
                                 minlength="10" maxlength="15" pattern="[0-9+]{10,15}"
                                 placeholder="Contoh: 081234567890"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -218,8 +218,8 @@
 
                         <div class="md:col-span-2">
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Alamat</label>
-                            <textarea name="alamat" id="alamat" rows="3"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('alamat') }}</textarea>
+                            <textarea name="address" id="address" rows="3"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('address') }}</textarea>
                         </div>
                     </div>
 
@@ -229,24 +229,24 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Mata Kuliah *</label>
-                                <input type="text" name="mata_kuliah" id="mata_kuliah" value="{{ old('mata_kuliah') }}"
+                                <input type="text" name="course_name" id="course_name" value="{{ old('course_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Dosen Pengampu *</label>
-                                <input type="text" name="dosen_pengampu" id="dosen_pengampu" value="{{ old('dosen_pengampu') }}"
+                                <input type="text" name="lecturer_name" id="lecturer_name" value="{{ old('lecturer_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen *</label>
-                                <input type="text" name="nip_dosen" id="nip_dosen" value="{{ old('nip_dosen') }}"
+                                <input type="text" name="lecturer_nip" id="lecturer_nip" value="{{ old('lecturer_nip') }}"
                                     maxlength="18" pattern="[0-9]{1,18}"
                                     placeholder="Maksimal 18 digit"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Software yang Digunakan</label>
-                                <input type="text" name="software_digunakan" id="software_digunakan" value="{{ old('software_digunakan') }}"
+                                <input type="text" name="software_needs" id="software_needs" value="{{ old('software_needs') }}"
                                     placeholder="Contoh: SPSS, Microsoft Office, dll"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
@@ -258,24 +258,24 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Kegiatan *</label>
-                                <input type="text" name="nama_kegiatan" id="nama_kegiatan" value="{{ old('nama_kegiatan') }}"
+                                <input type="text" name="activity_name" id="activity_name" value="{{ old('activity_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan *</label>
-                                <input type="text" name="jenis_kegiatan" id="jenis_kegiatan" value="{{ old('jenis_kegiatan') }}"
+                                <input type="text" name="activity_type" id="activity_type" value="{{ old('activity_type') }}"
                                     placeholder="Contoh: Seminar, Workshop, Rapat"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Jabatan</label>
-                                <input type="text" name="jabatan" id="jabatan" value="{{ old('jabatan') }}"
+                                <input type="text" name="position" id="position" value="{{ old('position') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Kebutuhan Peralatan</label>
-                                <textarea name="kebutuhan_peralatan" id="kebutuhan_peralatan" rows="3"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('kebutuhan_peralatan') }}</textarea>
+                                <textarea name="equipment_needs" id="equipment_needs" rows="3"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -300,14 +300,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Peminjaman *</label>
-                            <input type="date" name="tanggal" id="tanggal" value="{{ old('tanggal') }}" required
+                            <input type="date" name="booking_date" id="booking_date" value="{{ old('booking_date') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Jumlah Peserta *</label>
-                            <input type="number" name="jumlah_peserta" id="jumlah_peserta" value="{{ old('jumlah_peserta') }}" required
+                            <input type="number" name="participant_count" id="participant_count" value="{{ old('participant_count') }}" required
                                 min="1" placeholder="Contoh: 30"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
@@ -475,36 +475,36 @@
 
         // Step 2 Validation
         function setupStep2Validation() {
-            const requiredFields = ['nama_peminjam', 'program_studi', 'nim', 'no_telpon'];
+            const requiredFields = ['pic_name', 'study_program', 'nim', 'phone_number'];
             requiredFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 field.addEventListener('input', validateStep2);
             });
             
             // Also listen to conditional fields
-            ['mata_kuliah', 'dosen_pengampu', 'nip_dosen', 'nama_kegiatan', 'jenis_kegiatan'].forEach(fieldId => {
+            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) field.addEventListener('input', validateStep2);
             });
         }
 
         function validateStep2() {
-            const nama = document.getElementById('nama_peminjam').value.trim();
-            const prodi = document.getElementById('program_studi').value.trim();
+            const nama = document.getElementById('pic_name').value.trim();
+            const prodi = document.getElementById('study_program').value.trim();
             const nim = document.getElementById('nim').value.trim();
-            const telpon = document.getElementById('no_telpon').value.trim();
+            const telpon = document.getElementById('phone_number').value.trim();
 
             let isValid = nama && prodi && nim.length === 14 && telpon.length >= 10;
 
             // Check conditional fields
             if (selectedBookingType !== 'non_perkuliahan') {
-                const mataKuliah = document.getElementById('mata_kuliah').value.trim();
-                const dosen = document.getElementById('dosen_pengampu').value.trim();
-                const nip = document.getElementById('nip_dosen').value.trim();
+                const mataKuliah = document.getElementById('course_name').value.trim();
+                const dosen = document.getElementById('lecturer_name').value.trim();
+                const nip = document.getElementById('lecturer_nip').value.trim();
                 isValid = isValid && mataKuliah && dosen && nip;
             } else {
-                const namaKegiatan = document.getElementById('nama_kegiatan').value.trim();
-                const jenisKegiatan = document.getElementById('jenis_kegiatan').value.trim();
+                const namaKegiatan = document.getElementById('activity_name').value.trim();
+                const jenisKegiatan = document.getElementById('activity_type').value.trim();
                 isValid = isValid && namaKegiatan && jenisKegiatan;
             }
 
@@ -513,13 +513,13 @@
 
         // Step 3 Validation
         function setupStep3Validation() {
-            const tanggal = document.getElementById('tanggal');
-            const jumlahPeserta = document.getElementById('jumlah_peserta');
+            const bookingDate = document.getElementById('booking_date');
+            const participantCount = document.getElementById('participant_count');
             const startTime = document.getElementById('start_time');
             const endTime = document.getElementById('end_time');
             const labSelect = document.getElementById('labSelect');
 
-            [tanggal, jumlahPeserta, startTime, endTime].forEach(field => {
+            [bookingDate, participantCount, startTime, endTime].forEach(field => {
                 field.addEventListener('change', function() {
                     fetchAvailableLabs();
                     validateStep3();
@@ -530,24 +530,24 @@
         }
 
         function validateStep3() {
-            const tanggal = document.getElementById('tanggal').value;
-            const jumlahPeserta = document.getElementById('jumlah_peserta').value;
+            const bookingDate = document.getElementById('booking_date').value;
+            const participantCount = document.getElementById('participant_count').value;
             const startTime = document.getElementById('start_time').value;
             const endTime = document.getElementById('end_time').value;
             const lab = document.getElementById('labSelect').value;
 
-            const isValid = tanggal && jumlahPeserta && startTime && endTime && lab;
+            const isValid = bookingDate && participantCount && startTime && endTime && lab;
             document.getElementById('btn-next-3').disabled = !isValid;
         }
 
         // Fetch Available Labs
         function fetchAvailableLabs() {
-            const tanggal = document.getElementById('tanggal').value;
-            const jumlahPeserta = document.getElementById('jumlah_peserta').value;
+            const bookingDate = document.getElementById('booking_date').value;
+            const participantCount = document.getElementById('participant_count').value;
             const startTime = document.getElementById('start_time').value;
             const endTime = document.getElementById('end_time').value;
 
-            if (!tanggal || !jumlahPeserta || !startTime || !endTime) return;
+            if (!bookingDate || !participantCount || !startTime || !endTime) return;
 
             const labSelect = document.getElementById('labSelect');
             labSelect.innerHTML = '<option value="">Memuat...</option>';
@@ -559,13 +559,18 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
-                    tanggal: tanggal,
-                    jumlah_peserta: jumlahPeserta,
+                    booking_date: bookingDate,
+                    participant_count: participantCount,
                     start_time: startTime,
                     end_time: endTime
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(labs => {
                 labSelect.innerHTML = '';
                 if (labs.length === 0) {
@@ -581,6 +586,11 @@
                     });
                     labSelect.disabled = false;
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                labSelect.innerHTML = '<option value="">Gagal memuat data lab</option>';
+                alert('Terjadi kesalahan saat memuat data laboratorium. Silakan cek konsol atau coba lagi.');
             });
         }
 
@@ -636,11 +646,11 @@
 
             const summary = [];
             summary.push(`<div><strong>Tipe:</strong> ${bookingTypeLabels[selectedBookingType]}</div>`);
-            summary.push(`<div><strong>Nama:</strong> ${document.getElementById('nama_peminjam').value}</div>`);
+            summary.push(`<div><strong>Nama:</strong> ${document.getElementById('pic_name').value}</div>`);
             summary.push(`<div><strong>NIM:</strong> ${document.getElementById('nim').value}</div>`);
-            summary.push(`<div><strong>Tanggal:</strong> ${document.getElementById('tanggal').value}</div>`);
+            summary.push(`<div><strong>Tanggal:</strong> ${document.getElementById('booking_date').value}</div>`);
             summary.push(`<div><strong>Waktu:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</div>`);
-            summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('jumlah_peserta').value} orang</div>`);
+            summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('participant_count').value} orang</div>`);
             
             const labSelect = document.getElementById('labSelect');
             const labName = labSelect.options[labSelect.selectedIndex].text;
@@ -679,8 +689,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Mark conditional fields
             const conditionalFields = [
-                'mata_kuliah', 'dosen_pengampu', 'nip_dosen',
-                'nama_kegiatan', 'jenis_kegiatan'
+                'course_name', 'lecturer_name', 'lecturer_nip',
+                'activity_name', 'activity_type'
             ];
             conditionalFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);

@@ -49,14 +49,6 @@ class LandingController extends Controller
             ->orderBy('start_time')
             ->get();
 
-        // Get one-time bookings for this week (approved only)
-        $bookings = Booking::with('lab')
-            ->whereBetween('tanggal', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
-            ->where('status', 'approved')
-            ->orderBy('tanggal')
-            ->orderBy('start_time')
-            ->get();
-
         // Group schedules by day with concrete dates
         $groupedSchedules = [];
         
@@ -71,38 +63,23 @@ class LandingController extends Controller
             // Add recurring schedules for this day
             $daySchedules = $recurringSchedules->where('day', $day);
             foreach ($daySchedules as $schedule) {
+                // If it's a one-time booking, ensure the date matches exactly
+                // If it's a recurring schedule, the query already filtered for the valid date range
+                if ($schedule->type === 'booking_onetime' && $schedule->start_date && $schedule->start_date->format('Y-m-d') !== $concreteDate->format('Y-m-d')) {
+                    continue;
+                }
+
                 $groupedSchedules[$day]['items'][] = [
                     'type' => 'recurring',
                     'lab' => $schedule->lab,
                     'start_time' => $schedule->start_time,
                     'end_time' => $schedule->end_time,
-                    'course' => $schedule->course,
+                    // Use smart accessors from Schedule model which fallback to booking logic
+                    'course' => $schedule->course, 
                     'lecturer' => $schedule->lecturer,
                     'komting' => $schedule->komting,
                     'student_count' => $schedule->student_count,
-                ];
-            }
-
-            // Add one-time bookings for this specific date
-            $dayBookings = $bookings->filter(function ($booking) use ($concreteDate) {
-                return $booking->tanggal === $concreteDate->format('Y-m-d');
-            });
-            
-            foreach ($dayBookings as $booking) {
-                $groupedSchedules[$day]['items'][] = [
-                    'type' => 'booking',
-                    'lab' => $booking->lab,
-                    'start_time' => $booking->start_time,
-                    'end_time' => $booking->end_time,
-                    'course' => $booking->booking_type === 'non_perkuliahan' 
-                        ? $booking->nama_kegiatan 
-                        : $booking->mata_kuliah,
-                    'lecturer' => $booking->booking_type === 'non_perkuliahan'
-                        ? $booking->nama_peminjam
-                        : $booking->dosen_pengampu,
-                    'komting' => $booking->nama_peminjam,
-                    'student_count' => $booking->jumlah_peserta,
-                    'booking_type' => $booking->booking_type,
+                    'booking_type' => $schedule->booking ? $schedule->booking->booking_type : null,
                 ];
             }
 

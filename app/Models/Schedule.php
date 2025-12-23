@@ -48,7 +48,37 @@ class Schedule extends Model
     }
 
     /**
-     * Get komting - from column if set, otherwise from booking if exists
+     * Get effective course/activity name
+     * Fallback to booking if not locally set
+     */
+    public function getCourseAttribute($value)
+    {
+        if (!empty($value)) return $value;
+        
+        if ($this->booking) {
+            return $this->booking->course_name ?? $this->booking->activity_name;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get effective lecturer/PIC name
+     * Fallback to booking if not locally set
+     */
+    public function getLecturerAttribute($value)
+    {
+        if (!empty($value)) return $value;
+        
+        if ($this->booking) {
+            return $this->booking->lecturer_name ?? $this->booking->pic_name;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get komting/PIC - from column if set, otherwise from booking if exists
      */
     public function getKomtingAttribute()
     {
@@ -58,8 +88,8 @@ class Schedule extends Model
         }
         
         // Priority 2: Get from booking relationship (for booking schedules)
-        if ($this->type === 'booking' && $this->booking) {
-            return $this->booking->nama_peminjam;
+        if ($this->booking) {
+            return $this->booking->pic_name;
         }
         
         return null;
@@ -70,8 +100,8 @@ class Schedule extends Model
      */
     public function getPhoneAttribute()
     {
-        if ($this->type === 'booking' && $this->booking) {
-            return $this->booking->no_telpon;
+        if ($this->booking) {
+            return $this->booking->phone_number;
         }
         return null;
     }
@@ -87,8 +117,8 @@ class Schedule extends Model
         }
         
         // Priority 2: Get from booking relationship (for booking schedules)
-        if ($this->type === 'booking' && $this->booking) {
-            return $this->booking->jumlah_peserta;
+        if ($this->booking) {
+            return $this->booking->participant_count;
         }
         
         return null;

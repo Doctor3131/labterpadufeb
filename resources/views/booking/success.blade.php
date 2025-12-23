@@ -62,7 +62,7 @@
 
                     <div class="flex justify-between border-b pb-2">
                         <span class="text-gray-600">Nama Peminjam:</span>
-                        <span class="font-semibold text-gray-800">{{ $booking->nama_peminjam }}</span>
+                        <span class="font-semibold text-gray-800">{{ $booking->pic_name }}</span>
                     </div>
 
                     <div class="flex justify-between border-b pb-2">
@@ -72,7 +72,7 @@
 
                     <div class="flex justify-between border-b pb-2">
                         <span class="text-gray-600">Tanggal:</span>
-                        <span class="font-semibold text-gray-800">{{ $booking->tanggal->format('d F Y') }} ({{ $booking->day }})</span>
+                        <span class="font-semibold text-gray-800">{{ $booking->booking_date->format('d F Y') }} ({{ $booking->day }})</span>
                     </div>
 
                     <div class="flex justify-between border-b pb-2">
@@ -82,28 +82,28 @@
 
                     <div class="flex justify-between border-b pb-2">
                         <span class="text-gray-600">Jumlah Peserta:</span>
-                        <span class="font-semibold text-gray-800">{{ $booking->jumlah_peserta }} orang</span>
+                        <span class="font-semibold text-gray-800">{{ $booking->participant_count }} orang</span>
                     </div>
 
                     @if($booking->isPerkuliahan())
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-gray-600">Mata Kuliah:</span>
-                            <span class="font-semibold text-gray-800">{{ $booking->mata_kuliah }}</span>
+                            <span class="font-semibold text-gray-800">{{ $booking->course_name }}</span>
                         </div>
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-gray-600">Dosen:</span>
-                            <span class="font-semibold text-gray-800">{{ $booking->dosen_pengampu }}</span>
+                            <span class="font-semibold text-gray-800">{{ $booking->lecturer_name }}</span>
                         </div>
                     @endif
 
                     @if($booking->isNonPerkuliahan())
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-gray-600">Jenis Kegiatan:</span>
-                            <span class="font-semibold text-gray-800">{{ $booking->jenis_kegiatan }}</span>
+                            <span class="font-semibold text-gray-800">{{ $booking->activity_type }}</span>
                         </div>
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-gray-600">Nama Kegiatan:</span>
-                            <span class="font-semibold text-gray-800">{{ $booking->nama_kegiatan }}</span>
+                            <span class="font-semibold text-gray-800">{{ $booking->activity_name }}</span>
                         </div>
                     @endif
 

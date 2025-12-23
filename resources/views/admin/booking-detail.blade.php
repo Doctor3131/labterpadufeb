@@ -64,7 +64,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Tanggal</label>
-                    <p class="text-lg">{{ \Carbon\Carbon::parse($booking->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
+                    <p class="text-lg">{{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Waktu</label>
@@ -72,7 +72,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600 mb-1">Jumlah Peserta</label>
-                    <p class="text-lg">{{ $booking->jumlah_peserta }} orang</p>
+                    <p class="text-lg">{{ $booking->participant_count }} orang</p>
                 </div>
             </div>
         </div>
@@ -83,11 +83,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-600">Nama Lengkap</label>
-                    <p class="text-gray-800">{{ $booking->nama_peminjam }}</p>
+                    <p class="text-gray-800">{{ $booking->pic_name }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600">Program Studi</label>
-                    <p class="text-gray-800">{{ $booking->program_studi }}</p>
+                    <p class="text-gray-800">{{ $booking->study_program }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600">NIM</label>
@@ -95,12 +95,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600">No. Telepon</label>
-                    <p class="text-gray-800">{{ $booking->no_telpon }}</p>
+                    <p class="text-gray-800">{{ $booking->phone_number }}</p>
                 </div>
-                @if($booking->alamat)
+                @if($booking->address)
                     <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-gray-600">Alamat</label>
-                        <p class="text-gray-800">{{ $booking->alamat }}</p>
+                        <p class="text-gray-800">{{ $booking->address }}</p>
                     </div>
                 @endif
             </div>
@@ -118,22 +118,22 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Nama Kegiatan</label>
-                        <p class="text-lg font-semibold text-gray-800">{{ $booking->nama_kegiatan }}</p>
+                        <p class="text-lg font-semibold text-gray-800">{{ $booking->activity_name }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Jenis Kegiatan</label>
-                        <p class="text-gray-800">{{ $booking->jenis_kegiatan }}</p>
+                        <p class="text-gray-800">{{ $booking->activity_type }}</p>
                     </div>
-                    @if($booking->jabatan)
+                    @if($booking->position)
                         <div>
                             <label class="block text-sm font-semibold text-gray-600">Jabatan</label>
-                            <p class="text-gray-800">{{ $booking->jabatan }}</p>
+                            <p class="text-gray-800">{{ $booking->position }}</p>
                         </div>
                     @endif
-                    @if($booking->kebutuhan_peralatan)
+                    @if($booking->equipment_needs)
                         <div>
                             <label class="block text-sm font-semibold text-gray-600">Kebutuhan Peralatan</label>
-                            <p class="text-gray-800">{{ $booking->kebutuhan_peralatan }}</p>
+                            <p class="text-gray-800">{{ $booking->equipment_needs }}</p>
                         </div>
                     @endif
                 </div>
@@ -145,20 +145,20 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Mata Kuliah</label>
-                        <p class="text-lg font-semibold text-gray-800">{{ $booking->mata_kuliah }}</p>
+                        <p class="text-lg font-semibold text-gray-800">{{ $booking->course_name }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Dosen Pengampu</label>
-                        <p class="text-gray-800">{{ $booking->dosen_pengampu }}</p>
+                        <p class="text-gray-800">{{ $booking->lecturer_name }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">NIP Dosen</label>
-                        <p class="text-gray-800">{{ $booking->nip_dosen }}</p>
+                        <p class="text-gray-800">{{ $booking->lecturer_nip }}</p>
                     </div>
-                    @if($booking->software_digunakan)
+                    @if($booking->software_needs)
                         <div>
                             <label class="block text-sm font-semibold text-gray-600">Software yang Digunakan</label>
-                            <p class="text-gray-800">{{ $booking->software_digunakan }}</p>
+                            <p class="text-gray-800">{{ $booking->software_needs }}</p>
                         </div>
                     @endif
                 </div>

@@ -15,18 +15,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('lab_id')->constrained()->onDelete('cascade');
             
-            // Tipe peminjaman
+            // Booking Type
             $table->enum('booking_type', ['perkuliahan_tetap', 'perkuliahan_tidak_tetap', 'non_perkuliahan']);
             
-            // Data Peminjam (untuk non-perkuliahan)
-            $table->string('nama_peminjam');
-            $table->string('program_studi');
+            // Borrower Data (for non-perkuliahan & general PIC)
+            $table->string('pic_name'); // Nama Peminjam
+            $table->string('study_program'); // Program Studi
             $table->string('nim');
-            $table->string('no_telpon');
-            $table->text('alamat')->nullable(); // Alamat tempat tinggal
+            $table->string('phone_number'); // No Telpon
+            $table->text('address')->nullable(); // Alamat tempat tinggal
             
-            // Detail Peminjaman Non-Perkuliahan
-            $table->enum('jenis_kegiatan', [
+            // Non-Lecture Booking Details
+            $table->enum('activity_type', [ // Jenis Kegiatan
                 'Seminar',
                 'Workshop',
                 'Pelatihan',
@@ -34,44 +34,43 @@ return new class extends Migration
                 'Ujian',
                 'Lainnya'
             ])->nullable();
-            $table->string('jabatan')->nullable();
-            $table->text('kebutuhan_peralatan')->nullable();
-            $table->string('nama_kegiatan')->nullable();
+            $table->string('position')->nullable(); // Jabatan
+            $table->text('equipment_needs')->nullable(); // Kebutuhan Peralatan
+            $table->string('activity_name')->nullable(); // Nama Kegiatan
             
-            // Detail Perkuliahan
-            $table->string('mata_kuliah')->nullable(); // untuk perkuliahan
-            $table->string('dosen_pengampu')->nullable(); // Nama dosen/instruktur
-            $table->string('nip_dosen', 18)->nullable(); // Max 18 digit
-            $table->string('software_digunakan')->nullable();
-            $table->boolean('is_recurring')->default(false); // true untuk perkuliahan tetap
+            // Lecture Details
+            $table->string('course_name')->nullable(); // Mata Kuliah
+            $table->string('lecturer_name')->nullable(); // Dosen Pengampu
+            $table->string('lecturer_nip', 18)->nullable(); // NIP Dosen
+            $table->string('software_needs')->nullable(); // Software Digunakan
+            $table->boolean('is_recurring')->default(false);
             
-            // Jadwal
-            $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']); // Hari untuk recurring
-            $table->date('tanggal'); // Tanggal peminjaman
+            // Schedule Info
+            $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']);
+            $table->date('booking_date'); // Tanggal
             $table->time('start_time');
             $table->time('end_time');
             
-            // Peserta & Dokumen
-            $table->integer('jumlah_peserta');
-            $table->string('document_path')->nullable(); // PDF gabungan
+            // Participants & Documents
+            $table->integer('participant_count'); // Jumlah Peserta
+            $table->string('document_path')->nullable();
             
             // Status & Approval
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('rejection_reason')->nullable(); // Alasan penolakan
-            $table->string('tracking_token', 32)->unique(); // Token untuk tracking tanpa login
+            $table->text('rejection_reason')->nullable();
+            $table->string('tracking_token', 32)->unique();
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->text('admin_notes')->nullable();
             $table->timestamp('approved_at')->nullable();
             
             $table->timestamps();
             
-            // Indexes untuk performance
+            // Indexes
             $table->index('status');
             $table->index('nim');
-
-            $table->index('tanggal');
+            $table->index('booking_date');
             $table->index('tracking_token');
-            $table->index(['lab_id', 'tanggal', 'start_time']); // Composite untuk cek ketersediaan
+            $table->index(['lab_id', 'booking_date', 'start_time']);
         });
     }
 

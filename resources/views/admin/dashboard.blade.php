@@ -146,7 +146,7 @@
                                     <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
                                     </svg>
-                                    {{ \Carbon\Carbon::parse($booking->tanggal)->locale('id')->isoFormat('D MMMM YYYY') }}
+                                    {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMMM YYYY') }}
                                 </span>
                                 <span class="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg">
                                     <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -161,9 +161,9 @@
                             
                             <h3 class="text-xl font-bold text-gray-800 mb-2">
                                 @if($booking->booking_type === 'non_perkuliahan')
-                                    {{ $booking->nama_kegiatan }}
+                                    {{ $booking->activity_name }}
                                 @else
-                                    {{ $booking->mata_kuliah }}
+                                    {{ $booking->course_name }}
                                 @endif
                             </h3>
                             
@@ -172,27 +172,27 @@
                                     <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                                     </svg>
-                                    <strong class="mr-1">Peminjam:</strong> {{ $booking->nama_peminjam }}
+                                    <strong class="mr-1">Peminjam:</strong> {{ $booking->pic_name }}
                                 </div>
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
                                     </svg>
-                                    <strong class="mr-1">Prodi:</strong> {{ $booking->program_studi }}
+                                    <strong class="mr-1">Prodi:</strong> {{ $booking->study_program }}
                                 </div>
                                 @if($booking->booking_type !== 'non_perkuliahan')
                                     <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
                                         </svg>
-                                        <strong class="mr-1">Dosen:</strong> {{ $booking->dosen_pengampu }}
+                                        <strong class="mr-1">Dosen:</strong> {{ $booking->lecturer_name }}
                                     </div>
                                 @endif
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
                                     </svg>
-                                    <strong class="mr-1">Peserta:</strong> {{ $booking->jumlah_peserta }} orang
+                                    <strong class="mr-1">Peserta:</strong> {{ $booking->participant_count }} orang
                                 </div>
                             </div>
                         </div>
@@ -246,19 +246,19 @@
                         </span>
                         <span class="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-lg">{{ $booking->lab->name }}</span>
                         <span class="text-gray-600 text-sm font-medium">
-                            {{ \Carbon\Carbon::parse($booking->tanggal)->locale('id')->isoFormat('D MMM YYYY') }} • {{ $booking->start_time }}
+                            {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }} • {{ $booking->start_time }}
                         </span>
                     </div>
                     <h3 class="text-lg font-bold text-gray-800 mb-2">
                         @if($booking->booking_type === 'non_perkuliahan')
-                            {{ $booking->nama_kegiatan }}
+                            {{ $booking->activity_name }}
                         @else
-                            {{ $booking->mata_kuliah }}
+                            {{ $booking->course_name }}
                         @endif
                     </h3>
                     <div class="flex items-center justify-between">
                         <p class="text-sm text-gray-600">
-                            <strong>{{ $booking->nama_peminjam }}</strong> • {{ $booking->jumlah_peserta }} orang
+                            <strong>{{ $booking->pic_name }}</strong> • {{ $booking->participant_count }} orang
                         </p>
                         @if($booking->approvedBy)
                             <span class="text-xs text-gray-500">Approved by {{ $booking->approvedBy->name }}</span>
@@ -291,17 +291,17 @@
                         </span>
                         <span class="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-lg">{{ $booking->lab->name }}</span>
                         <span class="text-gray-600 text-sm">
-                            {{ \Carbon\Carbon::parse($booking->tanggal)->locale('id')->isoFormat('D MMM YYYY') }}
+                            {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }}
                         </span>
                     </div>
                     <h3 class="text-lg font-bold text-gray-800 mb-2">
                         @if($booking->booking_type === 'non_perkuliahan')
-                            {{ $booking->nama_kegiatan }}
+                            {{ $booking->activity_name }}
                         @else
-                            {{ $booking->mata_kuliah }}
+                            {{ $booking->course_name }}
                         @endif
                     </h3>
-                    <p class="text-sm text-gray-600 mb-3"><strong>{{ $booking->nama_peminjam }}</strong></p>
+                    <p class="text-sm text-gray-600 mb-3"><strong>{{ $booking->pic_name }}</strong></p>
                     @if($booking->rejection_reason)
                         <div class="mt-3 p-4 bg-red-50 border border-red-200 rounded-lg">
                             <p class="text-xs font-semibold text-red-600 mb-1">Alasan Penolakan:</p>

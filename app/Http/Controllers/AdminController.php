@@ -24,7 +24,7 @@ class AdminController extends Controller
 
         $approvedBookings = Booking::with('lab')
             ->where('status', 'approved')
-            ->orderBy('tanggal', 'desc')
+            ->orderBy('booking_date', 'desc')
             ->take(10)
             ->get();
 
@@ -63,7 +63,7 @@ class AdminController extends Controller
 
             // Create schedule entry from approved booking
             // Important: Use Carbon with Asia/Jakarta timezone to get correct day
-            $bookingDate = \Carbon\Carbon::parse($booking->tanggal)->timezone('Asia/Jakarta');
+            $bookingDate = \Carbon\Carbon::parse($booking->booking_date)->timezone('Asia/Jakarta');
             
             $scheduleData = [
                 'lab_id' => $booking->lab_id,
@@ -71,8 +71,7 @@ class AdminController extends Controller
                 'start_time' => $booking->start_time,
                 'end_time' => $booking->end_time,
                 'booking_id' => $booking->id,
-                'komting' => $booking->nama_peminjam,
-                'student_count' => $booking->jumlah_peserta,
+                // Linked data - no need to copy text fields thanks to smart accessors
             ];
 
             // Tentukan type dan fields berdasarkan booking_type
@@ -81,21 +80,12 @@ class AdminController extends Controller
                 $scheduleData['type'] = 'booking_recurring';
                 $scheduleData['start_date'] = $bookingDate->toDateString(); // Format: Y-m-d
                 $scheduleData['end_date'] = null; // Recurring tanpa batas
-                $scheduleData['course'] = $booking->mata_kuliah;
-                $scheduleData['lecturer'] = $booking->dosen_pengampu;
+                // Course/Lecturer info pulled from booking relationship
             } else {
                 // One-time booking (perkuliahan tidak tetap atau non-perkuliahan)
                 $scheduleData['type'] = 'booking_onetime';
                 $scheduleData['start_date'] = $bookingDate->toDateString(); // Format: Y-m-d
                 $scheduleData['end_date'] = $bookingDate->toDateString();
-                
-                if ($booking->booking_type === 'non_perkuliahan') {
-                    $scheduleData['course'] = $booking->nama_kegiatan;
-                    $scheduleData['lecturer'] = $booking->nama_peminjam;
-                } else {
-                    $scheduleData['course'] = $booking->mata_kuliah;
-                    $scheduleData['lecturer'] = $booking->dosen_pengampu;
-                }
             }
 
             Schedule::create($scheduleData);

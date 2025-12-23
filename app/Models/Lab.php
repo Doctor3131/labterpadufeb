@@ -91,7 +91,7 @@ class Lab extends Model
         // Check one-time bookings (only if date is provided)
         if ($date) {
             $hasBookingConflict = $this->bookings()
-                ->where('tanggal', $date)
+                ->where('booking_date', $date)
                 ->whereIn('status', ['pending', 'approved']) // Only check non-rejected bookings
                 ->where(function ($query) use ($startTime, $endTime) {
                     $query->where(function ($q) use ($startTime, $endTime) {

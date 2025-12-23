@@ -105,7 +105,7 @@
 
                     <div>
                         <label class="text-sm text-gray-600">Tanggal</label>
-                        <p class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($booking->tanggal)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
+                        <p class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
                     </div>
 
                     <div>
@@ -115,7 +115,7 @@
 
                     <div>
                         <label class="text-sm text-gray-600">Jumlah Peserta</label>
-                        <p class="font-semibold text-gray-800">{{ $booking->jumlah_peserta }} orang</p>
+                        <p class="font-semibold text-gray-800">{{ $booking->participant_count }} orang</p>
                     </div>
 
                     <div>
@@ -135,7 +135,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-sm text-gray-600">Nama</label>
-                            <p class="font-semibold text-gray-800">{{ $booking->nama_peminjam }}</p>
+                            <p class="font-semibold text-gray-800">{{ $booking->pic_name }}</p>
                         </div>
                         <div>
                             <label class="text-sm text-gray-600">NIM</label>
@@ -143,11 +143,11 @@
                         </div>
                         <div>
                             <label class="text-sm text-gray-600">Program Studi</label>
-                            <p class="font-semibold text-gray-800">{{ $booking->program_studi }}</p>
+                            <p class="font-semibold text-gray-800">{{ $booking->study_program }}</p>
                         </div>
                         <div>
                             <label class="text-sm text-gray-600">No. Telepon</label>
-                            <p class="font-semibold text-gray-800">{{ $booking->no_telpon }}</p>
+                            <p class="font-semibold text-gray-800">{{ $booking->phone_number }}</p>
                         </div>
                     </div>
                 </div>
@@ -158,11 +158,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-sm text-gray-600">Mata Kuliah</label>
-                                <p class="font-semibold text-gray-800">{{ $booking->mata_kuliah }}</p>
+                                <p class="font-semibold text-gray-800">{{ $booking->course_name }}</p>
                             </div>
                             <div>
                                 <label class="text-sm text-gray-600">Dosen Pengampu</label>
-                                <p class="font-semibold text-gray-800">{{ $booking->dosen_pengampu }}</p>
+                                <p class="font-semibold text-gray-800">{{ $booking->lecturer_name }}</p>
                             </div>
                         </div>
                     </div>
@@ -174,11 +174,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-sm text-gray-600">Nama Kegiatan</label>
-                                <p class="font-semibold text-gray-800">{{ $booking->nama_kegiatan }}</p>
+                                <p class="font-semibold text-gray-800">{{ $booking->activity_name }}</p>
                             </div>
                             <div>
                                 <label class="text-sm text-gray-600">Jenis Kegiatan</label>
-                                <p class="font-semibold text-gray-800">{{ $booking->jenis_kegiatan }}</p>
+                                <p class="font-semibold text-gray-800">{{ $booking->activity_type }}</p>
                             </div>
                         </div>
                     </div>
