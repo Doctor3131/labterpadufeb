@@ -150,7 +150,7 @@
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="perkuliahan_tetap" class="hidden peer" required>
                             <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all">
-                                <div class="text-4xl mb-3">📚</div>
+                                
                                 <div class="font-bold text-gray-800 text-lg">Perkuliahan Tetap</div>
                                 <div class="text-sm text-gray-500 mt-2">Jadwal rutin setiap minggu</div>
                             </div>
@@ -158,7 +158,7 @@
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="perkuliahan_tidak_tetap" class="hidden peer" required>
                             <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all">
-                                <div class="text-4xl mb-3">📖</div>
+                                
                                 <div class="font-bold text-gray-800 text-lg">Perkuliahan Tidak Tetap</div>
                                 <div class="text-sm text-gray-500 mt-2">Sekali waktu saja</div>
                             </div>
@@ -166,7 +166,7 @@
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required>
                             <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all">
-                                <div class="text-4xl mb-3">🎯</div>
+                                
                                 <div class="font-bold text-gray-800 text-lg">Non-Perkuliahan</div>
                                 <div class="text-sm text-gray-500 mt-2">Kegiatan lainnya</div>
                             </div>

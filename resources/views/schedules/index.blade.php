@@ -17,17 +17,17 @@
                     <span class="text-xl text-gray-700">FEB UNDIP</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold">Beranda</a>
+                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105">Beranda</a>
                     @auth
-                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold">Dashboard</a>
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105">Dashboard</a>
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg">
                             Ajukan Peminjaman
                         </a>
                     @else
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg">
                             Ajukan Peminjaman
                         </a>
-                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-colors">
+                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 hover:scale-105 hover:shadow-md">
                             Login Asisten Lab
                         </a>
                     @endauth
