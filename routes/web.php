@@ -69,6 +69,8 @@ Route::get('/sync-bookings', function () {
             'start_time' => $booking->start_time,
             'end_time' => $booking->end_time,
             'booking_id' => $booking->id,
+            'komting' => $booking->nama_peminjam,
+            'student_count' => $booking->jumlah_peserta,
         ];
         
         if ($booking->is_recurring) {
@@ -175,6 +177,8 @@ Route::get('/fix-schedules', function () {
             'start_time' => $booking->start_time,
             'end_time' => $booking->end_time,
             'booking_id' => $booking->id,
+            'komting' => $booking->nama_peminjam,
+            'student_count' => $booking->jumlah_peserta,
         ];
         
         if ($booking->is_recurring) {

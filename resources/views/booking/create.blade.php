@@ -81,8 +81,24 @@
 
         <!-- Form Card -->
         <div class="bg-white rounded-xl shadow-lg p-8">
+            <!-- Time Conflict Warning (More Prominent) -->
+            @if ($errors->has('time_conflict'))
+                <div class="mb-6 bg-red-100 border-2 border-red-500 rounded-lg p-5 animate-pulse">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-red-900 font-bold text-lg mb-2">⚠️ Konflik Jadwal!</h3>
+                            <p class="text-red-800 font-semibold">{{ $errors->first('time_conflict') }}</p>
+                            <p class="text-red-700 text-sm mt-2">💡 Tip: Gunakan fitur "Cek Ketersediaan" atau pilih waktu/ruangan yang berbeda.</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Error Messages -->
-            @if ($errors->any())
+            @if ($errors->any() && !$errors->has('time_conflict'))
                 <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center mb-2">
                         <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -92,7 +108,9 @@
                     </div>
                     <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
                         @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
+                            @if (!str_contains($error, 'tidak tersedia pada waktu'))
+                                <li>{{ $error }}</li>
+                            @endif
                         @endforeach
                     </ul>
                 </div>

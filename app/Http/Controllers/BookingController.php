@@ -99,6 +99,26 @@ class BookingController extends Controller
 
         \Log::info('Validation passed');
 
+        // Check for schedule conflicts
+        $lab = Lab::findOrFail($validated['lab_id']);
+        $date = \Carbon\Carbon::parse($validated['tanggal']);
+        $dayMap = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu'
+        ];
+        $day = $dayMap[$date->dayOfWeek];
+
+        if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['tanggal'])) {
+            return back()->withErrors([
+                'time_conflict' => 'Ruangan ' . $lab->name . ' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda (' . $validated['start_time'] . ' - ' . $validated['end_time'] . '). Silakan pilih waktu atau ruangan lain.'
+            ])->withInput();
+        }
+
         // Handle document upload
         if ($request->hasFile('document')) {
             $path = $request->file('document')->store('booking-documents', 'public');
@@ -111,18 +131,8 @@ class BookingController extends Controller
         // Generate unique tracking token
         $validated['tracking_token'] = bin2hex(random_bytes(16));
 
-        // Extract day from tanggal for ALL bookings (required field)
-        $date = \Carbon\Carbon::parse($validated['tanggal']);
-        $dayMap = [
-            0 => 'Minggu',
-            1 => 'Senin',
-            2 => 'Selasa',
-            3 => 'Rabu',
-            4 => 'Kamis',
-            5 => 'Jumat',
-            6 => 'Sabtu'
-        ];
-        $validated['day'] = $dayMap[$date->dayOfWeek];
+        // Day already set above during conflict check
+        $validated['day'] = $day;
 
         // Create booking
         $booking = Booking::create($validated);

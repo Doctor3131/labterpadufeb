@@ -215,6 +215,8 @@ class DatabaseSeeder extends Seeder
             'lecturer' => $booking1->nama_peminjam,
             'type' => 'booking_onetime',
             'booking_id' => $booking1->id,
+            'komting' => $booking1->nama_peminjam,
+            'student_count' => $booking1->jumlah_peserta,
         ]);
 
         $booking2 = \App\Models\Booking::create([
@@ -252,6 +254,8 @@ class DatabaseSeeder extends Seeder
             'lecturer' => $booking2->dosen_pengampu,
             'type' => 'booking_onetime',
             'booking_id' => $booking2->id,
+            'komting' => $booking2->nama_peminjam,
+            'student_count' => $booking2->jumlah_peserta,
         ]);
     }
 }

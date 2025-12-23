@@ -66,7 +66,7 @@
             @if($booking->status === 'pending')
                 <p class="text-gray-600 mb-4">Permintaan Anda sedang diproses oleh admin. Anda akan menerima notifikasi via email.</p>
             @elseif($booking->status === 'approved')
-                <p class="text-green-700 font-semibold mb-4">🎉 Selamat! Peminjaman Anda telah disetujui.</p>
+                <p class="text-green-700 font-semibold mb-4"> Peminjaman Anda telah disetujui.</p>
                 <p class="text-gray-600">Silakan datang sesuai jadwal yang telah ditentukan.</p>
             @else
                 <p class="text-red-700 font-semibold mb-2">Mohon maaf, peminjaman Anda ditolak.</p>

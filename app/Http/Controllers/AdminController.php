@@ -71,6 +71,8 @@ class AdminController extends Controller
                 'start_time' => $booking->start_time,
                 'end_time' => $booking->end_time,
                 'booking_id' => $booking->id,
+                'komting' => $booking->nama_peminjam,
+                'student_count' => $booking->jumlah_peserta,
             ];
 
             // Tentukan type dan fields berdasarkan booking_type

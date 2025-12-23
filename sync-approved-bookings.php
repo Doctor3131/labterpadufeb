@@ -23,6 +23,8 @@ foreach ($approvedBookings as $booking) {
         'start_time' => $booking->start_time,
         'end_time' => $booking->end_time,
         'booking_id' => $booking->id,
+        'komting' => $booking->nama_peminjam,
+        'student_count' => $booking->jumlah_peserta,
     ];
     
     if ($booking->is_recurring) {

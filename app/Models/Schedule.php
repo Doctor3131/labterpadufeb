@@ -20,6 +20,8 @@ class Schedule extends Model
         'lecturer',
         'type',
         'booking_id',
+        'komting',
+        'student_count',
     ];
 
     protected $casts = [

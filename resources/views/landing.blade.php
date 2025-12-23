@@ -250,15 +250,15 @@
                                 <ul class="text-xs text-yellow-800 space-y-1">
                                     <li class="flex items-center">
                                         <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                                        <strong>Menunggu:</strong> Sedang direview admin
+                                        <strong>Menunggu: </strong><span class = "ml-1">Sedang direview admin</span> 
                                     </li>
                                     <li class="flex items-center">
                                         <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                                        <strong>Disetujui:</strong> Peminjaman berhasil
+                                        <strong>Disetujui: </strong> <span class ="ml-1">Peminjaman berhasil </span>
                                     </li>
                                     <li class="flex items-center">
                                         <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                                        <strong>Ditolak:</strong> Lihat alasan penolakan
+                                        <strong>Ditolak:</strong><span class="ml-1">Lihat alasan penolakan</span>
                                     </li>
                                 </ul>
                             </div>
