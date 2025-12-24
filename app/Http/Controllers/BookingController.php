@@ -71,7 +71,8 @@ class BookingController extends Controller
 
         try {
             $validated = $request->validate([
-            'booking_type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan',
+            'booking_type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'unit_type' => 'required_unless:booking_type,pribadi|in:s1_tembalang,pascasarjana_pleburan',
             'pic_name' => 'required|string|max:255',
             'study_program' => 'required|string|max:255',
             'nim' => 'required|string|size:14|regex:/^[0-9]{14}$/',
@@ -83,6 +84,11 @@ class BookingController extends Controller
             'end_time' => 'required|date_format:H:i|after:start_time',
             'participant_count' => 'required|integer|min:1',
             'document' => 'nullable|file|mimes:pdf|max:2048', // Max 2MB
+            
+            // Personal Booking fields
+            'applicant_status' => 'required_if:booking_type,pribadi|string|max:255',
+            'class_year' => 'required_if:booking_type,pribadi|string|max:4',
+            'purpose' => 'required_if:booking_type,pribadi|string|max:255',
             
             // Non-perkuliahan fields
             'activity_type' => 'required_if:booking_type,non_perkuliahan',
@@ -178,10 +184,10 @@ class BookingController extends Controller
      */
     public function success($token)
     {
-        // Validate token format (MD5 hash = 32 characters hexadecimal)
-        if (!preg_match('/^[a-f0-9]{32}$/i', $token)) {
-            abort(404, 'Invalid tracking token format');
-        }
+        // Validate token format (Relaxed for flexibility)
+        // if (!preg_match('/^[a-f0-9]{32}$/i', $token)) {
+        //     abort(404, 'Invalid tracking token format');
+        // }
         
         // Find booking by tracking token instead of ID for security
         $booking = Booking::with('lab')

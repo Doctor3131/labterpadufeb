@@ -142,6 +142,25 @@
                                 <span class="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-bold rounded-lg shadow-sm">
                                     {{ $booking->lab->name }}
                                 </span>
+                                @php
+                                    $typeColors = [
+                                        'perkuliahan_tetap' => 'bg-blue-100 text-blue-800',
+                                        'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
+                                        'non_perkuliahan' => 'bg-green-100 text-green-800',
+                                        'pribadi' => 'bg-orange-100 text-orange-800',
+                                    ];
+                                    $typeLabels = [
+                                        'perkuliahan_tetap' => 'Kuliah Tetap',
+                                        'perkuliahan_tidak_tetap' => 'Kuliah Tidak Tetap',
+                                        'non_perkuliahan' => 'Non-Perkuliahan',
+                                        'pribadi' => 'Pribadi',
+                                    ];
+                                    $colorClass = $typeColors[$booking->booking_type] ?? 'bg-gray-100 text-gray-800';
+                                    $labelText = $typeLabels[$booking->booking_type] ?? ucfirst(str_replace('_', ' ', $booking->booking_type));
+                                @endphp
+                                <span class="px-3 py-1.5 {{ $colorClass }} text-xs font-semibold rounded-lg">
+                                    {{ $labelText }}
+                                </span>
                                 <span class="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg">
                                     <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
@@ -152,7 +171,7 @@
                                     <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
                                     </svg>
-                                    {{ $booking->start_time }} - {{ $booking->end_time }}
+                                    {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}
                                 </span>
                                 <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                                     {{ $booking->created_at->diffForHumans() }}
@@ -245,8 +264,27 @@
                             Disetujui
                         </span>
                         <span class="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-lg">{{ $booking->lab->name }}</span>
+                        @php
+                            $typeColors = [
+                                'perkuliahan_tetap' => 'bg-blue-100 text-blue-800',
+                                'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
+                                'non_perkuliahan' => 'bg-green-100 text-green-800',
+                                'pribadi' => 'bg-orange-100 text-orange-800',
+                            ];
+                            $typeLabels = [
+                                'perkuliahan_tetap' => 'Kuliah Tetap',
+                                'perkuliahan_tidak_tetap' => 'Kuliah Tidak Tetap',
+                                'non_perkuliahan' => 'Non-Perkuliahan',
+                                'pribadi' => 'Pribadi',
+                            ];
+                            $colorClass = $typeColors[$booking->booking_type] ?? 'bg-gray-100 text-gray-800';
+                            $labelText = $typeLabels[$booking->booking_type] ?? ucfirst(str_replace('_', ' ', $booking->booking_type));
+                        @endphp
+                        <span class="px-3 py-1.5 {{ $colorClass }} text-xs font-semibold rounded-lg">
+                            {{ $labelText }}
+                        </span>
                         <span class="text-gray-600 text-sm font-medium">
-                            {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }} • {{ $booking->start_time }}
+                            {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }} • {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}
                         </span>
                     </div>
                     <h3 class="text-lg font-bold text-gray-800 mb-2">
@@ -290,6 +328,25 @@
                             Ditolak
                         </span>
                         <span class="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-lg">{{ $booking->lab->name }}</span>
+                        @php
+                            $typeColors = [
+                                'perkuliahan_tetap' => 'bg-blue-100 text-blue-800',
+                                'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
+                                'non_perkuliahan' => 'bg-green-100 text-green-800',
+                                'pribadi' => 'bg-orange-100 text-orange-800',
+                            ];
+                            $typeLabels = [
+                                'perkuliahan_tetap' => 'Kuliah Tetap',
+                                'perkuliahan_tidak_tetap' => 'Kuliah Tidak Tetap',
+                                'non_perkuliahan' => 'Non-Perkuliahan',
+                                'pribadi' => 'Pribadi',
+                            ];
+                            $colorClass = $typeColors[$booking->booking_type] ?? 'bg-gray-100 text-gray-800';
+                            $labelText = $typeLabels[$booking->booking_type] ?? ucfirst(str_replace('_', ' ', $booking->booking_type));
+                        @endphp
+                        <span class="px-3 py-1.5 {{ $colorClass }} text-xs font-semibold rounded-lg">
+                            {{ $labelText }}
+                        </span>
                         <span class="text-gray-600 text-sm">
                             {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }}
                         </span>

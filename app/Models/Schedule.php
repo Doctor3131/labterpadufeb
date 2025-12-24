@@ -24,6 +24,13 @@ class Schedule extends Model
         'student_count',
     ];
 
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var array
+     */
+    protected $with = ['booking'];
+
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',

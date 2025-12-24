@@ -146,31 +146,49 @@
                         Pilih Tipe Peminjaman
                     </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="perkuliahan_tetap" class="hidden peer" required>
-                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all">
-                                
+                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
                                 <div class="font-bold text-gray-800 text-lg">Perkuliahan Tetap</div>
                                 <div class="text-sm text-gray-500 mt-2">Jadwal rutin setiap minggu</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="perkuliahan_tidak_tetap" class="hidden peer" required>
-                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all">
-                                
+                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
                                 <div class="font-bold text-gray-800 text-lg">Perkuliahan Tidak Tetap</div>
                                 <div class="text-sm text-gray-500 mt-2">Sekali waktu saja</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required>
-                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all">
-                                
+                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
                                 <div class="font-bold text-gray-800 text-lg">Non-Perkuliahan</div>
                                 <div class="text-sm text-gray-500 mt-2">Kegiatan lainnya</div>
                             </div>
                         </label>
+                         <label class="booking-type-card cursor-pointer">
+                            <input type="radio" name="booking_type" value="pribadi" class="hidden peer" required>
+                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
+                                <div class="font-bold text-gray-800 text-lg">Pribadi</div>
+                                <div class="text-sm text-gray-500 mt-2">Tugas/Keperluan Pribadi</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="block text-gray-700 font-bold mb-4 text-lg">Unit</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-yellow-50 transition-colors group">
+                                <input type="radio" name="unit_type" value="s1_tembalang" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" required>
+                                <span class="ml-3 text-gray-700 font-medium group-hover:text-gray-900">S1 Tembalang</span>
+                            </label>
+                            <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-yellow-50 transition-colors group">
+                                <input type="radio" name="unit_type" value="pascasarjana_pleburan" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" required>
+                                <span class="ml-3 text-gray-700 font-medium group-hover:text-gray-900">Pascasarjana Pleburan</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="flex justify-end">
@@ -276,6 +294,30 @@
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Kebutuhan Peralatan</label>
                                 <textarea name="equipment_needs" id="equipment_needs" rows="3"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pribadi-fields" class="hidden mb-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Data Peminjaman Pribadi</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status *</label>
+                                <input type="text" name="applicant_status" id="applicant_status" value="{{ old('applicant_status') }}"
+                                    placeholder="Contoh: Mahasiswa, Dosen, Pegawai"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+                             <div>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Angkatan *</label>
+                                <input type="text" name="class_year" id="class_year" value="{{ old('class_year') }}"
+                                    placeholder="Contoh: 2023" maxlength="4"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Keperluan *</label>
+                                <input type="text" name="purpose" id="purpose" value="{{ old('purpose') }}"
+                                    placeholder="Contoh: Ujian, Kuliah, Mengerjakan tugas pribadi"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                         </div>
                     </div>
@@ -433,42 +475,76 @@
             });
         }
 
-        // Booking Type Selection
+        // Booking Type & Unit Selection
         function setupBookingTypeListener() {
             const bookingTypeInputs = document.querySelectorAll('input[name="booking_type"]');
-            bookingTypeInputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    selectedBookingType = this.value;
-                    document.getElementById('btn-next-1').disabled = false;
-                    
+            const unitTypeInputs = document.querySelectorAll('input[name="unit_type"]');
+            
+            function checkStep1Validity() {
+                const bookingType = document.querySelector('input[name="booking_type"]:checked');
+                const unitType = document.querySelector('input[name="unit_type"]:checked');
+                
+                if (bookingType && bookingType.value === 'pribadi') {
+                    // For pribadi, unit type is not required
+                     document.getElementById('btn-next-1').disabled = false;
+                     // Disable unit type inputs
+                     unitTypeInputs.forEach(input => {
+                         input.disabled = true;
+                         input.checked = false;
+                     });
+                     
+                } else {
+                     // For others, unit type is required
+                     unitTypeInputs.forEach(input => input.disabled = false);
+                     document.getElementById('btn-next-1').disabled = !(bookingType && unitType);
+                }
+                
+                if (bookingType) {
+                    selectedBookingType = bookingType.value;
                     // Show/hide appropriate fields for step 2
                     if (selectedBookingType === 'non_perkuliahan') {
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.remove('hidden');
+                        document.getElementById('pribadi-fields').classList.add('hidden');
+                        
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', true);
+                        setRequiredFields('pribadi-fields', false);
+                    } else if (selectedBookingType === 'pribadi') {
+                        document.getElementById('perkuliahan-fields').classList.add('hidden');
+                        document.getElementById('non-perkuliahan-fields').classList.add('hidden');
+                        document.getElementById('pribadi-fields').classList.remove('hidden');
+                        
+                        setRequiredFields('perkuliahan-fields', false);
+                        setRequiredFields('non-perkuliahan-fields', false);
+                        setRequiredFields('pribadi-fields', true);
                     } else {
                         document.getElementById('perkuliahan-fields').classList.remove('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
+                        document.getElementById('pribadi-fields').classList.add('hidden');
+                        
                         setRequiredFields('perkuliahan-fields', true);
                         setRequiredFields('non-perkuliahan-fields', false);
+                        setRequiredFields('pribadi-fields', false);
                     }
-                });
-            });
+                }
+            }
+
+            bookingTypeInputs.forEach(input => input.addEventListener('change', checkStep1Validity));
+            unitTypeInputs.forEach(input => input.addEventListener('change', checkStep1Validity));
         }
 
         function setRequiredFields(containerId, required) {
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
             inputs.forEach(input => {
-                if (input.hasAttribute('data-conditional-required')) {
-                    if (required) {
-                        input.setAttribute('required', 'required');
-                        input.removeAttribute('disabled');
-                    } else {
-                        input.removeAttribute('required');
-                        input.setAttribute('disabled', 'disabled');
-                    }
+                // Modified to handle simple inputs, no data attribute check needed strictly if inside container
+                 if (required) {
+                    input.setAttribute('required', 'required');
+                    input.removeAttribute('disabled');
+                } else {
+                    input.removeAttribute('required');
+                    input.setAttribute('disabled', 'disabled');
                 }
             });
         }
@@ -482,7 +558,7 @@
             });
             
             // Also listen to conditional fields
-            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type'].forEach(fieldId => {
+            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'applicant_status', 'class_year', 'purpose'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) field.addEventListener('input', validateStep2);
             });
@@ -497,15 +573,20 @@
             let isValid = nama && prodi && nim.length === 14 && telpon.length >= 10;
 
             // Check conditional fields
-            if (selectedBookingType !== 'non_perkuliahan') {
+            if (selectedBookingType === 'perkuliahan_tetap' || selectedBookingType === 'perkuliahan_tidak_tetap') {
                 const mataKuliah = document.getElementById('course_name').value.trim();
                 const dosen = document.getElementById('lecturer_name').value.trim();
                 const nip = document.getElementById('lecturer_nip').value.trim();
                 isValid = isValid && mataKuliah && dosen && nip;
-            } else {
+            } else if (selectedBookingType === 'non_perkuliahan') {
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
                 const jenisKegiatan = document.getElementById('activity_type').value.trim();
                 isValid = isValid && namaKegiatan && jenisKegiatan;
+            } else if (selectedBookingType === 'pribadi') {
+                 const status = document.getElementById('applicant_status').value.trim();
+                 const angkatan = document.getElementById('class_year').value.trim();
+                 const keperluan = document.getElementById('purpose').value.trim();
+                 isValid = isValid && status && angkatan && keperluan;
             }
 
             document.getElementById('btn-next-2').disabled = !isValid;
@@ -641,13 +722,37 @@
             const bookingTypeLabels = {
                 'perkuliahan_tetap': 'Perkuliahan Tetap',
                 'perkuliahan_tidak_tetap': 'Perkuliahan Tidak Tetap',
-                'non_perkuliahan': 'Non-Perkuliahan'
+                'non_perkuliahan': 'Non-Perkuliahan',
+                'pribadi': 'Pribadi'
             };
 
             const summary = [];
             summary.push(`<div><strong>Tipe:</strong> ${bookingTypeLabels[selectedBookingType]}</div>`);
+            
+            // Add Unit if not pribadi
+             if (selectedBookingType !== 'pribadi') {
+                 const unitLabels = {
+                     's1_tembalang': 'S1 Tembalang',
+                     'pascasarjana_pleburan': 'Pascasarjana Pleburan'
+                 };
+                 const unit = document.querySelector('input[name="unit_type"]:checked').value;
+                 summary.push(`<div><strong>Unit:</strong> ${unitLabels[unit]}</div>`);
+             }
+            
             summary.push(`<div><strong>Nama:</strong> ${document.getElementById('pic_name').value}</div>`);
             summary.push(`<div><strong>NIM:</strong> ${document.getElementById('nim').value}</div>`);
+            
+            // Specific fields based on type
+             if (selectedBookingType === 'pribadi') {
+                summary.push(`<div><strong>Status:</strong> ${document.getElementById('applicant_status').value}</div>`);
+                summary.push(`<div><strong>Angkatan:</strong> ${document.getElementById('class_year').value}</div>`);
+                summary.push(`<div><strong>Keperluan:</strong> ${document.getElementById('purpose').value}</div>`);
+            } else if (selectedBookingType === 'non_perkuliahan') {
+                summary.push(`<div><strong>Kegiatan:</strong> ${document.getElementById('activity_name').value}</div>`);
+            } else {
+                 summary.push(`<div><strong>Mata Kuliah:</strong> ${document.getElementById('course_name').value}</div>`);
+            }
+            
             summary.push(`<div><strong>Tanggal:</strong> ${document.getElementById('booking_date').value}</div>`);
             summary.push(`<div><strong>Waktu:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</div>`);
             summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('participant_count').value} orang</div>`);

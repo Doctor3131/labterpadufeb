@@ -78,15 +78,109 @@ class DatabaseSeeder extends Seeder
             'status' => 'available',
         ]);
 
-        Lab::create([
-            'name' => 'EL. 3 01',
-            'code' => 'EL-3-01',
-            'description' => 'Laboratorium komputer lantai 3',
-            'location' => 'Gedung E Lantai 3',
-            'capacity' => 60,
-            'status' => 'available',
+        // Remove EL. 3 01 creation as requested
+        
+        // Seed Approved Bookings
+        $lab = Lab::first(); // Use first available lab
+        
+        // 1. Perkuliahan Tetap
+        \App\Models\Booking::create([
+            'lab_id' => $lab->id,
+            'booking_type' => 'perkuliahan_tetap',
+            'unit_type' => 's1_tembalang',
+            'pic_name' => 'Dr. Budi Santoso',
+            'study_program' => 'Manajemen',
+            'nim' => '198001012005011001', // NIP actually but stored in string field
+            'phone_number' => '081234567890',
+            'course_name' => 'Manajemen Operasional',
+            'lecturer_name' => 'Dr. Budi Santoso',
+            'lecturer_nip' => '198001012005011001',
+            'booking_date' => date('Y-m-d', strtotime('+1 day')),
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'participant_count' => 40,
+            'status' => 'approved',
+            'tracking_token' => \Illuminate\Support\Str::random(10),
+            'approved_by' => 1, // Super Admin
+            'approved_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+            'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+1 day')))->locale('id')->isoFormat('dddd'), 
         ]);
 
+        // 2. Perkuliahan Tidak Tetap
+        \App\Models\Booking::create([
+            'lab_id' => $lab->id,
+            'booking_type' => 'perkuliahan_tidak_tetap',
+            'unit_type' => 'pascasarjana_pleburan',
+            'pic_name' => 'Siti Aminah, M.Si',
+            'study_program' => 'Akuntansi',
+            'nim' => '198502022010012002',
+            'phone_number' => '081298765432',
+            'course_name' => 'Praktikum Audit Lanjutan',
+            'lecturer_name' => 'Siti Aminah, M.Si',
+            'lecturer_nip' => '198502022010012002',
+            'booking_date' => date('Y-m-d', strtotime('+2 days')),
+            'start_time' => '13:00',
+            'end_time' => '15:30',
+            'participant_count' => 35,
+            'status' => 'approved',
+            'tracking_token' => \Illuminate\Support\Str::random(10),
+            'approved_by' => 1,
+            'approved_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+             'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+2 days')))->locale('id')->isoFormat('dddd'),
+        ]);
+
+        // 3. Non-Perkuliahan
+        \App\Models\Booking::create([
+            'lab_id' => $lab->id,
+            'booking_type' => 'non_perkuliahan',
+            'unit_type' => 's1_tembalang',
+            'pic_name' => 'BEM FEB',
+            'study_program' => 'Ilmu Ekonomi',
+            'nim' => '21000120140001',
+            'phone_number' => '085678901234',
+            'activity_name' => 'Workshop Technopreneur',
+            'activity_type' => 'Workshop',
+            'booking_date' => date('Y-m-d', strtotime('+3 days')),
+            'start_time' => '09:00',
+            'end_time' => '12:00',
+            'participant_count' => 100,
+            'status' => 'approved',
+            'tracking_token' => \Illuminate\Support\Str::random(10),
+            'approved_by' => 1,
+            'approved_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+             'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+3 days')))->locale('id')->isoFormat('dddd'),
+        ]);
+
+        // 4. Pribadi
+        \App\Models\Booking::create([
+            'lab_id' => $lab->id,
+            'booking_type' => 'pribadi',
+            'unit_type' => null, // Pribadi has no unit
+            'pic_name' => 'Andi Mahasiswa',
+            'study_program' => 'Manajemen',
+            'nim' => '21000120140005',
+            'phone_number' => '081345678901',
+            'applicant_status' => 'Mahasiswa',
+            'class_year' => '2021',
+            'purpose' => 'Mengerjakan Tesis',
+            'booking_date' => date('Y-m-d', strtotime('+5 days')),
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'participant_count' => 1,
+            'status' => 'approved',
+            'tracking_token' => \Illuminate\Support\Str::random(10),
+            'approved_by' => 1,
+            'approved_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+             'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+5 days')))->locale('id')->isoFormat('dddd'),
+        ]);
         // Seed Schedules - SENIN
         $seninSchedules = [
             ['EL. 301', '07:00', '09:30', 'Statistik Bisnis - Kelas A', 'Dr. Ahyar Yuniawan, S.E., M.Si.', 'Reza Akmal Wibowo', 23],

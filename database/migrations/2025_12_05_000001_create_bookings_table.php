@@ -16,7 +16,10 @@ return new class extends Migration
             $table->foreignId('lab_id')->constrained()->onDelete('cascade');
             
             // Booking Type
-            $table->enum('booking_type', ['perkuliahan_tetap', 'perkuliahan_tidak_tetap', 'non_perkuliahan']);
+            $table->enum('booking_type', ['perkuliahan_tetap', 'perkuliahan_tidak_tetap', 'non_perkuliahan', 'pribadi']);
+            
+            // Unit Type (S1 Tembalang or Pascasarjana Pleburan) - Nullable for 'pribadi'
+            $table->enum('unit_type', ['s1_tembalang', 'pascasarjana_pleburan'])->nullable();
             
             // Borrower Data (for non-perkuliahan & general PIC)
             $table->string('pic_name'); // Nama Peminjam
@@ -24,6 +27,11 @@ return new class extends Migration
             $table->string('nim');
             $table->string('phone_number'); // No Telpon
             $table->text('address')->nullable(); // Alamat tempat tinggal
+            
+            // Personal Booking Details
+            $table->string('applicant_status')->nullable(); // Status (Mahasiswa/Dosen/etc)
+            $table->string('class_year', 4)->nullable(); // Angkatan
+            $table->string('purpose')->nullable(); // Keperluan
             
             // Non-Lecture Booking Details
             $table->enum('activity_type', [ // Jenis Kegiatan
@@ -46,7 +54,7 @@ return new class extends Migration
             $table->boolean('is_recurring')->default(false);
             
             // Schedule Info
-            $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']);
+            $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']);
             $table->date('booking_date'); // Tanggal
             $table->time('start_time');
             $table->time('end_time');

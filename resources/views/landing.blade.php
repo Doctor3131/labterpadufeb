@@ -143,7 +143,7 @@
                                             $roomBadgeClass = $isNonPerkuliahan ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800';
                                         @endphp
                                         <span class="inline-flex items-center px-3 py-1 rounded-full {{ $roomBadgeClass }} font-semibold text-xs lg:text-sm">
-                                            {{ $item['lab']->name }}
+                                            {{ $item['lab'] }}
                                         </span>
                                     </td>
                                     <td class="px-4 lg:px-6 py-4">
@@ -170,7 +170,7 @@
                                     <td class="px-4 lg:px-6 py-4">
                                         <div class="text-slate-600">{{ $item['lecturer'] }}</div>
                                         @if($item['komting'])
-                                            <div class="text-xs text-slate-400 mt-1">Komting: {{ $item['komting'] }}</div>
+                                            <div class="text-xs text-slate-400 mt-1">{{ $item['booking_type'] === 'pribadi' ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 lg:px-6 py-4 text-slate-500 text-xs">
