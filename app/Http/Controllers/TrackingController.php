@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Lab;
 use Illuminate\Http\Request;
 
 class TrackingController extends Controller
@@ -35,5 +36,18 @@ class TrackingController extends Controller
 
         return redirect()->route('booking.track', $token)
             ->with('success', 'Peminjaman berhasil dibatalkan.');
+    }
+
+
+    /**
+     * Show print view for booking form
+     */
+    public function print($token)
+    {
+        $booking = Booking::with('lab')
+            ->where('tracking_token', $token)
+            ->firstOrFail();
+
+        return view('booking.print', compact('booking'));
     }
 }

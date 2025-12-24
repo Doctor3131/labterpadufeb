@@ -21,6 +21,7 @@ Route::post('/booking/available-labs', [BookingController::class, 'getAvailableL
 
 // Tracking Routes (Public)
 Route::get('/booking/track/{token}', [TrackingController::class, 'track'])->name('booking.track');
+Route::get('/booking/print/{token}', [TrackingController::class, 'print'])->name('booking.print');
 Route::post('/booking/cancel/{token}', [TrackingController::class, 'cancel'])->name('booking.cancel');
 
 // Schedule Routes (Public)
