@@ -395,10 +395,10 @@
                     
                     <div class="mb-6">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">
-                            Upload Dokumen Pendukung (Opsional)
+                            Upload KTM (Kartu Tanda Mahasiswa) <span class="text-red-500">*</span>
                         </label>
                         <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
-                            <input type="file" name="document" id="document" accept=".pdf" class="hidden">
+                            <input type="file" name="document" id="document" accept=".pdf" class="hidden" required>
                             <label for="document" class="cursor-pointer">
                                 <div class="text-4xl mb-2">📄</div>
                                 <div class="text-gray-700 font-semibold mb-1">Klik untuk upload dokumen</div>

@@ -83,7 +83,7 @@ class BookingController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'participant_count' => 'required|integer|min:1',
-            'document' => 'nullable|file|mimes:pdf|max:2048', // Max 2MB
+            'document' => 'required|file|mimes:pdf|max:2048', // Max 2MB
             
             // Personal Booking fields
             'applicant_status' => 'required_if:booking_type,pribadi|string|max:255',
