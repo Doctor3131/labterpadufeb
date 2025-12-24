@@ -537,9 +537,22 @@
         function setRequiredFields(containerId, required) {
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
+            const optionalFields = ['software_needs', 'equipment_needs', 'position', 'address']; // Fields that are always optional
+            
             inputs.forEach(input => {
-                // Modified to handle simple inputs, no data attribute check needed strictly if inside container
-                 if (required) {
+                // Skip optional fields
+                if (optionalFields.includes(input.name)) {
+                    input.removeAttribute('required');
+                    if (!required) {
+                        input.setAttribute('disabled', 'disabled');
+                    } else {
+                        input.removeAttribute('disabled');
+                    }
+                    return;
+                }
+                
+                // Handle required/optional based on booking type
+                if (required) {
                     input.setAttribute('required', 'required');
                     input.removeAttribute('disabled');
                 } else {
