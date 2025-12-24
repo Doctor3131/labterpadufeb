@@ -281,9 +281,16 @@
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan *</label>
-                                <input type="text" name="activity_type" id="activity_type" value="{{ old('activity_type') }}"
-                                    placeholder="Contoh: Seminar, Workshop, Rapat"
+                                <select name="activity_type" id="activity_type"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                    <option value="">-- Pilih Jenis Kegiatan --</option>
+                                    <option value="Seminar" {{ old('activity_type') == 'Seminar' ? 'selected' : '' }}>Seminar</option>
+                                    <option value="Workshop" {{ old('activity_type') == 'Workshop' ? 'selected' : '' }}>Workshop</option>
+                                    <option value="Pelatihan" {{ old('activity_type') == 'Pelatihan' ? 'selected' : '' }}>Pelatihan</option>
+                                    <option value="Rapat" {{ old('activity_type') == 'Rapat' ? 'selected' : '' }}>Rapat</option>
+                                    <option value="Ujian" {{ old('activity_type') == 'Ujian' ? 'selected' : '' }}>Ujian</option>
+                                    <option value="Lainnya" {{ old('activity_type') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Jabatan</label>

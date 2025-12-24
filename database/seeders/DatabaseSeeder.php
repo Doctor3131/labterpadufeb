@@ -147,7 +147,7 @@ class DatabaseSeeder extends Seeder
             'booking_date' => date('Y-m-d', strtotime('+3 days')),
             'start_time' => '09:00',
             'end_time' => '12:00',
-            'participant_count' => 100,
+            'participant_count' => 40,
             'status' => 'approved',
             'tracking_token' => \Illuminate\Support\Str::random(10),
             'approved_by' => 1,
