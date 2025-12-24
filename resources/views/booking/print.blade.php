@@ -8,7 +8,7 @@
     <style>
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 1cm;
         }
         @media print {
             body {
@@ -22,14 +22,12 @@
         body {
             font-family: 'Times New Roman', Times, serif;
             color: #000;
-            line-height: 1.3;
-        }
-        .dotted-underline {
-            border-bottom: 1px dotted #000;
+            line-height: 1.15;
+            font-size: 11pt;
         }
     </style>
 </head>
-<body class="bg-white text-black p-8 max-w-[210mm] mx-auto min-h-screen">
+<body class="bg-white text-black p-4 max-w-[210mm] mx-auto min-h-screen">
 
     <!-- Print Controls -->
     <div class="fixed top-4 right-4 gap-4 no-print flex">
@@ -42,21 +40,24 @@
         </a>
     </div>
 
-    <!-- Header -->
-    <div class="text-center font-bold mb-8">
-        <div class="text-[11pt] tracking-wide">PEMINJAMAN : {{ strtoupper($booking->is_recurring ? 'Perkuliahan Tetap' : ($booking->booking_type === 'non_perkuliahan' ? 'Non-Perkuliahan' : 'Perkuliahan Tidak Tetap')) }}</div>
-        <br>
-        <div class="text-[12pt]">FORM PEMINJAMAN RUANG LABORATORIUM</div>
-        <div class="text-[12pt]">UNIT PENGEMBANGAN KOMPUTER FAKULTAS EKONOMIKA DAN BISNIS</div>
-        <div class="text-[12pt]">UNIVERSITAS DIPONEGORO</div>
+    <!-- Top Right Header -->
+    <div class="text-right font-bold text-[10pt] mb-4">
+        Peminjaman : {{ $booking->is_recurring ? 'Perkuliahan Tetap' : ($booking->booking_type === 'non_perkuliahan' ? 'Non-Perkuliahan' : 'KULIAH PENGGANTI') }}
+    </div>
+
+    <!-- Main Header -->
+    <div class="text-center font-bold mb-6">
+        <div class="text-[11pt]">FORM PEMINJAMAN RUANG LABORATORIUM</div>
+        <div class="text-[11pt]">UNIT PENGEMBANGAN KOMPUTER FAKULTAS EKONOMIKA DAN BISNIS</div>
+        <div class="text-[11pt]">UNIVERSITAS DIPONEGORO</div>
     </div>
 
     <!-- Content -->
     <div class="ml-4 text-[11pt]">
         <table class="w-full">
             <tr>
-                <td class="w-[250px] py-1 valign-top">MATA KULIAH / KEGIATAN</td>
-                <td class="w-[10px] py-1 valign-top">:</td>
+                <td class="w-[250px] py-1 align-top">MATA KULIAH / KEGIATAN</td>
+                <td class="w-[10px] py-1 align-top">:</td>
                 <td class="py-1 font-bold">{{ $booking->course_name ?: $booking->activity_name }}</td>
             </tr>
             <tr>
@@ -80,15 +81,15 @@
                 <td class="py-1">{{ $booking->phone_number }}</td>
             </tr>
             <tr>
-                <td class="py-1 valign-top">HARI, TANGGAL</td>
-                <td class="py-1 valign-top">:</td>
+                <td class="py-1 align-top">HARI, TANGGAL</td>
+                <td class="py-1 align-top">:</td>
                 <td class="py-1">
                     {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('dddd') }}, {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMMM Y') }}
                 </td>
             </tr>
             <tr>
-                <td class="py-1 valign-top">JAM</td>
-                <td class="py-1 valign-top">:</td>
+                <td class="py-1 align-top">JAM</td>
+                <td class="py-1 align-top">:</td>
                 <td class="py-1">
                     {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} s.d. {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }} WIB
                 </td>
@@ -99,8 +100,8 @@
                 <td class="py-1">{{ $booking->software_needs ?: '-' }}</td>
             </tr>
             <tr>
-                <td class="py-1 valign-top">LAB YANG DIGUNAKAN</td>
-                <td class="py-1 valign-top">:</td>
+                <td class="py-1 align-top">LAB YANG DIGUNAKAN</td>
+                <td class="py-1 align-top">:</td>
                 <td class="py-1">
                     {{ $booking->lab->name }} (kap. {{ $booking->lab->capacity }})
                 </td>
@@ -113,13 +114,12 @@
             <tr>
                 <td class="py-1">KONFIRMASI ULANG</td>
                 <td class="py-1">:</td>
-                <td class="py-1">______________________</td>
             </tr>
         </table>
     </div>
 
     <!-- Signatures Header -->
-    <div class="flex justify-between mt-12 px-8 text-[11pt]">
+    <div class="flex justify-between mt-8 px-4 text-[11pt]">
         <div class="text-center w-[250px]">
             <div>Mengetahui</div>
         </div>
@@ -130,10 +130,10 @@
     </div>
 
     <!-- Signatures Space -->
-    <div class="h-[80px]"></div>
+    <div class="h-[60px]"></div>
 
     <!-- Signatures Names -->
-    <div class="flex justify-between px-8 text-[11pt]">
+    <div class="flex justify-between px-4 text-[11pt]">
         <div class="text-center w-[250px]">
             <div class="border-b border-black font-bold pb-1">{{ $booking->lecturer_name ?: '____________________' }}</div>
             <div class="mt-1 flex justify-between">
@@ -150,30 +150,33 @@
     </div>
 
     <!-- Rules Box -->
-    <div class="mt-12 border border-black rounded-[20px] p-6 text-[10pt]">
-        <div class="text-center font-bold mb-4">Peraturan Penggunaan/Peminjaman Laboratorium</div>
-        <ol class="list-none space-y-1 pl-4">
-            <li class="pl-4 -indent-4">1. Peminjaman Laboratorium UPKFEB hanya digunakan untuk kegiatan akademik fakultas EKONOMIKA DAN BISNIS universitas diponegoro</li>
-            <li class="pl-4 -indent-4">2. Koordinator diwajibkan meninggalkan KTM kepada asisten Laboratorium sebagai jaminan</li>
-            <li class="pl-4 -indent-4">3. Apabila kegiatan menggunakan software yang belum tersedia di Laboratorium UPKFEB, koordinator wajib memberikan software tersebut paling lambat tiga hari sebelum pelaksanaan kegiatan.</li>
-            <li class="pl-4 -indent-4">4. Konfirmasi ulang atas kepastian jadwal paling lambat 3 hari sebelum pelaksanaan.</li>
-            <li class="pl-4 -indent-4">5. Selama pemakaian Laboratorium Pengguna harus mematuhi peraturan Laboratorium UPKFEB dan peraturan yang berlaku.</li>
-            <li class="pl-4 -indent-4">6. Koordinator bertanggungjawab penuh terhadap keadaan dan kondisi Laboratorium selama kegiatan.</li>
-        </ol>
-        <div class="mt-8 text-right font-bold pr-12">
-            TTD
-            <br><br><br>
-            Ketua Lab UPKFEB
+    <div class="mt-6 border-[1.5px] border-black rounded-[25px] p-4 relative">
+        <div class="text-center font-bold text-[9pt] mb-2">Peraturan Penggunaan/Peminjaman Laboratorium</div>
+        <div class="text-[8pt] text-justify px-4 leading-tight">
+            <ol class="list-decimal pl-4 space-y-0.5">
+                <li>Peminjaman Laboratorium UPKFEB hanya digunakan untuk kegiatan akademik fakultas EKONOMIKA DAN BISNIS universitas diponegoro</li>
+                <li>Koordinator diwajibkan meninggalkan KTM kepada asisten Laboratorium sebagai jaminan</li>
+                <li>Apabila kegiatan menggunakan software yang belum tersedia di Laboratorium UPKFEB, koordinator wajib memberikan software tersebut paling lambat tiga hari sebelum pelaksanaan kegiatan.</li>
+                <li>Konfirmasi ulang atas kepastian jadwal paling lambat 3 hari sebelum pelaksanaan.</li>
+                <li>Selama pemakaian Laboratorium Pengguna harus mematuhi peraturan Laboratorium UPKFEB dan peraturan yang berlaku.</li>
+                <li>Koordinator bertanggungjawab penuh terhadap keadaan dan kondisi Laboratorium selama kegiatan.</li>
+            </ol>
+        </div>
+        
+        <div class="flex justify-end mt-4 mr-8 text-[9pt] font-bold">
+            <div class="text-center">
+                <div class="mb-8">TTD</div>
+                <div>Ketua Lab UPKFEB</div>
+            </div>
         </div>
     </div>
     
-    <div class="text-[9pt] mt-4 ml-4">
+    <div class="text-[8pt] mt-2 ml-2 text-gray-500">
         Dibuat pada : {{ now()->format('d/m/Y H:i:s') }}
     </div>
 
     <script>
-        // Auto print based on url param or just let user click
-        // window.print(); 
+        // window.print();
     </script>
 </body>
 </html>
