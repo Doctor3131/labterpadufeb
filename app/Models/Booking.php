@@ -19,6 +19,7 @@ class Booking extends Model
         'phone_number',
         'address',
         'applicant_status',
+        'custom_status',
         'class_year',
         'purpose',
         'tracking_token',

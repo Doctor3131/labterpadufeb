@@ -42,7 +42,7 @@
 
     <!-- Top Right Header -->
     <div class="text-right font-bold text-[10pt] mb-4">
-        Peminjaman : {{ $booking->is_recurring ? 'Perkuliahan Tetap' : ($booking->booking_type === 'non_perkuliahan' ? 'Non-Perkuliahan' : 'KULIAH PENGGANTI') }}
+        Peminjaman : {{ $booking->is_recurring ? 'Perkuliahan Tetap' : ($booking->booking_type === 'non_perkuliahan' ? 'Non-Perkuliahan' : ($booking->booking_type === 'pribadi' ? 'Pribadi' : 'KULIAH PENGGANTI')) }}
     </div>
 
     <!-- Main Header -->

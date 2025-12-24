@@ -92,6 +92,8 @@
                                 Perkuliahan Tetap
                             @elseif($booking->booking_type === 'perkuliahan_tidak_tetap')
                                 Perkuliahan Tidak Tetap
+                            @elseif($booking->booking_type === 'pribadi')
+                                Pribadi
                             @else
                                 Non-Perkuliahan
                             @endif

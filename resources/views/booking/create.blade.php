@@ -148,28 +148,28 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="perkuliahan_tetap" class="hidden peer" required>
+                            <input type="radio" name="booking_type" value="perkuliahan_tetap" class="hidden peer" required {{ old('booking_type') == 'perkuliahan_tetap' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
                                 <div class="font-bold text-gray-800 text-lg">Perkuliahan Tetap</div>
                                 <div class="text-sm text-gray-500 mt-2">Jadwal rutin setiap minggu</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="perkuliahan_tidak_tetap" class="hidden peer" required>
+                            <input type="radio" name="booking_type" value="perkuliahan_tidak_tetap" class="hidden peer" required {{ old('booking_type') == 'perkuliahan_tidak_tetap' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
                                 <div class="font-bold text-gray-800 text-lg">Perkuliahan Tidak Tetap</div>
                                 <div class="text-sm text-gray-500 mt-2">Sekali waktu saja</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required>
+                            <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required {{ old('booking_type') == 'non_perkuliahan' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
                                 <div class="font-bold text-gray-800 text-lg">Non-Perkuliahan</div>
                                 <div class="text-sm text-gray-500 mt-2">Kegiatan lainnya</div>
                             </div>
                         </label>
                          <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="pribadi" class="hidden peer" required>
+                            <input type="radio" name="booking_type" value="pribadi" class="hidden peer" required {{ old('booking_type') == 'pribadi' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
                                 <div class="font-bold text-gray-800 text-lg">Pribadi</div>
                                 <div class="text-sm text-gray-500 mt-2">Tugas/Keperluan Pribadi</div>
@@ -181,11 +181,11 @@
                         <label class="block text-gray-700 font-bold mb-4 text-lg">Unit</label>
                         <div class="space-y-3">
                             <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-yellow-50 transition-colors group">
-                                <input type="radio" name="unit_type" value="s1_tembalang" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" required>
+                                <input type="radio" name="unit_type" value="s1_tembalang" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" required {{ old('unit_type') == 's1_tembalang' ? 'checked' : '' }}>
                                 <span class="ml-3 text-gray-700 font-medium group-hover:text-gray-900">S1 Tembalang</span>
                             </label>
                             <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-yellow-50 transition-colors group">
-                                <input type="radio" name="unit_type" value="pascasarjana_pleburan" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" required>
+                                <input type="radio" name="unit_type" value="pascasarjana_pleburan" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" required {{ old('unit_type') == 'pascasarjana_pleburan' ? 'checked' : '' }}>
                                 <span class="ml-3 text-gray-700 font-medium group-hover:text-gray-900">Pascasarjana Pleburan</span>
                             </label>
                         </div>
@@ -310,13 +310,24 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Status *</label>
-                                <input type="text" name="applicant_status" id="applicant_status" value="{{ old('applicant_status') }}"
-                                    placeholder="Contoh: Mahasiswa, Dosen, Pegawai"
+                                <select name="applicant_status" id="applicant_status"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                    <option value="">Pilih Status</option>
+                                    <option value="Mahasiswa" {{ old('applicant_status') == 'Mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
+                                    <option value="Dosen" {{ old('applicant_status') == 'Dosen' ? 'selected' : '' }}>Dosen</option>
+                                    <option value="Pegawai" {{ old('applicant_status') == 'Pegawai' ? 'selected' : '' }}>Pegawai</option>
+                                    <option value="Lainnya" {{ old('applicant_status') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                </select>
+                            </div>
+                            <div id="custom-status-field" style="display: none;">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status Lainnya <span class="text-red-500">*</span></label>
+                                <input type="text" data-name="custom_status" id="custom_status" value="{{ old('custom_status') }}"
+                                    placeholder="Masukkan status Anda"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
-                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Angkatan *</label>
-                                <input type="text" name="class_year" id="class_year" value="{{ old('class_year') }}"
+                             <div id="class-year-field" style="display: none;">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Angkatan <span class="text-red-500">*</span></label>
+                                <input type="text" data-name="class_year" id="class_year" value="{{ old('class_year') }}"
                                     placeholder="Contoh: 2023" maxlength="4"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
@@ -458,6 +469,7 @@
             setupStep3Validation();
             setupNavigationButtons();
             setupFileUpload();
+            setupApplicantStatusListener();
             preventEnterSubmit();
         });
 
@@ -539,14 +551,84 @@
 
             bookingTypeInputs.forEach(input => input.addEventListener('change', checkStep1Validity));
             unitTypeInputs.forEach(input => input.addEventListener('change', checkStep1Validity));
+            
+            // Run on load to set initial state (e.g. from old inputs)
+            checkStep1Validity();
+        }
+
+        // Setup listener untuk status peminjam (Mahasiswa/Dosen/Pegawai/Lainnya)
+        function setupApplicantStatusListener() {
+            const statusSelect = document.getElementById('applicant_status');
+            const classYearField = document.getElementById('class-year-field');
+            const classYearInput = document.getElementById('class_year');
+            const customStatusField = document.getElementById('custom-status-field');
+            const customStatusInput = document.getElementById('custom_status');
+            
+            if (statusSelect && classYearField) {
+                // Function to toggle class year field and custom status field visibility
+                function toggleFields() {
+                    const status = statusSelect.value;
+                    
+                    // Toggle custom status field
+                    if (status === 'Lainnya') {
+                        customStatusField.style.display = 'block';
+                        customStatusInput.setAttribute('name', 'custom_status');
+                        customStatusInput.setAttribute('required', 'required');
+                    } else {
+                        customStatusField.style.display = 'none';
+                        customStatusInput.removeAttribute('name');
+                        customStatusInput.removeAttribute('required');
+                        customStatusInput.value = ''; // Clear value
+                    }
+                    
+                    // Toggle class year field (only for Mahasiswa)
+                    if (status === 'Mahasiswa') {
+                        // Show angkatan field and make it required
+                        classYearField.style.display = 'block';
+                        classYearInput.setAttribute('name', 'class_year');
+                        classYearInput.setAttribute('required', 'required');
+                    } else {
+                        // Hide angkatan field and remove required
+                        classYearField.style.display = 'none';
+                        classYearInput.removeAttribute('name');
+                        classYearInput.removeAttribute('required');
+                        classYearInput.value = ''; // Clear value
+                    }
+                    
+                    // Re-validate step 2
+                    validateStep2();
+                }
+                
+                // Initial check on page load
+                toggleFields();
+                
+                // Listen to status changes
+                statusSelect.addEventListener('change', toggleFields);
+                
+                // Also listen to custom status input
+                if (customStatusInput) {
+                    customStatusInput.addEventListener('input', validateStep2);
+                }
+            }
         }
 
         function setRequiredFields(containerId, required) {
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
             const optionalFields = ['software_needs', 'equipment_needs', 'position', 'address']; // Fields that are always optional
+            const conditionalFields = ['class_year', 'custom_status']; // Fields handled by toggleFields()
             
             inputs.forEach(input => {
+                // Skip fields yang tidak punya name attribute (conditional fields)
+                if (!input.name && !input.getAttribute('data-name')) {
+                    return;
+                }
+                
+                // Skip conditional fields (dihandle oleh toggleFields)
+                if (conditionalFields.includes(input.name) || conditionalFields.includes(input.getAttribute('data-name'))) {
+                    return;
+                }
+                
                 // Skip optional fields
                 if (optionalFields.includes(input.name)) {
                     input.removeAttribute('required');
@@ -578,7 +660,7 @@
             });
             
             // Also listen to conditional fields
-            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'applicant_status', 'class_year', 'purpose'].forEach(fieldId => {
+            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'applicant_status', 'class_year', 'purpose', 'custom_status'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) field.addEventListener('input', validateStep2);
             });
@@ -604,9 +686,20 @@
                 isValid = isValid && namaKegiatan && jenisKegiatan;
             } else if (selectedBookingType === 'pribadi') {
                  const status = document.getElementById('applicant_status').value.trim();
-                 const angkatan = document.getElementById('class_year').value.trim();
                  const keperluan = document.getElementById('purpose').value.trim();
-                 isValid = isValid && status && angkatan && keperluan;
+                 isValid = isValid && status && keperluan;
+                 
+                 // Status custom wajib jika pilih Lainnya
+                 if (status === 'Lainnya') {
+                     const customStatus = document.getElementById('custom_status').value.trim();
+                     isValid = isValid && customStatus;
+                 }
+                 
+                 // Angkatan hanya wajib untuk mahasiswa
+                 if (status === 'Mahasiswa') {
+                     const angkatan = document.getElementById('class_year').value.trim();
+                     isValid = isValid && angkatan;
+                 }
             }
 
             document.getElementById('btn-next-2').disabled = !isValid;
@@ -764,8 +857,18 @@
             
             // Specific fields based on type
              if (selectedBookingType === 'pribadi') {
-                summary.push(`<div><strong>Status:</strong> ${document.getElementById('applicant_status').value}</div>`);
-                summary.push(`<div><strong>Angkatan:</strong> ${document.getElementById('class_year').value}</div>`);
+                const status = document.getElementById('applicant_status').value;
+                let statusDisplay = status;
+                
+                // Jika status adalah Lainnya, gunakan custom status
+                if (status === 'Lainnya') {
+                    statusDisplay = document.getElementById('custom_status').value;
+                }
+                
+                summary.push(`<div><strong>Status:</strong> ${statusDisplay}</div>`);
+                if (status === 'Mahasiswa') {
+                    summary.push(`<div><strong>Angkatan:</strong> ${document.getElementById('class_year').value}</div>`);
+                }
                 summary.push(`<div><strong>Keperluan:</strong> ${document.getElementById('purpose').value}</div>`);
             } else if (selectedBookingType === 'non_perkuliahan') {
                 summary.push(`<div><strong>Kegiatan:</strong> ${document.getElementById('activity_name').value}</div>`);

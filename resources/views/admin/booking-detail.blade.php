@@ -137,6 +137,25 @@
                         </div>
                     @endif
                 </div>
+            @elseif($booking->booking_type === 'pribadi')
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600">Tipe Peminjaman</label>
+                        <p class="text-gray-800">Pribadi</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600">Status Peminjam</label>
+                        <p class="text-gray-800">{{ $booking->applicant_status }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600">Angkatan</label>
+                        <p class="text-gray-800">{{ $booking->class_year }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600">Keperluan</label>
+                        <p class="text-gray-800">{{ $booking->purpose }}</p>
+                    </div>
+                </div>
             @else
                 <div class="space-y-4">
                     <div>

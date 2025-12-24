@@ -139,8 +139,25 @@
                                     </td>
                                     <td class="px-4 lg:px-6 py-4">
                                         @php
-                                            $isNonPerkuliahan = isset($item['booking_type']) && $item['booking_type'] === 'non_perkuliahan';
-                                            $roomBadgeClass = $isNonPerkuliahan ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800';
+                                            // Tentukan warna badge ruangan berdasarkan tipe peminjaman
+                                            $roomBadgeClass = 'bg-yellow-100 text-yellow-800'; // Default untuk perkuliahan tetap
+                                            
+                                            if (isset($item['booking_type'])) {
+                                                switch ($item['booking_type']) {
+                                                    case 'perkuliahan_tetap':
+                                                        $roomBadgeClass = 'bg-yellow-100 text-yellow-800';
+                                                        break;
+                                                    case 'perkuliahan_tidak_tetap':
+                                                        $roomBadgeClass = 'bg-indigo-100 text-indigo-800';
+                                                        break;
+                                                    case 'non_perkuliahan':
+                                                        $roomBadgeClass = 'bg-blue-100 text-blue-800';
+                                                        break;
+                                                    case 'pribadi':
+                                                        $roomBadgeClass = 'bg-orange-100 text-orange-800';
+                                                        break;
+                                                }
+                                            }
                                         @endphp
                                         <span class="inline-flex items-center px-3 py-1 rounded-full {{ $roomBadgeClass }} font-semibold text-xs lg:text-sm">
                                             {{ $item['lab'] }}
@@ -148,17 +165,30 @@
                                     </td>
                                     <td class="px-4 lg:px-6 py-4">
                                         <div class="text-slate-700 font-medium">{{ $item['course'] }}</div>
-                                        @if($item['type'] === 'booking' || (isset($item['booking_type']) && $item['booking_type'] === 'non_perkuliahan'))
+                                        @if($item['type'] === 'booking' || isset($item['booking_type']))
                                             @php
+                                                // Tentukan warna dan label badge tipe peminjaman
                                                 $badgeClass = 'bg-gray-100 text-gray-600';
                                                 $badgeLabel = 'Perkuliahan Tetap';
                                                 
                                                 if (isset($item['booking_type'])) {
-                                                    if ($item['booking_type'] === 'perkuliahan_tidak_tetap') {
-                                                        $badgeLabel = 'Perkuliahan Tidak Tetap';
-                                                    } elseif ($item['booking_type'] === 'non_perkuliahan') {
-                                                        $badgeClass = 'bg-blue-50 text-blue-700 border border-blue-100';
-                                                        $badgeLabel = 'Non-Perkuliahan';
+                                                    switch ($item['booking_type']) {
+                                                        case 'perkuliahan_tetap':
+                                                            $badgeClass = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+                                                            $badgeLabel = 'Perkuliahan Tetap';
+                                                            break;
+                                                        case 'perkuliahan_tidak_tetap':
+                                                            $badgeClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+                                                            $badgeLabel = 'Perkuliahan Tidak Tetap';
+                                                            break;
+                                                        case 'non_perkuliahan':
+                                                            $badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                                                            $badgeLabel = 'Non-Perkuliahan';
+                                                            break;
+                                                        case 'pribadi':
+                                                            $badgeClass = 'bg-orange-50 text-orange-700 border border-orange-200';
+                                                            $badgeLabel = 'Pribadi';
+                                                            break;
                                                     }
                                                 }
                                             @endphp
@@ -201,9 +231,26 @@
                 </div>
 
                 <!-- Legend / Notice -->
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-600 flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                    <span><strong>Info:</strong> Label ruangan berwarna <strong>biru</strong> menandakan kegiatan <strong>Non-Perkuliahan</strong> (Seminar, Workshop, dll).</span>
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-600">
+                    <div class="font-semibold mb-2">Keterangan Warna:</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-yellow-500"></span>
+                            <span><strong>Kuning:</strong> Perkuliahan Tetap</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-indigo-500"></span>
+                            <span><strong>Ungu:</strong> Perkuliahan Tidak Tetap</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-blue-500"></span>
+                            <span><strong>Biru:</strong> Non-Perkuliahan</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-orange-500"></span>
+                            <span><strong>Oranye:</strong> Peminjaman Pribadi</span>
+                        </div>
+                    </div>
                 </div>
 
             </div>

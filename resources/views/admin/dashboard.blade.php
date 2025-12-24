@@ -199,7 +199,7 @@
                                     </svg>
                                     <strong class="mr-1">Prodi:</strong> {{ $booking->study_program }}
                                 </div>
-                                @if($booking->booking_type !== 'non_perkuliahan')
+                                @if($booking->booking_type !== 'non_perkuliahan' && $booking->booking_type !== 'pribadi')
                                     <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
@@ -298,9 +298,17 @@
                         <p class="text-sm text-gray-600">
                             <strong>{{ $booking->pic_name }}</strong> • {{ $booking->participant_count }} orang
                         </p>
-                        @if($booking->approvedBy)
-                            <span class="text-xs text-gray-500">Approved by {{ $booking->approvedBy->name }}</span>
-                        @endif
+                        <div class="flex items-center space-x-3">
+                            <a href="{{ route('booking.print', $booking->tracking_token) }}" target="_blank" class="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Download PDF
+                            </a>
+                            @if($booking->approvedBy)
+                                <span class="text-xs text-gray-500 border-l pl-3 border-gray-300">Approved by {{ $booking->approvedBy->name }}</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @empty

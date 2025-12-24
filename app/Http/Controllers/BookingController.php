@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Lab;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\BookingConfirmation;
 
 class BookingController extends Controller
 {
@@ -87,7 +84,7 @@ class BookingController extends Controller
             
             // Personal Booking fields
             'applicant_status' => 'required_if:booking_type,pribadi|string|max:255',
-            'class_year' => 'required_if:booking_type,pribadi|string|max:4',
+            'class_year' => 'nullable|string|max:4',
             'purpose' => 'required_if:booking_type,pribadi|string|max:255',
             
             // Non-perkuliahan fields
