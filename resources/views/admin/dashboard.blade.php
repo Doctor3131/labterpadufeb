@@ -213,6 +213,17 @@
                                     </svg>
                                     <strong class="mr-1">Peserta:</strong> {{ $booking->participant_count }} orang
                                 </div>
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <strong class="mr-1">Penanggung Jawab:</strong> 
+                                    @if($booking->handler)
+                                        <span class="text-green-600 font-medium">{{ $booking->handler->name }}</span>
+                                    @else
+                                        <span class="text-gray-400 italic">-</span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
@@ -305,8 +316,13 @@
                                 </svg>
                                 Download PDF
                             </a>
-                            @if($booking->approvedBy)
-                                <span class="text-xs text-gray-500 border-l pl-3 border-gray-300">Approved by {{ $booking->approvedBy->name }}</span>
+                            @if($booking->handler)
+                                <span class="text-xs text-purple-600 font-medium border-l pl-3 border-gray-300">
+                                    <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $booking->handler->name }}
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -371,6 +387,14 @@
                         <div class="mt-3 p-4 bg-red-50 border border-red-200 rounded-lg">
                             <p class="text-xs font-semibold text-red-600 mb-1">Alasan Penolakan:</p>
                             <p class="text-sm text-red-700">{{ $booking->rejection_reason }}</p>
+                        </div>
+                    @endif
+                    @if($booking->handler)
+                        <div class="mt-3 text-xs text-purple-600">
+                            <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                            Ditolak oleh: <span class="font-semibold">{{ $booking->handler->name }}</span>
                         </div>
                     @endif
                 </div>

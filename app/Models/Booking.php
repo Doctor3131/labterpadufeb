@@ -40,16 +40,16 @@ class Booking extends Model
         'document_path',
         'status',
         'rejection_reason',
-        'approved_by',
         'admin_notes',
-        'approved_at',
+        'handled_by',
+        'handled_at',
     ];
 
     protected $casts = [
         'booking_date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
-        'approved_at' => 'datetime',
+        'handled_at' => 'datetime',
         'participant_count' => 'integer',
         'is_recurring' => 'boolean',
     ];
@@ -71,11 +71,11 @@ class Booking extends Model
     }
 
     /**
-     * Get the admin who approved this booking
+     * Get the user who is handling this booking
      */
-    public function approver()
+    public function handler()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'handled_by');
     }
 
     /**

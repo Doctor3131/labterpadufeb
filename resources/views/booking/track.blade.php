@@ -64,7 +64,7 @@
             </div>
 
             @if($booking->status === 'pending')
-                <p class="text-gray-600 mb-4">Permintaan Anda sedang diproses oleh admin. Anda akan menerima notifikasi via email.</p>
+                <p class="text-gray-600 mb-4">Permintaan Anda sedang diproses oleh admin.</p>
             @elseif($booking->status === 'approved')
                 <p class="text-green-700 font-semibold mb-4"> Peminjaman Anda telah disetujui.</p>
                 <p class="text-gray-600">Silakan datang sesuai jadwal yang telah ditentukan.</p>
@@ -153,6 +153,20 @@
                         </div>
                     </div>
                 </div>
+
+                @if($booking->handler)
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="font-bold text-gray-800 mb-3">Penanggung Jawab</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <p class="font-semibold text-purple-700">{{ $booking->handler->name }}</p>
+                                @if($booking->handled_at)
+                                    <p class="text-xs text-gray-500 mt-1">{{ $booking->handled_at->diffForHumans() }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 @if($booking->isPerkuliahan())
                     <div class="border-t pt-4 mt-4">

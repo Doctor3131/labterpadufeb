@@ -67,9 +67,11 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->string('tracking_token', 32)->unique();
-            $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->text('admin_notes')->nullable();
-            $table->timestamp('approved_at')->nullable();
+            
+            // Assignment Tracking (who handled approve/reject)
+            $table->foreignId('handled_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->timestamp('handled_at')->nullable();
             
             $table->timestamps();
             
@@ -78,6 +80,7 @@ return new class extends Migration
             $table->index('nim');
             $table->index('booking_date');
             $table->index('tracking_token');
+            $table->index('handled_by');
             $table->index(['lab_id', 'booking_date', 'start_time']);
         });
     }

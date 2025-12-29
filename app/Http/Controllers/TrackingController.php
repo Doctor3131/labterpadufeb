@@ -13,7 +13,7 @@ class TrackingController extends Controller
      */
     public function track($token)
     {
-        $booking = Booking::with('lab')
+        $booking = Booking::with(['lab', 'handler'])
             ->where('tracking_token', $token)
             ->firstOrFail();
 
@@ -44,7 +44,7 @@ class TrackingController extends Controller
      */
     public function print($token)
     {
-        $booking = Booking::with('lab')
+        $booking = Booking::with(['lab', 'handler'])
             ->where('tracking_token', $token)
             ->firstOrFail();
 

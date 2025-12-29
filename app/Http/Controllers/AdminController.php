@@ -17,18 +17,18 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
-        $pendingBookings = Booking::with('lab')
+        $pendingBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $approvedBookings = Booking::with('lab')
+        $approvedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'approved')
             ->orderBy('booking_date', 'desc')
             ->take(10)
             ->get();
 
-        $rejectedBookings = Booking::with('lab')
+        $rejectedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'rejected')
             ->orderBy('updated_at', 'desc')
             ->take(10)
@@ -57,8 +57,8 @@ class AdminController extends Controller
             // Update booking status
             $booking->update([
                 'status' => 'approved',
-                'approved_by' => auth()->id(),
-                'approved_at' => now()
+                'handled_by' => auth()->id(),
+                'handled_at' => now()
             ]);
 
             // Create schedule entry from approved booking
@@ -135,7 +135,9 @@ class AdminController extends Controller
             // Update booking status
             $booking->update([
                 'status' => 'rejected',
-                'rejection_reason' => $request->rejection_reason
+                'rejection_reason' => $request->rejection_reason,
+                'handled_by' => auth()->id(),
+                'handled_at' => now()
             ]);
             
             \Log::info('Booking rejected successfully', [
