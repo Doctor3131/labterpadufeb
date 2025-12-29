@@ -83,7 +83,7 @@
         <div class="bg-white rounded-xl shadow-lg p-8">
             <!-- Time Conflict Warning (More Prominent) -->
             @if ($errors->has('time_conflict'))
-                <div class="mb-6 bg-red-100 border-2 border-red-500 rounded-lg p-5 animate-pulse">
+                <div class="mb-6 bg-red-100 border-2 border-red-500 rounded-lg p-5">
                     <div class="flex items-start">
                         <svg class="w-8 h-8 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -235,8 +235,8 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Alamat</label>
-                            <textarea name="address" id="address" rows="3"
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Alamat Peminjam <span class="text-red-500">*</span></label>
+                            <textarea name="address" id="address" rows="3" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('address') }}</textarea>
                         </div>
                     </div>
@@ -293,8 +293,9 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Jabatan</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Jabatan Peminjam <span class="text-red-500">*</span></label>
                                 <input type="text" name="position" id="position" value="{{ old('position') }}"
+
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">
@@ -470,6 +471,8 @@
             setupNavigationButtons();
             setupFileUpload();
             setupApplicantStatusListener();
+
+            setupRealtimeValidation();
             preventEnterSubmit();
         });
 
@@ -615,7 +618,7 @@
         function setRequiredFields(containerId, required) {
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
-            const optionalFields = ['software_needs', 'equipment_needs', 'position', 'address']; // Fields that are always optional
+            const optionalFields = ['software_needs', 'equipment_needs', 'address']; // Fields that are always optional
             const conditionalFields = ['class_year', 'custom_status']; // Fields handled by toggleFields()
             
             inputs.forEach(input => {
@@ -683,7 +686,8 @@
             } else if (selectedBookingType === 'non_perkuliahan') {
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
                 const jenisKegiatan = document.getElementById('activity_type').value.trim();
-                isValid = isValid && namaKegiatan && jenisKegiatan;
+                const jabatan = document.getElementById('position').value.trim();
+                isValid = isValid && namaKegiatan && jenisKegiatan && jabatan;
             } else if (selectedBookingType === 'pribadi') {
                  const status = document.getElementById('applicant_status').value.trim();
                  const keperluan = document.getElementById('purpose').value.trim();
@@ -925,8 +929,87 @@
                 if (field) {
                     field.setAttribute('data-conditional-required', 'true');
                 }
+                if (field) {
+                    field.setAttribute('data-conditional-required', 'true');
+                }
             });
         });
+
+        // Realtime Validation Logic
+        function setupRealtimeValidation() {
+            const inputs = document.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                // Validate on blur
+                input.addEventListener('blur', () => {
+                    validateSingleField(input);
+                });
+                
+                // Clear error on input if valid
+                input.addEventListener('input', () => {
+                    if (input.classList.contains('border-red-500')) {
+                        validateSingleField(input);
+                    }
+                });
+
+                // For selects
+                input.addEventListener('change', () => {
+                    validateSingleField(input);
+                });
+            });
+        }
+
+        function validateSingleField(input) {
+            // Skip fields that are functionally hidden or disabled
+            if (input.disabled || input.offsetParent === null) return;
+            
+            // Skip optional fields that are empty (valid)
+            if (!input.required && input.value.trim() === '') {
+                clearError(input);
+                return;
+            }
+
+            if (!input.checkValidity()) {
+                let msg = input.validationMessage;
+                if (input.validity.valueMissing) msg = 'Field ini wajib diisi';
+                if (input.validity.patternMismatch) msg = 'Format input tidak sesuai';
+                if (input.validity.tooShort) msg = `Minimal ${input.minLength} karakter`;
+                
+                showError(input, msg);
+            } else {
+                clearError(input);
+            }
+        }
+
+        function showError(input, message) {
+            // Add red border
+            input.classList.remove('border-gray-300', 'focus:ring-yellow-500', 'focus:border-transparent');
+            input.classList.add('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
+            
+            // Add error message text
+            let parent = input.parentElement;
+            let errorText = parent.querySelector('.validation-error-msg');
+            
+            if (!errorText) {
+                errorText = document.createElement('p');
+                errorText.className = 'validation-error-msg text-red-500 text-xs mt-1 italic';
+                parent.appendChild(errorText);
+            }
+            errorText.textContent = `⚠ ${message}`;
+        }
+
+        function clearError(input) {
+            // Restore normal border
+            input.classList.remove('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
+            input.classList.add('border-gray-300', 'focus:ring-yellow-500', 'focus:border-transparent');
+            
+            // Remove error message
+            let parent = input.parentElement;
+            let errorText = parent.querySelector('.validation-error-msg');
+            if (errorText) {
+                errorText.remove();
+            }
+        }
     </script>
 </body>
 </html>

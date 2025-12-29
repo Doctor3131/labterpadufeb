@@ -74,7 +74,7 @@ class BookingController extends Controller
             'study_program' => 'required|string|max:255',
             'nim' => 'required|string|size:14|regex:/^[0-9]{14}$/',
             'phone_number' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
-            'address' => 'nullable|string',
+            'address' => 'required|string',
             'lab_id' => 'required|exists:labs,id',
             'booking_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -89,7 +89,7 @@ class BookingController extends Controller
             
             // Non-perkuliahan fields
             'activity_type' => 'required_if:booking_type,non_perkuliahan',
-            'position' => 'nullable|string|max:255',
+            'position' => 'required_if:booking_type,non_perkuliahan|string|max:255',
             'equipment_needs' => 'nullable|string',
             'activity_name' => 'required_if:booking_type,non_perkuliahan|string|max:255',
             
