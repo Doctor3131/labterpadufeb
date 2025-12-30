@@ -392,6 +392,19 @@
                                 <option value="">Isi data di atas untuk melihat lab yang tersedia</option>
                             </select>
                             <p class="text-sm text-gray-500 mt-2">Lab akan muncul setelah Anda mengisi tanggal, waktu, dan jumlah peserta</p>
+                            
+                            <!-- Conflict Warning Box (Hidden by default) -->
+                            <div id="conflictWarning" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                                <div class="flex items-start">
+                                    <svg class="w-6 h-6 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div>
+                                        <p class="font-bold text-red-800">⚠️ Lab Tidak Tersedia</p>
+                                        <p class="text-sm text-red-700 mt-1">Lab ini sudah ada booking yang diajukan di jam dan di lab ini. Silakan pilih jadwal atau lab lain.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -724,9 +737,21 @@
                 });
             });
 
-            labSelect.addEventListener('change', validateStep3);
-        }
+            labSelect.addEventListener('change', function() {
+                validateStep3();
+                checkLabConflict();
+            });
 
+            // Check conflict when date/time changes (after lab is selected)
+            ['booking_date', 'start_time', 'end_time'].forEach(fieldId => {
+                document.getElementById(fieldId).addEventListener('change', function() {
+                    const labSelect = document.getElementById('labSelect');
+                    if (labSelect.value) {
+                        checkLabConflict();
+                    }
+                });
+            });
+        }
         function validateStep3() {
             const bookingDate = document.getElementById('booking_date').value;
             const participantCount = document.getElementById('participant_count').value;
@@ -790,6 +815,43 @@
                 labSelect.innerHTML = '<option value="">Gagal memuat data lab</option>';
                 alert('Terjadi kesalahan saat memuat data laboratorium. Silakan cek konsol atau coba lagi.');
             });
+        }
+
+        // Check Lab Conflict
+        async function checkLabConflict() {
+            const bookingDate = document.getElementById('booking_date').value;
+            const startTime = document.getElementById('start_time').value;
+            const endTime = document.getElementById('end_time').value;
+            const selectedLabId = document.getElementById('labSelect').value;
+            
+            const conflictWarning = document.getElementById('conflictWarning');
+            const submitBtn = document.getElementById('btn-next-3');
+            
+            if (!bookingDate || !startTime || !endTime || !selectedLabId) {
+                conflictWarning.classList.add('hidden');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`{{ route("api.labs.available") }}?date=${bookingDate}&start_time=${startTime}&end_time=${endTime}`);
+                const labs = await response.json();
+                
+                const selectedLab = labs.find(lab => lab.id == selectedLabId);
+                
+                if (selectedLab && !selectedLab.available) {
+                    // Show conflict warning
+                    conflictWarning.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    // Hide conflict warning
+                    conflictWarning.classList.add('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } catch (error) {
+                console.error('Error checking conflict:', error);
+            }
         }
 
         // Navigation

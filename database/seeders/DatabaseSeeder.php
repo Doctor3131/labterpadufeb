@@ -294,8 +294,8 @@ class DatabaseSeeder extends Seeder
             'equipment_needs' => 'Proyektor, Sound System',
             'tracking_token' => bin2hex(random_bytes(16)),
             'status' => 'approved',
-            'approved_by' => 1,
-            'approved_at' => now(),
+            'handled_by' => 1,
+            'handled_at' => now(),
         ]);
 
         // Create schedule for booking 1
@@ -330,8 +330,8 @@ class DatabaseSeeder extends Seeder
             'software_needs' => 'Microsoft Excel, Power BI',
             'tracking_token' => bin2hex(random_bytes(16)),
             'status' => 'approved',
-            'approved_by' => 1,
-            'approved_at' => now(),
+            'handled_by' => 1,
+            'handled_at' => now(),
         ]);
 
         // Create schedule for booking 2

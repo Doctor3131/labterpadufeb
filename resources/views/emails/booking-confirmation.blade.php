@@ -87,7 +87,7 @@
                                 <p style="margin: 0 0 12px 0; color: #1E3A8A; font-size: 14px;">
                                     Gunakan link berikut untuk memantau status peminjaman Anda:
                                 </p>
-                                <a href="{{ route('booking.track', $booking->tracking_token) }}" 
+                                <a href="{{ route('booking.success', $booking->tracking_token) }}" 
                                    style="display: inline-block; background-color: #3B82F6; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">
                                     Cek Status Peminjaman
                                 </a>

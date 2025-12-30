@@ -193,4 +193,16 @@ class BookingController extends Controller
             
         return view('booking.success', compact('booking'));
     }
+
+    /**
+     * Show print view for downloading PDF
+     */
+    public function print($token)
+    {
+        $booking = Booking::with(['lab', 'handler'])
+            ->where('tracking_token', $token)
+            ->firstOrFail();
+
+        return view('booking.print', compact('booking'));
+    }
 }

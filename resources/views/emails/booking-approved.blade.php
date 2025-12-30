@@ -101,7 +101,7 @@
 
                             <!-- Tracking Link -->
                             <div style="text-align: center; margin-bottom: 25px;">
-                                <a href="{{ route('booking.track', $booking->tracking_token) }}" 
+                                <a href="{{ route('booking.success', $booking->tracking_token) }}" 
                                    style="display: inline-block; background-color: #10B981; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
                                     Lihat Detail Peminjaman
                                 </a>

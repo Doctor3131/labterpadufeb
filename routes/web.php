@@ -6,7 +6,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\TrackingController;
 use App\Models\Booking;
 use App\Models\Schedule;
 
@@ -19,10 +18,11 @@ Route::post('/booking', [BookingController::class, 'store'])->name('booking.stor
 Route::get('/booking/success/{token}', [BookingController::class, 'success'])->name('booking.success');
 Route::post('/booking/available-labs', [BookingController::class, 'getAvailableLabs'])->name('booking.available-labs');
 
-// Tracking Routes (Public)
-Route::get('/booking/track/{token}', [TrackingController::class, 'track'])->name('booking.track');
-Route::get('/booking/print/{token}', [TrackingController::class, 'print'])->name('booking.print');
-Route::post('/booking/cancel/{token}', [TrackingController::class, 'cancel'])->name('booking.cancel');
+// Lab Availability API
+Route::get('/api/labs/available', [App\Http\Controllers\LabController::class, 'checkAvailability'])->name('api.labs.available');
+
+// PDF Print (for re-download)
+Route::get('/booking/print/{token}', [BookingController::class, 'print'])->name('booking.print');
 
 // Schedule Routes (Public)
 Route::get('/schedules', function () {

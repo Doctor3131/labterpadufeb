@@ -110,7 +110,7 @@
                                    style="display: inline-block; background-color: #EAB308; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(234, 179, 8, 0.3); margin: 0 5px;">
                                     Ajukan Peminjaman Baru
                                 </a>
-                                <a href="{{ route('booking.track', $booking->tracking_token) }}" 
+                                <a href="{{ route('booking.success', $booking->tracking_token) }}" 
                                    style="display: inline-block; background-color: #6B7280; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(107, 114, 128, 0.3); margin: 0 5px;">
                                     Lihat Detail
                                 </a>
