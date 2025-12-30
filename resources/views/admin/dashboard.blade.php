@@ -310,12 +310,14 @@
                             <strong>{{ $booking->pic_name }}</strong> • {{ $booking->participant_count }} orang
                         </p>
                         <div class="flex items-center space-x-3">
+                            @if($booking->booking_type !== 'pribadi')
                             <a href="{{ route('booking.print', $booking->tracking_token) }}" target="_blank" class="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Download PDF
                             </a>
+                            @endif
                             @if($booking->handler)
                                 <span class="text-xs text-purple-600 font-medium border-l pl-3 border-gray-300">
                                     <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">

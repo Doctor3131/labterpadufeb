@@ -195,6 +195,15 @@ class BookingController extends Controller
     }
 
     /**
+     * Track booking by token
+     */
+    public function track($token)
+    {
+        // Redirect to success page which shows the booking status
+        return redirect()->route('booking.success', $token);
+    }
+
+    /**
      * Show print view for downloading PDF
      */
     public function print($token)

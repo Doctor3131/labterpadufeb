@@ -143,7 +143,7 @@
         </div>
         <div class="text-center w-[300px]">
              <div class="border-b border-black font-bold pb-1 text-transparent">SpaceForName</div>
-             <div class="mt-1 flex justify-center">
+             <div class="mt-1 flex justify-between">
                  <span>NIM.</span>
              </div>
         </div>

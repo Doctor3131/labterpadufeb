@@ -16,6 +16,7 @@ Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 Route::get('/booking/success/{token}', [BookingController::class, 'success'])->name('booking.success');
+Route::get('/booking/track/{token}', [BookingController::class, 'track'])->name('booking.track');
 Route::post('/booking/available-labs', [BookingController::class, 'getAvailableLabs'])->name('booking.available-labs');
 
 // Lab Availability API

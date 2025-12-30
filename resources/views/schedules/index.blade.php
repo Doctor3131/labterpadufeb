@@ -165,29 +165,12 @@
                             const startTime = formatTime(schedule.start_time);
                             const endTime = formatTime(schedule.end_time);
                             
-                            // Tentukan warna badge berdasarkan tipe peminjaman
-                            let badgeColor = 'bg-yellow-500'; // Default untuk perkuliahan tetap
-                            switch (schedule.booking_type) {
-                                case 'perkuliahan_tetap':
-                                    badgeColor = 'bg-yellow-500';
-                                    break;
-                                case 'perkuliahan_tidak_tetap':
-                                    badgeColor = 'bg-indigo-500';
-                                    break;
-                                case 'non_perkuliahan':
-                                    badgeColor = 'bg-blue-500';
-                                    break;
-                                case 'pribadi':
-                                    badgeColor = 'bg-orange-500';
-                                    break;
-                            }
-                            
                             html += `
                                 <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                                     <div class="flex justify-between items-start">
                                         <div class="flex-1">
                                             <div class="flex items-center space-x-3 mb-2">
-                                                <span class="inline-block px-3 py-1 ${badgeColor} text-white text-sm font-semibold rounded">${schedule.lab}</span>
+                                                <span class="inline-block px-3 py-1 ${schedule.booking_type === 'non_perkuliahan' ? 'bg-blue-500' : 'bg-yellow-500'} text-white text-sm font-semibold rounded">${schedule.lab}</span>
                                                 <span class="text-gray-600 font-medium">${startTime} - ${endTime}</span>
                                             </div>
                                             <h4 class="text-lg font-semibold text-gray-800">${schedule.course}</h4>

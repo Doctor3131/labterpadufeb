@@ -391,7 +391,10 @@
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100">
                                 <option value="">Isi data di atas untuk melihat lab yang tersedia</option>
                             </select>
-                            <p class="text-sm text-gray-500 mt-2">Lab akan muncul setelah Anda mengisi tanggal, waktu, dan jumlah peserta</p>
+                            <p class="text-sm text-gray-500 mt-2">
+                                Lab akan muncul setelah Anda mengisi tanggal, waktu, dan jumlah peserta. 
+                                <span class="text-red-500 font-medium">Jika lab tidak tersedia maka lab sedang dibooking.</span>
+                            </p>
                             
                             <!-- Conflict Warning Box (Hidden by default) -->
                             <div id="conflictWarning" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
