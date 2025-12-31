@@ -24,14 +24,12 @@ class AdminController extends Controller
 
         $approvedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'approved')
-            ->orderBy('booking_date', 'desc')
-            ->take(10)
+            ->orderBy('handled_at', 'desc')
             ->get();
 
         $rejectedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'rejected')
             ->orderBy('updated_at', 'desc')
-            ->take(10)
             ->get();
 
         return view('admin.dashboard', compact('pendingBookings', 'approvedBookings', 'rejectedBookings'));

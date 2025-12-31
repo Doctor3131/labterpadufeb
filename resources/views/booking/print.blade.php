@@ -135,10 +135,21 @@
     <!-- Signatures Names -->
     <div class="flex justify-between px-4 text-[11pt]">
         <div class="text-center w-[250px]">
-            <div class="border-b border-black font-bold pb-1">{{ $booking->lecturer_name ?: '____________________' }}</div>
+            <div class="border-b border-black font-bold pb-1">
+                @if($booking->booking_type === 'non_perkuliahan')
+                    {{ $booking->pic_name }}
+                @else
+                    {{ $booking->lecturer_name ?: '____________________' }}
+                @endif
+            </div>
             <div class="mt-1 flex justify-between">
-                <span>NIP.</span>
-                <span>{{ $booking->lecturer_nip ?: '....................' }}</span>
+                @if($booking->booking_type === 'non_perkuliahan')
+                    <span>NIM.</span>
+                    <span>{{ $booking->nim ?: '....................' }}</span>
+                @else
+                    <span>NIP.</span>
+                    <span>{{ $booking->lecturer_nip ?: '....................' }}</span>
+                @endif
             </div>
         </div>
         <div class="text-center w-[300px]">
