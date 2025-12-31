@@ -42,7 +42,16 @@
 
     <!-- Top Right Header -->
     <div class="text-right font-bold text-[10pt] mb-4">
-        Peminjaman : {{ $booking->is_recurring ? 'Perkuliahan Tetap' : ($booking->booking_type === 'non_perkuliahan' ? 'Non-Perkuliahan' : ($booking->booking_type === 'pribadi' ? 'Pribadi' : 'KULIAH PENGGANTI')) }}
+        @php
+            $typeLabels = [
+                'perkuliahan_tetap' => 'Perkuliahan Tetap',
+                'perkuliahan_tidak_tetap' => 'Perkuliahan Tidak Tetap',
+                'non_perkuliahan' => 'Non-Perkuliahan',
+                'pribadi' => 'Pribadi',
+            ];
+            $label = $booking->is_recurring ? 'Perkuliahan Tetap' : ($typeLabels[$booking->booking_type] ?? $booking->booking_type);
+        @endphp
+        Peminjaman : {{ $label }}
     </div>
 
     <!-- Main Header -->
@@ -84,14 +93,14 @@
                 <td class="py-1 align-top">HARI, TANGGAL</td>
                 <td class="py-1 align-top">:</td>
                 <td class="py-1">
-                    {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('dddd') }}, {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMMM Y') }}
+                    {{ $booking->booking_date->locale('id')->isoFormat('dddd') }}, {{ $booking->booking_date->locale('id')->isoFormat('D MMMM Y') }}
                 </td>
             </tr>
             <tr>
                 <td class="py-1 align-top">JAM</td>
                 <td class="py-1 align-top">:</td>
                 <td class="py-1">
-                    {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} s.d. {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }} WIB
+                    {{ $booking->start_time->format('H:i') }} s.d. {{ $booking->end_time->format('H:i') }} WIB
                 </td>
             </tr>
             <tr>

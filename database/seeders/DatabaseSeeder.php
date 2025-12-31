@@ -307,7 +307,7 @@ class DatabaseSeeder extends Seeder
             'end_date' => $booking1Date->toDateString(),
             'start_time' => $booking1->start_time,
             'end_time' => $booking1->end_time,
-            'type' => 'booking_onetime',
+            'type' => 'non_perkuliahan',
             'booking_id' => $booking1->id,
             // Accessors handle course/lecturer/komting/etc via booking relation
         ]);
@@ -343,7 +343,7 @@ class DatabaseSeeder extends Seeder
             'end_date' => $booking2Date->toDateString(),
             'start_time' => $booking2->start_time,
             'end_time' => $booking2->end_time,
-            'type' => 'booking_onetime',
+            'type' => 'perkuliahan_tidak_tetap',
             'booking_id' => $booking2->id,
             // Accessors handle course/lecturer/komting/etc via booking relation
         ]);

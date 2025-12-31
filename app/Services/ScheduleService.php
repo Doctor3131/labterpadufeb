@@ -108,43 +108,8 @@ class ScheduleService
             }
         }
 
-        // 2. Fetch Approved Bookings (Only those WITHOUT schedules to avoid duplication)
-        $bookings = Booking::with('lab')
-            ->where('status', 'approved')
-            ->doesntHave('schedule')
-            ->whereBetween('booking_date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
-            ->get();
-
-        foreach ($bookings as $booking) {
-            $courseName = $booking->course_name;
-            $lecturerName = $booking->lecturer_name;
-
-            if ($booking->booking_type === 'non_perkuliahan') {
-                $courseName = $booking->activity_name;
-                $lecturerName = $booking->pic_name;
-            } elseif ($booking->booking_type === 'pribadi') {
-                $courseName = 'Peminjaman Pribadi';
-                $lecturerName = $booking->pic_name;
-            }
-
-            $schedules->push([
-                'id' => 'book_' . $booking->id,
-                'lab' => $booking->lab->name,
-                'lab_id' => $booking->lab_id,
-                'day' => $booking->day,
-                'date' => $booking->booking_date->format('Y-m-d'), // Booking date is cast to Carbon
-                'date_formatted' => $this->formatDateForDisplay($booking->booking_date),
-                'start_time' => $booking->start_time, // Cast to Carbon in model
-                'end_time' => $booking->end_time,     // Cast to Carbon in model
-                'course' => $courseName,
-                'lecturer' => $lecturerName,
-                'komting' => $booking->pic_name,
-                'student_count' => $booking->participant_count,
-                'booking_type' => $booking->booking_type,
-                'type' => 'booking',
-                'is_booking' => true
-            ]);
-        }
+        // Note: Approved bookings should always have schedules (created in AdminController::approve)
+        // No need for fallback fetch here - if orphans exist, it's a data integrity issue
 
         // Sort by Date then Start Time
         return $schedules->sort(function ($a, $b) {

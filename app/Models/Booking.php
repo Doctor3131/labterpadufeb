@@ -55,14 +55,6 @@ class Booking extends Model
     ];
 
     /**
-     * Get the user who made the booking
-     */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
      * Get the lab being booked
      */
     public function lab()
@@ -118,5 +110,13 @@ class Booking extends Model
     public function isNonPerkuliahan()
     {
         return $this->booking_type === 'non_perkuliahan';
+    }
+
+    /**
+     * Check if this is a pribadi (personal) booking
+     */
+    public function isPribadi()
+    {
+        return $this->booking_type === 'pribadi';
     }
 }

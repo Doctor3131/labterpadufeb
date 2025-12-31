@@ -72,24 +72,23 @@ class AdminController extends Controller
                 // Linked data - no need to copy text fields thanks to smart accessors
             ];
 
-            // Tentukan type dan fields berdasarkan booking_type
+            // Tentukan type berdasarkan booking_type
             if ($booking->is_recurring) {
                 // Perkuliahan tetap - recurring schedule
-                $scheduleData['type'] = 'booking_recurring';
-                $scheduleData['start_date'] = $bookingDate->toDateString(); // Format: Y-m-d
+                $scheduleData['type'] = 'perkuliahan_tetap';
+                $scheduleData['start_date'] = $bookingDate->toDateString();
                 $scheduleData['end_date'] = null; // Recurring tanpa batas
-                // Course/Lecturer info pulled from booking relationship
             } else {
-                // One-time booking (perkuliahan tidak tetap atau non-perkuliahan)
-                $scheduleData['type'] = 'booking_onetime';
-                $scheduleData['start_date'] = $bookingDate->toDateString(); // Format: Y-m-d
+                // One-time booking - use booking_type directly
+                $scheduleData['type'] = $booking->booking_type; // perkuliahan_tidak_tetap, non_perkuliahan, or pribadi
+                $scheduleData['start_date'] = $bookingDate->toDateString();
                 $scheduleData['end_date'] = $bookingDate->toDateString();
             }
 
             Schedule::create($scheduleData);
         });
 
-        // Send approval email (DISABLED - Uncomment saat email sudah ready)
+        // Send approval email (DISABLED - Gajadi pake email)
         // try {
         //     Mail::to($booking->email)->send(new BookingApproved($booking));
         // } catch (\Exception $e) {

@@ -257,80 +257,69 @@
         </div>
     </section>
 
-    <!-- Tracking Section -->
+    <!-- Download PDF Section -->
     <section class="py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
         <div class="container mx-auto px-4 lg:px-8">
             <div class="max-w-2xl mx-auto">
                 <!-- Header -->
                 <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full mb-4 shadow-lg">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full mb-4 shadow-lg">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
-                    <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Lacak Status Peminjaman</h2>
-                    <p class="text-slate-600">Masukkan kode tracking untuk melihat status peminjaman Anda</p>
+                    <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Download Ulang Dokumen</h2>
+                    <p class="text-slate-600">Masukkan kode booking untuk download ulang dokumen peminjaman</p>
                 </div>
 
-                <!-- Tracking Form -->
+                <!-- Download Form -->
                 <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 lg:p-8">
-                    <form action="{{ route('booking.track', ['token' => 'placeholder']) }}" method="GET" onsubmit="return handleTrackingSubmit(event)">
+                    <form onsubmit="return handleDownloadSubmit(event)">
                         <div class="space-y-4">
                             <div>
-                                <label for="tracking_token" class="block text-sm font-semibold text-slate-700 mb-2">
+                                <label for="booking_token" class="block text-sm font-semibold text-slate-700 mb-2">
                                     <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                                     </svg>
-                                    Kode Tracking
+                                    Kode Booking
                                 </label>
                                 <input 
                                     type="text" 
-                                    id="tracking_token" 
-                                    name="tracking_token"
-                                    class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-center font-mono text-lg tracking-wider uppercase"
+                                    id="booking_token" 
+                                    name="booking_token"
+                                    class="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-center font-mono text-lg tracking-wider uppercase"
                                     placeholder="Contoh: ABC123XYZ456"
                                     required
                                     maxlength="50"
                                 >
                                 <p class="mt-2 text-xs text-slate-500">
-                                    💡 Kode tracking dikirim ke email Anda setelah berhasil mengajukan peminjaman
+                                    💡 Kode booking ada di halaman sukses setelah mengajukan peminjaman
                                 </p>
                             </div>
 
                             <button 
                                 type="submit" 
-                                class="w-full py-3.5 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+                                class="w-full py-3.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
                             >
                                 <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                Lacak Peminjaman
+                                Download Dokumen PDF
                             </button>
                         </div>
                     </form>
 
                     <!-- Info Box -->
-                    <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                         <div class="flex items-start space-x-3">
-                            <svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                             </svg>
                             <div class="flex-1">
-                                <h3 class="text-sm font-semibold text-yellow-900 mb-1">Status Peminjaman</h3>
-                                <ul class="text-xs text-yellow-800 space-y-1">
-                                    <li class="flex items-center">
-                                        <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                                        <strong>Menunggu: </strong><span class = "ml-1">Sedang direview admin</span> 
-                                    </li>
-                                    <li class="flex items-center">
-                                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                                        <strong>Disetujui: </strong> <span class ="ml-1">Peminjaman berhasil </span>
-                                    </li>
-                                    <li class="flex items-center">
-                                        <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                                        <strong>Ditolak:</strong><span class="ml-1">Lihat alasan penolakan</span>
-                                    </li>
-                                </ul>
+                                <h3 class="text-sm font-semibold text-blue-900 mb-1">Informasi</h3>
+                                <p class="text-xs text-blue-800">
+                                    Bawa dokumen yang sudah di-print ke kantor Lab Terpadu FEB untuk konfirmasi dan tanda tangan.
+                                </p>
                             </div>
                         </div> 
                     </div>
@@ -369,18 +358,18 @@
             activeTab.classList.remove('border-transparent', 'text-slate-600');
         }
 
-        // Handle tracking form submit
-        function handleTrackingSubmit(event) {
+        // Handle download form submit
+        function handleDownloadSubmit(event) {
             event.preventDefault();
-            const token = document.getElementById('tracking_token').value.trim();
+            const token = document.getElementById('booking_token').value.trim();
             
             if (!token) {
-                alert('❌ Masukkan kode tracking!');
+                alert('❌ Masukkan kode booking!');
                 return false;
             }
             
-            // Redirect to tracking page with token
-            window.location.href = `/booking/track/${token}`;
+            // Redirect to print page with token
+            window.open(`/booking/print/${token}`, '_blank');
             return false;
         }
     </script>
