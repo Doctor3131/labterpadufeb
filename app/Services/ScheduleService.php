@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 class ScheduleService
 {
-    protected $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    protected $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     
     protected $months = [
         '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',

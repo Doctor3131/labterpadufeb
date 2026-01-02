@@ -9,14 +9,14 @@
 <body class="bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <span class="text-2xl font-bold text-yellow-600">Lab Terpadu</span>
-                    <span class="text-xl text-gray-700">FEB UNDIP</span>
+                    <span class="text-lg md:text-2xl font-bold text-yellow-600">Lab Terpadu</span>
+                    <span class="text-base md:text-xl text-gray-700 hidden sm:inline">FEB UNDIP</span>
                 </div>
-                <a href="{{ route('landing') }}" class="text-gray-600 hover:text-gray-800 font-medium">
-                    ← Kembali ke Beranda
+                <a href="{{ route('landing') }}" class="text-gray-600 hover:text-gray-800 font-medium text-sm md:text-base">
+                    ← Beranda
                 </a>
             </div>
         </div>
@@ -77,9 +77,9 @@
                 <h3 class="text-lg font-bold text-gray-800 mb-4">Detail Peminjaman</h3>
                 
                 <div class="space-y-3 text-sm md:text-base">
-                    <div class="flex justify-between items-start border-b pb-2 gap-4">
-                        <span class="text-gray-600 shrink-0">ID Booking:</span>
-                        <span class="font-semibold text-gray-800 text-right">#{{ str_pad($booking->id, 5, '0', STR_PAD_LEFT) }}</span>
+                    <div class="flex flex-col sm:flex-row justify-between items-start border-b pb-2 gap-1 sm:gap-4">
+                        <span class="text-gray-600 shrink-0 text-xs sm:text-sm">ID Booking:</span>
+                        <span class="font-semibold text-gray-800 text-left sm:text-right text-sm sm:text-base">#{{ str_pad($booking->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
                     
                     <div class="flex justify-between items-start border-b pb-2 gap-4">
@@ -123,9 +123,9 @@
                     </div>
 
                     @if($booking->isPerkuliahan())
-                        <div class="flex justify-between items-start border-b pb-2 gap-4">
-                            <span class="text-gray-600 shrink-0">Mata Kuliah:</span>
-                            <span class="font-semibold text-gray-800 text-right">{{ $booking->course_name }}</span>
+                        <div class="flex flex-col sm:flex-row justify-between items-start border-b pb-2 gap-1 sm:gap-4">
+                            <span class="text-gray-600 shrink-0 text-xs sm:text-sm">Mata Kuliah:</span>
+                            <span class="font-semibold text-gray-800 text-left sm:text-right text-sm sm:text-base">{{ $booking->course_name }}</span>
                         </div>
                         <div class="flex justify-between items-start border-b pb-2 gap-4">
                             <span class="text-gray-600 shrink-0">Dosen:</span>
@@ -138,9 +138,9 @@
                             <span class="text-gray-600 shrink-0">Jenis Kegiatan:</span>
                             <span class="font-semibold text-gray-800 text-right">{{ $booking->activity_type }}</span>
                         </div>
-                        <div class="flex justify-between items-start border-b pb-2 gap-4">
-                            <span class="text-gray-600 shrink-0">Nama Kegiatan:</span>
-                            <span class="font-semibold text-gray-800 text-right">{{ $booking->activity_name }}</span>
+                        <div class="flex flex-col sm:flex-row justify-between items-start border-b pb-2 gap-1 sm:gap-4">
+                            <span class="text-gray-600 shrink-0 text-xs sm:text-sm">Nama Kegiatan:</span>
+                            <span class="font-semibold text-gray-800 text-left sm:text-right text-sm sm:text-base">{{ $booking->activity_name }}</span>
                         </div>
                     @endif
                 </div>

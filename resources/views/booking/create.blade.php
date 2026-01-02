@@ -15,72 +15,89 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 2rem;
+            position: relative;
         }
         .step-item {
             flex: 1;
             text-align: center;
             position: relative;
+            z-index: 1;
         }
+        /* Mobile Progress Line */
         .step-item:not(:last-child)::after {
             content: '';
             position: absolute;
-            top: 20px;
+            top: 20px; /* Center of the 40px circle */
             left: 50%;
             width: 100%;
             height: 2px;
             background: #e5e7eb;
             z-index: -1;
         }
+        .step-item.completed::after {
+            background: #22c55e;
+        }
+        /* Active/Completed States */
         .step-item.active .step-number {
             background: #eab308;
             color: white;
+            border-color: #eab308;
         }
         .step-item.completed .step-number {
             background: #22c55e;
             color: white;
-        }
-        .step-item.completed::after {
-            background: #22c55e;
+            border-color: #22c55e;
         }
         .step-number {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
+            md:width: 40px;
+            md:height: 40px;
             border-radius: 50%;
-            background: #e5e7eb;
+            background: #fff;
+            border: 2px solid #e5e7eb;
             color: #6b7280;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        @media (min-width: 768px) {
+            .step-number {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <span class="text-2xl font-bold text-yellow-600">Lab Terpadu</span>
-                    <span class="text-xl text-gray-700">FEB UNDIP</span>
+                    <span class="text-lg md:text-2xl font-bold text-yellow-600">Lab Terpadu</span>
+                    <span class="text-base md:text-xl text-gray-700 hidden sm:inline">FEB UNDIP</span>
                 </div>
-                <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
-                    Login Asisten Lab
+                <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-semibold transition-colors text-sm md:text-base whitespace-nowrap">
+                    Login
                 </a>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-6 py-12 max-w-4xl">
+    <div class="container mx-auto px-4 md:px-6 py-6 md:py-12 max-w-4xl">
         <!-- Header -->
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-bold text-gray-800 mb-3">Ajukan Peminjaman Laboratorium</h1>
-            <p class="text-gray-600">Silakan lengkapi formulir di bawah ini untuk mengajukan peminjaman laboratorium</p>
+        <div class="text-center mb-6 md:mb-10">
+            <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Ajukan Peminjaman Lab</h1>
+            <p class="text-sm md:text-base text-gray-600 px-4">Lengkapi formulir untuk mengajukan peminjaman laboratorium</p>
         </div>
 
         <!-- Form Card -->
-        <div class="bg-white rounded-xl shadow-lg p-8">
+        <div class="bg-white rounded-xl shadow-lg p-4 md:p-8">
             <!-- Time Conflict Warning (More Prominent) -->
             @if ($errors->has('time_conflict'))
                 <div class="mb-6 bg-red-100 border-2 border-red-500 rounded-lg p-5">
@@ -117,22 +134,26 @@
             @endif
             
             <!-- Step Indicator -->
-            <div class="step-indicator mb-8">
+            <div class="step-indicator mb-6 md:mb-8 px-2 md:px-0">
                 <div class="step-item active" id="step-indicator-1">
                     <div class="step-number">1</div>
-                    <div class="text-sm font-medium">Tipe Peminjaman</div>
+                    <div class="text-xs md:text-sm font-medium hidden md:block">Tipe</div>
+                    <div class="text-xs font-medium md:hidden">1</div>
                 </div>
                 <div class="step-item" id="step-indicator-2">
                     <div class="step-number">2</div>
-                    <div class="text-sm font-medium">Data Pribadi</div>
+                    <div class="text-xs md:text-sm font-medium hidden md:block">Data Diri</div>
+                    <div class="text-xs font-medium md:hidden">2</div>
                 </div>
                 <div class="step-item" id="step-indicator-3">
                     <div class="step-number">3</div>
-                    <div class="text-sm font-medium">Detail Peminjaman</div>
+                    <div class="text-xs md:text-sm font-medium hidden md:block">Detail</div>
+                    <div class="text-xs font-medium md:hidden">3</div>
                 </div>
                 <div class="step-item" id="step-indicator-4">
                     <div class="step-number">4</div>
-                    <div class="text-sm font-medium">Dokumen & Submit</div>
+                    <div class="text-xs md:text-sm font-medium hidden md:block">Submit</div>
+                    <div class="text-xs font-medium md:hidden">4</div>
                 </div>
             </div>
 
@@ -146,33 +167,33 @@
                         Pilih Tipe Peminjaman
                     </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="perkuliahan_tetap" class="hidden peer" required {{ old('booking_type') == 'perkuliahan_tetap' ? 'checked' : '' }}>
-                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
-                                <div class="font-bold text-gray-800 text-lg">Perkuliahan Tetap</div>
-                                <div class="text-sm text-gray-500 mt-2">Jadwal rutin setiap minggu</div>
+                            <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
+                                <div class="font-bold text-gray-800 text-sm md:text-lg">Perkuliahan Tetap</div>
+                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Jadwal rutin</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="perkuliahan_tidak_tetap" class="hidden peer" required {{ old('booking_type') == 'perkuliahan_tidak_tetap' ? 'checked' : '' }}>
-                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
-                                <div class="font-bold text-gray-800 text-lg">Perkuliahan Tidak Tetap</div>
-                                <div class="text-sm text-gray-500 mt-2">Sekali waktu saja</div>
+                            <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
+                                <div class="font-bold text-gray-800 text-sm md:text-lg">Perkuliahan Tidak Tetap</div>
+                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Sekali waktu</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required {{ old('booking_type') == 'non_perkuliahan' ? 'checked' : '' }}>
-                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
-                                <div class="font-bold text-gray-800 text-lg">Non-Perkuliahan</div>
-                                <div class="text-sm text-gray-500 mt-2">Kegiatan lainnya</div>
+                            <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
+                                <div class="font-bold text-gray-800 text-sm md:text-lg">Non-Perkuliahan</div>
+                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Kegiatan lain</div>
                             </div>
                         </label>
                          <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="pribadi" class="hidden peer" required {{ old('booking_type') == 'pribadi' ? 'checked' : '' }}>
-                            <div class="border-2 border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center">
-                                <div class="font-bold text-gray-800 text-lg">Pribadi</div>
-                                <div class="text-sm text-gray-500 mt-2">Tugas/Keperluan Pribadi</div>
+                            <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
+                                <div class="font-bold text-gray-800 text-sm md:text-lg">Pribadi</div>
+                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Keperluan Pribadi</div>
                             </div>
                         </label>
                     </div>
@@ -192,8 +213,8 @@
                     </div>
 
                     <div class="flex justify-end">
-                        <button type="button" id="btn-next-1" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-                            Lanjut ke Data Pribadi →
+                        <button type="button" id="btn-next-1" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base w-full md:w-auto" disabled>
+                            Lanjut →
                         </button>
                     </div>
                 </div>
@@ -341,12 +362,12 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between">
-                        <button type="button" id="btn-prev-2" class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                    <div class="flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0 mt-8">
+                        <button type="button" id="btn-prev-2" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
                             ← Kembali
                         </button>
-                        <button type="button" id="btn-next-2" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-                            Lanjut ke Detail Peminjaman →
+                        <button type="button" id="btn-next-2" class="w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base" disabled>
+                            Lanjut →
                         </button>
                     </div>
                 </div>
@@ -411,12 +432,12 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between">
-                        <button type="button" id="btn-prev-3" class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                    <div class="flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0 mt-8">
+                        <button type="button" id="btn-prev-3" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
                             ← Kembali
                         </button>
-                        <button type="button" id="btn-next-3" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-                            Lanjut ke Upload Dokumen →
+                        <button type="button" id="btn-next-3" class="w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base" disabled>
+                            Lanjut →
                         </button>
                     </div>
                 </div>
@@ -453,11 +474,11 @@
                         <div id="booking-summary" class="space-y-2 text-sm"></div>
                     </div>
 
-                    <div class="flex justify-between">
-                        <button type="button" id="btn-prev-4" class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                    <div class="flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0 mt-8">
+                        <button type="button" id="btn-prev-4" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
                             ← Kembali
                         </button>
-                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                        <button type="submit" class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
                             ✓ Ajukan Peminjaman
                         </button>
                     </div>

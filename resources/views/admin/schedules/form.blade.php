@@ -35,7 +35,7 @@
         @if($errors->any())
             <div class="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg">
                 <p class="font-bold">Terjadi Kesalahan:</p>
-                <ul class="list-disc list-inside">
+                <ul class="list-disc list-inside mt-2">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -128,6 +128,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
                         <input type="date" name="start_date"
                                value="{{ old('start_date', $schedule && $schedule->start_date ? $schedule->start_date->format('Y-m-d') : '') }}"
+                               min="{{ date('Y-m-d') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika berlaku selamanya</p>
                     </div>
@@ -181,5 +182,164 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // Real-time validation for day in date range
+        const daySelect = document.querySelector('select[name="day"]');
+        const startDateInput = document.querySelector('input[name="start_date"]');
+        const endDateInput = document.querySelector('input[name="end_date"]');
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        // Create error message container
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'hidden mt-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg';
+        errorContainer.id = 'day-validation-error';
+        endDateInput.parentElement.appendChild(errorContainer);
+
+        // Indonesian day names mapping
+        const dayNames = {
+            0: 'Minggu',
+            1: 'Senin',
+            2: 'Selasa',
+            3: 'Rabu',
+            4: 'Kamis',
+            5: 'Jumat',
+            6: 'Sabtu'
+        };
+
+        function validateDayInDateRange() {
+            const selectedDay = daySelect.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            // If no day selected or no dates, clear error
+            if (!selectedDay || (!startDate && !endDate)) {
+                errorContainer.classList.add('hidden');
+                submitButton.disabled = false;
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            // Parse dates
+            const start = new Date(startDate || endDate);
+            const end = new Date(endDate || startDate);
+
+            // IMPORTANT: Validate that start date matches the selected day
+            const startDayOfWeek = start.getDay();
+            const startDayName = dayNames[startDayOfWeek];
+            
+            if (startDayName !== selectedDay) {
+                const formattedStart = start.toLocaleDateString('id-ID');
+                errorContainer.innerHTML = `
+                    <p class="font-bold">⚠️ Validasi Hari dan Tanggal Mulai</p>
+                    <p class="text-sm mt-1">Tanggal mulai (<strong>${formattedStart}</strong>) adalah hari <strong>${startDayName}</strong>, tetapi hari yang dipilih adalah <strong>${selectedDay}</strong>.</p>
+                    <p class="text-sm mt-1">Silakan pilih tanggal mulai yang jatuh pada hari ${selectedDay}.</p>
+                `;
+                errorContainer.classList.remove('hidden');
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            // Check if selected day exists in range
+            let dayFound = false;
+            const currentDate = new Date(start);
+
+            while (currentDate <= end) {
+                const dayOfWeek = currentDate.getDay();
+                if (dayNames[dayOfWeek] === selectedDay) {
+                    dayFound = true;
+                    break;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            if (!dayFound) {
+                // Format dates for display
+                const formattedStart = start.toLocaleDateString('id-ID');
+                const formattedEnd = end.toLocaleDateString('id-ID');
+                
+                errorContainer.innerHTML = `
+                    <p class="font-bold">⚠️ Validasi Hari dan Tanggal</p>
+                    <p class="text-sm mt-1">Hari <strong>${selectedDay}</strong> tidak ditemukan dalam rentang tanggal <strong>${formattedStart} - ${formattedEnd}</strong>.</p>
+                    <p class="text-sm mt-1">Silakan pilih rentang tanggal yang mengandung hari ${selectedDay} atau ubah pilihan hari.</p>
+                `;
+                errorContainer.classList.remove('hidden');
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                errorContainer.classList.add('hidden');
+                // Check if student count validation also passes before enabling
+                const studentCountValid = validateStudentCount();
+                if (studentCountValid) {
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        // Add event listeners
+        daySelect.addEventListener('change', validateDayInDateRange);
+        startDateInput.addEventListener('change', validateDayInDateRange);
+        endDateInput.addEventListener('change', validateDayInDateRange);
+
+        // Run validation on page load (for edit form with existing data)
+        document.addEventListener('DOMContentLoaded', validateDayInDateRange);
+
+        // Real-time validation for student count vs lab capacity
+        const labSelect = document.querySelector('select[name="lab_id"]');
+        const studentCountInput = document.querySelector('input[name="student_count"]');
+        
+        // Create error message container for student count
+        const studentCountErrorContainer = document.createElement('div');
+        studentCountErrorContainer.className = 'hidden mt-2 text-red-600 text-sm font-medium';
+        studentCountErrorContainer.id = 'student-count-error';
+        studentCountInput.parentElement.appendChild(studentCountErrorContainer);
+
+        // Store lab capacities
+        const labCapacities = {
+            @foreach($labs as $lab)
+                {{ $lab->id }}: {{ $lab->capacity }},
+            @endforeach
+        };
+
+        function validateStudentCount() {
+            const selectedLabId = labSelect.value;
+            const studentCount = parseInt(studentCountInput.value);
+
+            // Clear error if no lab selected or no student count
+            if (!selectedLabId || !studentCount || studentCount <= 0) {
+                studentCountErrorContainer.classList.add('hidden');
+                return true;
+            }
+
+            const labCapacity = labCapacities[selectedLabId];
+            
+            if (studentCount > labCapacity) {
+                const labName = labSelect.options[labSelect.selectedIndex].text;
+                studentCountErrorContainer.innerHTML = `⚠️ Jumlah mahasiswa (${studentCount}) melebihi kapasitas ${labName} (${labCapacity} orang)`;
+                studentCountErrorContainer.classList.remove('hidden');
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                return false;
+            } else {
+                studentCountErrorContainer.classList.add('hidden');
+                // Check if day validation also passes before enabling
+                const dayErrorVisible = !errorContainer.classList.contains('hidden');
+                if (!dayErrorVisible) {
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+                return true;
+            }
+        }
+
+        // Add event listeners for student count validation
+        labSelect.addEventListener('change', validateStudentCount);
+        studentCountInput.addEventListener('input', validateStudentCount);
+
+        // Run student count validation on page load
+        document.addEventListener('DOMContentLoaded', validateStudentCount);
+    </script>
 </body>
 </html>

@@ -35,10 +35,26 @@ class ScheduleController extends Controller
             $query->where('day', $request->day);
         }
 
+        // Filter out past schedules (only show active or future schedules)
+        // A schedule is considered past if:
+        // 1. It has an end_date AND end_date is before today
+        // 2. It has a start_date but no end_date AND start_date is before today
+        $query->where(function ($q) {
+            $q->where(function ($q2) {
+                // Has end_date and it's today or in the future
+                $q2->whereNotNull('end_date')
+                   ->where('end_date', '>=', now()->format('Y-m-d'));
+            })->orWhere(function ($q2) {
+                // No end_date (recurring/permanent schedule)
+                $q2->whereNull('end_date');
+            });
+        });
+
+
         $schedules = $query->get();
         $labs = Lab::orderBy('name')->get();
         
-        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $types = [
             'regular' => 'Regular',
             'perkuliahan_tetap' => 'Perkuliahan Tetap',
@@ -56,7 +72,7 @@ class ScheduleController extends Controller
     public function create()
     {
         $labs = Lab::orderBy('name')->get();
-        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $types = [
             'regular' => 'Regular (Manual)',
             'perkuliahan_tetap' => 'Perkuliahan Tetap',
@@ -81,17 +97,41 @@ class ScheduleController extends Controller
     {
         $validated = $request->validate([
             'lab_id' => 'required|exists:labs,id',
-            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
+            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'type' => 'required|in:regular,perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
-            'start_date' => 'nullable|date',
+            'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'course' => 'required|string|max:255',
             'lecturer' => 'nullable|string|max:255',
             'komting' => 'nullable|string|max:255',
             'student_count' => 'nullable|integer|min:1',
         ]);
+
+        // Validate day exists in date range
+        $dayValidation = $this->validateDayInDateRange(
+            $validated['day'],
+            $validated['start_date'] ?? null,
+            $validated['end_date'] ?? null
+        );
+
+        if ($dayValidation !== true) {
+            return back()
+                ->withErrors(['day' => $dayValidation])
+                ->withInput();
+        }
+
+        // Validate student count does not exceed lab capacity
+        if (isset($validated['student_count']) && $validated['student_count'] > 0) {
+            $lab = Lab::findOrFail($validated['lab_id']);
+            if ($validated['student_count'] > $lab->capacity) {
+                return back()
+                    ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
+                    ->withInput();
+            }
+        }
+
 
         // Check for conflicts
         $conflict = $this->checkConflict(
@@ -123,7 +163,7 @@ class ScheduleController extends Controller
     {
         $schedule = Schedule::with('booking')->findOrFail($id);
         $labs = Lab::orderBy('name')->get();
-        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $types = [
             'regular' => 'Regular (Manual)',
             'perkuliahan_tetap' => 'Perkuliahan Tetap',
@@ -150,17 +190,41 @@ class ScheduleController extends Controller
 
         $validated = $request->validate([
             'lab_id' => 'required|exists:labs,id',
-            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
+            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'type' => 'required|in:regular,perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
-            'start_date' => 'nullable|date',
+            'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'course' => 'required|string|max:255',
             'lecturer' => 'nullable|string|max:255',
             'komting' => 'nullable|string|max:255',
             'student_count' => 'nullable|integer|min:1',
         ]);
+
+        // Validate day exists in date range
+        $dayValidation = $this->validateDayInDateRange(
+            $validated['day'],
+            $validated['start_date'] ?? null,
+            $validated['end_date'] ?? null
+        );
+
+        if ($dayValidation !== true) {
+            return back()
+                ->withErrors(['day' => $dayValidation])
+                ->withInput();
+        }
+
+        // Validate student count does not exceed lab capacity
+        if (isset($validated['student_count']) && $validated['student_count'] > 0) {
+            $lab = Lab::findOrFail($validated['lab_id']);
+            if ($validated['student_count'] > $lab->capacity) {
+                return back()
+                    ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
+                    ->withInput();
+            }
+        }
+
 
         // Check for conflicts (excluding current schedule)
         $conflict = $this->checkConflict(
@@ -285,5 +349,65 @@ class ScheduleController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Validate that the selected day exists within the date range
+     */
+    private function validateDayInDateRange($selectedDay, $startDate, $endDate)
+    {
+        // If no date range specified, validation passes (schedule berlaku selamanya)
+        if (!$startDate && !$endDate) {
+            return true;
+        }
+
+        // If only one date is specified, use it for both start and end
+        $start = Carbon::parse($startDate ?? $endDate);
+        $end = Carbon::parse($endDate ?? $startDate);
+
+        // IMPORTANT: Validate that start date matches the selected day
+        $startDayName = $this->getDayOfWeekInIndonesian($start);
+        if ($startDayName !== $selectedDay) {
+            $formattedStart = $start->format('d/m/Y');
+            return "Tanggal mulai ({$formattedStart}) adalah hari {$startDayName}, tetapi hari yang dipilih adalah {$selectedDay}. Silakan pilih tanggal mulai yang jatuh pada hari {$selectedDay}.";
+        }
+
+        // Check if selected day exists in the date range
+        $dayFound = false;
+        $currentDate = $start->copy();
+
+        while ($currentDate->lte($end)) {
+            if ($this->getDayOfWeekInIndonesian($currentDate) === $selectedDay) {
+                $dayFound = true;
+                break;
+            }
+            $currentDate->addDay();
+        }
+
+        if (!$dayFound) {
+            $formattedStart = $start->format('d/m/Y');
+            $formattedEnd = $end->format('d/m/Y');
+            return "Hari {$selectedDay} tidak ditemukan dalam rentang tanggal {$formattedStart} - {$formattedEnd}. Silakan pilih rentang tanggal yang mengandung hari {$selectedDay} atau ubah pilihan hari.";
+        }
+
+        return true;
+    }
+
+    /**
+     * Get Indonesian day name from Carbon date
+     */
+    private function getDayOfWeekInIndonesian($date)
+    {
+        $days = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+        ];
+
+        return $days[$date->dayOfWeek];
     }
 }

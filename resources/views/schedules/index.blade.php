@@ -10,25 +10,25 @@
 <body class="bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <span class="text-2xl font-bold text-yellow-600">Lab Terpadu</span>
-                    <span class="text-xl text-gray-700">FEB UNDIP</span>
+                    <span class="text-lg md:text-2xl font-bold text-yellow-600">Lab Terpadu</span>
+                    <span class="text-base md:text-xl text-gray-700 hidden sm:inline">FEB UNDIP</span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105">Beranda</a>
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-sm md:text-base">Beranda</a>
                     @auth
-                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105">Dashboard</a>
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg">
-                            Ajukan Peminjaman
+                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-sm md:text-base">Dashboard</a>
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-sm md:text-base whitespace-nowrap">
+                            Ajukan
                         </a>
                     @else
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg">
-                            Ajukan Peminjaman
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-sm md:text-base whitespace-nowrap">
+                            Ajukan
                         </a>
-                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 hover:scale-105 hover:shadow-md">
-                            Login Asisten Lab
+                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-3 md:px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 hover:scale-105 hover:shadow-md text-sm md:text-base whitespace-nowrap hidden sm:inline-block">
+                            Login
                         </a>
                     @endauth
                 </div>
@@ -38,30 +38,30 @@
 
     <div class="container mx-auto px-6 py-12">
         <!-- Header -->
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-bold text-gray-800 mb-3">Jadwal Laboratorium</h1>
-            <p class="text-gray-600">Lihat jadwal penggunaan laboratorium per minggu</p>
+        <div class="text-center mb-6 md:mb-10">
+            <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Jadwal Laboratorium</h1>
+            <p class="text-sm md:text-base text-gray-600">Lihat jadwal penggunaan laboratorium</p>
         </div>
 
         <!-- Week Navigation -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <div class="flex justify-between items-center">
-                <button id="prevWeek" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+                <button id="prevWeek" class="w-full md:w-auto flex justify-center md:justify-start items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors order-2 md:order-1">
+                    <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
-                    <span>Minggu Sebelumnya</span>
+                    <span class="pointer-events-none">Sebelumnya</span>
                 </button>
 
-                <div class="text-center">
-                    <div class="text-sm text-gray-500">Periode</div>
-                    <div id="weekLabel" class="text-xl font-bold text-gray-800">Loading...</div>
-                    <div class="text-xs text-gray-400 mt-1">Timezone: Asia/Jakarta (WIB)</div>
+                <div class="text-center order-1 md:order-2">
+                    <div class="text-xs md:text-sm text-gray-500">Periode</div>
+                    <div id="weekLabel" class="text-lg md:text-xl font-bold text-gray-800">Loading...</div>
+                    <div class="text-[10px] md:text-xs text-gray-400 mt-1">WIB (Asia/Jakarta)</div>
                 </div>
 
-                <button id="nextWeek" class="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                    <span>Minggu Berikutnya</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="nextWeek" class="w-full md:w-auto flex justify-center md:justify-end items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors order-3">
+                    <span class="pointer-events-none">Berikutnya</span>
+                    <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </button>

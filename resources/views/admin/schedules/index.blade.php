@@ -24,9 +24,11 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <a href="{{ route('admin.dashboard') }}" class="px-4 py-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg font-medium">
-                        ← Kembali ke Dashboard
+                <div class="flex items-center space-x-3">
+                    <a href="{{ route('admin.dashboard') }}" class="px-3 py-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg font-medium text-sm md:text-base">
+                        ← <span class="hidden sm:inline">Kembali ke </span>Dashboard
                     </a>
+                </div>
                 </div>
             </div>
         </div>
@@ -40,7 +42,7 @@
                 <p class="text-gray-600">Kelola semua jadwal laboratorium</p>
             </div>
             <a href="{{ route('admin.schedules.create') }}" 
-               class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+               class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-sm md:text-base whitespace-nowrap">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -108,13 +110,13 @@
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Lab</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Hari</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Waktu</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Mata Kuliah / Kegiatan</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Dosen / PIC</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tipe</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Aksi</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">Lab</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">Hari</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">Waktu</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[200px]">Mata Kuliah / Kegiatan</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase min-w-[150px]">Dosen / PIC</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">Tipe</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -124,7 +126,7 @@
                                     <span class="font-medium text-gray-800">{{ $schedule->lab->name }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-gray-600">{{ $schedule->day }}</td>
-                                <td class="px-4 py-3 text-gray-600">
+                                <td class="px-4 py-3 text-gray-600 whitespace-nowrap">
                                     {{ $schedule->start_time->format('H:i') }} - {{ $schedule->end_time->format('H:i') }}
                                 </td>
                                 <td class="px-4 py-3">
