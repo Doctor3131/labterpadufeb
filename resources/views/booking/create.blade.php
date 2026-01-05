@@ -700,9 +700,13 @@
             });
             
             // Also listen to conditional fields
-            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'applicant_status', 'class_year', 'purpose', 'custom_status'].forEach(fieldId => {
+            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'position', 'applicant_status', 'class_year', 'purpose', 'custom_status'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
-                if (field) field.addEventListener('input', validateStep2);
+                if (field) {
+                    // Use 'change' for select elements, 'input' for text/textarea
+                    const eventType = field.tagName === 'SELECT' ? 'change' : 'input';
+                    field.addEventListener(eventType, validateStep2);
+                }
             });
         }
 

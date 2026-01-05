@@ -139,14 +139,14 @@
                                 <td class="px-4 py-3">
                                     @php
                                         $typeColors = [
-                                            'regular' => 'bg-blue-100 text-blue-800',
-                                            'perkuliahan_tetap' => 'bg-green-100 text-green-800',
-                                            'perkuliahan_tidak_tetap' => 'bg-teal-100 text-teal-800',
-                                            'non_perkuliahan' => 'bg-purple-100 text-purple-800',
+                                            'regular' => 'bg-gray-100 text-gray-800',
+                                            'perkuliahan_tetap' => 'bg-yellow-100 text-yellow-800',
+                                            'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
+                                            'non_perkuliahan' => 'bg-emerald-100 text-emerald-800',
                                             'pribadi' => 'bg-orange-100 text-orange-800',
                                             // Legacy types (for old data)
-                                            'booking_recurring' => 'bg-green-100 text-green-800',
-                                            'booking_onetime' => 'bg-yellow-100 text-yellow-800',
+                                            'booking_recurring' => 'bg-yellow-100 text-yellow-800',
+                                            'booking_onetime' => 'bg-gray-100 text-gray-800',
                                         ];
                                         $typeLabels = [
                                             'regular' => 'Regular',

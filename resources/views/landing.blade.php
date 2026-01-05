@@ -151,7 +151,7 @@
                                                         $roomBadgeClass = 'bg-indigo-100 text-indigo-800';
                                                         break;
                                                     case 'non_perkuliahan':
-                                                        $roomBadgeClass = 'bg-blue-100 text-blue-800';
+                                                        $roomBadgeClass = 'bg-emerald-100 text-emerald-800';
                                                         break;
                                                     case 'pribadi':
                                                         $roomBadgeClass = 'bg-orange-100 text-orange-800';
@@ -182,7 +182,7 @@
                                                             $badgeLabel = 'Perkuliahan Tidak Tetap';
                                                             break;
                                                         case 'non_perkuliahan':
-                                                            $badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                                                            $badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
                                                             $badgeLabel = 'Non-Perkuliahan';
                                                             break;
                                                         case 'pribadi':
@@ -243,8 +243,8 @@
                             <span><strong>Ungu:</strong> Perkuliahan Tidak Tetap</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-blue-500"></span>
-                            <span><strong>Biru:</strong> Non-Perkuliahan</span>
+                            <span class="w-4 h-4 rounded bg-emerald-500"></span>
+                            <span><strong>Hijau:</strong> Non-Perkuliahan</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-orange-500"></span>
