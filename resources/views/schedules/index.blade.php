@@ -12,9 +12,8 @@
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <span class="text-lg md:text-2xl font-bold text-yellow-600">Lab Terpadu</span>
-                    <span class="text-base md:text-xl text-gray-700 hidden sm:inline">FEB UNDIP</span>
+                <div class="flex items-center space-x-3">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 md:h-16 w-auto object-contain">
                 </div>
                 <div class="flex items-center space-x-2 md:space-x-4">
                     <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-sm md:text-base">Beranda</a>
@@ -36,7 +35,7 @@
         </div>
     </nav>
 
-    <div class="container mx-auto px-6 py-12">
+    <div class="container mx-auto px-4 md:px-6 py-6 md:py-12">
         <!-- Header -->
         <div class="text-center mb-6 md:mb-10">
             <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Jadwal Laboratorium</h1>

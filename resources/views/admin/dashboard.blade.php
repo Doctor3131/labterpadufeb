@@ -33,24 +33,16 @@
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
     <!-- Modern Navbar -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-yellow-500">
-        <div class="container mx-auto px-6 py-4">
+    <nav class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-yellow-500" x-data="{ mobileMenuOpen: false }">
+        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
+                <!-- Branding -->
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl font-bold text-gray-800">Lab Terpadu</span>
-                            <span class="text-lg text-gray-600">FEB UNDIP</span>
-                        </div>
-                        <p class="text-xs text-gray-500">Admin Dashboard</p>
-                    </div>
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
                 </div>
-                <div class="flex items-center space-x-3">
+
+                <!-- Desktop Menu (Hidden on Mobile) -->
+                <div class="hidden md:flex items-center space-x-3">
                     <a href="{{ route('landing') }}" class="px-4 py-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg font-medium transition-all">
                         <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -87,48 +79,104 @@
                         </button>
                     </form>
                 </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="p-2 rounded-md text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu (Hidden by default) -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
+            <div class="px-4 pt-2 pb-4 space-y-2">
+                <div class="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-lg mb-2">
+                    <div class="bg-yellow-100 p-2 rounded-full">
+                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
+                </div>
+
+                <a href="{{ route('landing') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-yellow-600 hover:bg-yellow-50">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Lihat Jadwal
+                </a>
+
+                <a href="{{ route('admin.schedules.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-yellow-600 hover:bg-yellow-50">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Kelola Jadwal
+                </a>
+
+                @if(auth()->user()->isSuperAdmin())
+                    <a href="{{ route('admin.users.create') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-yellow-600 hover:bg-yellow-50">
+                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Buat User Baru
+                    </a>
+                @endif
+
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" onclick="return confirm('Yakin ingin logout?')" class="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">
+                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        Logout
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-6 py-8 max-w-7xl">
+    <div class="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-7xl">
         <!-- Header Section -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Manajemen Peminjaman Lab</h1>
-            <p class="text-gray-600">Kelola dan review semua permintaan peminjaman laboratorium</p>
+        <div class="mb-6 md:mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Manajemen Peminjaman Lab</h1>
+            <p class="text-sm md:text-base text-gray-600">Kelola dan review semua permintaan peminjaman laboratorium</p>
         </div>
 
         <!-- Success Message -->
         @if(session('success'))
-            <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-4 rounded-r-lg shadow-sm animate-pulse">
+            <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 md:px-6 py-4 rounded-r-lg shadow-sm animate-pulse">
                 <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                     </svg>
-                    <span class="font-medium">{{ session('success') }}</span>
+                    <span class="font-medium text-sm md:text-base">{{ session('success') }}</span>
                 </div>
             </div>
         @endif
 
         <!-- Professional Tabs -->
         <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden">
-            <div class="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-                <nav class="flex -mb-px px-4" aria-label="Tabs">
-                    <button onclick="showTab('pending')" class="tab-button flex items-center px-6 py-4 text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700" data-tab="pending">
+            <div class="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white overflow-x-auto">
+                <nav class="flex -mb-px px-4 min-w-max" aria-label="Tabs">
+                    <button onclick="showTab('pending')" class="tab-button flex items-center px-4 md:px-6 py-4 text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700 whitespace-nowrap" data-tab="pending">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Menunggu Persetujuan
                         <span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">{{ $pendingBookings->count() }}</span>
                     </button>
-                    <button onclick="showTab('approved')" class="tab-button flex items-center px-6 py-4 text-sm font-semibold border-b-3 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="approved">
+                    <button onclick="showTab('approved')" class="tab-button flex items-center px-4 md:px-6 py-4 text-sm font-semibold border-b-3 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap" data-tab="approved">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         Disetujui
                         <span class="ml-2 px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full text-xs font-bold">{{ $approvedBookings->count() }}</span>
                     </button>
-                    <button onclick="showTab('rejected')" class="tab-button flex items-center px-6 py-4 text-sm font-semibold border-b-3 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="rejected">
+                    <button onclick="showTab('rejected')" class="tab-button flex items-center px-4 md:px-6 py-4 text-sm font-semibold border-b-3 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap" data-tab="rejected">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
@@ -139,10 +187,10 @@
             </div>
 
         <!-- Pending Bookings -->
-        <div id="pending-tab" class="tab-content p-6">
+        <div id="pending-tab" class="tab-content p-4 md:p-6">
             @forelse($pendingBookings as $booking)
-                <div class="bg-white rounded-xl shadow-md hover:shadow-xl mb-4 p-6 border-l-4 border-yellow-500 transition-all hover:scale-[1.01]">
-                    <div class="flex justify-between items-start">
+                <div class="bg-white rounded-xl shadow-md hover:shadow-xl mb-4 p-4 md:p-6 border-l-4 border-yellow-500 transition-all hover:scale-[1.01]">
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0">
                         <div class="flex-1">
                             <div class="flex items-center space-x-2 mb-3">
                                 <span class="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-bold rounded-lg shadow-sm">
@@ -233,25 +281,28 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col space-y-2 ml-6">
-                            <a href="{{ route('admin.booking.show', $booking->id) }}" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex flex-row md:flex-col gap-2 md:gap-2 w-full md:w-auto md:ml-6 mt-4 md:mt-0">
+                            <a href="{{ route('admin.booking.show', $booking->id) }}" class="flex-1 md:flex-none px-4 md:px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center whitespace-nowrap">
+                                <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
-                                Detail
+                                <span class="hidden md:inline">Detail</span>
+                                <span class="md:hidden">Det</span>
                             </a>
-                            <button onclick="approveBooking({{ $booking->id }})" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button onclick="approveBooking({{ $booking->id }})" class="flex-1 md:flex-none px-4 md:px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center whitespace-nowrap">
+                                <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
-                                Setujui
+                                <span class="hidden md:inline">Setujui</span>
+                                <span class="md:hidden">Acc</span>
                             </button>
-                            <button onclick="showRejectModal({{ $booking->id }})" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button onclick="showRejectModal({{ $booking->id }})" class="flex-1 md:flex-none px-4 md:px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center whitespace-nowrap">
+                                <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
-                                Tolak
+                                <span class="hidden md:inline">Tolak</span>
+                                <span class="md:hidden">Tolak</span>
                             </button>
                         </div>
                     </div>

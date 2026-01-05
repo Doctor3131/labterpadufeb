@@ -7,9 +7,11 @@
 <header class="bg-yellow-500 text-white shadow-md">
     <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold">Lab<span class="text-yellow-200">FEB</span></h1>
-                <p class="text-sm text-yellow-100">Dashboard Admin</p>
+            <div class="flex items-center space-x-3">
+                <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-16 w-auto bg-white rounded-lg p-1">
+                <div>
+                    <p class="text-sm text-yellow-100 font-bold">Dashboard Admin</p>
+                </div>
             </div>
             <div class="flex items-center space-x-4">
                 <span class="text-sm">{{ auth()->user()->name }}</span>
@@ -24,17 +26,17 @@
     </div>
 </header>
 
-<div class="min-h-screen bg-gray-50 py-8">
+<div class="min-h-screen bg-gray-50 py-4 md:py-8">
     <div class="container mx-auto px-4">
         <!-- Welcome Card -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Selamat Datang, {{ auth()->user()->name }}!</h2>
             <p class="text-gray-600">Anda login sebagai <span class="font-semibold text-yellow-600">Admin</span></p>
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="grid md:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm mb-1">Total Ruangan</p>
@@ -48,7 +50,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm mb-1">Tersedia</p>
@@ -62,7 +64,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm mb-1">Terpakai</p>
@@ -76,7 +78,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-gray-500 text-sm mb-1">Maintenance</p>
@@ -93,7 +95,7 @@
         </div>
 
         <!-- Labs Management -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold text-gray-800">Manajemen Ruangan Laboratorium</h3>
                 <button class="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">

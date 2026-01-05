@@ -15,13 +15,7 @@
             <div class="flex items-center justify-between h-16 lg:h-20">
                 <!-- Left: Brand -->
                 <a href="{{ route('landing') }}" class="flex items-center space-x-3 group cursor-pointer">
-                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
-                        <span class="text-white font-bold text-xl">L</span>
-                    </div>
-                    <div>
-                        <h1 class="text-xl lg:text-2xl font-bold text-yellow-600 group-hover:text-yellow-700 transition-colors duration-200">Lab<span class="font-light">FEB</span></h1>
-                        <p class="text-xs text-slate-500 hidden lg:block group-hover:text-slate-700 transition-colors duration-200">Lab Terpadu FEB UNDIP</p>
-                    </div>
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 lg:h-12 w-auto object-contain group-hover:scale-105 transition-all duration-300">
                 </a>
 
                 <!-- Right: Navigation Links -->
@@ -49,18 +43,18 @@
     <!-- Hero Section -->
     <section class="relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white overflow-hidden">
         <div class="absolute inset-0 bg-grid-white/10"></div>
-        <div class="container mx-auto px-4 lg:px-8 py-16 lg:py-24 relative z-10">
+        <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl lg:text-5xl font-bold mb-4 lg:mb-6 leading-tight drop-shadow-md">
+                <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md">
                     Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium Terpadu
                 </h2>
-                <p class="text-lg lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-8 lg:mb-10">
+                <p class="text-base lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-6 lg:mb-10">
                     Pantau jadwal praktikum dan ajukan penggunaan fasilitas laboratorium secara terintegrasi
                 </p>
                 
                 <!-- CTA Button - Center untuk semua device -->
                 <div class="flex justify-center">
-                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-10 py-4 lg:px-12 lg:py-5 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-base lg:text-lg hover:scale-105">
+                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 lg:px-12 lg:py-5 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-105">
                         <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                         </svg>
@@ -72,7 +66,7 @@
     </section>
 
     <!-- Schedule Section -->
-    <section class="py-12 lg:py-16">
+    <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">
             <!-- Week Info -->
             <div class="text-center mb-6">
@@ -258,7 +252,7 @@
     </section>
 
     <!-- Download PDF Section -->
-    <section class="py-12 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
+    <section class="py-8 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
         <div class="container mx-auto px-4 lg:px-8">
             <div class="max-w-2xl mx-auto">
                 <!-- Header -->

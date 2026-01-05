@@ -78,9 +78,8 @@
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <span class="text-lg md:text-2xl font-bold text-yellow-600">Lab Terpadu</span>
-                    <span class="text-base md:text-xl text-gray-700 hidden sm:inline">FEB UNDIP</span>
+                <div class="flex items-center space-x-3">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 md:h-16 w-auto object-contain">
                 </div>
                 <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-semibold transition-colors text-sm md:text-base whitespace-nowrap">
                     Login
@@ -89,7 +88,7 @@
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 md:px-6 py-6 md:py-12 max-w-4xl">
+    <div class="container mx-auto px-4 md:px-6 py-4 md:py-12 max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-6 md:mb-10">
             <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Ajukan Peminjaman Lab</h1>

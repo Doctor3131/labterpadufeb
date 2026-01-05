@@ -10,18 +10,10 @@
 <body class="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 min-h-screen">
     <!-- Navbar -->
     <nav class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-yellow-500">
-        <div class="container mx-auto px-6 py-4">
+        <div class="container mx-auto px-4 md:px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <span class="text-xl font-bold text-gray-800">Kelola Jadwal</span>
-                        <p class="text-xs text-gray-500">Lab Terpadu FEB UNDIP</p>
-                    </div>
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-16 w-auto object-contain">
                 </div>
                 <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-3">
@@ -34,7 +26,7 @@
         </div>
     </nav>
 
-    <div class="container mx-auto px-6 py-8">
+    <div class="container mx-auto px-4 md:px-6 py-6 md:py-8">
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div>
