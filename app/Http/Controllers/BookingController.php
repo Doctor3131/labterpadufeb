@@ -40,10 +40,8 @@ class BookingController extends Controller
         ];
         $dayName = $days[date('l', strtotime($date))];
         
-        // Get labs with sufficient capacity
-        $labs = Lab::where('capacity', '>=', $participantCount)
-            ->orderBy('capacity', 'asc')
-            ->get();
+        // Get all labs (ignore capacity filter here, we'll warn on frontend)
+        $labs = Lab::orderBy('capacity', 'asc')->get();
         
         // Filter labs that are available at the requested time
         $availableLabs = $labs->filter(function ($lab) use ($dayName, $startTime, $endTime, $date) {

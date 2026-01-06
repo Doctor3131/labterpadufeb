@@ -122,15 +122,15 @@ class ScheduleController extends Controller
                 ->withInput();
         }
 
-        // Validate student count does not exceed lab capacity
-        if (isset($validated['student_count']) && $validated['student_count'] > 0) {
-            $lab = Lab::findOrFail($validated['lab_id']);
-            if ($validated['student_count'] > $lab->capacity) {
-                return back()
-                    ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
-                    ->withInput();
-            }
-        }
+        // Validate student count does not exceed lab capacity (Removed strict check)
+        // if (isset($validated['student_count']) && $validated['student_count'] > 0) {
+        //     $lab = Lab::findOrFail($validated['lab_id']);
+        //     if ($validated['student_count'] > $lab->capacity) {
+        //         return back()
+        //             ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
+        //             ->withInput();
+        //     }
+        // }
 
 
         // Check for conflicts
@@ -215,15 +215,15 @@ class ScheduleController extends Controller
                 ->withInput();
         }
 
-        // Validate student count does not exceed lab capacity
-        if (isset($validated['student_count']) && $validated['student_count'] > 0) {
-            $lab = Lab::findOrFail($validated['lab_id']);
-            if ($validated['student_count'] > $lab->capacity) {
-                return back()
-                    ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
-                    ->withInput();
-            }
-        }
+        // Validate student count does not exceed lab capacity (Removed strict check)
+        // if (isset($validated['student_count']) && $validated['student_count'] > 0) {
+        //     $lab = Lab::findOrFail($validated['lab_id']);
+        //     if ($validated['student_count'] > $lab->capacity) {
+        //         return back()
+        //             ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
+        //             ->withInput();
+        //     }
+        // }
 
 
         // Check for conflicts (excluding current schedule)
