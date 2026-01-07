@@ -69,7 +69,9 @@ class ScheduleService
                     $concreteDate = $startOfWeek->copy()->addDays($dayIndex);
                     
                     // Skip if specific date doesn't match a one-time schedule
-                    if ($schedule->type === 'booking_onetime' && $schedule->start_date && $schedule->start_date->format('Y-m-d') !== $concreteDate->format('Y-m-d')) {
+                    // One-time types: perkuliahan_tidak_tetap, non_perkuliahan, pribadi
+                    $oneTimeTypes = ['perkuliahan_tidak_tetap', 'non_perkuliahan', 'pribadi'];
+                    if (in_array($schedule->type, $oneTimeTypes) && $schedule->start_date && $schedule->start_date->format('Y-m-d') !== $concreteDate->format('Y-m-d')) {
                         continue;
                     }
 
