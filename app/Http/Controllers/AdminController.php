@@ -5,10 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
-use App\Mail\BookingApproved;
-use App\Mail\BookingRejected;
 
 class AdminController extends Controller
 {
@@ -88,15 +85,7 @@ class AdminController extends Controller
             Schedule::create($scheduleData);
         });
 
-        // Send approval email (DISABLED - Gajadi pake email)
-        // try {
-        //     Mail::to($booking->email)->send(new BookingApproved($booking));
-        // } catch (\Exception $e) {
-        //     \Log::warning('Failed to send booking approval email', [
-        //         'booking_id' => $booking->id,
-        //         'error' => $e->getMessage()
-        //     ]);
-        // }
+
 
         return redirect()->route('admin.dashboard')
             ->with('success', 'Peminjaman berhasil disetujui!');

@@ -92,7 +92,7 @@ class Lab extends Model
         if ($date) {
             $hasBookingConflict = $this->bookings()
                 ->where('booking_date', $date)
-                ->whereIn('status', ['pending', 'approved']) // Only check non-rejected bookings
+                ->where('status', 'pending') // Only check pending bookings (approved ones already have schedules)
                 ->where(function ($query) use ($startTime, $endTime) {
                     $query->where(function ($q) use ($startTime, $endTime) {
                         // New booking starts during existing booking

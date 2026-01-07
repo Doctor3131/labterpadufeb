@@ -138,17 +138,6 @@ class BookingController extends Controller
         // Create booking
         $booking = Booking::create($validated);
 
-        // Send confirmation email (DISABLED - Uncomment saat email sudah ready)
-        // try {
-        //     Mail::to($booking->email)->send(new BookingConfirmation($booking));
-        // } catch (\Exception $e) {
-        //     \Log::warning('Failed to send booking confirmation email', [
-        //         'booking_id' => $booking->id,
-        //         'error' => $e->getMessage()
-        //     ]);
-        //     // Continue even if email fails
-        // }
-
         // Log for debugging
         \Log::info('Booking created successfully', [
             'booking_id' => $booking->id,
