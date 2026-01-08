@@ -25,11 +25,9 @@ class Schedule extends Model
     ];
 
     /**
-     * The relationships that should always be loaded.
-     *
-     * @var array
+     * NOTE: Removed $with = ['booking'] for performance optimization.
+     * Use ->with('booking') explicitly where needed.
      */
-    protected $with = ['booking'];
 
     protected $casts = [
         'start_date' => 'date',

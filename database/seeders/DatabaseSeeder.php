@@ -211,7 +211,7 @@ class DatabaseSeeder extends Seeder
                     'lecturer' => $schedule[4],
                     'komting' => $schedule[5],
                     'student_count' => $schedule[6],
-                    'type' => 'regular',
+                    'type' => 'perkuliahan_tetap',
                 ]);
             }
         }
@@ -239,7 +239,7 @@ class DatabaseSeeder extends Seeder
                     'lecturer' => $schedule[4],
                     'komting' => $schedule[5],
                     'student_count' => $schedule[6],
-                    'type' => 'regular',
+                    'type' => 'perkuliahan_tetap',
                 ]);
             }
         }
@@ -268,7 +268,7 @@ class DatabaseSeeder extends Seeder
                     'lecturer' => $schedule[4],
                     'komting' => $schedule[5],
                     'student_count' => $schedule[6],
-                    'type' => 'regular',
+                    'type' => 'perkuliahan_tetap',
                 ]);
             }
         }

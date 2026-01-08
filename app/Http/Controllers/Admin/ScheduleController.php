@@ -6,12 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Models\Lab;
 use App\Models\Booking;
+use App\Helpers\DayHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class ScheduleController extends Controller
 {
+    /**
+     * Schedule types for dropdown
+     * Note: 'regular' was merged into 'perkuliahan_tetap' as they serve the same purpose
+     */
+    protected array $types = [
+        'perkuliahan_tetap' => 'Perkuliahan Tetap',
+        'perkuliahan_tidak_tetap' => 'Perkuliahan Tidak Tetap',
+        'non_perkuliahan' => 'Non Perkuliahan',
+        'pribadi' => 'Pribadi',
+    ];
     /**
      * Display a listing of schedules
      */
@@ -92,21 +103,10 @@ class ScheduleController extends Controller
 
         $schedules = $query->get();
 
-        // Custom Sorting in PHP
-        // Order: Day (Senin->Sabtu) -> Start Time
-        $dayOrder = [
-            'Senin' => 1,
-            'Selasa' => 2,
-            'Rabu' => 3,
-            'Kamis' => 4,
-            'Jumat' => 5,
-            'Sabtu' => 6,
-            'Minggu' => 7,
-        ];
-
-        $schedules = $schedules->sort(function ($a, $b) use ($dayOrder) {
-            $dayA = $dayOrder[$a->day] ?? 99;
-            $dayB = $dayOrder[$b->day] ?? 99;
+        // Custom Sorting in PHP using DayHelper
+        $schedules = $schedules->sort(function ($a, $b) {
+            $dayA = DayHelper::getOrder($a->day);
+            $dayB = DayHelper::getOrder($b->day);
 
             if ($dayA === $dayB) {
                 return $a->start_time <=> $b->start_time;
@@ -116,14 +116,8 @@ class ScheduleController extends Controller
 
         $labs = Lab::orderBy('name')->get();
         
-        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        $types = [
-            'regular' => 'Regular',
-            'perkuliahan_tetap' => 'Perkuliahan Tetap',
-            'perkuliahan_tidak_tetap' => 'Perkuliahan Tidak Tetap',
-            'non_perkuliahan' => 'Non Perkuliahan',
-            'pribadi' => 'Pribadi',
-        ];
+        $days = DayHelper::SCHEDULE_DAYS;
+        $types = $this->types;
 
         return view('admin.schedules.index', compact('schedules', 'labs', 'days', 'types'));
     }
@@ -134,14 +128,8 @@ class ScheduleController extends Controller
     public function create()
     {
         $labs = Lab::orderBy('name')->get();
-        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        $types = [
-            'regular' => 'Regular (Manual)',
-            'perkuliahan_tetap' => 'Perkuliahan Tetap',
-            'perkuliahan_tidak_tetap' => 'Perkuliahan Tidak Tetap',
-            'non_perkuliahan' => 'Non Perkuliahan',
-            'pribadi' => 'Pribadi',
-        ];
+        $days = DayHelper::SCHEDULE_DAYS;
+        $types = $this->types;
 
         return view('admin.schedules.form', [
             'schedule' => null,
@@ -157,7 +145,8 @@ class ScheduleController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        // Base validation rules
+        $rules = [
             'lab_id' => 'required|exists:labs,id',
             'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'start_time' => 'required|date_format:H:i',
@@ -165,11 +154,61 @@ class ScheduleController extends Controller
             'type' => 'required|in:regular,perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'course' => 'required|string|max:255',
-            'lecturer' => 'nullable|string|max:255',
-            'komting' => 'nullable|string|max:255',
             'student_count' => 'nullable|integer|min:1',
-        ]);
+        ];
+
+        // Conditional validation based on type
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+            $rules['course_name'] = 'required|string|max:255';
+            $rules['lecturer_name'] = 'required|string|max:255';
+            $rules['komting'] = 'nullable|string|max:255';
+        } elseif ($request->type === 'non_perkuliahan') {
+            $rules['activity_name'] = 'required|string|max:255';
+            $rules['activity_type'] = 'required|in:Seminar,Workshop,Pelatihan,Rapat,Ujian,Lainnya';
+            $rules['position'] = 'required|string|max:255';
+        } elseif ($request->type === 'pribadi') {
+            $rules['purpose'] = 'required|string|max:255';
+            $rules['applicant_status'] = 'required|in:Mahasiswa,Dosen,Pegawai,Lainnya';
+            
+            // Validate class_year only if status is Mahasiswa
+            if ($request->applicant_status === 'Mahasiswa') {
+                $rules['class_year'] = 'required|string|max:4';
+            }
+            
+            // Validate custom_status if status is Lainnya
+            if ($request->applicant_status === 'Lainnya') {
+                $rules['custom_status'] = 'required|string|max:255';
+            }
+        }
+
+        $validated = $request->validate($rules);
+
+        // Map request fields to schedule columns
+        $scheduleData = [
+            'lab_id' => $validated['lab_id'],
+            'day' => $validated['day'],
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
+            'type' => $validated['type'],
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+            'student_count' => $validated['student_count'] ?? null,
+        ];
+
+        // Map course/lecturer/komting based on type
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+            $scheduleData['course'] = $validated['course_name'];
+            $scheduleData['lecturer'] = $validated['lecturer_name'];
+            $scheduleData['komting'] = $validated['komting'] ?? null;
+        } elseif ($request->type === 'non_perkuliahan') {
+            $scheduleData['course'] = $validated['activity_name'];
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        } elseif ($request->type === 'pribadi') {
+            $scheduleData['course'] = $validated['purpose'];
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        }
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
@@ -183,17 +222,6 @@ class ScheduleController extends Controller
                 ->withErrors(['day' => $dayValidation])
                 ->withInput();
         }
-
-        // Validate student count does not exceed lab capacity (Removed strict check)
-        // if (isset($validated['student_count']) && $validated['student_count'] > 0) {
-        //     $lab = Lab::findOrFail($validated['lab_id']);
-        //     if ($validated['student_count'] > $lab->capacity) {
-        //         return back()
-        //             ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
-        //             ->withInput();
-        //     }
-        // }
-
 
         // Check for conflicts
         $conflict = $this->checkConflict(
@@ -212,7 +240,7 @@ class ScheduleController extends Controller
                 ->withInput();
         }
 
-        Schedule::create($validated);
+        Schedule::create($scheduleData);
 
         // Check for pending bookings that might conflict (warning only)
         $pendingBookingWarning = $this->checkPendingBookings(
@@ -240,14 +268,8 @@ class ScheduleController extends Controller
     {
         $schedule = Schedule::with('booking')->findOrFail($id);
         $labs = Lab::orderBy('name')->get();
-        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        $types = [
-            'regular' => 'Regular (Manual)',
-            'perkuliahan_tetap' => 'Perkuliahan Tetap',
-            'perkuliahan_tidak_tetap' => 'Perkuliahan Tidak Tetap',
-            'non_perkuliahan' => 'Non Perkuliahan',
-            'pribadi' => 'Pribadi',
-        ];
+        $days = DayHelper::SCHEDULE_DAYS;
+        $types = $this->types;
 
         return view('admin.schedules.form', [
             'schedule' => $schedule,
@@ -278,7 +300,7 @@ class ScheduleController extends Controller
         ];
 
         // Conditional validation and data mapping based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap' || $request->type === 'regular') {
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
             $rules['course_name'] = 'required|string|max:255';
             $rules['lecturer_name'] = 'required|string|max:255';
             $rules['komting'] = 'nullable|string|max:255';
@@ -319,7 +341,7 @@ class ScheduleController extends Controller
         ];
 
         // Map course/lecturer/komting based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap' || $request->type === 'regular') {
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
             $scheduleData['course'] = $validated['course_name'];
             $scheduleData['lecturer'] = $validated['lecturer_name'];
             $scheduleData['komting'] = $validated['komting'] ?? null;
@@ -379,7 +401,7 @@ class ScheduleController extends Controller
                 ];
 
                 // Sync type-specific fields
-                if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap' || $request->type === 'regular') {
+                if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
                     $bookingData['course_name'] = $validated['course_name'];
                     $bookingData['lecturer_name'] = $validated['lecturer_name'];
                     // Booking model might put komting in pic_name or similar, check existing usage
@@ -567,17 +589,7 @@ class ScheduleController extends Controller
      */
     private function getDayOfWeekInIndonesian($date)
     {
-        $days = [
-            0 => 'Minggu',
-            1 => 'Senin',
-            2 => 'Selasa',
-            3 => 'Rabu',
-            4 => 'Kamis',
-            5 => 'Jumat',
-            6 => 'Sabtu',
-        ];
-
-        return $days[$date->dayOfWeek];
+        return DayHelper::fromDate($date);
     }
 
     /**

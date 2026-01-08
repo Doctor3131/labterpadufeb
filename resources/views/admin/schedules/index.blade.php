@@ -128,7 +128,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="font-medium text-gray-800">{{ $schedule->course }}</div>
-                                    @if($schedule->komting && in_array($schedule->type, ['regular', 'perkuliahan_tetap', 'perkuliahan_tidak_tetap']))
+                                    @if($schedule->komting && in_array($schedule->type, ['perkuliahan_tetap', 'perkuliahan_tidak_tetap']))
                                         <div class="text-sm text-gray-500">Komting: {{ $schedule->komting }}</div>
                                     @endif
                                 </td>
@@ -136,7 +136,6 @@
                                 <td class="px-4 py-3">
                                     @php
                                         $typeColors = [
-                                            'regular' => 'bg-gray-100 text-gray-800',
                                             'perkuliahan_tetap' => 'bg-yellow-100 text-yellow-800',
                                             'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
                                             'non_perkuliahan' => 'bg-emerald-100 text-emerald-800',
@@ -146,7 +145,7 @@
                                             'booking_onetime' => 'bg-gray-100 text-gray-800',
                                         ];
                                         $typeLabels = [
-                                            'regular' => 'Regular',
+                                            'perkuliahan_tetap' => 'Tetap',
                                             'perkuliahan_tetap' => 'Tetap',
                                             'perkuliahan_tidak_tetap' => 'Tidak Tetap',
                                             'non_perkuliahan' => 'Non Kuliah',

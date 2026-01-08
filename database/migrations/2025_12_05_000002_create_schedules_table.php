@@ -8,6 +8,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - includes:
+     * - Original schedules table structure
+     * - komting and student_count columns (from 2025_12_22)
+     * - Final type ENUM without 'regular' (consolidated from 2025_12_31 and 2026_01_08)
      */
     public function up(): void
     {
@@ -21,8 +26,18 @@ return new class extends Migration
             $table->time('end_time');
             $table->string('course')->nullable(); // Mata Kuliah
             $table->string('lecturer')->nullable(); // Dosen
-            $table->enum('type', ['regular', 'perkuliahan_tetap', 'perkuliahan_tidak_tetap', 'non_perkuliahan', 'pribadi'])->default('regular');
+            
+            // Final type ENUM - 'regular' merged into 'perkuliahan_tetap'
+            $table->enum('type', [
+                'perkuliahan_tetap',
+                'perkuliahan_tidak_tetap',
+                'non_perkuliahan',
+                'pribadi'
+            ])->default('perkuliahan_tetap');
+            
             $table->foreignId('booking_id')->nullable()->constrained('bookings')->onDelete('cascade');
+            $table->string('komting')->nullable(); // Koordinator/Komting
+            $table->integer('student_count')->nullable(); // Jumlah mahasiswa
             $table->timestamps();
             
             // Indexes untuk performance

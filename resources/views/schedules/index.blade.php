@@ -170,8 +170,7 @@
                                     'perkuliahan_tetap': 'bg-yellow-500',
                                     'perkuliahan_tidak_tetap': 'bg-indigo-500',
                                     'non_perkuliahan': 'bg-emerald-500',
-                                    'pribadi': 'bg-orange-500',
-                                    'regular': 'bg-gray-500'
+                                    'pribadi': 'bg-orange-500'
                                 };
                                 return colors[type] || 'bg-yellow-500';
                             };

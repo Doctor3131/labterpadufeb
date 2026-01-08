@@ -105,7 +105,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tipe Jadwal *</label>
                         <select name="type" id="typeSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             @foreach($types as $key => $label)
-                                <option value="{{ $key }}" {{ old('type', $schedule->type ?? 'regular') == $key ? 'selected' : '' }}>
+                                <option value="{{ $key }}" {{ old('type', $schedule->type ?? 'perkuliahan_tetap') == $key ? 'selected' : '' }}>
                                     {{ $label }}
                                 </option>
                             @endforeach
@@ -298,7 +298,7 @@
             setFieldsRequired('pribadi-fields', false);
             
             // Show and enable appropriate section
-            if (selectedType === 'perkuliahan_tetap' || selectedType === 'perkuliahan_tidak_tetap' || selectedType === 'regular') {
+            if (selectedType === 'perkuliahan_tetap' || selectedType === 'perkuliahan_tidak_tetap') {
                 perkuliahanFields.classList.remove('hidden');
                 setFieldsRequired('perkuliahan-fields', true);
             } else if (selectedType === 'non_perkuliahan') {

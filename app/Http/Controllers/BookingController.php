@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Lab;
+use App\Helpers\DayHelper;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
@@ -28,17 +29,8 @@ class BookingController extends Controller
         $startTime = $request->start_time;
         $endTime = $request->end_time;
         
-        // Get day name from date
-        $days = [
-            'Sunday' => 'Minggu',
-            'Monday' => 'Senin',
-            'Tuesday' => 'Selasa',
-            'Wednesday' => 'Rabu',
-            'Thursday' => 'Kamis',
-            'Friday' => 'Jumat',
-            'Saturday' => 'Sabtu',
-        ];
-        $dayName = $days[date('l', strtotime($date))];
+        // Get day name from date using DayHelper
+        $dayName = DayHelper::fromEnglish(date('l', strtotime($date)));
         
         // Get all labs (ignore capacity filter here, we'll warn on frontend)
         $labs = Lab::orderBy('capacity', 'asc')->get();
@@ -103,16 +95,7 @@ class BookingController extends Controller
         // Check for schedule conflicts
         $lab = Lab::findOrFail($validated['lab_id']);
         $date = \Carbon\Carbon::parse($validated['booking_date']);
-        $dayMap = [
-            0 => 'Minggu',
-            1 => 'Senin',
-            2 => 'Selasa',
-            3 => 'Rabu',
-            4 => 'Kamis',
-            5 => 'Jumat',
-            6 => 'Sabtu'
-        ];
-        $day = $dayMap[$date->dayOfWeek];
+        $day = DayHelper::fromIndex($date->dayOfWeek);
 
         if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['booking_date'])) {
             return back()->withErrors([

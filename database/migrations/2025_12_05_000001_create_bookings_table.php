@@ -8,6 +8,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - includes:
+     * - Original bookings table structure
+     * - custom_status column (from 2025_12_24)
+     * - 'deleted' status in ENUM (from 2025_12_31)
      */
     public function up(): void
     {
@@ -30,6 +35,7 @@ return new class extends Migration
             
             // Personal Booking Details
             $table->string('applicant_status')->nullable(); // Status (Mahasiswa/Dosen/etc)
+            $table->string('custom_status')->nullable(); // Custom status when 'Lainnya' is selected
             $table->string('class_year', 4)->nullable(); // Angkatan
             $table->string('purpose')->nullable(); // Keperluan
             
@@ -63,8 +69,8 @@ return new class extends Migration
             $table->integer('participant_count'); // Jumlah Peserta
             $table->string('document_path')->nullable();
             
-            // Status & Approval
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            // Status & Approval - includes 'deleted' status
+            $table->enum('status', ['pending', 'approved', 'rejected', 'deleted'])->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->string('tracking_token', 32)->unique();
             $table->text('admin_notes')->nullable();

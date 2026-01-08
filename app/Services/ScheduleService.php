@@ -5,22 +5,16 @@ namespace App\Services;
 use App\Models\Lab;
 use App\Models\Schedule;
 use App\Models\Booking;
+use App\Helpers\DayHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class ScheduleService
 {
-    protected $dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    
     protected $months = [
         '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
         '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
         '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
-    ];
-    
-    protected $days = [
-        'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu',
-        'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu', 'Sunday' => 'Minggu'
     ];
 
     /**
@@ -64,7 +58,7 @@ class ScheduleService
         foreach ($labs as $lab) {
             foreach ($lab->schedules as $schedule) {
                  // Find the concrete date for this schedule in the current week
-                 $dayIndex = array_search($schedule->day, $this->dayNames);
+                 $dayIndex = array_search($schedule->day, DayHelper::SCHEDULE_DAYS);
                  if ($dayIndex !== false) {
                     $concreteDate = $startOfWeek->copy()->addDays($dayIndex);
                     
@@ -103,7 +97,7 @@ class ScheduleService
                         'komting' => $komtingName,
                         'student_count' => $schedule->student_count,
                         'booking_type' => $schedule->booking ? $schedule->booking->booking_type : 'perkuliahan_tetap',
-                        'type' => 'regular',
+                        'type' => 'perkuliahan_tetap',
                         'is_booking' => false
                     ]);
                  }
@@ -129,7 +123,7 @@ class ScheduleService
      */
     public function formatDateForDisplay(Carbon $date): string
     {
-        $dayName = $this->days[$date->format('l')];
+        $dayName = DayHelper::fromDate($date);
         $month = $this->months[$date->format('m')];
         return "$dayName, " . $date->format('j') . " $month " . $date->format('Y');
     }
