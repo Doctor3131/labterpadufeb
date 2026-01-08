@@ -17,42 +17,103 @@ class ScheduleController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Schedule::with(['lab', 'booking'])
-            ->orderBy('day')
-            ->orderBy('start_time');
+        $query = Schedule::with(['lab', 'booking']);
 
-        // Filter by lab
-        if ($request->filled('lab_id')) {
-            $query->where('lab_id', $request->lab_id);
-        }
+        // Filter Logic: Date OR Day
+        if ($request->filled('date') || $request->filled('day')) {
+            $query->where(function($q) use ($request) {
+                // 1. Filter by Specific Date
+                if ($request->filled('date')) {
+                    $q->orWhere(function($subQ) use ($request) {
+                        $date = Carbon::parse($request->date);
+                        $dayName = $this->getDayOfWeekInIndonesian($date);
+                        
+                        // Match Day of the specific date
+                        $subQ->where('day', $dayName);
 
-        // Filter by type
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+                        // Match Date Range
+                        $subQ->where(function ($q2) use ($request) {
+                            $q2->where(function ($q3) use ($request) {
+                                // Specific date range
+                                $q3->whereNotNull('start_date')
+                                   ->where('start_date', '<=', $request->date)
+                                   ->where(function ($q4) use ($request) {
+                                       $q4->whereNull('end_date')
+                                          ->orWhere('end_date', '>=', $request->date);
+                                   });
+                            })->orWhere(function ($q3) use ($request) {
+                                // Recurring (no start_date) but check end_date
+                                $q3->whereNull('start_date')
+                                   ->where(function ($q4) use ($request) {
+                                       $q4->whereNull('end_date')
+                                          ->orWhere('end_date', '>=', $request->date);
+                                   });
+                            });
+                        });
+                    });
+                }
 
-        // Filter by day
-        if ($request->filled('day')) {
-            $query->where('day', $request->day);
-        }
-
-        // Filter out past schedules (only show active or future schedules)
-        // A schedule is considered past if:
-        // 1. It has an end_date AND end_date is before today
-        // 2. It has a start_date but no end_date AND start_date is before today
-        $query->where(function ($q) {
-            $q->where(function ($q2) {
-                // Has end_date and it's today or in the future
-                $q2->whereNotNull('end_date')
-                   ->where('end_date', '>=', now()->format('Y-m-d'));
-            })->orWhere(function ($q2) {
-                // No end_date (recurring/permanent schedule)
-                $q2->whereNull('end_date');
+                // 2. Filter by Day (Explicit)
+                if ($request->filled('day')) {
+                    $q->orWhere(function($subQ) use ($request) {
+                        $subQ->where('day', $request->day);
+                        
+                        // Apply standard "Active" check for general day filter
+                        // so we don't show expired schedules for that day
+                        $subQ->where(function ($q2) {
+                            $q2->where(function ($q3) {
+                                // Has end_date and it's today or in the future
+                                $q3->whereNotNull('end_date')
+                                   ->where('end_date', '>=', now()->format('Y-m-d'));
+                            })->orWhere(function ($q3) {
+                                // No end_date (recurring/permanent schedule)
+                                $q3->whereNull('end_date');
+                            });
+                        });
+                    });
+                }
             });
-        });
-
+        } elseif (!$request->filled('date')) {
+            // Default "Active" filter if NO Date/Day filter is applied
+            // (If Date is applied above, we handled validity inside; if Day is applied, we handled inside)
+            // Actually, if ONLY Day was applied above, we handled it.
+            // If ONLY Date was applied, we handled it.
+            // So this `elseif` handles the "No Date AND No Day" case (Pure initial load or only Type/Lab filter)
+            
+            $query->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNotNull('end_date')
+                       ->where('end_date', '>=', now()->format('Y-m-d'));
+                })->orWhere(function ($q2) {
+                    $q2->whereNull('end_date');
+                });
+            });
+        }
 
         $schedules = $query->get();
+
+        // Custom Sorting in PHP
+        // Order: Day (Senin->Sabtu) -> Start Time
+        $dayOrder = [
+            'Senin' => 1,
+            'Selasa' => 2,
+            'Rabu' => 3,
+            'Kamis' => 4,
+            'Jumat' => 5,
+            'Sabtu' => 6,
+            'Minggu' => 7,
+        ];
+
+        $schedules = $schedules->sort(function ($a, $b) use ($dayOrder) {
+            $dayA = $dayOrder[$a->day] ?? 99;
+            $dayB = $dayOrder[$b->day] ?? 99;
+
+            if ($dayA === $dayB) {
+                return $a->start_time <=> $b->start_time;
+            }
+            return $dayA <=> $dayB;
+        });
+
         $labs = Lab::orderBy('name')->get();
         
         $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];

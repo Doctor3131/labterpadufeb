@@ -485,6 +485,32 @@
                         @enderror
                     </div>
 
+
+                    <!-- Capacity Warning (Red Text) -->
+                    <div id="capacity-warning-text" class="hidden mb-6 bg-red-50 border-2 border-red-500 rounded-lg p-5">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="flex-1">
+                                <h3 class="text-red-900 font-bold text-lg mb-2">⚠️ PERINGATAN KAPASITAS!</h3>
+                                <p class="text-red-800 font-semibold mb-2">
+                                    Jumlah peserta (<span id="warning-participant-count" class="font-bold"></span> orang) 
+                                    <span class="text-red-900">MELEBIHI</span> 
+                                    kapasitas lab (<span id="warning-lab-capacity" class="font-bold"></span> orang) 
+                                    sebanyak <span id="warning-overflow" class="font-bold text-red-900"></span> orang.
+                                </p>
+                                <div class="bg-red-100 border-l-4 border-red-700 p-3 mt-3">
+                                    <p class="text-red-900 font-bold text-sm mb-1">Konsekuensi:</p>
+                                    <ul class="text-red-800 text-sm space-y-1 ml-4 list-disc">
+                                        <li>Fasilitas mungkin tidak mencukupi untuk setiap peserta</li>
+                                        <li>Ketidaknyamanan ditanggung sendiri</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Summary -->
                     <div class="bg-gray-50 rounded-lg p-6 mb-6">
                         <h4 class="font-bold text-gray-800 mb-4">Ringkasan Peminjaman</h4>
@@ -784,19 +810,11 @@
 
             labSelect.addEventListener('change', function() {
                 validateStep3();
-                checkLabConflict();
                 checkCapacityWarning();
             });
 
-            // Check conflict when date/time changes (after lab is selected)
-            ['booking_date', 'start_time', 'end_time'].forEach(fieldId => {
-                document.getElementById(fieldId).addEventListener('change', function() {
-                    const labSelect = document.getElementById('labSelect');
-                    if (labSelect.value) {
-                        checkLabConflict();
-                    }
-                });
-            });
+            // No need to check conflict when date/time changes
+            // because fetchAvailableLabs() already filters out conflicting labs
         }
         function validateStep3() {
             const bookingDate = document.getElementById('booking_date').value;
@@ -870,42 +888,6 @@
             });
         }
 
-        // Check Lab Conflict
-        async function checkLabConflict() {
-            const bookingDate = document.getElementById('booking_date').value;
-            const startTime = document.getElementById('start_time').value;
-            const endTime = document.getElementById('end_time').value;
-            const selectedLabId = document.getElementById('labSelect').value;
-            
-            const conflictWarning = document.getElementById('conflictWarning');
-            const submitBtn = document.getElementById('btn-next-3');
-            
-            if (!bookingDate || !startTime || !endTime || !selectedLabId) {
-                conflictWarning.classList.add('hidden');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`{{ route("api.labs.available") }}?date=${bookingDate}&start_time=${startTime}&end_time=${endTime}`);
-                const labs = await response.json();
-                
-                const selectedLab = labs.find(lab => lab.id == selectedLabId);
-                
-                if (selectedLab && !selectedLab.available) {
-                    // Show conflict warning
-                    conflictWarning.classList.remove('hidden');
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    // Hide conflict warning
-                    conflictWarning.classList.add('hidden');
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            } catch (error) {
-                console.error('Error checking conflict:', error);
-            }
-        }
 
         // Check Capacity Warning
         function checkCapacityWarning() {
@@ -1029,6 +1011,22 @@
             summary.push(`<div><strong>Lab:</strong> ${labName}</div>`);
 
             document.getElementById('booking-summary').innerHTML = summary.join('');
+
+            // Check and display capacity warning
+            const participantCount = parseInt(document.getElementById('participant_count').value);
+            const labCapacity = parseInt(labSelect.options[labSelect.selectedIndex].dataset.capacity);
+            const warningBox = document.getElementById('capacity-warning-text');
+
+            if (labCapacity < participantCount) {
+                // Show warning
+                document.getElementById('warning-participant-count').textContent = participantCount;
+                document.getElementById('warning-lab-capacity').textContent = labCapacity;
+                document.getElementById('warning-overflow').textContent = participantCount - labCapacity;
+                warningBox.classList.remove('hidden');
+            } else {
+                // Hide warning
+                warningBox.classList.add('hidden');
+            }
         }
 
         // File Upload

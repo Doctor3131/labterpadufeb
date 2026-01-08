@@ -11,9 +11,8 @@
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <span class="text-lg md:text-2xl font-bold text-yellow-600">Lab Terpadu</span>
-                    <span class="text-base md:text-xl text-gray-700 hidden sm:inline">FEB UNDIP</span>
+                <div class="flex items-center space-x-3">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
                 </div>
                 <a href="{{ route('landing') }}" class="text-gray-600 hover:text-gray-800 font-medium text-sm md:text-base">
                     ← Beranda
