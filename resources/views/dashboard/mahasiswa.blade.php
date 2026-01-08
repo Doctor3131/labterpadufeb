@@ -5,19 +5,19 @@
 @section('content')
 <!-- Header with Yellow Background -->
 <header class="bg-yellow-500 text-white shadow-md">
-    <div class="container mx-auto px-4 py-4">
+    <div class="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
         <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-16 w-auto bg-white rounded-lg p-1">
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 sm:h-16 w-auto bg-white rounded-lg p-1">
                 <div>
-                    <p class="text-sm text-yellow-100 font-bold">Dashboard Mahasiswa</p>
+                    <p class="text-xs sm:text-sm text-yellow-100 font-bold">Dashboard Mahasiswa</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-4">
-                <span class="text-sm">{{ auth()->user()->name }}</span>
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <span class="text-xs sm:text-sm hidden sm:inline">{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition text-sm">
+                    <button type="submit" class="px-3 sm:px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition text-xs sm:text-sm">
                         Logout
                     </button>
                 </form>
@@ -26,52 +26,52 @@
     </div>
 </header>
 
-<div class="min-h-screen bg-gray-50 py-4 md:py-8">
-    <div class="container mx-auto px-4">
+<div class="min-h-screen bg-gray-50 py-3 sm:py-4 md:py-8">
+    <div class="container mx-auto px-3 sm:px-4">
         <!-- Welcome Card -->
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Selamat Datang, {{ auth()->user()->name }}!</h2>
-            <p class="text-gray-600">Anda login sebagai <span class="font-semibold text-yellow-600">Mahasiswa</span></p>
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-8">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Selamat Datang, {{ auth()->user()->name }}!</h2>
+            <p class="text-sm sm:text-base text-gray-600">Anda login sebagai <span class="font-semibold text-yellow-600">Mahasiswa</span></p>
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid md:grid-cols-3 gap-4 md:gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm mb-1">Total Ruangan</p>
-                        <p class="text-3xl font-bold text-gray-800">{{ $labs->count() }}</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-8">
+            <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                    <div class="mb-2 sm:mb-0">
+                        <p class="text-gray-500 text-xs sm:text-sm mb-1">Total Ruangan</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-gray-800">{{ $labs->count() }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm mb-1">Tersedia</p>
-                        <p class="text-3xl font-bold text-green-600">{{ $labs->where('status', 'available')->count() }}</p>
+            <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                    <div class="mb-2 sm:mb-0">
+                        <p class="text-gray-500 text-xs sm:text-sm mb-1">Tersedia</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ $labs->where('status', 'available')->count() }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm mb-1">Terpakai</p>
-                        <p class="text-3xl font-bold text-red-600">{{ $labs->where('status', 'occupied')->count() }}</p>
+            <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6 col-span-2 sm:col-span-1">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                    <div class="mb-2 sm:mb-0">
+                        <p class="text-gray-500 text-xs sm:text-sm mb-1">Terpakai</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ $labs->where('status', 'occupied')->count() }}</p>
                     </div>
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                     </div>

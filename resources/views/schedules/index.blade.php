@@ -10,23 +10,57 @@
 <body class="bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
+        <div class="container mx-auto px-3 sm:px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 md:h-16 w-auto object-contain">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 sm:h-12 md:h-16 w-auto object-contain">
                 </div>
-                <div class="flex items-center space-x-2 md:space-x-4">
-                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-sm md:text-base">Beranda</a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-base">Beranda</a>
                     @auth
-                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-sm md:text-base">Dashboard</a>
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-sm md:text-base whitespace-nowrap">
+                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-base">Dashboard</a>
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-base">
                             Ajukan
                         </a>
                     @else
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-sm md:text-base whitespace-nowrap">
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-base">
                             Ajukan
                         </a>
-                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-3 md:px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 hover:scale-105 hover:shadow-md text-sm md:text-base whitespace-nowrap hidden sm:inline-block">
+                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 hover:scale-105 hover:shadow-md text-base">
+                            Login
+                        </a>
+                    @endauth
+                </div>
+
+                <!-- Mobile Hamburger Button -->
+                <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-2 border-t border-gray-200 pt-4">
+                <div class="flex flex-col space-y-3">
+                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">
+                        Beranda
+                    </a>
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">
+                            Dashboard
+                        </a>
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold text-center transition-all text-base">
+                            Ajukan Peminjaman
+                        </a>
+                    @else
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold text-center transition-all text-base">
+                            Ajukan Peminjaman
+                        </a>
+                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-3 rounded-lg hover:bg-yellow-50 text-center transition-all text-base">
                             Login
                         </a>
                     @endauth
@@ -227,6 +261,11 @@
 
         document.getElementById('currentWeek').addEventListener('click', () => {
             loadSchedules(0);
+        });
+
+        // Mobile menu toggle
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
         });
 
         // Load current week on page load

@@ -6,6 +6,8 @@ use App\Models\Booking;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -50,11 +52,16 @@ class AdminController extends Controller
         
         DB::transaction(function () use ($booking) {
             // Update booking status
-            $booking->update([
+            $updateData = [
                 'status' => 'approved',
-                'handled_by' => auth()->id(),
                 'handled_at' => now()
-            ]);
+            ];
+            
+            if (Auth::check()) {
+                $updateData['handled_by'] = Auth::id();
+            }
+            
+            $booking->update($updateData);
 
             // Create schedule entry from approved booking
             // Important: Use Carbon with Asia/Jakarta timezone to get correct day
@@ -96,7 +103,7 @@ class AdminController extends Controller
      */
     public function reject(Request $request, $id)
     {
-        \Log::info('Reject booking called', [
+        Log::info('Reject booking called', [
             'booking_id' => $id,
             'reason' => $request->rejection_reason
         ]);
@@ -107,7 +114,7 @@ class AdminController extends Controller
 
         $booking = Booking::findOrFail($id);
         
-        \Log::info('Booking found', [
+        Log::info('Booking found', [
             'booking_id' => $booking->id,
             'current_status' => $booking->status
         ]);
@@ -119,14 +126,19 @@ class AdminController extends Controller
             }
             
             // Update booking status
-            $booking->update([
+            $updateData = [
                 'status' => 'rejected',
                 'rejection_reason' => $request->rejection_reason,
-                'handled_by' => auth()->id(),
                 'handled_at' => now()
-            ]);
+            ];
             
-            \Log::info('Booking rejected successfully', [
+            if (Auth::check()) {
+                $updateData['handled_by'] = Auth::id();
+            }
+            
+            $booking->update($updateData);
+            
+            Log::info('Booking rejected successfully', [
                 'booking_id' => $booking->id,
                 'new_status' => $booking->status
             ]);

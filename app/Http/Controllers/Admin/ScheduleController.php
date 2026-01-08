@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -254,7 +254,7 @@ class ScheduleController extends Controller
 
         $successMessage = 'Jadwal berhasil ditambahkan!';
         if ($pendingBookingWarning) {
-            $successMessage .= ' ⚠️ Perhatian: ' . $pendingBookingWarning;
+            $successMessage .= ' ΓÜá∩╕Å Perhatian: ' . $pendingBookingWarning;
         }
 
         return redirect()->route('admin.schedules.index')
@@ -460,7 +460,7 @@ class ScheduleController extends Controller
 
         $successMessage = 'Jadwal berhasil diperbarui!';
         if ($pendingBookingWarning) {
-            $successMessage .= ' ⚠️ Perhatian: ' . $pendingBookingWarning;
+            $successMessage .= ' ΓÜá∩╕Å Perhatian: ' . $pendingBookingWarning;
         }
 
         return redirect()->route('admin.schedules.index')

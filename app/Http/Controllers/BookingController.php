@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Lab;
 use App\Helpers\DayHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -51,7 +52,7 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         // Log incoming request
-        \Log::info('Booking store method called', [
+        Log::info('Booking store method called', [
             'booking_type' => $request->booking_type,
             'all_data' => $request->except(['_token', 'document'])
         ]);
@@ -90,7 +91,7 @@ class BookingController extends Controller
             'software_needs' => 'nullable|string|max:255',
         ]);
 
-        \Log::info('Validation passed');
+        Log::info('Validation passed');
 
         // Check for schedule conflicts
         $lab = Lab::findOrFail($validated['lab_id']);
@@ -122,7 +123,7 @@ class BookingController extends Controller
         $booking = Booking::create($validated);
 
         // Log for debugging
-        \Log::info('Booking created successfully', [
+        Log::info('Booking created successfully', [
             'booking_id' => $booking->id,
             'tracking_token' => $booking->tracking_token,
             'redirect_to' => route('booking.success', $booking->tracking_token)
@@ -133,12 +134,12 @@ class BookingController extends Controller
             ->with('success', 'Permintaan peminjaman berhasil diajukan!');
             
     } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation failed', [
+            Log::error('Validation failed', [
                 'errors' => $e->errors()
             ]);
             throw $e;
         } catch (\Exception $e) {
-            \Log::error('Booking creation failed', [
+            Log::error('Booking creation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
