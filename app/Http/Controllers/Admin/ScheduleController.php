@@ -1,5 +1,4 @@
-﻿<?php
-
+<?php
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -8,6 +7,7 @@ use App\Models\Lab;
 use App\Models\Booking;
 use App\Helpers\DayHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -254,7 +254,7 @@ class ScheduleController extends Controller
 
         $successMessage = 'Jadwal berhasil ditambahkan!';
         if ($pendingBookingWarning) {
-            $successMessage .= ' ΓÜá∩╕Å Perhatian: ' . $pendingBookingWarning;
+            $successMessage .= ' Ã¢Å¡Â Ã¯Â¸Â Perhatian: ' . $pendingBookingWarning;
         }
 
         return redirect()->route('admin.schedules.index')
@@ -460,7 +460,7 @@ class ScheduleController extends Controller
 
         $successMessage = 'Jadwal berhasil diperbarui!';
         if ($pendingBookingWarning) {
-            $successMessage .= ' ΓÜá∩╕Å Perhatian: ' . $pendingBookingWarning;
+            $successMessage .= ' Ã¢Å¡Â Ã¯Â¸Â Perhatian: ' . $pendingBookingWarning;
         }
 
         return redirect()->route('admin.schedules.index')
@@ -479,11 +479,16 @@ class ScheduleController extends Controller
         DB::transaction(function () use ($schedule) {
             // If schedule has booking, mark booking as deleted
             if ($schedule->booking) {
-                $schedule->booking->update([
+                $bookingUpdate = [
                     'status' => 'deleted',
-                    'handled_by' => auth()->id(),
                     'handled_at' => now(),
-                ]);
+                ];
+                
+                if (Auth::check()) {
+                    $bookingUpdate['handled_by'] = Auth::id();
+                }
+                
+                $schedule->booking->update($bookingUpdate);
             }
             
             // Delete the schedule
