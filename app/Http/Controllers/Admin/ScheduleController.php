@@ -278,7 +278,7 @@ class ScheduleController extends Controller
         ];
 
         // Conditional validation and data mapping based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap' || $request->type === 'regular') {
             $rules['course_name'] = 'required|string|max:255';
             $rules['lecturer_name'] = 'required|string|max:255';
             $rules['komting'] = 'nullable|string|max:255';
@@ -319,7 +319,7 @@ class ScheduleController extends Controller
         ];
 
         // Map course/lecturer/komting based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap' || $request->type === 'regular') {
             $scheduleData['course'] = $validated['course_name'];
             $scheduleData['lecturer'] = $validated['lecturer_name'];
             $scheduleData['komting'] = $validated['komting'] ?? null;
@@ -331,10 +331,6 @@ class ScheduleController extends Controller
             $scheduleData['course'] = $validated['purpose'];
             $scheduleData['lecturer'] = null;
             $scheduleData['komting'] = null;
-        } else {
-            $scheduleData['course'] = $validated['course'];
-            $scheduleData['lecturer'] = $request->lecturer ?? null;
-            $scheduleData['komting'] = $request->komting ?? null;
         }
 
         // Validate day exists in date range
@@ -383,7 +379,7 @@ class ScheduleController extends Controller
                 ];
 
                 // Sync type-specific fields
-                if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+                if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap' || $request->type === 'regular') {
                     $bookingData['course_name'] = $validated['course_name'];
                     $bookingData['lecturer_name'] = $validated['lecturer_name'];
                     // Booking model might put komting in pic_name or similar, check existing usage

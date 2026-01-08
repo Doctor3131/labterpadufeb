@@ -298,7 +298,7 @@
             setFieldsRequired('pribadi-fields', false);
             
             // Show and enable appropriate section
-            if (selectedType === 'perkuliahan_tetap' || selectedType === 'perkuliahan_tidak_tetap') {
+            if (selectedType === 'perkuliahan_tetap' || selectedType === 'perkuliahan_tidak_tetap' || selectedType === 'regular') {
                 perkuliahanFields.classList.remove('hidden');
                 setFieldsRequired('perkuliahan-fields', true);
             } else if (selectedType === 'non_perkuliahan') {
