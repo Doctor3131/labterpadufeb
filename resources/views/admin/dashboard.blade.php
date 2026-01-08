@@ -363,10 +363,33 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-2">
                         @if($booking->booking_type === 'non_perkuliahan')
                             {{ $booking->activity_name }}
+                        @elseif($booking->booking_type === 'pribadi')
+                            {{ $booking->purpose ?? 'Peminjaman Pribadi' }}
                         @else
                             {{ $booking->course_name }}
                         @endif
                     </h3>
+                    @if($booking->booking_type === 'perkuliahan_tetap' || $booking->booking_type === 'perkuliahan_tidak_tetap')
+                        <p class="text-sm text-gray-600 mb-2">
+                            <strong>Dosen:</strong> {{ $booking->lecturer_name }}
+                        </p>
+                    @elseif($booking->booking_type === 'non_perkuliahan')
+                        <p class="text-sm text-gray-600 mb-2">
+                            <strong>{{ $booking->position }}</strong> • {{ $booking->activity_type }}
+                        </p>
+                    @elseif($booking->booking_type === 'pribadi')
+                        <p class="text-sm text-gray-600 mb-2">
+                            <strong>Status:</strong> 
+                            @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
+                                {{ $booking->custom_status }}
+                            @else
+                                {{ $booking->applicant_status }}
+                            @endif
+                            @if($booking->applicant_status === 'Mahasiswa' && $booking->class_year)
+                                • Angkatan {{ $booking->class_year }}
+                            @endif
+                        </p>
+                    @endif
                     <div class="flex items-center justify-between">
                         <p class="text-sm text-gray-600">
                             <strong>{{ $booking->pic_name }}</strong> • {{ $booking->participant_count }} orang

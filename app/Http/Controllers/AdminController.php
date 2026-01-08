@@ -73,20 +73,43 @@ class AdminController extends Controller
                 'start_time' => $booking->start_time,
                 'end_time' => $booking->end_time,
                 'booking_id' => $booking->id,
-                // Linked data - no need to copy text fields thanks to smart accessors
+                'student_count' => $booking->participant_count,
             ];
 
-            // Tentukan type berdasarkan booking_type
+            // Tentukan type dan data spesifik berdasarkan booking_type
             if ($booking->is_recurring) {
                 // Perkuliahan tetap - recurring schedule
                 $scheduleData['type'] = 'perkuliahan_tetap';
                 $scheduleData['start_date'] = $bookingDate->toDateString();
                 $scheduleData['end_date'] = null; // Recurring tanpa batas
+                $scheduleData['course'] = $booking->course_name;
+                $scheduleData['lecturer'] = $booking->lecturer_name;
+                $scheduleData['komting'] = $booking->pic_name;
             } else {
                 // One-time booking - use booking_type directly
                 $scheduleData['type'] = $booking->booking_type; // perkuliahan_tidak_tetap, non_perkuliahan, or pribadi
                 $scheduleData['start_date'] = $bookingDate->toDateString();
                 $scheduleData['end_date'] = $bookingDate->toDateString();
+                
+                // Map data based on booking type
+                if ($booking->booking_type === 'perkuliahan_tidak_tetap') {
+                    $scheduleData['course'] = $booking->course_name;
+                    $scheduleData['lecturer'] = $booking->lecturer_name;
+                    $scheduleData['komting'] = $booking->pic_name;
+                } elseif ($booking->booking_type === 'non_perkuliahan') {
+                    $scheduleData['course'] = $booking->activity_name;
+                    $scheduleData['lecturer'] = null;
+                    $scheduleData['komting'] = null;
+                } elseif ($booking->booking_type === 'pribadi') {
+                    $scheduleData['course'] = $booking->purpose ?? 'Peminjaman Pribadi';
+                    $scheduleData['lecturer'] = null;
+                    $scheduleData['komting'] = null;
+                } else {
+                    // Fallback for regular type
+                    $scheduleData['course'] = $booking->course_name ?? $booking->activity_name ?? $booking->purpose ?? 'Peminjaman';
+                    $scheduleData['lecturer'] = null;
+                    $scheduleData['komting'] = null;
+                }
             }
 
             Schedule::create($scheduleData);

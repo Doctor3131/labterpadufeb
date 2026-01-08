@@ -208,6 +208,11 @@ class ScheduleController extends Controller
             $scheduleData['course'] = $validated['purpose'];
             $scheduleData['lecturer'] = null;
             $scheduleData['komting'] = null;
+        } else {
+            // Regular type - fallback
+            $scheduleData['course'] = $validated['course'] ?? 'Peminjaman';
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
         }
 
         // Validate day exists in date range
@@ -351,6 +356,11 @@ class ScheduleController extends Controller
             $scheduleData['komting'] = null;
         } elseif ($request->type === 'pribadi') {
             $scheduleData['course'] = $validated['purpose'];
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        } else {
+            // Regular type - fallback
+            $scheduleData['course'] = $validated['course'] ?? 'Peminjaman';
             $scheduleData['lecturer'] = null;
             $scheduleData['komting'] = null;
         }
