@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Models\Lab;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -152,8 +153,23 @@ class ScheduleController extends Controller
 
         Schedule::create($validated);
 
+        // Check for pending bookings that might conflict (warning only)
+        $pendingBookingWarning = $this->checkPendingBookings(
+            $validated['lab_id'],
+            $validated['day'],
+            $validated['start_time'],
+            $validated['end_time'],
+            $validated['start_date'] ?? null,
+            $validated['end_date'] ?? null
+        );
+
+        $successMessage = 'Jadwal berhasil ditambahkan!';
+        if ($pendingBookingWarning) {
+            $successMessage .= ' ⚠️ Perhatian: ' . $pendingBookingWarning;
+        }
+
         return redirect()->route('admin.schedules.index')
-            ->with('success', 'Jadwal berhasil ditambahkan!');
+            ->with('success', $successMessage);
     }
 
     /**
@@ -272,8 +288,23 @@ class ScheduleController extends Controller
             }
         });
 
+        // Check for pending bookings that might conflict (warning only)
+        $pendingBookingWarning = $this->checkPendingBookings(
+            $validated['lab_id'],
+            $validated['day'],
+            $validated['start_time'],
+            $validated['end_time'],
+            $validated['start_date'] ?? null,
+            $validated['end_date'] ?? null
+        );
+
+        $successMessage = 'Jadwal berhasil diperbarui!';
+        if ($pendingBookingWarning) {
+            $successMessage .= ' ⚠️ Perhatian: ' . $pendingBookingWarning;
+        }
+
         return redirect()->route('admin.schedules.index')
-            ->with('success', 'Jadwal berhasil diperbarui!');
+            ->with('success', $successMessage);
     }
 
     /**
@@ -409,5 +440,47 @@ class ScheduleController extends Controller
         ];
 
         return $days[$date->dayOfWeek];
+    }
+
+    /**
+     * Check for pending bookings that might conflict with the schedule
+     * Returns a warning message if any pending bookings are found, null otherwise
+     */
+    private function checkPendingBookings($labId, $day, $startTime, $endTime, $startDate, $endDate)
+    {
+        $query = Booking::where('lab_id', $labId)
+            ->where('day', $day)
+            ->where('status', 'pending')
+            ->where(function ($q) use ($startTime, $endTime) {
+                $q->whereTime('start_time', '<', $endTime)
+                  ->whereTime('end_time', '>', $startTime);
+            });
+
+        // If dates are specified, filter bookings within date range
+        if ($startDate || $endDate) {
+            $query->where(function ($q) use ($startDate, $endDate) {
+                if ($startDate && $endDate) {
+                    $q->whereBetween('booking_date', [$startDate, $endDate]);
+                } elseif ($startDate) {
+                    $q->where('booking_date', '>=', $startDate);
+                } else {
+                    $q->where('booking_date', '<=', $endDate);
+                }
+            });
+        }
+
+        $pendingBookings = $query->get();
+
+        if ($pendingBookings->count() > 0) {
+            $bookingList = $pendingBookings->map(function ($booking) {
+                $name = $booking->course_name ?? $booking->activity_name ?? 'Peminjaman Pribadi';
+                $date = Carbon::parse($booking->booking_date)->format('d/m/Y');
+                return "{$name} ({$date})";
+            })->join(', ');
+
+            return "Ada {$pendingBookings->count()} booking pending yang mungkin konflik: {$bookingList}. Booking tersebut perlu ditolak atau diubah waktunya.";
+        }
+
+        return null;
     }
 }
