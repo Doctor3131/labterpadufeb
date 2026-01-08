@@ -128,7 +128,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="font-medium text-gray-800">{{ $schedule->course }}</div>
-                                    @if($schedule->komting)
+                                    @if($schedule->komting && in_array($schedule->type, ['perkuliahan_tetap', 'perkuliahan_tidak_tetap']))
                                         <div class="text-sm text-gray-500">Komting: {{ $schedule->komting }}</div>
                                     @endif
                                 </td>

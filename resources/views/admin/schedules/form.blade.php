@@ -103,7 +103,7 @@
                     <!-- Type -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tipe Jadwal *</label>
-                        <select name="type" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        <select name="type" id="typeSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             @foreach($types as $key => $label)
                                 <option value="{{ $key }}" {{ old('type', $schedule->type ?? 'regular') == $key ? 'selected' : '' }}>
                                     {{ $label }}
@@ -115,7 +115,7 @@
                     <!-- Student Count -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Mahasiswa</label>
-                        <input type="number" name="student_count" min="1"
+                        <input type="number" name="student_count" id="student_count" min="1"
                                value="{{ old('student_count', $schedule->student_count ?? '') }}"
                                placeholder="Opsional"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -139,32 +139,122 @@
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika berlaku selamanya</p>
                     </div>
+                </div>
 
-                    <!-- Course/Activity -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Mata Kuliah / Nama Kegiatan *</label>
-                        <input type="text" name="course" required
-                               value="{{ old('course', $schedule->course ?? '') }}"
-                               placeholder="Contoh: Sistem Informasi Manajemen"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                <!-- Conditional Fields Based on Type -->
+                
+                <!-- Perkuliahan Fields -->
+                <div id="perkuliahan-fields" class="hidden mt-6">
+                    <h4 class="font-bold text-gray-800 mb-4 text-lg">Data Perkuliahan</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Mata Kuliah *</label>
+                            <input type="text" name="course_name" id="course_name"
+                                   value="{{ old('course_name', $schedule->course ?? '') }}"
+                                   placeholder="Contoh: Sistem Informasi Manajemen"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Dosen Pengampu *</label>
+                            <input type="text" name="lecturer_name" id="lecturer_name"
+                                   value="{{ old('lecturer_name', $schedule->lecturer ?? '') }}"
+                                   placeholder="Contoh: Dr. Budi Santoso"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Koordinator / Komting</label>
+                            <input type="text" name="komting" id="komting"
+                                   value="{{ old('komting', $schedule->komting ?? '') }}"
+                                   placeholder="Contoh: Ahmad Faizal"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Lecturer -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Dosen Pengampu / PIC</label>
-                        <input type="text" name="lecturer"
-                               value="{{ old('lecturer', $schedule->lecturer ?? '') }}"
-                               placeholder="Contoh: Dr. Budi Santoso"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                <!-- Non-Perkuliahan Fields -->
+                <div id="non-perkuliahan-fields" class="hidden mt-6">
+                    <h4 class="font-bold text-gray-800 mb-4 text-lg">Data Kegiatan Non-Perkuliahan</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Kegiatan *</label>
+                            <input type="text" name="activity_name" id="activity_name"
+                                   value="{{ old('activity_name', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_name : '') }}"
+                                   placeholder="Contoh: Workshop Data Analytics"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan *</label>
+                            <select name="activity_type" id="activity_type"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                <option value="">-- Pilih Jenis Kegiatan --</option>
+                                <option value="Seminar" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Seminar' ? 'selected' : '' }}>Seminar</option>
+                                <option value="Workshop" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Workshop' ? 'selected' : '' }}>Workshop</option>
+                                <option value="Pelatihan" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Pelatihan' ? 'selected' : '' }}>Pelatihan</option>
+                                <option value="Rapat" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Rapat' ? 'selected' : '' }}>Rapat</option>
+                                <option value="Ujian" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Ujian' ? 'selected' : '' }}>Ujian</option>
+                                <option value="Lainnya" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jabatan Peminjam *</label>
+                            <input type="text" name="position" id="position"
+                                   value="{{ old('position', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->position : '') }}"
+                                   placeholder="Contoh: Ketua Panitia"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Kebutuhan Peralatan</label>
+                            <textarea name="equipment_needs" id="equipment_needs" rows="3"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->equipment_needs : '') }}</textarea>
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Komting -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Koordinator / Komting</label>
-                        <input type="text" name="komting"
-                               value="{{ old('komting', $schedule->komting ?? '') }}"
-                               placeholder="Contoh: Ahmad Faizal"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                <!-- Pribadi Fields -->
+                <div id="pribadi-fields" class="hidden mt-6">
+                    <h4 class="font-bold text-gray-800 mb-4 text-lg">Data Peminjaman Pribadi</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Status *</label>
+                            <select name="applicant_status" id="applicant_status"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                <option value="">Pilih Status</option>
+                                @php
+                                    $currentStatus = old('applicant_status', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->applicant_status : '');
+                                    // If custom_status exists, set applicant_status to "Lainnya"
+                                    if ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi' && $schedule->booking->custom_status) {
+                                        $currentStatus = 'Lainnya';
+                                    }
+                                @endphp
+                                <option value="Mahasiswa" {{ $currentStatus == 'Mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
+                                <option value="Dosen" {{ $currentStatus == 'Dosen' ? 'selected' : '' }}>Dosen</option>
+                                <option value="Pegawai" {{ $currentStatus == 'Pegawai' ? 'selected' : '' }}>Pegawai</option>
+                                <option value="Lainnya" {{ $currentStatus == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            </select>
+                        </div>
+                        
+                        <div id="custom-status-field" style="display: none;">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Status Lainnya *</label>
+                            <input type="text" name="custom_status" id="custom_status"
+                                   value="{{ old('custom_status', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->custom_status : '') }}"
+                                   placeholder="Masukkan status Anda"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
+
+                        <div id="class-year-field" style="display: none;">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Angkatan *</label>
+                            <input type="text" name="class_year" id="class_year"
+                                   value="{{ old('class_year', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->class_year : '') }}"
+                                   placeholder="Contoh: 2023" maxlength="4"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Keperluan *</label>
+                            <input type="text" name="purpose" id="purpose"
+                                   value="{{ old('purpose', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->purpose : '') }}"
+                                   placeholder="Contoh: Ujian, Kuliah, Mengerjakan tugas pribadi"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
                     </div>
                 </div>
 
@@ -182,6 +272,124 @@
     </div>
 
     <script>
+        // Conditional Fields Logic
+        const typeSelect = document.getElementById('typeSelect');
+        const perkuliahanFields = document.getElementById('perkuliahan-fields');
+        const nonPerkuliahanFields = document.getElementById('non-perkuliahan-fields');
+        const pribadiFields = document.getElementById('pribadi-fields');
+        const applicantStatusSelect = document.getElementById('applicant_status');
+        const classYearField = document.getElementById('class-year-field');
+        const classYearInput = document.getElementById('class_year');
+        const customStatusField = document.getElementById('custom-status-field');
+        const customStatusInput = document.getElementById('custom_status');
+
+        // Function to show/hide fields based on type
+        function updateFieldsVisibility() {
+            const selectedType = typeSelect.value;
+            
+            // Hide all conditional sections first
+            perkuliahanFields.classList.add('hidden');
+            nonPerkuliahanFields.classList.add('hidden');
+            pribadiFields.classList.add('hidden');
+            
+            // Disable all conditional fields
+            setFieldsRequired('perkuliahan-fields', false);
+            setFieldsRequired('non-perkuliahan-fields', false);
+            setFieldsRequired('pribadi-fields', false);
+            
+            // Show and enable appropriate section
+            if (selectedType === 'perkuliahan_tetap' || selectedType === 'perkuliahan_tidak_tetap') {
+                perkuliahanFields.classList.remove('hidden');
+                setFieldsRequired('perkuliahan-fields', true);
+            } else if (selectedType === 'non_perkuliahan') {
+                nonPerkuliahanFields.classList.remove('hidden');
+                setFieldsRequired('non-perkuliahan-fields', true);
+            } else if (selectedType === 'pribadi') {
+                pribadiFields.classList.remove('hidden');
+                setFieldsRequired('pribadi-fields', true);
+                // Check if we need to show class year field or custom status field
+                updatePribadiFields();
+            }
+        }
+
+        // Function to set required attribute on fields
+        function setFieldsRequired(containerId, required) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const inputs = container.querySelectorAll('input, select, textarea');
+            const optionalFields = ['equipment_needs', 'lecturer', 'komting', 'class_year', 'custom_status'];
+            
+            inputs.forEach(input => {
+                const fieldName = input.name || input.id;
+                
+                // Skip optional fields
+                if (optionalFields.includes(fieldName)) {
+                    input.removeAttribute('required');
+                    if (!required) {
+                        input.setAttribute('disabled', 'disabled');
+                    } else {
+                        input.removeAttribute('disabled');
+                    }
+                    return;
+                }
+                
+                // Handle required/disabled based on visibility
+                if (required) {
+                    input.setAttribute('required', 'required');
+                    input.removeAttribute('disabled');
+                } else {
+                    input.removeAttribute('required');
+                    input.setAttribute('disabled', 'disabled');
+                }
+            });
+        }
+
+        // Function to toggle fields for Pribadi status
+        function updatePribadiFields() {
+            if (!applicantStatusSelect) return;
+            
+            const status = applicantStatusSelect.value;
+            
+            // Toggle Class Year (Only for Mahasiswa)
+            if (status === 'Mahasiswa') {
+                classYearField.style.display = 'block';
+                classYearInput.setAttribute('required', 'required');
+                classYearInput.removeAttribute('disabled');
+            } else {
+                classYearField.style.display = 'none';
+                classYearInput.removeAttribute('required');
+                classYearInput.setAttribute('disabled', 'disabled');
+                // Don't clear value immediately in case user switches back
+            }
+            
+            // Toggle Custom Status (Only for Lainnya)
+            if (status === 'Lainnya') {
+                customStatusField.style.display = 'block';
+                customStatusInput.setAttribute('required', 'required');
+                customStatusInput.removeAttribute('disabled');
+            } else {
+                customStatusField.style.display = 'none';
+                customStatusInput.removeAttribute('required');
+                customStatusInput.setAttribute('disabled', 'disabled');
+            }
+        }
+
+        // Event listeners
+        typeSelect.addEventListener('change', updateFieldsVisibility);
+        if (applicantStatusSelect) {
+            applicantStatusSelect.addEventListener('change', updatePribadiFields);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFieldsVisibility();
+            // Also update pribadi fields if type is pribadi on page load
+            if (typeSelect.value === 'pribadi') {
+                updatePribadiFields();
+            }
+        });
+
         // Real-time validation for day in date range
         const daySelect = document.querySelector('select[name="day"]');
         const startDateInput = document.querySelector('input[name="start_date"]');

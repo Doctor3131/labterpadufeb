@@ -264,8 +264,9 @@ class ScheduleController extends Controller
     public function update(Request $request, $id)
     {
         $schedule = Schedule::with('booking')->findOrFail($id);
-
-        $validated = $request->validate([
+        
+        // Base validation rules
+        $rules = [
             'lab_id' => 'required|exists:labs,id',
             'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'start_time' => 'required|date_format:H:i',
@@ -273,11 +274,68 @@ class ScheduleController extends Controller
             'type' => 'required|in:regular,perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'start_date' => 'nullable|date|after_or_equal:today',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'course' => 'required|string|max:255',
-            'lecturer' => 'nullable|string|max:255',
-            'komting' => 'nullable|string|max:255',
             'student_count' => 'nullable|integer|min:1',
-        ]);
+        ];
+
+        // Conditional validation and data mapping based on type
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+            $rules['course_name'] = 'required|string|max:255';
+            $rules['lecturer_name'] = 'required|string|max:255';
+            $rules['komting'] = 'nullable|string|max:255';
+        } elseif ($request->type === 'non_perkuliahan') {
+            $rules['activity_name'] = 'required|string|max:255';
+            $rules['activity_type'] = 'required|in:Seminar,Workshop,Pelatihan,Rapat,Ujian,Lainnya';
+            $rules['position'] = 'required|string|max:255';
+        } elseif ($request->type === 'pribadi') {
+            $rules['purpose'] = 'required|string|max:255';
+            $rules['applicant_status'] = 'required|in:Mahasiswa,Dosen,Pegawai,Lainnya';
+            
+            // Validate class_year only if status is Mahasiswa
+            if ($request->applicant_status === 'Mahasiswa') {
+                $rules['class_year'] = 'required|string|max:4';
+            }
+            
+            // Validate custom_status if status is Lainnya
+            if ($request->applicant_status === 'Lainnya') {
+                $rules['custom_status'] = 'required|string|max:255';
+            }
+        } else {
+            // Regular (manual) fallback
+            $rules['course'] = 'required|string|max:255';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Map request fields to schedule columns (generic columns)
+        $scheduleData = [
+            'lab_id' => $validated['lab_id'],
+            'day' => $validated['day'],
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
+            'type' => $validated['type'],
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+            'student_count' => $validated['student_count'] ?? null,
+        ];
+
+        // Map course/lecturer/komting based on type
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+            $scheduleData['course'] = $validated['course_name'];
+            $scheduleData['lecturer'] = $validated['lecturer_name'];
+            $scheduleData['komting'] = $validated['komting'] ?? null;
+        } elseif ($request->type === 'non_perkuliahan') {
+            $scheduleData['course'] = $validated['activity_name'];
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        } elseif ($request->type === 'pribadi') {
+            $scheduleData['course'] = $validated['purpose'];
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        } else {
+            $scheduleData['course'] = $validated['course'];
+            $scheduleData['lecturer'] = $request->lecturer ?? null;
+            $scheduleData['komting'] = $request->komting ?? null;
+        }
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
@@ -291,17 +349,6 @@ class ScheduleController extends Controller
                 ->withErrors(['day' => $dayValidation])
                 ->withInput();
         }
-
-        // Validate student count does not exceed lab capacity (Removed strict check)
-        // if (isset($validated['student_count']) && $validated['student_count'] > 0) {
-        //     $lab = Lab::findOrFail($validated['lab_id']);
-        //     if ($validated['student_count'] > $lab->capacity) {
-        //         return back()
-        //             ->withErrors(['student_count' => "Jumlah mahasiswa ({$validated['student_count']}) melebihi kapasitas lab {$lab->name} ({$lab->capacity} orang). Silakan kurangi jumlah mahasiswa atau pilih lab dengan kapasitas lebih besar."])
-        //             ->withInput();
-        //     }
-        // }
-
 
         // Check for conflicts (excluding current schedule)
         $conflict = $this->checkConflict(
@@ -320,30 +367,64 @@ class ScheduleController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use ($schedule, $validated) {
+        DB::transaction(function () use ($schedule, $scheduleData, $validated, $request) {
             // Update schedule
-            $schedule->update($validated);
+            $schedule->update($scheduleData);
 
             // Sync changes to booking if exists
             if ($schedule->booking) {
                 $bookingData = [
                     'lab_id' => $validated['lab_id'],
-                    'day' => $validated['day'],
+                    'booking_date' => $validated['start_date'] ?? $schedule->booking->booking_date, // update date if changed
                     'start_time' => $validated['start_time'],
                     'end_time' => $validated['end_time'],
                     'participant_count' => $validated['student_count'] ?? $schedule->booking->participant_count,
+                    'booking_type' => $validated['type'], // Also update type
                 ];
 
-                // Sync course/activity based on booking type
-                if ($schedule->booking->isPerkuliahan()) {
-                    $bookingData['course_name'] = $validated['course'];
-                    $bookingData['lecturer_name'] = $validated['lecturer'];
+                // Sync type-specific fields
+                if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+                    $bookingData['course_name'] = $validated['course_name'];
+                    $bookingData['lecturer_name'] = $validated['lecturer_name'];
+                    // Booking model might put komting in pic_name or similar, check existing usage
+                    // Assuming pic_name usually holds the applicant name, but if admin puts komting here maybe it maps?
+                    // Let's stick to existing logic: $bookingData['pic_name'] = $validated['komting'] ?? ...
+                    if (isset($validated['komting'])) {
+                         // Careful: pic_name is the applicant/account. We probably shouldn't override it with komting unless that was the intent.
+                         // But the original code did: $bookingData['pic_name'] = $validated['komting'] ?? ...
+                         // Let's check if komting is provided.
+                         // Actually, for perkuliahan, the applicant might be a rep.
+                         // Let's keep existing logic but be safer.
+                         // The original code: $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
+                         // We will replicate that logic but using the mapped variables.
+                         $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
+                    }
+                    
+                } elseif ($request->type === 'non_perkuliahan') {
+                    $bookingData['activity_name'] = $validated['activity_name'];
+                    $bookingData['activity_type'] = $validated['activity_type'];
+                    $bookingData['position'] = $validated['position'];
+                    $bookingData['equipment_needs'] = $request->equipment_needs; // optional field
+                    
+                } elseif ($request->type === 'pribadi') {
+                    $bookingData['purpose'] = $validated['purpose'];
+                    $bookingData['applicant_status'] = $validated['applicant_status'];
+                    
+                    if (isset($validated['class_year'])) {
+                        $bookingData['class_year'] = $validated['class_year'];
+                    } else {
+                        $bookingData['class_year'] = null;
+                    }
+                    
+                    // Save custom_status when applicant_status is "Lainnya"
+                    if (isset($validated['custom_status'])) {
+                        $bookingData['custom_status'] = $validated['custom_status'];
+                    } else {
+                        $bookingData['custom_status'] = null;
+                    }
                 } else {
                     $bookingData['activity_name'] = $validated['course'];
                 }
-
-                // Sync PIC/komting
-                $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
 
                 $schedule->booking->update($bookingData);
             }
