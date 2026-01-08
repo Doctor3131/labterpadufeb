@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Lab;
 use App\Models\Schedule;
+use App\Helpers\DayHelper;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -80,36 +81,59 @@ class DatabaseSeeder extends Seeder
 
         // Remove EL. 3 01 creation as requested
         
-        // Seed Approved Bookings
-        $lab = Lab::first(); // Use first available lab
+        // Seed Approved Bookings WITH corresponding Schedules
+        // Using fixed weekday dates to avoid Sunday (not in schedules ENUM)
+        $lab = Lab::first();
         
-        // 1. Perkuliahan Tetap
-        \App\Models\Booking::create([
+        // Helper to get next weekday
+        $getNextWeekday = function($dayName) {
+            $dayOrder = ['Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5, 'Sabtu' => 6];
+            $today = \Carbon\Carbon::now('Asia/Jakarta');
+            $target = $today->copy()->next($dayOrder[$dayName] == 6 ? \Carbon\Carbon::SATURDAY : $dayOrder[$dayName]);
+            return $target->format('Y-m-d');
+        };
+        
+        // 1. Perkuliahan Tetap - next Monday
+        $date1 = $getNextWeekday('Senin');
+        $booking1 = \App\Models\Booking::create([
             'lab_id' => $lab->id,
             'booking_type' => 'perkuliahan_tetap',
             'unit_type' => 's1_tembalang',
             'pic_name' => 'Dr. Budi Santoso',
             'study_program' => 'Manajemen',
-            'nim' => '198001012005011001', // NIP actually but stored in string field
+            'nim' => '198001012005011001',
             'phone_number' => '081234567890',
             'course_name' => 'Manajemen Operasional',
             'lecturer_name' => 'Dr. Budi Santoso',
             'lecturer_nip' => '198001012005011001',
-            'booking_date' => date('Y-m-d', strtotime('+1 day')),
+            'booking_date' => $date1,
             'start_time' => '08:00',
             'end_time' => '10:00',
             'participant_count' => 40,
             'status' => 'approved',
             'tracking_token' => \Illuminate\Support\Str::random(10),
-            'handled_by' => 1, // Super Admin
+            'handled_by' => 1,
             'handled_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-            'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+1 day')))->locale('id')->isoFormat('dddd'), 
+            'day' => 'Senin',
+        ]);
+        
+        Schedule::create([
+            'lab_id' => $booking1->lab_id,
+            'day' => $booking1->day,
+            'start_date' => $booking1->booking_date,
+            'end_date' => $booking1->booking_date,
+            'start_time' => $booking1->start_time,
+            'end_time' => $booking1->end_time,
+            'course' => $booking1->course_name,
+            'lecturer' => $booking1->lecturer_name,
+            'student_count' => $booking1->participant_count,
+            'type' => 'perkuliahan_tetap',
+            'booking_id' => $booking1->id,
         ]);
 
-        // 2. Perkuliahan Tidak Tetap
-        \App\Models\Booking::create([
+        // 2. Perkuliahan Tidak Tetap - next Tuesday
+        $date2 = $getNextWeekday('Selasa');
+        $booking2 = \App\Models\Booking::create([
             'lab_id' => $lab->id,
             'booking_type' => 'perkuliahan_tidak_tetap',
             'unit_type' => 'pascasarjana_pleburan',
@@ -120,7 +144,7 @@ class DatabaseSeeder extends Seeder
             'course_name' => 'Praktikum Audit Lanjutan',
             'lecturer_name' => 'Siti Aminah, M.Si',
             'lecturer_nip' => '198502022010012002',
-            'booking_date' => date('Y-m-d', strtotime('+2 days')),
+            'booking_date' => $date2,
             'start_time' => '13:00',
             'end_time' => '15:30',
             'participant_count' => 35,
@@ -128,13 +152,26 @@ class DatabaseSeeder extends Seeder
             'tracking_token' => \Illuminate\Support\Str::random(10),
             'handled_by' => 1,
             'handled_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-             'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+2 days')))->locale('id')->isoFormat('dddd'),
+            'day' => 'Selasa',
+        ]);
+        
+        Schedule::create([
+            'lab_id' => $booking2->lab_id,
+            'day' => $booking2->day,
+            'start_date' => $booking2->booking_date,
+            'end_date' => $booking2->booking_date,
+            'start_time' => $booking2->start_time,
+            'end_time' => $booking2->end_time,
+            'course' => $booking2->course_name,
+            'lecturer' => $booking2->lecturer_name,
+            'student_count' => $booking2->participant_count,
+            'type' => 'perkuliahan_tidak_tetap',
+            'booking_id' => $booking2->id,
         ]);
 
-        // 3. Non-Perkuliahan
-        \App\Models\Booking::create([
+        // 3. Non-Perkuliahan - next Wednesday
+        $date3 = $getNextWeekday('Rabu');
+        $booking3 = \App\Models\Booking::create([
             'lab_id' => $lab->id,
             'booking_type' => 'non_perkuliahan',
             'unit_type' => 's1_tembalang',
@@ -144,7 +181,7 @@ class DatabaseSeeder extends Seeder
             'phone_number' => '085678901234',
             'activity_name' => 'Workshop Technopreneur',
             'activity_type' => 'Workshop',
-            'booking_date' => date('Y-m-d', strtotime('+3 days')),
+            'booking_date' => $date3,
             'start_time' => '09:00',
             'end_time' => '12:00',
             'participant_count' => 40,
@@ -152,16 +189,28 @@ class DatabaseSeeder extends Seeder
             'tracking_token' => \Illuminate\Support\Str::random(10),
             'handled_by' => 1,
             'handled_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-             'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+3 days')))->locale('id')->isoFormat('dddd'),
+            'day' => 'Rabu',
+        ]);
+        
+        Schedule::create([
+            'lab_id' => $booking3->lab_id,
+            'day' => $booking3->day,
+            'start_date' => $booking3->booking_date,
+            'end_date' => $booking3->booking_date,
+            'start_time' => $booking3->start_time,
+            'end_time' => $booking3->end_time,
+            'course' => $booking3->activity_name,
+            'student_count' => $booking3->participant_count,
+            'type' => 'non_perkuliahan',
+            'booking_id' => $booking3->id,
         ]);
 
-        // 4. Pribadi
-        \App\Models\Booking::create([
+        // 4. Pribadi - next Thursday
+        $date4 = $getNextWeekday('Kamis');
+        $booking4 = \App\Models\Booking::create([
             'lab_id' => $lab->id,
             'booking_type' => 'pribadi',
-            'unit_type' => null, // Pribadi has no unit
+            'unit_type' => null,
             'pic_name' => 'Andi',
             'study_program' => 'Manajemen',
             'nim' => '21000120140005',
@@ -169,7 +218,7 @@ class DatabaseSeeder extends Seeder
             'applicant_status' => 'Mahasiswa',
             'class_year' => '2021',
             'purpose' => 'Mengerjakan Tesis',
-            'booking_date' => date('Y-m-d', strtotime('+5 days')),
+            'booking_date' => $date4,
             'start_time' => '10:00',
             'end_time' => '12:00',
             'participant_count' => 1,
@@ -177,9 +226,20 @@ class DatabaseSeeder extends Seeder
             'tracking_token' => \Illuminate\Support\Str::random(10),
             'handled_by' => 1,
             'handled_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-             'day' => \Carbon\Carbon::parse(date('Y-m-d', strtotime('+5 days')))->locale('id')->isoFormat('dddd'),
+            'day' => 'Kamis',
+        ]);
+        
+        Schedule::create([
+            'lab_id' => $booking4->lab_id,
+            'day' => $booking4->day,
+            'start_date' => $booking4->booking_date,
+            'end_date' => $booking4->booking_date,
+            'start_time' => $booking4->start_time,
+            'end_time' => $booking4->end_time,
+            'course' => $booking4->purpose,
+            'student_count' => $booking4->participant_count,
+            'type' => 'pribadi',
+            'booking_id' => $booking4->id,
         ]);
         // Seed Schedules - SENIN
         $seninSchedules = [
