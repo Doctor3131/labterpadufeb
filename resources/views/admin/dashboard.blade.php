@@ -160,32 +160,17 @@
 
     <div class="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-7xl">
         <!-- Header Section -->
-        <div class="mb-6 md:mb-8">
-            <div class="bg-gradient-to-br from-yellow-500 via-yellow-600 to-orange-500 rounded-2xl p-6 shadow-xl mb-6">
-                <div class="flex items-center justify-between mb-4">
+        <div class="mb-6">
+            <div class="bg-gradient-to-br from-yellow-500 via-yellow-600 to-orange-500 rounded-2xl p-4 md:p-6 shadow-xl">
+                <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold text-white mb-1">Manajemen Peminjaman</h1>
-                        <p class="text-sm text-yellow-50">Kelola permintaan peminjaman lab</p>
+                        <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Manajemen Peminjaman</h1>
+                        <p class="text-xs md:text-sm text-yellow-50">Kelola permintaan peminjaman lab</p>
                     </div>
-                    <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-white/20 backdrop-blur-sm p-2 md:p-3 rounded-xl">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
-                    </div>
-                </div>
-                <!-- Quick Stats -->
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
-                        <div class="text-2xl font-bold text-white">{{ $pendingBookings->count() }}</div>
-                        <div class="text-xs text-yellow-50 mt-1">Pending</div>
-                    </div>
-                    <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
-                        <div class="text-2xl font-bold text-white">{{ $approvedBookings->count() }}</div>
-                        <div class="text-xs text-yellow-50 mt-1">Disetujui</div>
-                    </div>
-                    <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
-                        <div class="text-2xl font-bold text-white">{{ $rejectedBookings->count() }}</div>
-                        <div class="text-xs text-yellow-50 mt-1">Ditolak</div>
                     </div>
                 </div>
             </div>
@@ -375,7 +360,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Semua Telah Diproses! 🎉</h3>
+                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Semua Telah Diproses</h3>
                     <p class="text-sm text-gray-600">Tidak ada peminjaman yang menunggu persetujuan</p>
                 </div>
             @endforelse
@@ -612,7 +597,7 @@
                         </svg>
                     </div>
                     <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Tidak Ada Peminjaman Ditolak</h3>
-                    <p class="text-sm text-gray-600">Semua peminjaman telah disetujui 👍</p>
+                    <p class="text-sm text-gray-600">Semua peminjaman telah disetujui</p>
                 </div>
             @endforelse
         </div>
