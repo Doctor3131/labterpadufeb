@@ -30,72 +30,49 @@ class ScheduleController extends Controller
     {
         $query = Schedule::with(['lab', 'booking']);
 
-        // Filter Logic: Date OR Day
-        if ($request->filled('date') || $request->filled('day')) {
-            $query->where(function($q) use ($request) {
-                // 1. Filter by Specific Date
-                if ($request->filled('date')) {
-                    $q->orWhere(function($subQ) use ($request) {
-                        $date = Carbon::parse($request->date);
-                        $dayName = $this->getDayOfWeekInIndonesian($date);
-                        
-                        // Match Day of the specific date
-                        $subQ->where('day', $dayName);
+        // Filter by Lab
+        if ($request->filled('lab_id')) {
+            $query->where('lab_id', $request->lab_id);
+        }
 
-                        // Match Date Range
-                        $subQ->where(function ($q2) use ($request) {
-                            $q2->where(function ($q3) use ($request) {
-                                // Specific date range
-                                $q3->whereNotNull('start_date')
-                                   ->where('start_date', '<=', $request->date)
-                                   ->where(function ($q4) use ($request) {
-                                       $q4->whereNull('end_date')
-                                          ->orWhere('end_date', '>=', $request->date);
-                                   });
-                            })->orWhere(function ($q3) use ($request) {
-                                // Recurring (no start_date) but check end_date
-                                $q3->whereNull('start_date')
-                                   ->where(function ($q4) use ($request) {
-                                       $q4->whereNull('end_date')
-                                          ->orWhere('end_date', '>=', $request->date);
-                                   });
-                            });
-                        });
-                    });
-                }
+        // Filter by Type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
 
-                // 2. Filter by Day (Explicit)
-                if ($request->filled('day')) {
-                    $q->orWhere(function($subQ) use ($request) {
-                        $subQ->where('day', $request->day);
-                        
-                        // Apply standard "Active" check for general day filter
-                        // so we don't show expired schedules for that day
-                        $subQ->where(function ($q2) {
-                            $q2->where(function ($q3) {
-                                // Has end_date and it's today or in the future
-                                $q3->whereNotNull('end_date')
-                                   ->where('end_date', '>=', now()->format('Y-m-d'));
-                            })->orWhere(function ($q3) {
-                                // No end_date (recurring/permanent schedule)
-                                $q3->whereNull('end_date');
-                            });
-                        });
-                    });
-                }
-            });
-        } elseif (!$request->filled('date')) {
-            // Default "Active" filter if NO Date/Day filter is applied
-            // (If Date is applied above, we handled validity inside; if Day is applied, we handled inside)
-            // Actually, if ONLY Day was applied above, we handled it.
-            // If ONLY Date was applied, we handled it.
-            // So this `elseif` handles the "No Date AND No Day" case (Pure initial load or only Type/Lab filter)
+        // Filter by Date (specific date)
+        if ($request->filled('date')) {
+            $date = Carbon::parse($request->date);
+            $dayName = DayHelper::fromDate($date);
             
+            $query->where('day', $dayName)
+                  ->where(function ($q) use ($request) {
+                      $q->where(function ($q2) use ($request) {
+                          // Has start_date, check range
+                          $q2->whereNotNull('start_date')
+                             ->where('start_date', '<=', $request->date)
+                             ->where(function ($q3) use ($request) {
+                                 $q3->whereNull('end_date')
+                                    ->orWhere('end_date', '>=', $request->date);
+                             });
+                      })->orWhere(function ($q2) use ($request) {
+                          // No start_date (recurring), check end_date only
+                          $q2->whereNull('start_date')
+                             ->where(function ($q3) use ($request) {
+                                 $q3->whereNull('end_date')
+                                    ->orWhere('end_date', '>=', $request->date);
+                             });
+                      });
+                  });
+        } else {
+            // No specific date - show active/future schedules only
             $query->where(function ($q) {
                 $q->where(function ($q2) {
+                    // Has end_date in the future
                     $q2->whereNotNull('end_date')
                        ->where('end_date', '>=', now()->format('Y-m-d'));
                 })->orWhere(function ($q2) {
+                    // No end_date (permanent/recurring)
                     $q2->whereNull('end_date');
                 });
             });
@@ -103,15 +80,27 @@ class ScheduleController extends Controller
 
         $schedules = $query->get();
 
-        // Custom Sorting in PHP using DayHelper
+        // Custom Sorting: start_date DESC → day → start_time
+        // Newest schedules appear first (most recent/upcoming at top)
         $schedules = $schedules->sort(function ($a, $b) {
+            // First by start_date DESCENDING (newest first, nulls last)
+            $dateA = $a->start_date ? $a->start_date->format('Y-m-d') : '0000-01-01';
+            $dateB = $b->start_date ? $b->start_date->format('Y-m-d') : '0000-01-01';
+            
+            if ($dateA !== $dateB) {
+                return $dateB <=> $dateA; // DESC order
+            }
+            
+            // Then by day order (Senin -> Sabtu)
             $dayA = DayHelper::getOrder($a->day);
             $dayB = DayHelper::getOrder($b->day);
 
-            if ($dayA === $dayB) {
-                return $a->start_time <=> $b->start_time;
+            if ($dayA !== $dayB) {
+                return $dayA <=> $dayB;
             }
-            return $dayA <=> $dayB;
+            
+            // Finally by start time
+            return $a->start_time <=> $b->start_time;
         });
 
         $labs = Lab::orderBy('name')->get();
@@ -151,8 +140,8 @@ class ScheduleController extends Controller
             'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'type' => 'required|in:regular,perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
-            'start_date' => 'nullable|date|after_or_equal:today',
+            'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'student_count' => 'nullable|integer|min:1',
         ];
@@ -298,8 +287,8 @@ class ScheduleController extends Controller
             'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'type' => 'required|in:regular,perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
-            'start_date' => 'nullable|date|after_or_equal:today',
+            'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'student_count' => 'nullable|integer|min:1',
         ];
@@ -572,7 +561,7 @@ class ScheduleController extends Controller
         $end = Carbon::parse($endDate ?? $startDate);
 
         // IMPORTANT: Validate that start date matches the selected day
-        $startDayName = $this->getDayOfWeekInIndonesian($start);
+        $startDayName = DayHelper::fromDate($start);
         if ($startDayName !== $selectedDay) {
             $formattedStart = $start->format('d/m/Y');
             return "Tanggal mulai ({$formattedStart}) adalah hari {$startDayName}, tetapi hari yang dipilih adalah {$selectedDay}. Silakan pilih tanggal mulai yang jatuh pada hari {$selectedDay}.";
@@ -583,7 +572,7 @@ class ScheduleController extends Controller
         $currentDate = $start->copy();
 
         while ($currentDate->lte($end)) {
-            if ($this->getDayOfWeekInIndonesian($currentDate) === $selectedDay) {
+            if (DayHelper::fromDate($currentDate) === $selectedDay) {
                 $dayFound = true;
                 break;
             }
@@ -599,13 +588,7 @@ class ScheduleController extends Controller
         return true;
     }
 
-    /**
-     * Get Indonesian day name from Carbon date
-     */
-    private function getDayOfWeekInIndonesian($date)
-    {
-        return DayHelper::fromDate($date);
-    }
+
 
     /**
      * Check for pending bookings that might conflict with the schedule

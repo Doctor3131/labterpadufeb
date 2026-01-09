@@ -126,7 +126,6 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
                         <input type="date" name="start_date"
                                value="{{ old('start_date', $schedule && $schedule->start_date ? $schedule->start_date->format('Y-m-d') : '') }}"
-                               min="{{ date('Y-m-d') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika berlaku selamanya</p>
                     </div>

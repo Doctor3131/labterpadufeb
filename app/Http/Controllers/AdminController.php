@@ -105,7 +105,7 @@ class AdminController extends Controller
                     $scheduleData['lecturer'] = null;
                     $scheduleData['komting'] = null;
                 } else {
-                    // Fallback for regular type
+                    // Fallback for unknown booking type
                     $scheduleData['course'] = $booking->course_name ?? $booking->activity_name ?? $booking->purpose ?? 'Peminjaman';
                     $scheduleData['lecturer'] = null;
                     $scheduleData['komting'] = null;

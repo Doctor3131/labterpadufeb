@@ -96,8 +96,8 @@ class ScheduleService
                         'lecturer' => $lecturerName,
                         'komting' => $komtingName,
                         'student_count' => $schedule->student_count,
-                        'booking_type' => $schedule->booking ? $schedule->booking->booking_type : 'perkuliahan_tetap',
-                        'type' => 'perkuliahan_tetap',
+                        'booking_type' => $schedule->booking ? $schedule->booking->booking_type : $schedule->type,
+                        'type' => $schedule->type,
                         'is_booking' => false
                     ]);
                  }
