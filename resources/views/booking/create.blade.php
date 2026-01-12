@@ -81,7 +81,7 @@
                 <div class="flex items-center space-x-3">
                     <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 md:h-16 w-auto object-contain">
                 </div>
-                <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-semibold transition-colors text-sm md:text-base whitespace-nowrap">
+                <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-bold transition-all shadow-sm hover:shadow-md text-sm md:text-base whitespace-nowrap">
                     Login
                 </a>
             </div>
@@ -466,7 +466,7 @@
                         Upload Dokumen & Konfirmasi
                     </h3>
                     
-                    <div class="mb-6">
+                    <div class="mb-6" id="upload-document-section">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">
                             Upload KTM (Kartu Tanda Mahasiswa) <span class="text-red-500">*</span>
                         </label>
@@ -928,7 +928,40 @@
             document.getElementById('btn-prev-4').addEventListener('click', () => goToStep(3));
         }
 
+        function updateUploadVisibility() {
+            const uploadSection = document.getElementById('upload-document-section');
+            const fileInput = document.getElementById('document');
+            
+            // Default: Show and Required
+            let showUpload = true;
+            let requiredUpload = true;
+            
+            if (selectedBookingType === 'pribadi') {
+                 const status = document.getElementById('applicant_status').value;
+                 if (status !== 'Mahasiswa') {
+                     // Non-mahasiswa pribadi: Hide and Not Required
+                     showUpload = false;
+                     requiredUpload = false;
+                 }
+            }
+            
+            if (showUpload) {
+                uploadSection.classList.remove('hidden');
+                fileInput.setAttribute('required', 'required');
+            } else {
+                uploadSection.classList.add('hidden');
+                fileInput.removeAttribute('required');
+                fileInput.value = ''; // Clear file if hidden
+                document.getElementById('file-name').textContent = '';
+            }
+        }
+
         function goToStep(step) {
+            // Check visibility if entering step 4
+            if (step === 4) {
+                updateUploadVisibility();
+            }
+
             // Hide current step
             document.getElementById(`step-${currentStep}`).classList.add('hidden');
             

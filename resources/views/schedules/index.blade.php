@@ -201,12 +201,12 @@
                             // Get lab badge color based on booking type
                             const getLabBadgeColor = (type) => {
                                 const colors = {
-                                    'perkuliahan_tetap': 'bg-yellow-500',
-                                    'perkuliahan_tidak_tetap': 'bg-indigo-500',
-                                    'non_perkuliahan': 'bg-emerald-500',
-                                    'pribadi': 'bg-orange-500'
+                                    'perkuliahan_tetap': 'bg-yellow-100 text-yellow-800',
+                                    'perkuliahan_tidak_tetap': 'bg-indigo-100 text-indigo-800',
+                                    'non_perkuliahan': 'bg-emerald-100 text-emerald-800',
+                                    'pribadi': 'bg-orange-100 text-orange-800'
                                 };
-                                return colors[type] || 'bg-yellow-500';
+                                return colors[type] || 'bg-yellow-100 text-yellow-800';
                             };
                             
                             html += `

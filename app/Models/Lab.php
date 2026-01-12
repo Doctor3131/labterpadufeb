@@ -50,37 +50,14 @@ class Lab extends Model
         // Check recurring schedules (perkuliahan tetap)
         $hasScheduleConflict = $this->schedules()
             ->where('day', $day)
-            ->where(function ($query) use ($date) {
+            ->where(function ($query) use ($date, $startTime, $endTime) {
                 // Check if schedule is active on the requested date
                 if ($date) {
-                    $query->where(function ($q) use ($date) {
-                        $q->whereNull('start_date')
-                          ->orWhere(function ($q2) use ($date) {
-                              $q2->where('start_date', '<=', $date)
-                                 ->where(function ($q3) use ($date) {
-                                     $q3->whereNull('end_date')
-                                        ->orWhere('end_date', '>=', $date);
-                                 });
-                          });
-                    });
+                    $query->activeBetweenDates($date, $date);
                 }
-            })
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->where(function ($q) use ($startTime, $endTime) {
-                    // New booking starts during existing schedule
-                    $q->where('start_time', '<=', $startTime)
-                      ->where('end_time', '>', $startTime);
-                })
-                ->orWhere(function ($q) use ($startTime, $endTime) {
-                    // New booking ends during existing schedule
-                    $q->where('start_time', '<', $endTime)
-                      ->where('end_time', '>=', $endTime);
-                })
-                ->orWhere(function ($q) use ($startTime, $endTime) {
-                    // New booking completely covers existing schedule
-                    $q->where('start_time', '>=', $startTime)
-                      ->where('end_time', '<=', $endTime);
-                });
+                
+                // Check for time overlap
+                $query->overlappingTime($startTime, $endTime);
             })
             ->exists();
 

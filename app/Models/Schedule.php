@@ -130,8 +130,50 @@ class Schedule extends Model
     }
 
     /**
-     * Get formatted time range
+     * Scope to filter schedules that are active within a specific date range.
+     * Takes into account start_date and end_date of the schedule.
      */
+    public function scopeActiveBetweenDates($query, $startDate, $endDate)
+    {
+        return $query->where(function ($q) use ($startDate, $endDate) {
+            // Case 1: Schedule has no start_date (always active from beginning)
+            $q->whereNull('start_date')
+              ->orWhere(function ($q2) use ($endDate, $startDate) {
+                  // Case 2: Schedule starts before or on the end date of the requested range
+                  $q2->where('start_date', '<=', $endDate)
+                     ->where(function ($q3) use ($startDate) {
+                         // AND it has no end_date or ends after or on the start date of the requested range
+                         $q3->whereNull('end_date')
+                            ->orWhere('end_date', '>=', $startDate);
+                     });
+              });
+        });
+    }
+
+    /**
+     * Scope to filter schedules that overlap with a specific time range.
+     */
+    public function scopeOverlappingTime($query, $startTime, $endTime)
+    {
+        return $query->where(function ($q) use ($startTime, $endTime) {
+            // New booking starts during existing schedule
+            $q->where(function ($sub) use ($startTime, $endTime) {
+                $sub->where('start_time', '<=', $startTime)
+                    ->where('end_time', '>', $startTime);
+            })
+            // New booking ends during existing schedule
+            ->orWhere(function ($sub) use ($startTime, $endTime) {
+                $sub->where('start_time', '<', $endTime)
+                    ->where('end_time', '>=', $endTime);
+            })
+            // New booking completely covers existing schedule
+            ->orWhere(function ($sub) use ($startTime, $endTime) {
+                $sub->where('start_time', '>=', $startTime)
+                    ->where('end_time', '<=', $endTime);
+            });
+        });
+    }
+
     public function getTimeRangeAttribute()
     {
         return $this->start_time->format('H:i') . ' - ' . $this->end_time->format('H:i');

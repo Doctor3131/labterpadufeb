@@ -40,19 +40,7 @@ class ScheduleService
 
         // 1. Fetch Regular Schedules
         $labs = Lab::with(['schedules' => function ($query) use ($startOfWeek, $endOfWeek) {
-            $query->where(function ($q) use ($startOfWeek, $endOfWeek) {
-                $q->where(function ($q2) use ($startOfWeek, $endOfWeek) {
-                    // Schedule is active during this week
-                    $q2->whereNull('start_date')
-                       ->orWhere(function ($q3) use ($startOfWeek, $endOfWeek) {
-                           $q3->where('start_date', '<=', $endOfWeek->format('Y-m-d'))
-                              ->where(function ($q4) use ($startOfWeek) {
-                                  $q4->whereNull('end_date')
-                                     ->orWhere('end_date', '>=', $startOfWeek->format('Y-m-d'));
-                              });
-                       });
-                });
-            });
+            $query->activeBetweenDates($startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d'));
         }, 'schedules.booking'])->get();
 
         foreach ($labs as $lab) {

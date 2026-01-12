@@ -71,7 +71,32 @@ class BookingController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'participant_count' => 'required|integer|min:1',
-            'document' => 'required|file|mimes:pdf|max:2048', // Max 2MB
+            // Document validation:
+            // 1. Required if NOT personal booking
+            // 2. Required if personal booking AND applicant status is 'Mahasiswa'
+            'document' => [
+                function ($attribute, $value, $fail) use ($request) {
+                    $isPribadi = $request->booking_type === 'pribadi';
+                    $isMahasiswa = $request->applicant_status === 'Mahasiswa';
+
+                    if (!$isPribadi) {
+                        // Not pribadi (perkuliahan/non-perkuliahan) -> Required
+                        if (!$request->hasFile('document')) {
+                            $fail('Dokumen pendukung (Surat/KTM) wajib diupload.');
+                        }
+                    } else {
+                        // Pribadi
+                        if ($isMahasiswa) {
+                            // Mahasiswa -> Required KTM
+                            if (!$request->hasFile('document')) {
+                                $fail('Foto/Scan KTM wajib diupload untuk mahasiswa.');
+                            }
+                        }
+                        // Non-mahasiswa (Dosen/Pegawai/Lainnya) -> Optional
+                    }
+                },
+                'file', 'mimes:pdf', 'max:2048'
+            ],
             
             // Personal Booking fields
             'applicant_status' => 'required_if:booking_type,pribadi|string|max:255',

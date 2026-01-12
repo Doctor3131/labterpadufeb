@@ -119,7 +119,7 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Tipe Peminjaman</label>
-                        <p class="text-gray-800">Non-Perkuliahan</p>
+                        <x-booking-badge :type="$booking->booking_type" class="text-sm" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Nama Kegiatan</label>
@@ -146,7 +146,7 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Tipe Peminjaman</label>
-                        <p class="text-gray-800">Pribadi</p>
+                        <x-booking-badge :type="$booking->booking_type" class="text-sm" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Status Peminjam</label>
@@ -165,7 +165,7 @@
                 <div class="space-y-3">
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Tipe Peminjaman</label>
-                        <p class="text-gray-800">{{ $booking->booking_type === 'perkuliahan_tetap' ? 'Perkuliahan Tetap' : 'Perkuliahan Tidak Tetap' }}</p>
+                        <x-booking-badge :type="$booking->booking_type" class="text-sm" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-600">Mata Kuliah</label>

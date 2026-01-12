@@ -161,7 +161,7 @@
     <div class="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-7xl">
         <!-- Header Section -->
         <div class="mb-6">
-            <div class="bg-gradient-to-br from-yellow-500 via-yellow-600 to-orange-500 rounded-2xl p-4 md:p-6 shadow-xl">
+            <div class="bg-yellow-500 rounded-2xl p-4 md:p-6 shadow-none">
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Manajemen Peminjaman</h1>
@@ -235,28 +235,8 @@
                     <!-- Header dengan badges dan tanggal -->
                     <div class="flex items-start justify-between gap-2 mb-0">
                         <div class="flex flex-wrap items-center gap-2 flex-1">
-                            <span class="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-bold rounded-lg shadow-sm">
-                                {{ $booking->lab->name }}
-                            </span>
-                            @php
-                                $typeColors = [
-                                    'perkuliahan_tetap' => 'bg-blue-100 text-blue-800',
-                                    'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
-                                    'non_perkuliahan' => 'bg-green-100 text-green-800',
-                                    'pribadi' => 'bg-orange-100 text-orange-800',
-                                ];
-                                $typeLabels = [
-                                    'perkuliahan_tetap' => 'Kuliah Tetap',
-                                    'perkuliahan_tidak_tetap' => 'Kuliah Tidak Tetap',
-                                    'non_perkuliahan' => 'Non-Perkuliahan',
-                                    'pribadi' => 'Pribadi',
-                                ];
-                                $colorClass = $typeColors[$booking->booking_type] ?? 'bg-gray-100 text-gray-800';
-                                $labelText = $typeLabels[$booking->booking_type] ?? ucfirst(str_replace('_', ' ', $booking->booking_type));
-                            @endphp
-                            <span class="px-3 py-1.5 {{ $colorClass }} text-xs font-semibold rounded-lg">
-                                {{ $labelText }}
-                            </span>
+                            <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                            <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
                             <!-- Waktu Dibuat - Inline -->
                             <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                                 {{ $booking->created_at->diffForHumans() }}
@@ -379,26 +359,8 @@
                                 </svg>
                                 Disetujui
                             </span>
-                            <span class="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-lg">{{ $booking->lab->name }}</span>
-                            @php
-                                $typeColors = [
-                                    'perkuliahan_tetap' => 'bg-blue-100 text-blue-800',
-                                    'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
-                                    'non_perkuliahan' => 'bg-green-100 text-green-800',
-                                    'pribadi' => 'bg-orange-100 text-orange-800',
-                                ];
-                                $typeLabels = [
-                                    'perkuliahan_tetap' => 'Kuliah Tetap',
-                                    'perkuliahan_tidak_tetap' => 'Kuliah Tidak Tetap',
-                                    'non_perkuliahan' => 'Non-Perkuliahan',
-                                    'pribadi' => 'Pribadi',
-                                ];
-                                $colorClass = $typeColors[$booking->booking_type] ?? 'bg-gray-100 text-gray-800';
-                                $labelText = $typeLabels[$booking->booking_type] ?? ucfirst(str_replace('_', ' ', $booking->booking_type));
-                            @endphp
-                            <span class="px-3 py-1.5 {{ $colorClass }} text-xs font-semibold rounded-lg">
-                                {{ $labelText }}
-                            </span>
+                            <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                            <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
                         </div>
                         <!-- Tanggal & Waktu - Compact -->
                         <div class="flex flex-col items-end text-right flex-shrink-0">
@@ -498,26 +460,8 @@
                                 </svg>
                                 Ditolak
                             </span>
-                            <span class="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-lg">{{ $booking->lab->name }}</span>
-                            @php
-                                $typeColors = [
-                                    'perkuliahan_tetap' => 'bg-blue-100 text-blue-800',
-                                    'perkuliahan_tidak_tetap' => 'bg-indigo-100 text-indigo-800',
-                                    'non_perkuliahan' => 'bg-green-100 text-green-800',
-                                    'pribadi' => 'bg-orange-100 text-orange-800',
-                                ];
-                                $typeLabels = [
-                                    'perkuliahan_tetap' => 'Kuliah Tetap',
-                                    'perkuliahan_tidak_tetap' => 'Kuliah Tidak Tetap',
-                                    'non_perkuliahan' => 'Non-Perkuliahan',
-                                    'pribadi' => 'Pribadi',
-                                ];
-                                $colorClass = $typeColors[$booking->booking_type] ?? 'bg-gray-100 text-gray-800';
-                                $labelText = $typeLabels[$booking->booking_type] ?? ucfirst(str_replace('_', ' ', $booking->booking_type));
-                            @endphp
-                            <span class="px-3 py-1.5 {{ $colorClass }} text-xs font-semibold rounded-lg">
-                                {{ $labelText }}
-                            </span>
+                            <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                            <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
                         </div>
                         <!-- Tanggal & Waktu - Compact -->
                         <div class="flex flex-col items-end text-right flex-shrink-0">

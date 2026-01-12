@@ -41,8 +41,8 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white overflow-hidden">
-        <div class="absolute inset-0 bg-grid-white/10"></div>
+    <section class="relative bg-yellow-500 text-white overflow-hidden">
+        {{-- <div class="absolute inset-0 bg-grid-white/10"></div> --}}
         <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md">
@@ -132,63 +132,12 @@
                                         {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
                                     </td>
                                     <td class="px-4 lg:px-6 py-4">
-                                        @php
-                                            // Tentukan warna badge ruangan berdasarkan tipe peminjaman
-                                            $roomBadgeClass = 'bg-yellow-100 text-yellow-800'; // Default untuk perkuliahan tetap
-
-                                            if (isset($item['booking_type'])) {
-                                                switch ($item['booking_type']) {
-                                                    case 'perkuliahan_tetap':
-                                                        $roomBadgeClass = 'bg-yellow-100 text-yellow-800';
-                                                        break;
-                                                    case 'perkuliahan_tidak_tetap':
-                                                        $roomBadgeClass = 'bg-indigo-100 text-indigo-800';
-                                                        break;
-                                                    case 'non_perkuliahan':
-                                                        $roomBadgeClass = 'bg-emerald-100 text-emerald-800';
-                                                        break;
-                                                    case 'pribadi':
-                                                        $roomBadgeClass = 'bg-orange-100 text-orange-800';
-                                                        break;
-                                                }
-                                            }
-                                        @endphp
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full {{ $roomBadgeClass }} font-semibold text-xs lg:text-sm">
-                                            {{ $item['lab'] }}
-                                        </span>
+                                        <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-xs lg:text-sm" />
                                     </td>
                                     <td class="px-4 lg:px-6 py-4">
                                         <div class="text-slate-700 font-medium">{{ $item['course'] }}</div>
                                         @if($item['type'] === 'booking' || isset($item['booking_type']))
-                                            @php
-                                                // Tentukan warna dan label badge tipe peminjaman
-                                                $badgeClass = 'bg-gray-100 text-gray-600';
-                                                $badgeLabel = 'Perkuliahan Tetap';
-                                                
-                                                if (isset($item['booking_type'])) {
-                                                    switch ($item['booking_type']) {
-                                                        case 'perkuliahan_tetap':
-                                                            $badgeClass = 'bg-yellow-50 text-yellow-700 border border-yellow-200';
-                                                            $badgeLabel = 'Perkuliahan Tetap';
-                                                            break;
-                                                        case 'perkuliahan_tidak_tetap':
-                                                            $badgeClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
-                                                            $badgeLabel = 'Perkuliahan Tidak Tetap';
-                                                            break;
-                                                        case 'non_perkuliahan':
-                                                            $badgeClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-                                                            $badgeLabel = 'Non-Perkuliahan';
-                                                            break;
-                                                        case 'pribadi':
-                                                            $badgeClass = 'bg-orange-50 text-orange-700 border border-orange-200';
-                                                            $badgeLabel = 'Pribadi';
-                                                            break;
-                                                    }
-                                                }
-                                            @endphp
-                                            <span class="inline-block mt-1 text-xs px-2 py-1 {{ $badgeClass }} rounded">
-                                                {{ $badgeLabel }}
-                                            </span>
+                                            <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="mt-1" />
                                         @endif
                                     </td>
                                     <td class="px-4 lg:px-6 py-4">
