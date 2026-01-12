@@ -214,7 +214,7 @@
                                     <div class="flex justify-between items-start">
                                         <div class="flex-1">
                                             <div class="flex items-center space-x-3 mb-2">
-                                                <span class="inline-block px-3 py-1 ${getLabBadgeColor(schedule.booking_type)} text-white text-sm font-semibold rounded">${schedule.lab}</span>
+                                                <span class="inline-block px-3 py-1 ${getLabBadgeColor(schedule.booking_type)} text-sm font-semibold rounded">${schedule.lab}</span>
                                                 <span class="text-gray-600 font-medium">${startTime} - ${endTime}</span>
                                             </div>
                                             <h4 class="text-lg font-semibold text-gray-800">${schedule.course}</h4>
