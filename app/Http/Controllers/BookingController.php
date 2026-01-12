@@ -6,7 +6,9 @@ use App\Models\Booking;
 use App\Models\Lab;
 use App\Helpers\DayHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
@@ -33,10 +35,13 @@ class BookingController extends Controller
         // Get day name from date using DayHelper
         $dayName = DayHelper::fromEnglish(date('l', strtotime($date)));
         
-        // Get all labs (ignore capacity filter here, we'll warn on frontend)
-        $labs = Lab::orderBy('capacity', 'asc')->get();
+        // Get all labs with eager loading to prevent N+1 queries
+        // This loads all related schedules and bookings in just 3 queries total
+        $labs = Lab::with(['schedules', 'bookings' => function ($query) use ($date) {
+            $query->where('booking_date', $date)->where('status', 'pending');
+        }])->orderBy('capacity', 'asc')->get();
         
-        // Filter labs that are available at the requested time
+        // Filter labs that are available at the requested time (in memory, no additional queries)
         $availableLabs = $labs->filter(function ($lab) use ($dayName, $startTime, $endTime, $date) {
             return $lab->isAvailable($dayName, $startTime, $endTime, $date);
         });
@@ -51,10 +56,11 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        // Log incoming request
+        // Log incoming request (sanitized - no PII)
         Log::info('Booking store method called', [
             'booking_type' => $request->booking_type,
-            'all_data' => $request->except(['_token', 'document'])
+            'lab_id' => $request->lab_id,
+            'booking_date' => $request->booking_date
         ]);
 
         try {
@@ -116,47 +122,51 @@ class BookingController extends Controller
             'software_needs' => 'nullable|string|max:255',
         ]);
 
-        Log::info('Validation passed');
+        Log::info('Validation passed', ['lab_id' => $validated['lab_id']]);
 
-        // Check for schedule conflicts
-        $lab = Lab::findOrFail($validated['lab_id']);
-        $date = \Carbon\Carbon::parse($validated['booking_date']);
-        $day = DayHelper::fromIndex($date->dayOfWeek);
+        // Use transaction with lock to prevent race condition (double booking)
+        return DB::transaction(function () use ($request, $validated) {
+            // Lock the lab row to prevent concurrent bookings
+            $lab = Lab::lockForUpdate()->findOrFail($validated['lab_id']);
+            
+            // Use consistent timezone (Asia/Jakarta)
+            $date = Carbon::parse($validated['booking_date'])->timezone('Asia/Jakarta');
+            $day = DayHelper::fromIndex($date->dayOfWeek);
 
-        if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['booking_date'])) {
-            return back()->withErrors([
-                'time_conflict' => 'Ruangan ' . $lab->name . ' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda (' . $validated['start_time'] . ' - ' . $validated['end_time'] . '). Silakan pilih waktu atau ruangan lain.'
-            ])->withInput();
-        }
+            // Check availability inside the transaction (after lock)
+            if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['booking_date'])) {
+                return back()->withErrors([
+                    'time_conflict' => 'Ruangan ' . $lab->name . ' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda (' . $validated['start_time'] . ' - ' . $validated['end_time'] . '). Silakan pilih waktu atau ruangan lain.'
+                ])->withInput();
+            }
 
-        // Handle document upload
-        if ($request->hasFile('document')) {
-            $path = $request->file('document')->store('booking-documents', 'public');
-            $validated['document_path'] = $path;
-        }
+            // Handle document upload
+            if ($request->hasFile('document')) {
+                $path = $request->file('document')->store('booking-documents', 'public');
+                $validated['document_path'] = $path;
+            }
 
-        // Set is_recurring for perkuliahan tetap
-        $validated['is_recurring'] = $request->booking_type === 'perkuliahan_tetap';
+            // Set is_recurring for perkuliahan tetap
+            $validated['is_recurring'] = $request->booking_type === 'perkuliahan_tetap';
 
-        // Generate unique tracking token
-        $validated['tracking_token'] = bin2hex(random_bytes(16));
+            // Generate unique tracking token
+            $validated['tracking_token'] = bin2hex(random_bytes(16));
 
-        // Day already set above during conflict check
-        $validated['day'] = $day;
+            // Day already set above during conflict check
+            $validated['day'] = $day;
 
-        // Create booking
-        $booking = Booking::create($validated);
+            // Create booking (inside transaction - prevents race condition)
+            $booking = Booking::create($validated);
 
-        // Log for debugging
-        Log::info('Booking created successfully', [
-            'booking_id' => $booking->id,
-            'tracking_token' => $booking->tracking_token,
-            'redirect_to' => route('booking.success', $booking->tracking_token)
-        ]);
+            // Log for debugging (no PII)
+            Log::info('Booking created successfully', [
+                'booking_id' => $booking->id
+            ]);
 
-        // ✅ Redirect using tracking_token (secure)
-        return redirect()->route('booking.success', $booking->tracking_token)
-            ->with('success', 'Permintaan peminjaman berhasil diajukan!');
+            // Redirect using tracking_token (secure)
+            return redirect()->route('booking.success', $booking->tracking_token)
+                ->with('success', 'Permintaan peminjaman berhasil diajukan!');
+        }); // End DB::transaction
             
     } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed', [

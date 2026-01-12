@@ -134,75 +134,12 @@ class ScheduleController extends Controller
      */
     public function store(Request $request)
     {
-        // Base validation rules
-        $rules = [
-            'lab_id' => 'required|exists:labs,id',
-            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'student_count' => 'nullable|integer|min:1',
-        ];
-
-        // Conditional validation based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
-            $rules['course_name'] = 'required|string|max:255';
-            $rules['lecturer_name'] = 'required|string|max:255';
-            $rules['komting'] = 'nullable|string|max:255';
-        } elseif ($request->type === 'non_perkuliahan') {
-            $rules['activity_name'] = 'required|string|max:255';
-            $rules['activity_type'] = 'required|in:Seminar,Workshop,Pelatihan,Rapat,Ujian,Lainnya';
-            $rules['position'] = 'required|string|max:255';
-        } elseif ($request->type === 'pribadi') {
-            $rules['purpose'] = 'required|string|max:255';
-            $rules['applicant_status'] = 'required|in:Mahasiswa,Dosen,Pegawai,Lainnya';
-            
-            // Validate class_year only if status is Mahasiswa
-            if ($request->applicant_status === 'Mahasiswa') {
-                $rules['class_year'] = 'required|string|max:4';
-            }
-            
-            // Validate custom_status if status is Lainnya
-            if ($request->applicant_status === 'Lainnya') {
-                $rules['custom_status'] = 'required|string|max:255';
-            }
-        }
-
+        // Get validation rules using helper method (DRY)
+        $rules = $this->getScheduleValidationRules($request);
         $validated = $request->validate($rules);
 
-        // Map request fields to schedule columns
-        $scheduleData = [
-            'lab_id' => $validated['lab_id'],
-            'day' => $validated['day'],
-            'start_time' => $validated['start_time'],
-            'end_time' => $validated['end_time'],
-            'type' => $validated['type'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
-            'student_count' => $validated['student_count'] ?? null,
-        ];
-
-        // Map course/lecturer/komting based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
-            $scheduleData['course'] = $validated['course_name'];
-            $scheduleData['lecturer'] = $validated['lecturer_name'];
-            $scheduleData['komting'] = $validated['komting'] ?? null;
-        } elseif ($request->type === 'non_perkuliahan') {
-            $scheduleData['course'] = $validated['activity_name'];
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-        } elseif ($request->type === 'pribadi') {
-            $scheduleData['course'] = $validated['purpose'];
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-        } else {
-            // Regular type - fallback
-            $scheduleData['course'] = $validated['course'] ?? 'Peminjaman';
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-        }
+        // Map data using helper method (DRY)
+        $scheduleData = $this->mapScheduleData($validated, $request->type);
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
@@ -281,78 +218,12 @@ class ScheduleController extends Controller
     {
         $schedule = Schedule::with('booking')->findOrFail($id);
         
-        // Base validation rules
-        $rules = [
-            'lab_id' => 'required|exists:labs,id',
-            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'student_count' => 'nullable|integer|min:1',
-        ];
-
-        // Conditional validation and data mapping based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
-            $rules['course_name'] = 'required|string|max:255';
-            $rules['lecturer_name'] = 'required|string|max:255';
-            $rules['komting'] = 'nullable|string|max:255';
-        } elseif ($request->type === 'non_perkuliahan') {
-            $rules['activity_name'] = 'required|string|max:255';
-            $rules['activity_type'] = 'required|in:Seminar,Workshop,Pelatihan,Rapat,Ujian,Lainnya';
-            $rules['position'] = 'required|string|max:255';
-        } elseif ($request->type === 'pribadi') {
-            $rules['purpose'] = 'required|string|max:255';
-            $rules['applicant_status'] = 'required|in:Mahasiswa,Dosen,Pegawai,Lainnya';
-            
-            // Validate class_year only if status is Mahasiswa
-            if ($request->applicant_status === 'Mahasiswa') {
-                $rules['class_year'] = 'required|string|max:4';
-            }
-            
-            // Validate custom_status if status is Lainnya
-            if ($request->applicant_status === 'Lainnya') {
-                $rules['custom_status'] = 'required|string|max:255';
-            }
-        } else {
-            // Regular (manual) fallback
-            $rules['course'] = 'required|string|max:255';
-        }
-
+        // Get validation rules using helper method (DRY)
+        $rules = $this->getScheduleValidationRules($request);
         $validated = $request->validate($rules);
 
-        // Map request fields to schedule columns (generic columns)
-        $scheduleData = [
-            'lab_id' => $validated['lab_id'],
-            'day' => $validated['day'],
-            'start_time' => $validated['start_time'],
-            'end_time' => $validated['end_time'],
-            'type' => $validated['type'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
-            'student_count' => $validated['student_count'] ?? null,
-        ];
-
-        // Map course/lecturer/komting based on type
-        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
-            $scheduleData['course'] = $validated['course_name'];
-            $scheduleData['lecturer'] = $validated['lecturer_name'];
-            $scheduleData['komting'] = $validated['komting'] ?? null;
-        } elseif ($request->type === 'non_perkuliahan') {
-            $scheduleData['course'] = $validated['activity_name'];
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-        } elseif ($request->type === 'pribadi') {
-            $scheduleData['course'] = $validated['purpose'];
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-        } else {
-            // Regular type - fallback
-            $scheduleData['course'] = $validated['course'] ?? 'Peminjaman';
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-        }
+        // Map data using helper method (DRY)
+        $scheduleData = $this->mapScheduleData($validated, $request->type);
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
@@ -630,5 +501,94 @@ class ScheduleController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Get validation rules based on schedule type
+     * Eliminates duplication between store() and update()
+     */
+    private function getScheduleValidationRules(Request $request): array
+    {
+        // Base validation rules
+        $rules = [
+            'lab_id' => 'required|exists:labs,id',
+            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'student_count' => 'nullable|integer|min:1',
+        ];
+
+        // Conditional validation based on type
+        if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
+            $rules['course_name'] = 'required|string|max:255';
+            $rules['lecturer_name'] = 'required|string|max:255';
+            $rules['komting'] = 'nullable|string|max:255';
+        } elseif ($request->type === 'non_perkuliahan') {
+            $rules['activity_name'] = 'required|string|max:255';
+            $rules['activity_type'] = 'required|in:Seminar,Workshop,Pelatihan,Rapat,Ujian,Lainnya';
+            $rules['position'] = 'required|string|max:255';
+        } elseif ($request->type === 'pribadi') {
+            $rules['purpose'] = 'required|string|max:255';
+            $rules['applicant_status'] = 'required|in:Mahasiswa,Dosen,Pegawai,Lainnya';
+            
+            // Validate class_year only if status is Mahasiswa
+            if ($request->applicant_status === 'Mahasiswa') {
+                $rules['class_year'] = 'required|string|max:4';
+            }
+            
+            // Validate custom_status if status is Lainnya
+            if ($request->applicant_status === 'Lainnya') {
+                $rules['custom_status'] = 'required|string|max:255';
+            }
+        } else {
+            // Regular type - fallback
+            $rules['course'] = 'required|string|max:255';
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Map validated data to schedule columns based on type
+     * Eliminates duplication between store() and update()
+     */
+    private function mapScheduleData(array $validated, string $type): array
+    {
+        // Base schedule data
+        $scheduleData = [
+            'lab_id' => $validated['lab_id'],
+            'day' => $validated['day'],
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
+            'type' => $validated['type'],
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+            'student_count' => $validated['student_count'] ?? null,
+        ];
+
+        // Map course/lecturer/komting based on type
+        if ($type === 'perkuliahan_tetap' || $type === 'perkuliahan_tidak_tetap') {
+            $scheduleData['course'] = $validated['course_name'];
+            $scheduleData['lecturer'] = $validated['lecturer_name'];
+            $scheduleData['komting'] = $validated['komting'] ?? null;
+        } elseif ($type === 'non_perkuliahan') {
+            $scheduleData['course'] = $validated['activity_name'];
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        } elseif ($type === 'pribadi') {
+            $scheduleData['course'] = $validated['purpose'];
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        } else {
+            // Regular type - fallback
+            $scheduleData['course'] = $validated['course'] ?? 'Peminjaman';
+            $scheduleData['lecturer'] = null;
+            $scheduleData['komting'] = null;
+        }
+
+        return $scheduleData;
     }
 }
