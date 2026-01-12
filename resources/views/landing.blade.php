@@ -143,7 +143,7 @@
                                     <td class="px-4 lg:px-6 py-4">
                                         <div class="text-slate-600">{{ $item['lecturer'] }}</div>
                                         @if($item['komting'])
-                                            <div class="text-xs text-slate-400 mt-1">{{ $item['booking_type'] === 'pribadi' ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}</div>
+                                            <div class="text-xs text-slate-400 mt-1">{{ in_array($item['booking_type'], ['pribadi', 'non_perkuliahan']) ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}</div>
                                         @endif
                                     </td>
                                     <td class="px-4 lg:px-6 py-4 text-slate-500 text-xs">

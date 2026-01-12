@@ -118,6 +118,8 @@
                                     <div class="font-medium text-gray-800">{{ $schedule->course }}</div>
                                     @if($schedule->komting && in_array($schedule->type, ['perkuliahan_tetap', 'perkuliahan_tidak_tetap']))
                                         <div class="text-sm text-gray-500">Komting: {{ $schedule->komting }}</div>
+                                    @elseif($schedule->komting && in_array($schedule->type, ['non_perkuliahan', 'pribadi']))
+                                        <div class="text-sm text-gray-500">Peminjam: {{ $schedule->komting }}</div>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-gray-600">{{ $schedule->lecturer ?? '-' }}</td>
@@ -226,6 +228,10 @@
                         @if($schedule->komting && in_array($schedule->type, ['perkuliahan_tetap', 'perkuliahan_tidak_tetap']))
                             <div class="text-sm text-gray-600 mb-3">
                                 <span class="font-medium">Komting:</span> {{ $schedule->komting }}
+                            </div>
+                        @elseif($schedule->komting && in_array($schedule->type, ['non_perkuliahan', 'pribadi']))
+                            <div class="text-sm text-gray-600 mb-3">
+                                <span class="font-medium">Peminjam:</span> {{ $schedule->komting }}
                             </div>
                         @endif
                         
