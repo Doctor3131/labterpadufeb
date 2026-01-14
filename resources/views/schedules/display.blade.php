@@ -49,14 +49,14 @@
             @if(count($todaySchedules) > 0)
             <div class="p-6">
                 <!-- Schedule Table -->
-                <table class="w-full border-collapse">
+                <table class="w-full border-collapse table-fixed">
                     <thead class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
                         <tr>
-                            <th class="px-6 py-4 text-left font-semibold border-b-2 border-slate-200" style="width: 140px;">Waktu</th>
-                            <th class="px-6 py-4 text-left font-semibold border-b-2 border-slate-200" style="width: 120px;">Ruang</th>
-                            <th class="px-6 py-4 text-left font-semibold border-b-2 border-slate-200">Kegiatan / Mata Kuliah</th>
-                            <th class="px-6 py-4 text-left font-semibold border-b-2 border-slate-200" style="width: 250px;">Dosen / PIC</th>
-                            <th class="px-6 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 120px;">Peserta</th>
+                            <th class="px-4 py-4 text-left font-semibold border-b-2 border-slate-200" style="width: 150px;">Waktu</th>
+                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 100px;">Ruang</th>
+                            <th class="px-4 py-4 text-left font-semibold border-b-2 border-slate-200">Kegiatan / Mata Kuliah</th>
+                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 200px;">Dosen / PIC</th>
+                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 100px;">Peserta</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,34 +78,26 @@
                             $bgColor = $typeColors[$item['booking_type']] ?? 'bg-slate-500';
                         @endphp
                         <tr class="border-b border-slate-200 {{ $isCurrent ? 'current-row' : 'hover:bg-slate-50' }} transition">
-                            <td class="px-6 py-5 align-top">
-                                <span class="text-xl font-mono font-bold text-slate-800">
-                                    {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }}
-                                </span>
+                            <td class="px-4 py-4 align-middle whitespace-nowrap">
+                                <span class="text-lg font-mono font-bold text-slate-800">{{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }}</span>
                                 <span class="text-slate-400 mx-1">-</span>
-                                <span class="text-lg font-mono text-slate-600">
-                                    {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
-                                </span>
+                                <span class="text-lg font-mono text-slate-600">{{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}</span>
                             </td>
-                            <td class="px-6 py-5 align-top">
-                                <span class="{{ $bgColor }} text-white px-3 py-1.5 rounded-lg font-bold text-sm inline-block">
-                                    {{ $item['lab'] }}
-                                </span>
+                            <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
+                                <span class="{{ $bgColor }} text-white px-2 py-1 rounded text-xs font-semibold">{{ $item['lab'] }}</span>
                             </td>
-                            <td class="px-6 py-5 align-top">
-                                <div class="text-lg font-semibold text-slate-800">{{ $item['course'] }}</div>
+                            <td class="px-4 py-4 align-middle">
+                                <div class="text-base font-semibold text-slate-800">{{ $item['course'] }}</div>
                                 @if($item['komting'])
-                                    <div class="text-sm text-slate-500 mt-1">
+                                    <div class="text-sm text-slate-500 mt-0.5">
                                         {{ in_array($item['booking_type'], ['pribadi', 'non_perkuliahan']) ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-6 py-5 align-top text-slate-600">{{ $item['lecturer'] ?? '-' }}</td>
-                            <td class="px-6 py-5 align-top text-center">
+                            <td class="px-4 py-4 align-middle text-center text-slate-600 text-sm whitespace-nowrap">{{ $item['lecturer'] ?? '-' }}</td>
+                            <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
                                 @if($item['student_count'])
-                                    <span class="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">
-                                        {{ $item['student_count'] }} orang
-                                    </span>
+                                    <span class="text-slate-700 text-sm font-medium">{{ $item['student_count'] }} orang</span>
                                 @else
                                     <span class="text-slate-400">-</span>
                                 @endif
