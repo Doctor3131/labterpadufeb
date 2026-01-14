@@ -1182,5 +1182,190 @@
             }
         }
     </script>
+    <script>
+        // Enhanced Custom Dropdown for Booking Page
+        class CustomSelectEncoded {
+            constructor(originalSelect) {
+                this.originalSelect = originalSelect;
+                this.originalSelect.style.display = 'none'; // Hide original
+                
+                // Create wrapper
+                this.wrapper = document.createElement('div');
+                this.wrapper.className = 'relative custom-select-wrapper w-full';
+                this.originalSelect.parentNode.insertBefore(this.wrapper, this.originalSelect);
+                this.wrapper.appendChild(this.originalSelect); // Move original inside
+                
+                // Create Trigger Element
+                this.trigger = document.createElement('button');
+                this.trigger.type = 'button';
+                // Match the style of existing inputs in create.blade.php (px-4 py-3 border border-gray-300 rounded-lg)
+                this.trigger.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base text-left bg-white flex justify-between items-center transition-shadow duration-200';
+                
+                // Content span
+                this.triggerLabel = document.createElement('span');
+                this.triggerLabel.className = 'block truncate text-gray-700';
+                
+                // Chevron icon
+                const chevron = document.createElement('div');
+                chevron.innerHTML = `<svg class="w-5 h-5 text-gray-400 pointer-events-none transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+                this.chevronIcon = chevron.firstElementChild;
+
+                this.trigger.appendChild(this.triggerLabel);
+                this.trigger.appendChild(chevron);
+                this.wrapper.appendChild(this.trigger);
+
+                // Create Options Container
+                this.optionsContainer = document.createElement('div');
+                this.optionsContainer.className = 'absolute z-50 w-full bg-white shadow-xl max-h-60 rounded-lg py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm mt-1 hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 option-container-anim';
+                this.wrapper.appendChild(this.optionsContainer);
+
+                // Initialize
+                this.initOptions();
+                this.updateTrigger();
+
+                // Event Listeners
+                this.trigger.addEventListener('click', (e) => {
+                    if (this.trigger.hasAttribute('disabled')) return;
+                    e.stopPropagation();
+                    this.toggleDropdown();
+                });
+
+                // Close when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!this.wrapper.contains(e.target)) {
+                        this.closeDropdown();
+                    }
+                });
+
+                // Listen for changes (value)
+                this.originalSelect.addEventListener('change', () => {
+                   this.updateTrigger();
+                   this.initOptions();
+                });
+
+                // Mutation Observer for dynamic changes (attributes AND childList/options)
+                this.observer = new MutationObserver((mutations) => {
+                    let shouldUpdateTrigger = false;
+                    let shouldInitOptions = false;
+
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'disabled') {
+                            shouldUpdateTrigger = true;
+                        }
+                        if (mutation.type === 'childList') {
+                            shouldInitOptions = true;
+                            shouldUpdateTrigger = true; // Trigger text might change if options change
+                        }
+                    });
+
+                    if (shouldInitOptions) this.initOptions();
+                    if (shouldUpdateTrigger) this.updateTrigger();
+                });
+                
+                this.observer.observe(this.originalSelect, { 
+                    attributes: true, 
+                    childList: true, 
+                    subtree: true // needed for option text changes if any
+                });
+            }
+
+            initOptions() {
+                this.optionsContainer.innerHTML = '';
+                const options = Array.from(this.originalSelect.options);
+                
+                if (options.length === 0) {
+                    // No options
+                    return;
+                }
+
+                options.forEach(option => {
+                    // Skip hidden placeholders if desired, but here usually show all that are not hidden
+                    if (option.hidden) return; 
+
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = `text-gray-900 cursor-pointer select-none relative py-3 pl-4 pr-9 hover:bg-yellow-50 transition-colors duration-150 border-b border-gray-50 last:border-0`;
+                    
+                    // Allow html content for warnings (lab capacity icons)
+                    // But usually option.text is plain. 
+                    // In fetchAvailableLabs, we put emoji in textContent. So textContent is safe.
+                    optionDiv.textContent = option.text;
+                    
+                    // Handle disabled options (like headers "Pilih ...")
+                    if (option.disabled && option.value === "") {
+                        optionDiv.className = 'text-gray-400 select-none relative py-2 pl-4 pr-4 bg-gray-50 cursor-default font-semibold text-sm';
+                    }
+
+                    if (option.selected) {
+                        optionDiv.classList.add('bg-blue-50', 'text-blue-900', 'font-medium');
+                        const check = document.createElement('span');
+                        check.className = 'absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600';
+                        check.innerHTML = `<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
+                        optionDiv.appendChild(check);
+                    }
+
+                    if (!option.disabled) {
+                        optionDiv.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.originalSelect.value = option.value;
+                            this.originalSelect.dispatchEvent(new Event('change'));
+                            this.closeDropdown();
+                        });
+                    }
+
+                    this.optionsContainer.appendChild(optionDiv);
+                });
+            }
+
+            updateTrigger() {
+                const selectedOption = this.originalSelect.options[this.originalSelect.selectedIndex];
+                this.triggerLabel.textContent = selectedOption ? selectedOption.text : 'Pilih...';
+                
+                if (this.originalSelect.disabled) {
+                    this.trigger.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
+                    this.trigger.setAttribute('disabled', 'disabled');
+                } else {
+                    this.trigger.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
+                    this.trigger.removeAttribute('disabled');
+                }
+            }
+
+            toggleDropdown() {
+                const isHidden = this.optionsContainer.classList.contains('hidden');
+                // Close others
+                document.querySelectorAll('.custom-select-wrapper .options-container').forEach(el => {
+                    if (!el.classList.contains('hidden') && el !== this.optionsContainer) {
+                        el.classList.add('hidden');
+                        const otherChevron = el.parentElement.querySelector('svg');
+                        if(otherChevron) otherChevron.classList.remove('rotate-180');
+                    }
+                });
+
+                if (isHidden) {
+                    this.optionsContainer.classList.remove('hidden');
+                    this.chevronIcon.classList.add('rotate-180');
+                } else {
+                    this.closeDropdown();
+                }
+            }
+
+            closeDropdown() {
+                this.optionsContainer.classList.add('hidden');
+                this.chevronIcon.classList.remove('rotate-180');
+            }
+        }
+
+        // Initialize for Booking Page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Target selects
+            const selects = ['activity_type', 'applicant_status', 'labSelect'];
+            
+            selects.forEach(id => {
+                const selectElement = document.getElementById(id) || document.querySelector(`select[name="${id}"]`);
+                if (selectElement) {
+                    new CustomSelectEncoded(selectElement);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
