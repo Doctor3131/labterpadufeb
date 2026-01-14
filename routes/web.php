@@ -28,6 +28,9 @@ Route::get('/schedules', function () {
 })->name('schedules.index');
 Route::get('/schedules/week', [App\Http\Controllers\ScheduleController::class, 'getWeekSchedules'])->name('schedules.week');
 
+// TV Display Mode (Fullscreen for TV/Monitor)
+Route::get('/display', [App\Http\Controllers\ScheduleController::class, 'display'])->name('schedules.display');
+
 // Auth Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);

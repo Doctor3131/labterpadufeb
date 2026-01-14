@@ -56,4 +56,37 @@ class ScheduleController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Display fullscreen TV mode for schedule display
+     */
+    public function display(Request $request)
+    {
+        // Get week range (current week)
+        [$startOfWeek, $endOfWeek] = $this->scheduleService->getWeekRange(0);
+        
+        // Get all schedules for the week
+        $weekSchedules = $this->scheduleService->getWeekSchedules($startOfWeek, $endOfWeek);
+        
+        // Organize by day
+        $schedules = [];
+        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        
+        foreach ($days as $day) {
+            $daySchedules = $weekSchedules->filter(fn($s) => $s['day'] === $day)->values();
+            $schedules[$day] = [
+                'items' => $daySchedules,
+                'date' => $startOfWeek->copy()->next(strtolower($day === 'Senin' ? 'Monday' : ($day === 'Selasa' ? 'Tuesday' : ($day === 'Rabu' ? 'Wednesday' : ($day === 'Kamis' ? 'Thursday' : ($day === 'Jumat' ? 'Friday' : 'Saturday'))))))->format('Y-m-d'),
+            ];
+        }
+        
+        // Fix Senin date (it's the start of week)
+        $schedules['Senin']['date'] = $startOfWeek->format('Y-m-d');
+        
+        return view('schedules.display', [
+            'schedules' => $schedules,
+            'startOfWeek' => $startOfWeek,
+            'endOfWeek' => $endOfWeek,
+        ]);
+    }
 }
