@@ -150,19 +150,74 @@
     <script>
         function copyToken() {
             const token = '{{ $booking->tracking_token }}';
-            navigator.clipboard.writeText(token).then(() => {
-                const btn = document.getElementById('copyTokenBtn');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✓ Tersalin!';
-                btn.classList.add('bg-green-500');
-                btn.classList.remove('bg-yellow-500');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('bg-green-500');
-                    btn.classList.add('bg-yellow-500');
-                }, 2000);
-            });
+            const btn = document.getElementById('copyTokenBtn');
+            const originalText = btn.innerHTML;
+            
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(token).then(() => {
+                    showCopySuccess(btn, originalText);
+                }).catch(() => {
+                    // Fallback if clipboard API fails
+                    fallbackCopy(token, btn, originalText);
+                });
+            } else {
+                // Use fallback for browsers that don't support clipboard API
+                fallbackCopy(token, btn, originalText);
+            }
+        }
+
+        function fallbackCopy(text, btn, originalText) {
+            // Create temporary input element
+            const tempInput = document.createElement('input');
+            tempInput.style.position = 'fixed';
+            tempInput.style.opacity = '0';
+            tempInput.style.pointerEvents = 'none';
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            
+            // Select and copy
+            tempInput.focus();
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess(btn, originalText);
+                } else {
+                    showCopyError(btn, originalText);
+                }
+            } catch (err) {
+                showCopyError(btn, originalText);
+            }
+            
+            // Remove temporary input
+            document.body.removeChild(tempInput);
+        }
+
+        function showCopySuccess(btn, originalText) {
+            btn.innerHTML = '✓ Tersalin!';
+            btn.classList.add('bg-green-500');
+            btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-green-500');
+                btn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+            }, 2000);
+        }
+
+        function showCopyError(btn, originalText) {
+            btn.innerHTML = '✗ Gagal';
+            btn.classList.add('bg-red-500');
+            btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('bg-red-500');
+                btn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+            }, 2000);
         }
     </script>
 </body>
