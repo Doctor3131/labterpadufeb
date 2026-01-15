@@ -167,14 +167,12 @@ class ScheduleController extends Controller
 
         if ($conflict) {
             return back()
-                ->withErrors(['conflict' => 'Jadwal bentrok dengan: ' . $conflict])
+                ->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: ' . $conflict])
                 ->withInput();
         }
 
-        Schedule::create($scheduleData);
-
-        // Check for pending bookings that might conflict (warning only)
-        $pendingBookingWarning = $this->checkPendingBookings(
+        // Check for conflicts with pending bookings - BLOCKER
+        $pendingConflict = $this->checkPendingBookings(
             $validated['lab_id'],
             $validated['day'],
             $validated['start_time'],
@@ -183,13 +181,16 @@ class ScheduleController extends Controller
             $validated['end_date'] ?? null
         );
 
-        $successMessage = 'Jadwal berhasil ditambahkan!';
-        if ($pendingBookingWarning) {
-            $successMessage .= ' Ã¢Å¡Â Ã¯Â¸Â Perhatian: ' . $pendingBookingWarning;
+        if ($pendingConflict) {
+            return back()
+                ->withErrors(['conflict' => $pendingConflict])
+                ->withInput();
         }
 
+        Schedule::create($scheduleData);
+
         return redirect()->route('admin.schedules.index')
-            ->with('success', $successMessage);
+            ->with('success', 'Jadwal berhasil ditambahkan!');
     }
 
     /**
@@ -251,7 +252,24 @@ class ScheduleController extends Controller
 
         if ($conflict) {
             return back()
-                ->withErrors(['conflict' => 'Jadwal bentrok dengan: ' . $conflict])
+                ->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: ' . $conflict])
+                ->withInput();
+        }
+
+        // Check for conflicts with pending bookings - BLOCKER
+        $pendingConflict = $this->checkPendingBookings(
+            $validated['lab_id'],
+            $validated['day'],
+            $validated['start_time'],
+            $validated['end_time'],
+            $validated['start_date'] ?? null,
+            $validated['end_date'] ?? null,
+            $schedule->booking_id // Exclude current booking if schedule is from booking
+        );
+
+        if ($pendingConflict) {
+            return back()
+                ->withErrors(['conflict' => $pendingConflict])
                 ->withInput();
         }
 
@@ -318,23 +336,8 @@ class ScheduleController extends Controller
             }
         });
 
-        // Check for pending bookings that might conflict (warning only)
-        $pendingBookingWarning = $this->checkPendingBookings(
-            $validated['lab_id'],
-            $validated['day'],
-            $validated['start_time'],
-            $validated['end_time'],
-            $validated['start_date'] ?? null,
-            $validated['end_date'] ?? null
-        );
-
-        $successMessage = 'Jadwal berhasil diperbarui!';
-        if ($pendingBookingWarning) {
-            $successMessage .= ' Ã¢Å¡Â Ã¯Â¸Â Perhatian: ' . $pendingBookingWarning;
-        }
-
         return redirect()->route('admin.schedules.index')
-            ->with('success', $successMessage);
+            ->with('success', 'Jadwal berhasil diperbarui!');
     }
 
     /**
@@ -462,10 +465,10 @@ class ScheduleController extends Controller
 
 
     /**
-     * Check for pending bookings that might conflict with the schedule
-     * Returns a warning message if any pending bookings are found, null otherwise
+     * Check for pending bookings that conflict with the schedule
+     * Returns an error message if any pending bookings are found, null otherwise
      */
-    private function checkPendingBookings($labId, $day, $startTime, $endTime, $startDate, $endDate)
+    private function checkPendingBookings($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeBookingId = null)
     {
         $query = Booking::where('lab_id', $labId)
             ->where('day', $day)
@@ -474,6 +477,11 @@ class ScheduleController extends Controller
                 $q->whereTime('start_time', '<', $endTime)
                   ->whereTime('end_time', '>', $startTime);
             });
+
+        // Exclude specific booking if needed (for update scenario)
+        if ($excludeBookingId) {
+            $query->where('id', '!=', $excludeBookingId);
+        }
 
         // If dates are specified, filter bookings within date range
         if ($startDate || $endDate) {
@@ -494,10 +502,11 @@ class ScheduleController extends Controller
             $bookingList = $pendingBookings->map(function ($booking) {
                 $name = $booking->course_name ?? $booking->activity_name ?? 'Peminjaman Pribadi';
                 $date = Carbon::parse($booking->booking_date)->format('d/m/Y');
-                return "{$name} ({$date})";
+                $time = Carbon::parse($booking->start_time)->format('H:i') . ' - ' . Carbon::parse($booking->end_time)->format('H:i');
+                return "{$name} ({$date}, {$time})";
             })->join(', ');
 
-            return "Ada {$pendingBookings->count()} booking pending yang mungkin konflik: {$bookingList}. Booking tersebut perlu ditolak atau diubah waktunya.";
+            return "Tidak dapat membuat jadwal. Terdapat {$pendingBookings->count()} peminjaman pending yang bentrok: {$bookingList}. Silakan tolak atau approve peminjaman tersebut terlebih dahulu.";
         }
 
         return null;
@@ -592,3 +601,4 @@ class ScheduleController extends Controller
         return $scheduleData;
     }
 }
+

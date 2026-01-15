@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -49,6 +50,22 @@ class AdminController extends Controller
     public function approve($id)
     {
         $booking = Booking::findOrFail($id);
+        
+        // CRITICAL: Check for schedule conflicts BEFORE approving
+        $bookingDate = \Carbon\Carbon::parse($booking->booking_date);
+        $conflictCheck = $this->checkScheduleConflict(
+            $booking->lab_id,
+            $booking->day,
+            $booking->start_time,
+            $booking->end_time,
+            $bookingDate->format('Y-m-d'),
+            $booking->is_recurring ? null : $bookingDate->format('Y-m-d')
+        );
+
+        if ($conflictCheck) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Tidak dapat menyetujui peminjaman: ' . $conflictCheck);
+        }
         
         DB::transaction(function () use ($booking) {
             // Update booking status
@@ -169,5 +186,70 @@ class AdminController extends Controller
 
         return redirect()->route('admin.dashboard')
             ->with('success', 'Peminjaman berhasil ditolak.');
+    }
+
+    /**
+     * Check for schedule conflicts before approving a booking
+     * Returns error message if conflict exists, null otherwise
+     */
+    private function checkScheduleConflict($labId, $day, $startTime, $endTime, $startDate, $endDate = null)
+    {
+        // Check for conflicts with existing schedules
+        $conflictingSchedule = Schedule::where('lab_id', $labId)
+            ->where('day', $day)
+            ->where(function ($q) use ($startTime, $endTime) {
+                $q->whereTime('start_time', '<', $endTime)
+                  ->whereTime('end_time', '>', $startTime);
+            })
+            ->where(function ($q) use ($startDate, $endDate) {
+                // Date overlap check
+                $q->where(function ($q2) use ($startDate, $endDate) {
+                    // Permanent schedules (no end_date) that started before or on this date
+                    $q2->whereNull('end_date')
+                       ->where(function ($q3) use ($endDate, $startDate) {
+                           $q3->whereNull('start_date')
+                              ->orWhere('start_date', '<=', $endDate ?? $startDate);
+                       });
+                })->orWhere(function ($q2) use ($startDate, $endDate) {
+                    // Scheduled with specific date range
+                    $q2->whereNotNull('start_date')
+                       ->where('start_date', '<=', $endDate ?? $startDate)
+                       ->where(function ($q3) use ($startDate) {
+                           $q3->whereNull('end_date')
+                              ->orWhere('end_date', '>=', $startDate);
+                       });
+                });
+            })
+            ->first();
+
+        if ($conflictingSchedule) {
+            $timeRange = Carbon::parse($conflictingSchedule->start_time)->format('H:i') . 
+                         ' - ' . 
+                         Carbon::parse($conflictingSchedule->end_time)->format('H:i');
+            $courseName = $conflictingSchedule->course ?? 'Jadwal';
+            return "Bentrok dengan jadwal yang sudah ada: {$courseName} ({$timeRange})";
+        }
+
+        // Check for conflicts with OTHER pending bookings (exclude current one being approved)
+        // This is handled by the unique constraint in the database, but we can add extra validation
+        $conflictingBooking = Booking::where('lab_id', $labId)
+            ->where('day', $day)
+            ->where('status', 'approved')
+            ->where('booking_date', $startDate)
+            ->where(function ($q) use ($startTime, $endTime) {
+                $q->whereTime('start_time', '<', $endTime)
+                  ->whereTime('end_time', '>', $startTime);
+            })
+            ->first();
+
+        if ($conflictingBooking) {
+            $timeRange = Carbon::parse($conflictingBooking->start_time)->format('H:i') . 
+                         ' - ' . 
+                         Carbon::parse($conflictingBooking->end_time)->format('H:i');
+            $bookingName = $conflictingBooking->course_name ?? $conflictingBooking->activity_name ?? 'Peminjaman';
+            return "Bentrok dengan peminjaman yang sudah disetujui: {$bookingName} ({$timeRange})";
+        }
+
+        return null;
     }
 }
