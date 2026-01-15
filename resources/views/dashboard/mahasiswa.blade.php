@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Mahasiswa - LabTerpaduFEB')
+@section('title', 'Dashboard Mahasiswa - LabDigitalFEB')
 
 @section('content')
 <!-- Header with Yellow Background -->

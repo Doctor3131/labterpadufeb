@@ -24,9 +24,11 @@
     <header class="bg-yellow-500 py-4 px-6 shadow-lg">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo" class="h-12">
+                <a href="{{ route('landing') }}" class="hover:opacity-80 transition-opacity">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo" class="h-12">
+                </a>
                 <div>
-                    <h1 class="text-2xl font-bold text-white">Jadwal Laboratorium Terpadu FEB</h1>
+                    <h1 class="text-2xl font-bold text-white">Jadwal Laboratorium Digital FEB</h1>
                     <p class="text-yellow-100 text-sm">Hari Ini - {{ now()->timezone('Asia/Jakarta')->isoFormat('dddd, D MMMM Y') }}</p>
                 </div>
             </div>
@@ -52,10 +54,10 @@
                 <table class="w-full border-collapse table-fixed">
                     <thead class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
                         <tr>
-                            <th class="px-4 py-4 text-left font-semibold border-b-2 border-slate-200" style="width: 150px;">Waktu</th>
-                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 100px;">Ruang</th>
+                            <th class="px-4 py-4 text-left font-semibold border-b-2 border-slate-200" style="width: 130px;">Waktu</th>
+                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 80px;">Ruang</th>
                             <th class="px-4 py-4 text-left font-semibold border-b-2 border-slate-200">Kegiatan / Mata Kuliah</th>
-                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 200px;">Dosen / PIC</th>
+                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 320px;">Dosen / PIC</th>
                             <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 100px;">Peserta</th>
                         </tr>
                     </thead>
@@ -94,7 +96,7 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-4 py-4 align-middle text-center text-slate-600 text-sm whitespace-nowrap">{{ $item['lecturer'] ?? '-' }}</td>
+                            <td class="px-4 py-4 align-middle text-center text-slate-600 text-sm">{{ $item['lecturer'] ?? '-' }}</td>
                             <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
                                 @if($item['student_count'])
                                     <span class="text-slate-700 text-sm font-medium">{{ $item['student_count'] }} orang</span>

@@ -100,7 +100,7 @@
                 <td class="py-1 align-top">JAM</td>
                 <td class="py-1 align-top">:</td>
                 <td class="py-1">
-                    {{ $booking->start_time->format('H:i') }} s.d. {{ $booking->end_time->format('H:i') }} WIB
+                    {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} s.d. {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }} WIB
                 </td>
             </tr>
             <tr>

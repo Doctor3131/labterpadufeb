@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Register - LabTerpaduFEB')
+@section('title', 'Register - LabDigitalFEB')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center p-4 bg-gray-50">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peminjaman Berhasil - Lab Terpadu FEB UNDIP</title>
+    <title>Peminjaman Berhasil - Lab Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50">
@@ -113,7 +113,7 @@
 
                     <div class="flex justify-between items-start border-b pb-2 gap-4">
                         <span class="text-gray-600 shrink-0">Waktu:</span>
-                        <span class="font-semibold text-gray-800 text-right">{{ $booking->start_time }} - {{ $booking->end_time }}</span>
+                        <span class="font-semibold text-gray-800 text-right">{{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}</span>
                     </div>
 
                     <div class="flex justify-between items-start border-b pb-2 gap-4">

@@ -174,7 +174,7 @@ POST /logout                  → Logout
 ## 🔄 Cara Menggunakan
 
 ### Untuk Peminjam (Mahasiswa/Dosen):
-1. Buka website Lab Terpadu FEB UNDIP
+1. Buka website Lab Digital FEB UNDIP
 2. Klik "Ajukan Peminjaman"
 3. Pilih tipe peminjaman
 4. Isi data peminjam & detail kegiatan

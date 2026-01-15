@@ -12,60 +12,29 @@
     <!-- Sticky Navbar -->
     <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div class="container mx-auto px-4 lg:px-8">
-            <div class="flex items-center justify-between h-20">
+            <div class="flex items-center justify-between h-16 lg:h-20">
                 <!-- Left: Brand -->
                 <a href="{{ route('landing') }}" class="flex items-center space-x-3 group cursor-pointer">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-14 lg:h-16 w-auto object-contain group-hover:scale-105 transition-all duration-300">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 lg:h-12 w-auto object-contain group-hover:scale-105 transition-all duration-300">
                 </a>
 
                 <!-- Right: Navigation Links -->
-                <div class="flex items-center gap-3 lg:gap-4 ml-4">
-                    <!-- Desktop Menu -->
-                    <a href="{{ route('schedules.index') }}" class="hidden lg:inline-flex items-center px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex items-center space-x-3 lg:space-x-4">
+                    <a href="{{ route('schedules.index') }}" class="inline-flex items-center px-3 lg:px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
+                        <svg class="w-4 h-4 lg:w-5 lg:h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         Jadwal
                     </a>
-
-                    <!-- Login/Dashboard Button -->
                     @auth
-                        <a href="{{ route('dashboard') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-xs sm:text-sm lg:text-base whitespace-nowrap">
-                            Dashboard Asisten
+                        <a href="{{ route('dashboard') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                            Dashboard Asisten Lab
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-xs sm:text-sm lg:text-base whitespace-nowrap">
-                            Login Asisten
+                        <a href="{{ route('login') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                            Login Asisten Lab
                         </a>
                     @endauth
-
-                    <!-- Mobile Hamburger Menu -->
-                    <div class="relative lg:hidden">
-                        <button id="mobile-menu-btn" class="p-2 text-slate-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                            </svg>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="mobile-menu-dropdown" class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 hidden transform origin-top-right transition-all duration-200 z-50">
-                            <div class="py-2">
-                                <a href="{{ route('schedules.index') }}" class="flex items-center px-4 py-3 text-slate-700 hover:bg-yellow-50 hover:text-yellow-700 transition-colors">
-                                    <svg class="w-5 h-5 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <span class="font-medium">Lihat Jadwal</span>
-                                </a>
-                                <div class="border-t border-slate-100 my-1"></div>
-                                <a href="{{ route('booking.create') }}" class="flex items-center px-4 py-3 text-slate-700 hover:bg-yellow-50 hover:text-yellow-700 transition-colors">
-                                    <svg class="w-5 h-5 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                    <span class="font-medium">Ajukan Peminjaman</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -77,7 +46,7 @@
         <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md">
-                    Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium Terpadu
+                    Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium Digital
                 </h2>
                 <p class="text-base lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-6 lg:mb-10">
                     Pantau jadwal praktikum dan ajukan penggunaan fasilitas laboratorium secara terintegrasi
@@ -146,134 +115,60 @@
                             </p>
                         </div>
 
-                        <!-- Desktop Table View -->
-                        <div class="hidden lg:block">
-                            <table class="w-full min-w-[800px]">
-                                <thead class="bg-slate-100 text-slate-700 text-sm">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left font-semibold">Waktu</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Ruang</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Kegiatan / Mata Kuliah</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Dosen / PIC</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Info</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm lg:text-base">
-                                    @forelse(($schedules[$day]['items'] ?? []) as $item)
-                                    <tr class="border-t border-slate-200 hover:bg-slate-50 transition">
-                                        <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
-                                            {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-sm" />
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-slate-700 font-medium">{{ $item['course'] }}</div>
-                                            @if($item['type'] === 'booking' || isset($item['booking_type']))
-                                                <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="mt-1" />
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-slate-600">{{ $item['lecturer'] }}</div>
-                                            @if($item['komting'])
-                                                <div class="text-xs text-slate-400 mt-1">{{ in_array($item['booking_type'], ['pribadi', 'non_perkuliahan']) ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}</div>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-slate-500 text-xs">
-                                            @if($item['student_count'])
-                                                <div class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                    </svg>
-                                                    {{ $item['student_count'] }} peserta
-                                                </div>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-12 text-center text-slate-500">
-                                            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                            </svg>
-                                            <p class="text-lg font-medium">Tidak ada jadwal untuk hari {{ $day }}</p>
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Mobile Card View -->
-                        <div class="lg:hidden p-4 space-y-3 bg-slate-50">
-                            @forelse(($schedules[$day]['items'] ?? []) as $item)
-                            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all">
-                                <!-- Header: Time & Room -->
-                                <div class="flex justify-between items-start mb-3">
-                                    <div class="flex items-center text-slate-800 font-bold text-sm bg-slate-100 px-2.5 py-1 rounded-lg">
-                                        <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
+                        <table class="w-full min-w-[800px]">
+                            <thead class="bg-slate-100 text-slate-700 text-sm">
+                                <tr>
+                                    <th class="px-4 lg:px-6 py-4 text-left font-semibold">Waktu</th>
+                                    <th class="px-4 lg:px-6 py-4 text-left font-semibold">Ruang</th>
+                                    <th class="px-4 lg:px-6 py-4 text-left font-semibold">Kegiatan / Mata Kuliah</th>
+                                    <th class="px-4 lg:px-6 py-4 text-left font-semibold">Dosen / PIC</th>
+                                    <th class="px-4 lg:px-6 py-4 text-left font-semibold">Info</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm lg:text-base">
+                                @forelse(($schedules[$day]['items'] ?? []) as $item)
+                                <tr class="border-t border-slate-200 hover:bg-slate-50 transition">
+                                    <td class="px-4 lg:px-6 py-4 font-medium text-slate-900">
                                         {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
-                                    </div>
-                                    <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-xs shadow-sm" />
-                                </div>
-
-                                <!-- Body: Course Name -->
-                                <div class="mb-3">
-                                    <h4 class="font-bold text-slate-900 text-base leading-snug mb-1.5">{{ $item['course'] }}</h4>
-                                    @if($item['type'] === 'booking' || isset($item['booking_type']))
-                                        <div class="inline-block">
-                                            <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-[10px] px-2 py-0.5" />
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <!-- Footer: Lecturer & Info -->
-                                <div class="border-t border-slate-100 pt-3 flex flex-col gap-3">
-                                    <!-- Lecturer -->
-                                    <div class="flex items-start text-xs text-slate-600">
-                                        <svg class="w-4 h-4 mr-2 text-slate-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        <span class="font-medium leading-relaxed">{{ $item['lecturer'] }}</span>
-                                    </div>
-                                    
-                                    <!-- Meta Info (Student Count & PIC) -->
-                                    @if($item['student_count'] || $item['komting'])
-                                    <div class="flex items-center justify-between gap-3 text-xs text-slate-500">
+                                    </td>
+                                    <td class="px-4 lg:px-6 py-4">
+                                        <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-xs lg:text-sm" />
+                                    </td>
+                                    <td class="px-4 lg:px-6 py-4">
+                                        <div class="text-slate-700 font-medium">{{ $item['course'] }}</div>
+                                        @if($item['type'] === 'booking' || isset($item['booking_type']))
+                                            <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="mt-1" />
+                                        @endif
+                                    </td>
+                                    <td class="px-4 lg:px-6 py-4">
+                                        <div class="text-slate-600">{{ $item['lecturer'] }}</div>
+                                        @if($item['komting'])
+                                            <div class="text-xs text-slate-400 mt-1">{{ in_array($item['booking_type'], ['pribadi', 'non_perkuliahan']) ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 lg:px-6 py-4 text-slate-500 text-xs">
                                         @if($item['student_count'])
-                                            <div class="flex-shrink-0 flex items-center bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                                 </svg>
-                                                <span class="font-medium text-slate-600">{{ $item['student_count'] }} Peserta</span>
+                                                {{ $item['student_count'] }} peserta
                                             </div>
                                         @endif
-
-                                        @if($item['komting'])
-                                            <div class="flex-1 min-w-0 text-right">
-                                                <span class="text-slate-400 mr-1">PIC:</span>
-                                                <span class="font-medium text-slate-700 break-words leading-tight" title="{{ $item['komting'] }}">
-                                                    {{ $item['komting'] }}
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                            @empty
-                            <div class="text-center py-12 px-4">
-                                <div class="bg-white rounded-full p-4 inline-flex mb-4 shadow-sm">
-                                    <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-slate-500 font-medium">Tidak ada jadwal</p>
-                            </div>
-                            @endforelse
-                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <p class="text-lg font-medium">Tidak ada jadwal untuk hari {{ $day }}</p>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                     @endforeach
                 </div>
@@ -366,7 +261,7 @@
                             <div class="flex-1">
                                 <h3 class="text-sm font-semibold text-blue-900 mb-1">Informasi</h3>
                                 <p class="text-xs text-blue-800">
-                                    Bawa dokumen yang sudah di-print ke kantor Lab Terpadu FEB untuk konfirmasi dan tanda tangan.
+                                    Bawa dokumen yang sudah di-print ke kantor Lab Digital FEB untuk konfirmasi dan tanda tangan.
                                 </p>
                             </div>
                         </div> 
@@ -384,7 +279,7 @@
             <!-- Contact Info - Horizontal -->
             <div class="flex flex-wrap items-center justify-center gap-4 lg:gap-6 mb-4 text-sm">
                 <!-- Instagram -->
-                <a href="https://instagram.com/upkfeb" target="_blank" rel="noopener noreferrer" 
+                <a href="https://instagram.com/labdigital_feb" target="_blank" rel="noopener noreferrer" 
                    class="flex items-center gap-2 hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -408,7 +303,7 @@
                 </a>
             </div>
             <!-- Copyright -->
-            <p class="text-sm lg:text-base">&copy; {{ date('Y') }} Laboratorium Terpadu FEB UNDIP. All rights reserved.</p>
+            <p class="text-sm lg:text-base">&copy; {{ date('Y') }} Laboratorium Digital FEB UNDIP. All rights reserved.</p>
         </div>
     </footer>
 
@@ -449,25 +344,6 @@
             window.open(`/booking/print/${token}`, '_blank');
             return false;
         }
-        // Mobile Menu Toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const btn = document.getElementById('mobile-menu-btn');
-            const menu = document.getElementById('mobile-menu-dropdown');
-            
-            if(btn && menu) {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    menu.classList.toggle('hidden');
-                });
-                
-                // Close when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!menu.contains(e.target) && !btn.contains(e.target)) {
-                        menu.classList.add('hidden');
-                    }
-                });
-            }
-        });
     </script>
 
 </body>

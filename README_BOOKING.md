@@ -93,7 +93,7 @@ Sistem Peminjaman Laboratorium adalah aplikasi web yang memungkinkan mahasiswa, 
 
 1. **Clone & Install Dependencies**
 ```bash
-cd "D:\Lab Terpadu\LabTerpaduFEB"
+cd "D:\Lab Digital\LabDigitalFEB"
 composer install
 npm install
 ```
@@ -104,7 +104,7 @@ npm install
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=labterpadu
+DB_DATABASE=labDigital
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -162,7 +162,7 @@ Login: http://localhost:8000/login
 ## 📁 Project Structure
 
 ```
-LabTerpaduFEB/
+LabDigitalFEB/
 ├── app/
 │   ├── Http/
 │   │   └── Controllers/
@@ -474,7 +474,7 @@ None at the moment. Report issues to the development team.
 ## 📞 Support
 
 Untuk pertanyaan atau bantuan:
-- Email: lab.terpadu@feb.undip.ac.id
+- Email: lab.Digital@feb.undip.ac.id
 - Telp: (024) 1234567
 - Alamat: Fakultas Ekonomika dan Bisnis UNDIP
 
@@ -488,7 +488,7 @@ Proprietary - FEB UNDIP © 2025
 
 ## 🎉 Credits
 
-**Developed by:** Lab Terpadu FEB UNDIP Team  
+**Developed by:** Lab Digital FEB UNDIP Team  
 **Powered by:** Laravel, Tailwind CSS, Vite  
 **Design:** FEB UNDIP Brand Identity
 

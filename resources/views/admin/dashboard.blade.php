@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Dashboard Admin - Lab Terpadu FEB UNDIP</title>
+    <title>Dashboard Admin - Lab Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Custom scrollbar */

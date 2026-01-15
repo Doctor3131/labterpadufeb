@@ -47,8 +47,6 @@ class Booking extends Model
 
     protected $casts = [
         'booking_date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
         'handled_at' => 'datetime',
         'participant_count' => 'integer',
         'is_recurring' => 'boolean',

@@ -1,8 +1,8 @@
-# LabTerpaduFEB
+# LabDigitalFEB
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Sistem Informasi Laboratorium Terpadu Fakultas Ekonomi dan Bisnis - Aplikasi web untuk manajemen laboratorium dengan desain minimalis dan header kuning.
+Sistem Informasi Laboratorium Digital Fakultas Ekonomi dan Bisnis - Aplikasi web untuk manajemen laboratorium dengan desain minimalis dan header kuning.
 
 ## 🎯 Features Implemented
 
@@ -30,8 +30,8 @@ Sistem Informasi Laboratorium Terpadu Fakultas Ekonomi dan Bisnis - Aplikasi web
 
 ```bash
 # Clone repository
-git clone https://github.com/Firzii/LabTerpaduFEB.git
-cd LabTerpaduFEB
+git clone https://github.com/Firzii/LabDigitalFEB.git
+cd LabDigitalFEB
 
 # Install dependencies
 composer install

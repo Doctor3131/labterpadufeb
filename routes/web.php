@@ -11,13 +11,20 @@ use App\Http\Controllers\AdminController;
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // Booking Routes (Public - No Authentication Required)
+// Rate limited to prevent spam submissions
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
-Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+Route::post('/booking', [BookingController::class, 'store'])
+    ->middleware('throttle:5,1') // Max 5 submissions per minute
+    ->name('booking.store');
 Route::get('/booking/success/{token}', [BookingController::class, 'success'])->name('booking.success');
-Route::post('/booking/available-labs', [BookingController::class, 'getAvailableLabs'])->name('booking.available-labs');
+Route::post('/booking/available-labs', [BookingController::class, 'getAvailableLabs'])
+    ->middleware('throttle:30,1') // Max 30 requests per minute (for AJAX)
+    ->name('booking.available-labs');
 
-// Lab Availability API
-Route::get('/api/labs/available', [App\Http\Controllers\LabController::class, 'checkAvailability'])->name('api.labs.available');
+// Lab Availability API (rate limited)
+Route::get('/api/labs/available', [App\Http\Controllers\LabController::class, 'checkAvailability'])
+    ->middleware('throttle:30,1')
+    ->name('api.labs.available');
 
 // PDF Print (for re-download)
 Route::get('/booking/print/{token}', [BookingController::class, 'print'])->name('booking.print');
@@ -31,12 +38,14 @@ Route::get('/schedules/week', [App\Http\Controllers\ScheduleController::class, '
 // TV Display Mode (Fullscreen for TV/Monitor)
 Route::get('/display', [App\Http\Controllers\ScheduleController::class, 'display'])->name('schedules.display');
 
-// Auth Routes
+// Auth Routes (rate limited to prevent brute force)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1'); // Max 5 login attempts per minute
 
 // Protected Routes (Admin/Super Admin only)
-Route::middleware('auth')->group(function () {
+// Uses 'admin' middleware to explicitly check role, not just authentication
+Route::middleware(['auth', 'admin'])->group(function () {
     // Redirect /dashboard to admin dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
