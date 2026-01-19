@@ -57,6 +57,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/bookings/{id}/reject', [AdminController::class, 'reject'])->name('admin.booking.reject');
     
     // Admin Schedule CRUD
+    Route::post('/admin/schedules/available-labs', [App\Http\Controllers\Admin\ScheduleController::class, 'getAvailableLabs'])
+        ->name('admin.schedules.available-labs');
     Route::resource('/admin/schedules', App\Http\Controllers\Admin\ScheduleController::class)
         ->names('admin.schedules')
         ->except(['show']);

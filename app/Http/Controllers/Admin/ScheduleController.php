@@ -124,6 +124,121 @@ class ScheduleController extends Controller
     }
 
     /**
+     * Get available labs based on day, time, and date range
+     * Used by AJAX to dynamically filter labs that don't have conflicts
+     */
+    public function getAvailableLabs(Request $request)
+    {
+        $day = $request->day;
+        $startTime = $request->start_time;
+        $endTime = $request->end_time;
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $excludeScheduleId = $request->exclude_schedule_id;
+
+        // Validate required fields
+        if (!$day || !$startTime || !$endTime) {
+            return response()->json([]);
+        }
+
+        // Get all labs with schedules and bookings eager loaded
+        $labs = Lab::with(['schedules', 'bookings'])->orderBy('name')->get();
+
+        // Filter available labs
+        $availableLabs = $labs->filter(function ($lab) use ($day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId) {
+            return $this->isLabAvailableForSchedule($lab, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId);
+        });
+
+        // Return labs with id, name, and capacity
+        return response()->json($availableLabs->map(function ($lab) {
+            return [
+                'id' => $lab->id,
+                'name' => $lab->name,
+                'capacity' => $lab->capacity,
+            ];
+        })->values());
+    }
+
+    /**
+     * Check if a lab is available for the given schedule criteria
+     * Returns true if no conflicts exist
+     */
+    private function isLabAvailableForSchedule($lab, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId = null)
+    {
+        // Query for conflicting schedules
+        $query = $lab->schedules()
+            ->where('day', $day)
+            ->where(function ($q) use ($startTime, $endTime) {
+                // Time overlap check
+                $q->whereTime('start_time', '<', $endTime)
+                  ->whereTime('end_time', '>', $startTime);
+            });
+
+        // Exclude current schedule if editing
+        if ($excludeScheduleId) {
+            $query->where('id', '!=', $excludeScheduleId);
+        }
+
+        // Date range conflict check
+        if ($startDate || $endDate) {
+            // If the new schedule has dates, check overlap with existing schedules
+            $query->where(function ($q) use ($startDate, $endDate) {
+                $q->where(function ($q2) use ($startDate, $endDate) {
+                    // Existing schedule has no end_date (permanent)
+                    $q2->whereNull('end_date')
+                       ->where(function ($q3) use ($endDate, $startDate) {
+                           $q3->whereNull('start_date')
+                              ->orWhere('start_date', '<=', $endDate ?? $startDate);
+                       });
+                })->orWhere(function ($q2) use ($startDate, $endDate) {
+                    // Existing schedule has date range
+                    $q2->whereNotNull('start_date')
+                       ->where('start_date', '<=', $endDate ?? $startDate)
+                       ->where(function ($q3) use ($startDate) {
+                           $q3->whereNull('end_date')
+                              ->orWhere('end_date', '>=', $startDate);
+                       });
+                });
+            });
+        } else {
+            // New schedule is permanent (no dates), conflicts with any existing schedule on that day/time
+            // No additional date filtering needed - any overlap is a conflict
+        }
+
+        $hasScheduleConflict = $query->exists();
+
+        if ($hasScheduleConflict) {
+            return false;
+        }
+
+        // Check pending bookings only if dates are specified
+        if ($startDate || $endDate) {
+            $pendingQuery = $lab->bookings()
+                ->where('day', $day)
+                ->where('status', 'pending')
+                ->where(function ($q) use ($startTime, $endTime) {
+                    $q->whereTime('start_time', '<', $endTime)
+                      ->whereTime('end_time', '>', $startTime);
+                });
+
+            // Filter by date range
+            if ($startDate && $endDate) {
+                $pendingQuery->whereBetween('booking_date', [$startDate, $endDate]);
+            } elseif ($startDate) {
+                $pendingQuery->where('booking_date', '>=', $startDate);
+            } else {
+                $pendingQuery->where('booking_date', '<=', $endDate);
+            }
+
+            if ($pendingQuery->exists()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Store a newly created schedule
      */
     public function store(Request $request)
@@ -521,7 +636,7 @@ class ScheduleController extends Controller
             'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'student_count' => 'nullable|integer|min:1',
+            'student_count' => 'required|integer|min:1',
         ];
 
         // Conditional validation based on type
@@ -569,7 +684,7 @@ class ScheduleController extends Controller
             'type' => $validated['type'],
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
-            'student_count' => $validated['student_count'] ?? null,
+            'student_count' => $validated['student_count'],
         ];
 
         // Map course/lecturer/komting based on type

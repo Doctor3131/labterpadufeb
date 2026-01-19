@@ -58,23 +58,10 @@
                 @endif
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <!-- Lab -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Laboratorium *</label>
-                        <select name="lab_id" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base">
-                            <option value="">Pilih Lab</option>
-                            @foreach($labs as $lab)
-                                <option value="{{ $lab->id }}" {{ old('lab_id', $schedule->lab_id ?? '') == $lab->id ? 'selected' : '' }}>
-                                    {{ $lab->name }} (Kap. {{ $lab->capacity }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Day -->
+                    <!-- Day (FIRST - Time selection starts here) -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Hari *</label>
-                        <select name="day" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base">
+                        <select name="day" id="daySelect" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base">
                             <option value="">Pilih Hari</option>
                             @foreach($days as $day)
                                 <option value="{{ $day }}" {{ old('day', $schedule->day ?? '') == $day ? 'selected' : '' }}>
@@ -84,23 +71,7 @@
                         </select>
                     </div>
 
-                    <!-- Start Time -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Mulai *</label>
-                        <input type="time" name="start_time" required
-                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : '') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                    </div>
-
-                    <!-- End Time -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Selesai *</label>
-                        <input type="time" name="end_time" required
-                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : '') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                    </div>
-
-                    <!-- Type -->
+                    <!-- Type (Moved up for context) -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tipe Jadwal *</label>
                         <select name="type" id="typeSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -112,19 +83,26 @@
                         </select>
                     </div>
 
-                    <!-- Student Count -->
+                    <!-- Start Time -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Mahasiswa</label>
-                        <input type="number" name="student_count" id="student_count" min="1"
-                               value="{{ old('student_count', $schedule->student_count ?? '') }}"
-                               placeholder="Opsional"
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Mulai *</label>
+                        <input type="time" name="start_time" id="startTime" required
+                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : '') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                    </div>
+
+                    <!-- End Time -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Selesai *</label>
+                        <input type="time" name="end_time" id="endTime" required
+                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : '') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
 
                     <!-- Start Date -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
-                        <input type="date" name="start_date"
+                        <input type="date" name="start_date" id="startDate"
                                value="{{ old('start_date', $schedule && $schedule->start_date ? $schedule->start_date->format('Y-m-d') : '') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika berlaku selamanya</p>
@@ -133,10 +111,35 @@
                     <!-- End Date -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Selesai</label>
-                        <input type="date" name="end_date"
+                        <input type="date" name="end_date" id="endDate"
                                value="{{ old('end_date', $schedule && $schedule->end_date ? $schedule->end_date->format('Y-m-d') : '') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Kosongkan jika berlaku selamanya</p>
+                    </div>
+
+                    <!-- Lab (LAST - After time is selected, fetched via AJAX) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Laboratorium *</label>
+                        <select name="lab_id" id="labSelect" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base" {{ $isEdit ? '' : 'disabled' }}>
+                            @if($isEdit)
+                                @foreach($labs as $lab)
+                                    <option value="{{ $lab->id }}" data-capacity="{{ $lab->capacity }}" {{ old('lab_id', $schedule->lab_id ?? '') == $lab->id ? 'selected' : '' }}>
+                                        {{ $lab->name }} (Kap. {{ $lab->capacity }})
+                                    </option>
+                                @endforeach
+                            @else
+                                <option value="">Pilih waktu terlebih dahulu</option>
+                            @endif
+                        </select>
+                    </div>
+
+                    <!-- Student Count -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Mahasiswa *</label>
+                        <input type="number" name="student_count" id="student_count" min="1" required
+                               value="{{ old('student_count', $schedule->student_count ?? '') }}"
+                               placeholder="Wajib diisi"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
                 </div>
 
@@ -286,6 +289,107 @@
     </div>
 
     <script>
+        // Time-First Flow Variables
+        const daySelectEl = document.getElementById('daySelect');
+        const startTimeEl = document.getElementById('startTime');
+        const endTimeEl = document.getElementById('endTime');
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        const labSelectEl = document.getElementById('labSelect');
+        const isEditMode = {{ $isEdit ? 'true' : 'false' }};
+        const excludeScheduleId = {{ $isEdit ? $schedule->id : 'null' }};
+        const currentLabId = {{ $isEdit ? ($schedule->lab_id ?? 'null') : 'null' }};
+
+        // Fetch available labs via AJAX
+        function fetchAvailableLabs() {
+            const day = daySelectEl.value;
+            const startTime = startTimeEl.value;
+            const endTime = endTimeEl.value;
+            const startDate = startDateEl.value;
+            const endDate = endDateEl.value;
+
+            // Require day, start_time, and end_time
+            if (!day || !startTime || !endTime) {
+                if (!isEditMode) {
+                    labSelectEl.disabled = true;
+                    labSelectEl.innerHTML = '<option value="">Pilih waktu terlebih dahulu</option>';
+                }
+                return;
+            }
+
+            // Show loading state
+            labSelectEl.innerHTML = '<option value="">Memuat lab tersedia...</option>';
+            labSelectEl.disabled = true;
+
+            // Make AJAX request
+            fetch('{{ route("admin.schedules.available-labs") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    day: day,
+                    start_time: startTime,
+                    end_time: endTime,
+                    start_date: startDate || null,
+                    end_date: endDate || null,
+                    exclude_schedule_id: excludeScheduleId
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(labs => {
+                labSelectEl.innerHTML = '';
+                
+                if (labs.length === 0) {
+                    labSelectEl.innerHTML = '<option value="">Tidak ada lab tersedia pada waktu ini</option>';
+                    labSelectEl.disabled = true;
+                } else {
+                    labSelectEl.innerHTML = '<option value="">-- Pilih Laboratorium --</option>';
+                    labs.forEach(lab => {
+                        const option = document.createElement('option');
+                        option.value = lab.id;
+                        option.dataset.capacity = lab.capacity;
+                        option.textContent = `${lab.name} (Kap. ${lab.capacity})`;
+                        
+                        // Pre-select current lab in edit mode
+                        if (isEditMode && lab.id === currentLabId) {
+                            option.selected = true;
+                        }
+                        
+                        labSelectEl.appendChild(option);
+                    });
+                    labSelectEl.disabled = false;
+                    
+                    // Trigger validation after loading labs
+                    validateStudentCount();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching labs:', error);
+                labSelectEl.innerHTML = '<option value="">Gagal memuat data lab</option>';
+                labSelectEl.disabled = true;
+            });
+        }
+
+        // Event listeners for time fields - fetch labs when any changes
+        [daySelectEl, startTimeEl, endTimeEl, startDateEl, endDateEl].forEach(el => {
+            el.addEventListener('change', fetchAvailableLabs);
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isEditMode) {
+                // In create mode, fetch if time fields already have values
+                if (daySelectEl.value && startTimeEl.value && endTimeEl.value) {
+                    fetchAvailableLabs();
+                }
+            }
+        });
+
         // Conditional Fields Logic
         const typeSelect = document.getElementById('typeSelect');
         const perkuliahanFields = document.getElementById('perkuliahan-fields');
@@ -405,16 +509,14 @@
         });
 
         // Real-time validation for day in date range
-        const daySelect = document.querySelector('select[name="day"]');
-        const startDateInput = document.querySelector('input[name="start_date"]');
-        const endDateInput = document.querySelector('input[name="end_date"]');
+        // Re-use existing variables: daySelectEl, startDateEl, endDateEl from above
         const submitButton = document.querySelector('button[type="submit"]');
         
         // Create error message container
         const errorContainer = document.createElement('div');
         errorContainer.className = 'hidden mt-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg';
         errorContainer.id = 'day-validation-error';
-        endDateInput.parentElement.appendChild(errorContainer);
+        endDateEl.parentElement.appendChild(errorContainer);
 
         // Indonesian day names mapping
         const dayNames = {
@@ -428,9 +530,9 @@
         };
 
         function validateDayInDateRange() {
-            const selectedDay = daySelect.value;
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
+            const selectedDay = daySelectEl.value;
+            const startDate = startDateEl.value;
+            const endDate = endDateEl.value;
 
             // If no day selected or no dates, clear error
             if (!selectedDay || (!startDate && !endDate)) {
@@ -499,15 +601,15 @@
         }
 
         // Add event listeners
-        daySelect.addEventListener('change', validateDayInDateRange);
-        startDateInput.addEventListener('change', validateDayInDateRange);
-        endDateInput.addEventListener('change', validateDayInDateRange);
+        daySelectEl.addEventListener('change', validateDayInDateRange);
+        startDateEl.addEventListener('change', validateDayInDateRange);
+        endDateEl.addEventListener('change', validateDayInDateRange);
 
         // Run validation on page load (for edit form with existing data)
         document.addEventListener('DOMContentLoaded', validateDayInDateRange);
 
         // Real-time validation for student count vs lab capacity
-        const labSelect = document.querySelector('select[name="lab_id"]');
+        // Use labSelectEl (already defined above for AJAX)
         const studentCountInput = document.querySelector('input[name="student_count"]');
         
         // Create warning message container for student count (changed to warning style)
@@ -516,15 +618,8 @@
         studentCountErrorContainer.id = 'student-count-error';
         studentCountInput.parentElement.appendChild(studentCountErrorContainer);
 
-        // Store lab capacities
-        const labCapacities = {
-            @foreach($labs as $lab)
-                {{ $lab->id }}: {{ $lab->capacity }},
-            @endforeach
-        };
-
         function validateStudentCount() {
-            const selectedLabId = labSelect.value;
+            const selectedLabId = labSelectEl.value;
             const studentCount = parseInt(studentCountInput.value);
 
             // Clear error if no lab selected or no student count
@@ -533,10 +628,12 @@
                 return true;
             }
 
-            const labCapacity = labCapacities[selectedLabId];
+            // Get capacity from selected option's data attribute (supports dynamic AJAX options)
+            const selectedOption = labSelectEl.options[labSelectEl.selectedIndex];
+            const labCapacity = selectedOption ? parseInt(selectedOption.dataset.capacity) : 0;
             
-            if (studentCount > labCapacity) {
-                const labName = labSelect.options[labSelect.selectedIndex].text;
+            if (!labCapacity || studentCount > labCapacity) {
+                const labName = labSelectEl.options[labSelectEl.selectedIndex].text;
                 studentCountErrorContainer.innerHTML = `
                     <div class="flex items-start">
                         <svg class="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -571,7 +668,7 @@
         }
 
         // Add event listeners for student count validation
-        labSelect.addEventListener('change', validateStudentCount);
+        labSelectEl.addEventListener('change', validateStudentCount);
         studentCountInput.addEventListener('input', validateStudentCount);
 
         // Run student count validation on page load
@@ -631,15 +728,30 @@
                     }
                 });
 
-                // Observe disabled attribute changes on original select
+                // Observe disabled attribute changes AND dynamic options changes on original select
                 this.observer = new MutationObserver((mutations) => {
+                    let shouldUpdateTrigger = false;
+                    let shouldReinitOptions = false;
+                    
                     mutations.forEach((mutation) => {
                         if (mutation.type === 'attributes' && mutation.attributeName === 'disabled') {
-                            this.updateTrigger();
+                            shouldUpdateTrigger = true;
+                        }
+                        if (mutation.type === 'childList') {
+                            // Options were added/removed (e.g., from AJAX)
+                            shouldReinitOptions = true;
+                            shouldUpdateTrigger = true;
                         }
                     });
+                    
+                    if (shouldReinitOptions) this.initOptions();
+                    if (shouldUpdateTrigger) this.updateTrigger();
                 });
-                this.observer.observe(this.originalSelect, { attributes: true });
+                this.observer.observe(this.originalSelect, { 
+                    attributes: true, 
+                    childList: true, 
+                    subtree: true 
+                });
 
                 // Listen for changes on original select (to update UI if changed programmatically)
                 this.originalSelect.addEventListener('change', () => {

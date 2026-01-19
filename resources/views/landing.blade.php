@@ -340,9 +340,6 @@
                                     required
                                     maxlength="50"
                                 >
-                                <p class="mt-2 text-xs text-slate-500">
-                                    💡 Kode booking ada di halaman sukses setelah mengajukan peminjaman
-                                </p>
                             </div>
 
                             <button 
