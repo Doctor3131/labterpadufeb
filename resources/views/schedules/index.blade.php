@@ -244,7 +244,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <p class="text-orange-600 text-lg font-semibold mb-2">Tidak ada jadwal di luar semester</p>
-                            <p class="text-gray-500 text-sm">Jadwal hanya tersedia untuk periode semester: Desember 2025 - Juni 2026</p>
                         </div>
                     `;
                 });
