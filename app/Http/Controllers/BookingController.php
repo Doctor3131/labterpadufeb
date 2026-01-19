@@ -187,11 +187,6 @@ class BookingController extends Controller
      */
     public function success($token)
     {
-        // Validate token format (Relaxed for flexibility)
-        // if (!preg_match('/^[a-f0-9]{32}$/i', $token)) {
-        //     abort(404, 'Invalid tracking token format');
-        // }
-        
         // Find booking by tracking token instead of ID for security
         $booking = Booking::with('lab')
             ->where('tracking_token', $token)

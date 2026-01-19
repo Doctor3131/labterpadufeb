@@ -40,6 +40,16 @@ class ScheduleController extends Controller
             $query->where('type', $request->type);
         }
 
+        // Filter by Search (course/activity name or lecturer)
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('course', 'like', $searchTerm)
+                  ->orWhere('lecturer', 'like', $searchTerm)
+                  ->orWhere('komting', 'like', $searchTerm);
+            });
+        }
+
         // Filter by Date (specific date)
         if ($request->filled('date')) {
             $date = Carbon::parse($request->date);
@@ -78,30 +88,14 @@ class ScheduleController extends Controller
             });
         }
 
-        $schedules = $query->get();
-
-        // Custom Sorting: start_date DESC → day → start_time
-        // Newest schedules appear first (most recent/upcoming at top)
-        $schedules = $schedules->sort(function ($a, $b) {
-            // First by start_date DESCENDING (newest first, nulls last)
-            $dateA = $a->start_date ? $a->start_date->format('Y-m-d') : '0000-01-01';
-            $dateB = $b->start_date ? $b->start_date->format('Y-m-d') : '0000-01-01';
-            
-            if ($dateA !== $dateB) {
-                return $dateB <=> $dateA; // DESC order
-            }
-            
-            // Then by day order (Senin -> Sabtu)
-            $dayA = DayHelper::getOrder($a->day);
-            $dayB = DayHelper::getOrder($b->day);
-
-            if ($dayA !== $dayB) {
-                return $dayA <=> $dayB;
-            }
-            
-            // Finally by start time
-            return $a->start_time <=> $b->start_time;
-        });
+        // Database-level sorting for performance (instead of in-memory sort)
+        // Order: start_date DESC (nulls last) → day order (Senin-Sabtu) → start_time
+        $schedules = $query
+            ->orderByRaw('CASE WHEN start_date IS NULL THEN 1 ELSE 0 END') // nulls last
+            ->orderByDesc('start_date')
+            ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
+            ->orderBy('start_time')
+            ->get();
 
         $labs = Lab::orderBy('name')->get();
         

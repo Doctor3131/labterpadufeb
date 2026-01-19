@@ -32,8 +32,8 @@ class Schedule extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
+        // Note: start_time and end_time are stored as TIME, not DATETIME
+        // No cast needed - use Carbon::parse() when formatting
     ];
 
     /**
@@ -176,6 +176,6 @@ class Schedule extends Model
 
     public function getTimeRangeAttribute()
     {
-        return $this->start_time->format('H:i') . ' - ' . $this->end_time->format('H:i');
+        return \Carbon\Carbon::parse($this->start_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($this->end_time)->format('H:i');
     }
 }

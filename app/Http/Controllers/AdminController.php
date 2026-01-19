@@ -14,23 +14,26 @@ class AdminController extends Controller
 {
     /**
      * Show admin dashboard with pending bookings
+     * Paginated to improve performance with large datasets
      */
     public function dashboard()
     {
+        // Paginate each status separately with custom page parameter names
+        // This allows independent pagination for each tab
         $pendingBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(15, ['*'], 'pending_page');
 
         $approvedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'approved')
             ->orderBy('handled_at', 'desc')
-            ->get();
+            ->paginate(15, ['*'], 'approved_page');
 
         $rejectedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'rejected')
             ->orderBy('updated_at', 'desc')
-            ->get();
+            ->paginate(15, ['*'], 'rejected_page');
 
         return view('admin.dashboard', compact('pendingBookings', 'approvedBookings', 'rejectedBookings'));
     }

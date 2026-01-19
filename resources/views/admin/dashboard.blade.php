@@ -201,7 +201,7 @@
                             </div>
                         </div>
                         <span class="hidden md:inline">Pending</span>
-                        <span class="mt-1 px-2 py-0.5 bg-yellow-500 text-white rounded-full text-xs font-bold">{{ $pendingBookings->count() }}</span>
+                        <span class="mt-1 px-2 py-0.5 bg-yellow-500 text-white rounded-full text-xs font-bold">{{ $pendingBookings->total() }}</span>
                     </button>
                     <button onclick="showTab('approved')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="approved">
                         <div class="flex items-center justify-center">
@@ -212,7 +212,7 @@
                             </div>
                         </div>
                         <span class="hidden md:inline">Disetujui</span>
-                        <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $approvedBookings->count() }}</span>
+                        <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $approvedBookings->total() }}</span>
                     </button>
                     <button onclick="showTab('rejected')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="rejected">
                         <div class="flex items-center justify-center">
@@ -223,7 +223,7 @@
                             </div>
                         </div>
                         <span class="hidden md:inline">Ditolak</span>
-                        <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $rejectedBookings->count() }}</span>
+                        <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $rejectedBookings->total() }}</span>
                     </button>
                 </nav>
             </div>
@@ -344,6 +344,13 @@
                     <p class="text-sm text-gray-600">Tidak ada peminjaman yang menunggu persetujuan</p>
                 </div>
             @endforelse
+            
+            {{-- Pagination Links --}}
+            @if($pendingBookings->hasPages())
+                <div class="mt-4 px-2">
+                    {{ $pendingBookings->links() }}
+                </div>
+            @endif
         </div>
 
         <!-- Approved Bookings -->
@@ -445,6 +452,13 @@
                     <p class="text-sm text-gray-600">Approve peminjaman untuk melihatnya di sini</p>
                 </div>
             @endforelse
+            
+            {{-- Pagination Links --}}
+            @if($approvedBookings->hasPages())
+                <div class="mt-4 px-2">
+                    {{ $approvedBookings->links() }}
+                </div>
+            @endif
         </div>
 
         <!-- Rejected Bookings -->
@@ -544,6 +558,13 @@
                     <p class="text-sm text-gray-600">Semua peminjaman telah disetujui</p>
                 </div>
             @endforelse
+            
+            {{-- Pagination Links --}}
+            @if($rejectedBookings->hasPages())
+                <div class="mt-4 px-2">
+                    {{ $rejectedBookings->links() }}
+                </div>
+            @endif
         </div>
     </div>
 

@@ -88,7 +88,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Mulai *</label>
                         <input type="time" name="start_time" required
-                               value="{{ old('start_time', $schedule ? $schedule->start_time->format('H:i') : '') }}"
+                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : '') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
 
@@ -96,7 +96,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Selesai *</label>
                         <input type="time" name="end_time" required
-                               value="{{ old('end_time', $schedule ? $schedule->end_time->format('H:i') : '') }}"
+                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : '') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
 

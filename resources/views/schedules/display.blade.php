@@ -52,11 +52,11 @@
             <div class="p-6">
                 <!-- Schedule Table -->
                 <table class="w-full border-collapse table-fixed">
-                    <thead class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider">
+                    <thead class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider sticky top-0 z-10">
                         <tr>
-                            <th class="px-4 py-4 text-left font-semibold border-b-2 border-slate-200" style="width: 130px;">Waktu</th>
-                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 80px;">Ruang</th>
-                            <th class="px-4 py-4 text-left font-semibold border-b-2 border-slate-200">Kegiatan / Mata Kuliah</th>
+                            <th class="px-4 py-4 pr-10 text-center font-semibold border-b-2 border-slate-200" style="width: 150px;">Waktu</th>
+                            <th class="px-4 py-4 pl-8 text-center font-semibold border-b-2 border-slate-200" style="width: 80px;">Ruang</th>
+                            <th class="px-4 py-4 pl-6 text-left font-semibold border-b-2 border-slate-200">Kegiatan / Mata Kuliah</th>
                             <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 320px;">Dosen / PIC</th>
                             <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 100px;">Peserta</th>
                         </tr>
@@ -80,15 +80,15 @@
                             $bgColor = $typeColors[$item['booking_type']] ?? 'bg-slate-500';
                         @endphp
                         <tr class="border-b border-slate-200 {{ $isCurrent ? 'current-row' : 'hover:bg-slate-50' }} transition">
-                            <td class="px-4 py-4 align-middle whitespace-nowrap">
+                            <td class="px-4 py-4 pr-10 align-middle whitespace-nowrap">
                                 <span class="text-lg font-mono font-bold text-slate-800">{{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }}</span>
                                 <span class="text-slate-400 mx-1">-</span>
                                 <span class="text-lg font-mono text-slate-600">{{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}</span>
                             </td>
-                            <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
+                            <td class="px-4 py-4 pl-8 align-middle text-center whitespace-nowrap">
                                 <span class="{{ $bgColor }} text-white px-2 py-1 rounded text-xs font-semibold">{{ $item['lab'] }}</span>
                             </td>
-                            <td class="px-4 py-4 align-middle">
+                            <td class="px-4 py-4 pl-6 align-middle">
                                 <div class="text-base font-semibold text-slate-800">{{ $item['course'] }}</div>
                                 @if($item['komting'])
                                     <div class="text-sm text-slate-500 mt-0.5">
