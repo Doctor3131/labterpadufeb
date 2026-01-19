@@ -523,7 +523,7 @@
                         <button type="button" id="btn-prev-4" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
                             ← Kembali
                         </button>
-                        <button type="submit" class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
+                        <button type="submit" id="btn-submit" disabled class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base">
                             ✓ Ajukan Peminjaman
                         </button>
                     </div>
@@ -956,6 +956,8 @@
                 fileInput.value = ''; // Clear file if hidden
                 document.getElementById('file-name').textContent = '';
             }
+            // Trigger validation for step 4 status
+            validateStep4();
         }
 
         function goToStep(step) {
@@ -1078,6 +1080,7 @@
                         alert('⚠️ File terlalu besar!\n\nUkuran file: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB\nMaksimal: 2 MB\n\nSilakan compress file PDF Anda terlebih dahulu.');
                         this.value = ''; // Clear the file input
                         fileNameDisplay.textContent = '';
+                        validateStep4(); // Re-validate
                         return;
                     }
                     
@@ -1087,7 +1090,27 @@
                 } else {
                     fileNameDisplay.textContent = '';
                 }
+                validateStep4();
             });
+        }
+
+        function validateStep4() {
+             const documentInput = document.getElementById('document');
+             const submitBtn = document.getElementById('btn-submit');
+             const docSection = document.getElementById('upload-document-section');
+             
+             // If section is hidden, it's valid (no upload needed)
+             if (docSection.classList.contains('hidden')) {
+                 submitBtn.disabled = false;
+                 return;
+             }
+             
+             // If visible, check if file is selected
+             if (documentInput.files.length > 0) {
+                 submitBtn.disabled = false;
+             } else {
+                 submitBtn.disabled = true;
+             }
         }
 
         // Add conditional required attributes
