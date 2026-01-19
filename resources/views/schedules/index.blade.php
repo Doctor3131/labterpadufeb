@@ -14,7 +14,9 @@
             <div class="flex justify-between items-center">
                 <!-- Logo -->
                 <div class="flex items-center space-x-2">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 sm:h-12 md:h-16 w-auto object-contain">
+                    <a href="{{ route('landing') }}">
+                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 sm:h-12 md:h-16 w-auto object-contain">
+                    </a>
                 </div>
                 
                 <!-- Desktop Menu -->

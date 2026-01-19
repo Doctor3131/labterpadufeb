@@ -79,7 +79,9 @@
         <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-3">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 md:h-16 w-auto object-contain">
+                    <a href="{{ route('landing') }}">
+                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
+                    </a>
                 </div>
                 <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-bold transition-all shadow-sm hover:shadow-md text-sm md:text-base whitespace-nowrap">
                     Login
@@ -227,19 +229,19 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
                             <input type="text" name="pic_name" id="pic_name" value="{{ old('pic_name') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi <span class="text-red-500">*</span></label>
                             <input type="text" name="study_program" id="study_program" value="{{ old('study_program') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIM * <span class="text-xs text-gray-500">(14 digit)</span></label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIM <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(14 digit)</span></label>
                             <input type="text" name="nim" id="nim" value="{{ old('nim') }}" required
                                 maxlength="14" pattern="[0-9]{14}" 
                                 placeholder="Contoh: 12010120130001"
@@ -247,7 +249,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon * <span class="text-xs text-gray-500">(10-15 digit)</span></label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(10-15 digit)</span></label>
                             <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number') }}" required
                                 minlength="10" maxlength="15" pattern="[0-9+]{10,15}"
                                 placeholder="Contoh: 081234567890"
@@ -266,17 +268,17 @@
                         <h4 class="font-bold text-gray-800 mb-4">Data Perkuliahan</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Mata Kuliah *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Mata Kuliah <span class="text-red-500">*</span></label>
                                 <input type="text" name="course_name" id="course_name" value="{{ old('course_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Dosen Pengampu *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Dosen Pengampu <span class="text-red-500">*</span></label>
                                 <input type="text" name="lecturer_name" id="lecturer_name" value="{{ old('lecturer_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen <span class="text-red-500">*</span></label>
                                 <input type="text" name="lecturer_nip" id="lecturer_nip" value="{{ old('lecturer_nip') }}"
                                     maxlength="18" pattern="[0-9]{1,18}"
                                     placeholder="Maksimal 18 digit"
@@ -295,12 +297,12 @@
                         <h4 class="font-bold text-gray-800 mb-4">Data Kegiatan Non-Perkuliahan</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Kegiatan *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Kegiatan <span class="text-red-500">*</span></label>
                                 <input type="text" name="activity_name" id="activity_name" value="{{ old('activity_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan <span class="text-red-500">*</span></label>
                                 <select name="activity_type" id="activity_type"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     <option value="">-- Pilih Jenis Kegiatan --</option>
@@ -330,7 +332,7 @@
                         <h4 class="font-bold text-gray-800 mb-4">Data Peminjaman Pribadi</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status <span class="text-red-500">*</span></label>
                                 <select name="applicant_status" id="applicant_status"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     <option value="">Pilih Status</option>
@@ -353,7 +355,7 @@
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Keperluan *</label>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Keperluan <span class="text-red-500">*</span></label>
                                 <input type="text" name="purpose" id="purpose" value="{{ old('purpose') }}"
                                     placeholder="Contoh: Ujian, Kuliah, Mengerjakan tugas pribadi"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -380,33 +382,33 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Peminjaman *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Peminjaman <span class="text-red-500">*</span></label>
                             <input type="date" name="booking_date" id="booking_date" value="{{ old('booking_date') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jumlah Peserta *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jumlah Peserta <span class="text-red-500">*</span></label>
                             <input type="number" name="participant_count" id="participant_count" value="{{ old('participant_count') }}" required
                                 min="1" placeholder="Contoh: 30"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai <span class="text-red-500">*</span></label>
                             <input type="time" name="start_time" id="start_time" value="{{ old('start_time') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Selesai *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Selesai <span class="text-red-500">*</span></label>
                             <input type="time" name="end_time" id="end_time" value="{{ old('end_time') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Pilih Laboratorium *</label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Pilih Laboratorium <span class="text-red-500">*</span></label>
                             <select name="lab_id" id="labSelect" required disabled
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100">
                                 <option value="">Isi data di atas untuk melihat lab yang tersedia</option>

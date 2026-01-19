@@ -57,7 +57,9 @@
             <div class="flex justify-between items-center">
                 <!-- Branding -->
                 <div class="flex items-center space-x-3">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
+                    <a href="{{ route('landing') }}">
+                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
+                    </a>
                 </div>
 
                 <!-- Desktop Menu (Hidden on Mobile) -->

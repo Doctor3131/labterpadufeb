@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Admin - LabDigitalFEB')
+@section('title', 'Dashboard Mahasiswa - LabTerpaduFEB')
 
 @section('content')
 <!-- Header with Yellow Background -->
@@ -12,7 +12,7 @@
                     <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 sm:h-16 w-auto bg-white rounded-lg p-1">
                 </a>
                 <div>
-                    <p class="text-xs sm:text-sm text-yellow-100 font-bold">Dashboard Admin</p>
+                    <p class="text-xs sm:text-sm text-yellow-100 font-bold">Dashboard Mahasiswa</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2 sm:space-x-4">
@@ -33,11 +33,11 @@
         <!-- Welcome Card -->
         <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-8">
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Selamat Datang, {{ auth()->user()->name }}!</h2>
-            <p class="text-sm sm:text-base text-gray-600">Anda login sebagai <span class="font-semibold text-yellow-600">Admin</span></p>
+            <p class="text-sm sm:text-base text-gray-600">Anda login sebagai <span class="font-semibold text-yellow-600">Mahasiswa</span></p>
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-8">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-8">
             <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                     <div class="mb-2 sm:mb-0">
@@ -66,7 +66,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
+            <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6 col-span-2 sm:col-span-1">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                     <div class="mb-2 sm:mb-0">
                         <p class="text-gray-500 text-xs sm:text-sm mb-1">Terpakai</p>
@@ -79,31 +79,11 @@
                     </div>
                 </div>
             </div>
-
-            <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                    <div class="mb-2 sm:mb-0">
-                        <p class="text-gray-500 text-xs sm:text-sm mb-1">Maintenance</p>
-                        <p class="text-2xl sm:text-3xl font-bold text-gray-600">{{ $labs->where('status', 'maintenance')->count() }}</p>
-                    </div>
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Labs Management -->
-        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-800">Manajemen Ruangan Laboratorium</h3>
-                <button class="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition">
-                    + Tambah Ruangan
-                </button>
-            </div>
+        <!-- Labs List -->
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Daftar Ruangan Laboratorium</h3>
             
             @if($labs->count() > 0)
             <div class="overflow-x-auto">
@@ -115,7 +95,6 @@
                             <th class="text-left py-3 px-4 text-gray-600 font-semibold">Lokasi</th>
                             <th class="text-left py-3 px-4 text-gray-600 font-semibold">Kapasitas</th>
                             <th class="text-left py-3 px-4 text-gray-600 font-semibold">Status</th>
-                            <th class="text-left py-3 px-4 text-gray-600 font-semibold">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,16 +114,6 @@
                                     {{ $lab->status === 'occupied' ? 'Terpakai' : '' }}
                                     {{ $lab->status === 'maintenance' ? 'Maintenance' : '' }}
                                 </span>
-                            </td>
-                            <td class="py-3 px-4">
-                                <div class="flex space-x-2">
-                                    <button class="px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded hover:bg-blue-600 transition">
-                                        Edit
-                                    </button>
-                                    <button class="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded hover:bg-red-600 transition">
-                                        Hapus
-                                    </button>
-                                </div>
                             </td>
                         </tr>
                         @endforeach
