@@ -22,7 +22,6 @@ class Booking extends Model
         'custom_status',
         'class_year',
         'purpose',
-        'tracking_token',
         'activity_type',
         'position',
         'equipment_needs',
@@ -40,6 +39,7 @@ class Booking extends Model
         'document_path',
         'status',
         'rejection_reason',
+        'tracking_token',
         'admin_notes',
         'handled_by',
         'handled_at',
@@ -91,8 +91,6 @@ class Booking extends Model
     {
         return $this->status === 'pending';
     }
-
-
 
     /**
      * Check if this is a perkuliahan booking
