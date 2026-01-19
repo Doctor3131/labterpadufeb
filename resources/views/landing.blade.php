@@ -12,14 +12,14 @@
     <!-- Sticky Navbar -->
     <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div class="container mx-auto px-4 lg:px-8">
-            <div class="flex items-center justify-between h-20">
+            <div class="flex items-center justify-between h-16 lg:h-20">
                 <!-- Left: Brand -->
                 <a href="{{ route('landing') }}" class="flex items-center space-x-3 group cursor-pointer">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-14 lg:h-16 w-auto object-contain group-hover:scale-105 transition-all duration-300">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 lg:h-16 w-auto object-contain group-hover:scale-105 transition-all duration-300">
                 </a>
 
                 <!-- Right: Navigation Links -->
-                <div class="flex items-center gap-3 lg:gap-4 ml-4">
+                <div class="flex items-center gap-2 lg:gap-4">
                     <!-- Desktop Menu -->
                     <a href="{{ route('schedules.index') }}" class="hidden lg:inline-flex items-center px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
                         <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,42 +30,14 @@
 
                     <!-- Login/Dashboard Button -->
                     @auth
-                        <a href="{{ route('dashboard') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-xs sm:text-sm lg:text-base whitespace-nowrap">
-                            Dashboard Asisten
+                        <a href="{{ route('dashboard') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                            Dashboard
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="px-3 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-xs sm:text-sm lg:text-base whitespace-nowrap">
-                            Login Asisten
+                        <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                            Login
                         </a>
                     @endauth
-
-                    <!-- Mobile Hamburger Menu -->
-                    <div class="relative lg:hidden">
-                        <button id="mobile-menu-btn" class="p-2 text-slate-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                            </svg>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="mobile-menu-dropdown" class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 hidden transform origin-top-right transition-all duration-200 z-50">
-                            <div class="py-2">
-                                <a href="{{ route('schedules.index') }}" class="flex items-center px-4 py-3 text-slate-700 hover:bg-yellow-50 hover:text-yellow-700 transition-colors">
-                                    <svg class="w-5 h-5 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <span class="font-medium">Lihat Jadwal</span>
-                                </a>
-                                <div class="border-t border-slate-100 my-1"></div>
-                                <a href="{{ route('booking.create') }}" class="flex items-center px-4 py-3 text-slate-700 hover:bg-yellow-50 hover:text-yellow-700 transition-colors">
-                                    <svg class="w-5 h-5 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                    <span class="font-medium">Ajukan Peminjaman</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -449,25 +421,7 @@
             window.open(`/booking/print/${token}`, '_blank');
             return false;
         }
-        // Mobile Menu Toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const btn = document.getElementById('mobile-menu-btn');
-            const menu = document.getElementById('mobile-menu-dropdown');
-            
-            if(btn && menu) {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    menu.classList.toggle('hidden');
-                });
-                
-                // Close when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!menu.contains(e.target) && !btn.contains(e.target)) {
-                        menu.classList.add('hidden');
-                    }
-                });
-            }
-        });
+
     </script>
 
 </body>

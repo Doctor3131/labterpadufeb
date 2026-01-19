@@ -13,7 +13,9 @@
         <div class="container mx-auto px-3 sm:px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 sm:h-14 md:h-16 w-auto object-contain">
+                    <a href="{{ route('landing') }}">
+                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 sm:h-14 md:h-16 w-auto object-contain">
+                    </a>
                 </div>
                 <a href="{{ route('admin.schedules.index') }}" class="px-3 sm:px-4 py-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg font-medium text-sm md:text-base">
                     ← <span class="hidden sm:inline">Kembali ke </span>Daftar
