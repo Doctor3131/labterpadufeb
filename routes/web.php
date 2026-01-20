@@ -62,6 +62,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/admin/schedules', App\Http\Controllers\Admin\ScheduleController::class)
         ->names('admin.schedules')
         ->except(['show']);
+
+    // Admin Inventory Management
+    Route::resource('/admin/inventories', App\Http\Controllers\Admin\InventoryController::class)
+        ->names('admin.inventories')
+        ->except(['show']);
 });
 
 // Super Admin Only Routes
