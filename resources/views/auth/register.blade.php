@@ -7,9 +7,7 @@
     <div class="w-full max-w-md">
         <!-- Header -->
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold mb-2 text-gray-800">
-                Lab<span class="text-yellow-500">FEB</span>
-            </h1>
+            <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-20 w-auto mx-auto mb-4 object-contain">
             <p class="text-gray-600">Buat User Baru</p>
             <p class="text-sm text-gray-500">Hanya Super Admin yang dapat mengakses halaman ini</p>
         </div>
