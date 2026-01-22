@@ -36,10 +36,11 @@ class BookingController extends Controller
         $dayName = DayHelper::fromEnglish(date('l', strtotime($date)));
         
         // Get all labs with eager loading to prevent N+1 queries
-        // This loads all related schedules and bookings in just 3 queries total
-        $labs = Lab::with(['schedules', 'bookings' => function ($query) use ($date) {
-            $query->where('booking_date', $date)->where('status', 'pending');
-        }])->orderBy('capacity', 'asc')->get();
+        // Only get labs that are available (not in maintenance)
+        $labs = Lab::where('status', 'available')
+            ->with(['schedules', 'bookings' => function ($query) use ($date) {
+                $query->where('booking_date', $date)->where('status', 'pending');
+            }])->orderBy('capacity', 'asc')->get();
         
         // Filter labs that are available at the requested time (in memory, no additional queries)
         $availableLabs = $labs->filter(function ($lab) use ($dayName, $startTime, $endTime, $date) {

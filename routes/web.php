@@ -67,6 +67,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/admin/inventories', App\Http\Controllers\Admin\InventoryController::class)
         ->names('admin.inventories')
         ->except(['show']);
+
+    // Admin Lab Management
+    Route::resource('/admin/labs', App\Http\Controllers\Admin\LabController::class)
+        ->names('admin.labs')
+        ->except(['show']);
+    Route::post('/admin/labs/{lab}/toggle-status', [App\Http\Controllers\Admin\LabController::class, 'toggleStatus'])
+        ->name('admin.labs.toggle-status');
 });
 
 // Super Admin Only Routes

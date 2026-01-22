@@ -142,7 +142,11 @@ class ScheduleController extends Controller
         }
 
         // Get all labs with schedules and bookings eager loaded
-        $labs = Lab::with(['schedules', 'bookings'])->orderBy('name')->get();
+        // Only get labs that are available (not in maintenance)
+        $labs = Lab::where('status', 'available')
+            ->with(['schedules', 'bookings'])
+            ->orderBy('name')
+            ->get();
 
         // Filter available labs
         $availableLabs = $labs->filter(function ($lab) use ($day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId) {

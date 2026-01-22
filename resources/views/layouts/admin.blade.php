@@ -35,56 +35,59 @@
 <body class="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
     <!-- Modern Navbar -->
     <nav class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-yellow-500" x-data="{ mobileMenuOpen: false }">
-        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
+        <div class="container mx-auto px-3 md:px-4 py-2 md:py-3">
             <div class="flex justify-between items-center">
                 <!-- Branding -->
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center">
                     <a href="{{ route('landing') }}">
-                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
+                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-12 w-auto object-contain">
                     </a>
                 </div>
 
                 <!-- Desktop Menu (Hidden on Mobile) -->
-                <div class="hidden md:flex items-center space-x-3">
-                    <a href="{{ route('landing') }}" class="px-4 py-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg font-medium transition-all">
-                        <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="hidden lg:flex items-center space-x-2">
+                    <a href="{{ route('landing') }}" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg text-sm font-medium transition-all flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         Lihat Jadwal
                     </a>
-                    <a href="{{ route('admin.dashboard') }}" class="px-4 py-2 {{ request()->routeIs('admin.dashboard') ? 'bg-yellow-100 text-yellow-700' : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50' }} rounded-lg font-medium transition-all">
-                       Dashboard
-                    </a>
-                    <a href="{{ route('admin.schedules.index') }}" class="px-4 py-2 {{ request()->routeIs('admin.schedules.*') ? 'bg-green-600 text-white' : 'text-gray-600 hover:text-green-600 hover:bg-green-50' }} rounded-lg font-medium transition-all">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('admin.schedules.index') }}" class="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-all flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                         Kelola Jadwal
                     </a>
-                     <a href="{{ route('admin.inventories.index') }}" class="px-4 py-2 {{ request()->routeIs('admin.inventories.*') ? 'bg-purple-600 text-white' : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50' }} rounded-lg font-medium transition-all">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('admin.labs.index') }}" class="px-2.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-all flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        Kelola Ruang
+                    </a>
+                     <a href="{{ route('admin.inventories.index') }}" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-all flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
                         Inventaris
                     </a>
                     @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.users.create') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-md hover:shadow-lg">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="{{ route('admin.users.create') }}" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
                             User Baru
                         </a>
                     @endif
-                    <div class="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center space-x-1.5 px-2.5 py-1.5 bg-gray-100 rounded-lg">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-                        <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
+                        <span class="text-xs font-medium text-gray-700">{{ auth()->user()->name }}</span>
                     </div>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" onclick="return confirm('Yakin ingin logout?')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button type="submit" onclick="return confirm('Yakin ingin logout?')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                             </svg>
                             Logout
@@ -93,7 +96,7 @@
                 </div>
 
                 <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center">
+                <div class="lg:hidden flex items-center">
                     <button type="button" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="p-2 rounded-md text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 focus:outline-none">
                         <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -104,7 +107,7 @@
         </div>
 
         <!-- Mobile Menu (Hidden by default) -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
+        <div id="mobile-menu" class="hidden lg:hidden border-t border-gray-100 bg-white">
             <div class="px-4 pt-2 pb-4 space-y-2">
                 <div class="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-lg mb-2">
                     <div class="bg-yellow-100 p-2 rounded-full">
@@ -114,10 +117,6 @@
                     </div>
                     <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
                 </div>
-
-                <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.dashboard') ? 'text-yellow-600 bg-yellow-50' : 'text-gray-600 hover:text-yellow-600 hover:bg-yellow-50' }}">
-                   Dashboard
-                </a>
 
                 <a href="{{ route('landing') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-yellow-600 hover:bg-yellow-50">
                     <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,6 +130,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                     Kelola Jadwal
+                </a>
+
+                <a href="{{ route('admin.labs.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.labs.*') ? 'text-orange-600 bg-orange-50' : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50' }}">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    Kelola Ruang
                 </a>
 
                  <a href="{{ route('admin.inventories.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.inventories.*') ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50' }}">

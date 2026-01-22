@@ -3,6 +3,16 @@
 @section('title', 'Inventaris Alat - Lab Digital FEB UNDIP')
 
 @section('content')
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-gray-600 hover:text-yellow-600 font-medium transition-all group">
+            <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali ke Dashboard
+        </a>
+    </div>
+
     <!-- Header -->
     <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
