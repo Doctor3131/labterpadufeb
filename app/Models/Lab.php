@@ -37,6 +37,30 @@ class Lab extends Model
     }
 
     /**
+     * Get all asset units in this lab
+     */
+    public function assetUnits()
+    {
+        return $this->hasMany(AssetUnit::class);
+    }
+
+    /**
+     * Get all inventory balances for this lab
+     */
+    public function inventoryBalances()
+    {
+        return $this->hasMany(InventoryBalance::class);
+    }
+
+    /**
+     * Get inventory transactions for this lab
+     */
+    public function inventoryTransactions()
+    {
+        return $this->hasMany(InventoryTransaction::class);
+    }
+
+    /**
      * Check if lab is available at specific date and time
      * Checks both:
      * 1. Recurring schedules (schedules table) - for permanent classes

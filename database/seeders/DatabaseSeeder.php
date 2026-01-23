@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed Asset Type Codes first (for inventory)
+        $this->call(AssetTypeCodeSeeder::class);
+
         // Create Super Admin User
         User::create([
             'name' => 'Super Admin',

@@ -120,10 +120,23 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->names('admin.schedules')
         ->except(['show']);
 
-    // Admin Inventory Management
-    Route::resource('/admin/inventories', App\Http\Controllers\Admin\InventoryController::class)
-        ->names('admin.inventories')
-        ->except(['show']);
+    // Admin Inventory Management (Lab-based)
+    Route::get('/admin/labs/{lab}/inventory', [App\Http\Controllers\Admin\LabInventoryController::class, 'index'])
+        ->name('admin.labs.inventory');
+    Route::get('/admin/labs/{lab}/inventory/create', [App\Http\Controllers\Admin\LabInventoryController::class, 'create'])
+        ->name('admin.labs.inventory.create');
+    Route::post('/admin/labs/{lab}/inventory', [App\Http\Controllers\Admin\LabInventoryController::class, 'store'])
+        ->name('admin.labs.inventory.store');
+    Route::get('/admin/labs/{lab}/inventory/{item}/units', [App\Http\Controllers\Admin\LabInventoryController::class, 'showUnits'])
+        ->name('admin.labs.inventory.units');
+    Route::get('/admin/labs/{lab}/inventory/{item}/balances', [App\Http\Controllers\Admin\LabInventoryController::class, 'showBalances'])
+        ->name('admin.labs.inventory.balances');
+    Route::post('/admin/inventory/bulk-update-condition', [App\Http\Controllers\Admin\LabInventoryController::class, 'bulkUpdateCondition'])
+        ->name('admin.inventory.bulk-condition');
+    Route::post('/admin/labs/{lab}/inventory/transfer-balance', [App\Http\Controllers\Admin\LabInventoryController::class, 'transferBalance'])
+        ->name('admin.labs.inventory.transfer');
+    Route::get('/admin/items/{item}/batches', [App\Http\Controllers\Admin\LabInventoryController::class, 'getBatches'])
+        ->name('admin.items.batches');
 
     // Admin Reports
     Route::get('/admin/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])
