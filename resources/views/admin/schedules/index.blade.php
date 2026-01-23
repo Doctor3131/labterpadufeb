@@ -230,14 +230,18 @@
 
         // Save filters to localStorage
         function saveFiltersToLocalStorage() {
-            const filters = {
-                month: document.getElementById('filter-month').value,
-                date: document.getElementById('filter-date').value,
-                lab: document.getElementById('filter-lab').value,
-                type: document.getElementById('filter-type').value,
-                search: document.getElementById('filter-search').value
-            };
-            localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+            try {
+                const filters = {
+                    month: document.getElementById('filter-month').value,
+                    date: document.getElementById('filter-date').value,
+                    lab: document.getElementById('filter-lab').value,
+                    type: document.getElementById('filter-type').value,
+                    search: document.getElementById('filter-search').value
+                };
+                localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+            } catch (e) {
+                console.warn('Failed to save filters to localStorage:', e);
+            }
         }
 
         // Load filters from localStorage (silent mode - no AJAX trigger)
@@ -267,35 +271,53 @@
             localStorage.removeItem(FILTER_STORAGE_KEY);
         }
 
-        function loadSchedules() {
+        function loadSchedules(url = null, append = false) {
             const container = document.getElementById('schedule-container');
-            const filterMonth = document.getElementById('filter-month').value;
-            const filterDate = document.getElementById('filter-date').value;
-            const filterLab = document.getElementById('filter-lab').value;
-            const filterType = document.getElementById('filter-type').value;
-            const filterSearch = document.getElementById('filter-search').value;
+            
+            // If not append (filtering), show loading state
+            if (!append) {
+                container.innerHTML = `
+                    <div class="p-8 text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500 mx-auto"></div>
+                        <p class="text-gray-500 mt-2 text-sm">Memuat jadwal...</p>
+                    </div>
+                `;
+            } else {
+                // Show loading on button
+                const btn = document.getElementById('btn-load-more');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-700 mr-2"></div> Memuat...`;
+                }
+            }
 
-            // Save current filters to localStorage
-            saveFiltersToLocalStorage();
+            // Build URL
+            let fetchUrl;
+            if (url) {
+                fetchUrl = url;
+            } else {
+                // Save current filters to localStorage only when filtering (not loading more)
+                saveFiltersToLocalStorage();
+                
+                const filterMonth = document.getElementById('filter-month').value;
+                const filterDate = document.getElementById('filter-date').value;
+                const filterLab = document.getElementById('filter-lab').value;
+                const filterType = document.getElementById('filter-type').value;
+                const filterSearch = document.getElementById('filter-search').value;
 
-            // Build query string
-            const params = new URLSearchParams();
-            if (filterMonth) params.append('month', filterMonth);
-            if (filterDate) params.append('date', filterDate);
-            if (filterLab) params.append('lab_id', filterLab);
-            if (filterType) params.append('type', filterType);
-            if (filterSearch) params.append('search', filterSearch);
-
-            // Show loading state
-            container.innerHTML = `
-                <div class="p-8 text-center">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500 mx-auto"></div>
-                    <p class="text-gray-500 mt-2 text-sm">Memuat jadwal...</p>
-                </div>
-            `;
+                // Build query string
+                const params = new URLSearchParams();
+                if (filterMonth) params.append('month', filterMonth);
+                if (filterDate) params.append('date', filterDate);
+                if (filterLab) params.append('lab_id', filterLab);
+                if (filterType) params.append('type', filterType);
+                if (filterSearch) params.append('search', filterSearch);
+                
+                fetchUrl = `{{ route('admin.schedules.index') }}?${params.toString()}`;
+            }
 
             // Fetch with AJAX
-            fetch(`{{ route('admin.schedules.index') }}?${params.toString()}`, {
+            fetch(fetchUrl, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'text/html'
@@ -303,11 +325,55 @@
             })
             .then(response => response.text())
             .then(html => {
-                container.innerHTML = html;
+                if (append) {
+                    // APPEND MODE: Parse HTML and append rows/cards
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Append Desktop Rows
+                    const newRows = doc.querySelectorAll('#desktop-table tbody tr');
+                    const currentTbody = document.querySelector('#desktop-table tbody');
+                    if (currentTbody && newRows.length) {
+                        newRows.forEach(row => currentTbody.appendChild(row));
+                    }
+
+                    // Append Mobile Cards
+                    const newCards = doc.querySelectorAll('#mobile-cards > div'); // direct children divs
+                    const currentCards = document.getElementById('mobile-cards');
+                    if (currentCards && newCards.length) {
+                        newCards.forEach(card => currentCards.appendChild(card));
+                    }
+
+                    // Update Load More Button (replace container)
+                    const newLoadMore = doc.getElementById('load-more-container');
+                    const currentLoadMore = document.getElementById('load-more-container');
+                    if (newLoadMore) {
+                        if (currentLoadMore) {
+                            currentLoadMore.replaceWith(newLoadMore);
+                        } else {
+                             // Insert after mobile cards (or schedule container end)
+                             container.appendChild(newLoadMore); 
+                        }
+                    } else if (currentLoadMore) {
+                        currentLoadMore.remove(); // No more pages
+                    }
+
+                    // Update Total Count
+                    const newCount = doc.getElementById('schedule-count');
+                    const currentCount = document.getElementById('schedule-count');
+                    if (newCount && currentCount) {
+                        currentCount.replaceWith(newCount);
+                    }
+
+                } else {
+                    // REPLACE MODE: Just replace innerHTML
+                    container.innerHTML = html;
+                }
             })
             .catch(error => {
                 console.error('Error loading schedules:', error);
-                container.innerHTML = `
+                // Error handling...
+                const errorHtml = `
                     <div class="p-8 text-center text-red-500">
                         <svg class="w-12 h-12 mx-auto mb-2 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -315,6 +381,18 @@
                         Gagal memuat jadwal. Silakan coba lagi.
                     </div>
                 `;
+                
+                if (!append) {
+                    container.innerHTML = errorHtml;
+                } else {
+                    // Revert button state if append failed
+                     const btn = document.getElementById('btn-load-more');
+                     if(btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = `<span>Coba Lagi</span>`;
+                     }
+                     alert('Gagal memuat halaman berikutnya.');
+                }
             });
         }
 
@@ -337,39 +415,56 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // STEP 1: Load saved filters from localStorage FIRST (before event listeners)
+            // Load saved filters from localStorage
             const filtersLoaded = loadFiltersFromLocalStorage();
 
-            // STEP 2: Initialize custom dropdowns (will read current values)
+            // Initialize custom dropdowns
             const filterLab = document.getElementById('filter-lab');
             const filterType = document.getElementById('filter-type');
             
             if (filterLab) new CustomSelect(filterLab);
             if (filterType) new CustomSelect(filterType);
 
-            // STEP 3: Add event listeners for auto-filter
-            // Month filter - immediate
-            document.getElementById('filter-month').addEventListener('change', loadSchedules);
+            // Add event listeners for auto-filter
+            const triggerLoad = () => loadSchedules(); // Default: replace mode
+
+            document.getElementById('filter-month').addEventListener('change', function() {
+                // Mutual exclusion: Clear date if month is selected
+                if (this.value) {
+                    document.getElementById('filter-date').value = '';
+                }
+                triggerLoad();
+            });
+
+            document.getElementById('filter-date').addEventListener('change', function() {
+                // Mutual exclusion: Clear month if date is selected
+                if (this.value) {
+                    document.getElementById('filter-month').value = '';
+                }
+                triggerLoad();
+            });
+            document.getElementById('filter-lab').addEventListener('change', triggerLoad);
+            document.getElementById('filter-type').addEventListener('change', triggerLoad);
             
-            // Date filter - immediate
-            document.getElementById('filter-date').addEventListener('change', loadSchedules);
-            
-            // Lab filter - immediate
-            document.getElementById('filter-lab').addEventListener('change', loadSchedules);
-            
-            // Type filter - immediate
-            document.getElementById('filter-type').addEventListener('change', loadSchedules);
-            
-            // Search filter - debounced
             document.getElementById('filter-search').addEventListener('input', function() {
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(loadSchedules, DEBOUNCE_DELAY);
+                searchTimeout = setTimeout(triggerLoad, DEBOUNCE_DELAY);
             });
             
-            // Reset button
             document.getElementById('btn-reset').addEventListener('click', resetFilters);
 
-            // STEP 4: If filters were loaded from localStorage, apply them (AJAX call once)
+            // Event Delegation for Load More Button
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('#btn-load-more');
+                if (btn) {
+                    const nextUrl = btn.getAttribute('data-next-url');
+                    if (nextUrl) {
+                        loadSchedules(nextUrl, true); // Append mode
+                    }
+                }
+            });
+
+            // Initial load if filters exist in localStorage
             if (filtersLoaded) {
                 loadSchedules();
             }

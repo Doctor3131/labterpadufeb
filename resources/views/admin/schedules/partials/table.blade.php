@@ -153,7 +153,28 @@
     @endforelse
 </div>
 
+{{-- Load More Button --}}
+@if($schedules->hasMorePages())
+    <div class="p-4 text-center bg-white border-t border-gray-100" id="load-more-container">
+        <button type="button" 
+                id="btn-load-more" 
+                data-next-url="{{ $schedules->nextPageUrl() }}"
+                class="px-6 py-2.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 font-semibold rounded-full border border-yellow-200 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 flex items-center justify-center mx-auto space-x-2">
+            <span>Tampilkan Lebih Banyak</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
+    </div>
+@endif
+
 {{-- Total Count --}}
-<div class="px-4 py-3 bg-gray-50 border-t text-sm text-gray-500" id="schedule-count">
-    Total: {{ $schedules->count() }} jadwal
+<div class="px-4 py-3 bg-gray-50 border-t text-sm text-gray-500 flex justify-between items-center" id="schedule-count">
+    <span>
+        Menampilkan <span class="font-medium text-gray-700">{{ $schedules->firstItem() ?? 0 }}</span> - <span class="font-medium text-gray-700">{{ $schedules->lastItem() ?? 0 }}</span> 
+        dari <span class="font-medium text-gray-700">{{ $schedules->total() }}</span> jadwal
+    </span>
+    <span class="text-xs text-gray-400">
+        Halaman {{ $schedules->currentPage() }} dari {{ $schedules->lastPage() }}
+    </span>
 </div>

@@ -28,89 +28,21 @@ class ScheduleController extends Controller
      */
     public function index(Request $request)
     {
+        // Security Fix: Input Validation
+        $request->validate([
+            'date' => 'nullable|date_format:Y-m-d',
+            'month' => 'nullable|date_format:Y-m',
+            'lab_id' => 'nullable|exists:labs,id',
+            'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'search' => 'nullable|string|max:255',
+        ]);
+
         $query = Schedule::with(['lab', 'booking']);
 
-        // Filter by Lab
-        if ($request->filled('lab_id')) {
-            $query->where('lab_id', $request->lab_id);
-        }
+        $query = Schedule::with(['lab', 'booking']);
 
-        // Filter by Type
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        // Filter by Search (course/activity name or lecturer)
-        if ($request->filled('search')) {
-            $searchTerm = '%' . $request->search . '%';
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('course', 'like', $searchTerm)
-                  ->orWhere('lecturer', 'like', $searchTerm)
-                  ->orWhere('komting', 'like', $searchTerm);
-            });
-        }
-
-        // Filter by Date (specific date) - HIGHEST PRIORITY
-        if ($request->filled('date')) {
-            $date = Carbon::parse($request->date);
-            $dayName = DayHelper::fromDate($date);
-            
-            $query->where('day', $dayName)
-                  ->where(function ($q) use ($request) {
-                      $q->where(function ($q2) use ($request) {
-                          // Has start_date, check range
-                          $q2->whereNotNull('start_date')
-                             ->where('start_date', '<=', $request->date)
-                             ->where(function ($q3) use ($request) {
-                                 $q3->whereNull('end_date')
-                                    ->orWhere('end_date', '>=', $request->date);
-                             });
-                      })->orWhere(function ($q2) use ($request) {
-                          // No start_date (recurring), check end_date only
-                          $q2->whereNull('start_date')
-                             ->where(function ($q3) use ($request) {
-                                 $q3->whereNull('end_date')
-                                    ->orWhere('end_date', '>=', $request->date);
-                             });
-                      });
-                  });
-        } elseif ($request->filled('month')) {
-            // Filter by Month (broader than date) - SECOND PRIORITY
-            $yearMonth = $request->month; // Format: "2026-01"
-            $firstDayOfMonth = Carbon::parse($yearMonth . '-01');
-            $lastDayOfMonth = $firstDayOfMonth->copy()->endOfMonth();
-            
-            $query->where(function ($q) use ($firstDayOfMonth, $lastDayOfMonth) {
-                $q->where(function ($q2) use ($firstDayOfMonth, $lastDayOfMonth) {
-                    // Has start_date, check if schedule is active during this month
-                    $q2->whereNotNull('start_date')
-                       ->where('start_date', '<=', $lastDayOfMonth->format('Y-m-d'))
-                       ->where(function ($q3) use ($firstDayOfMonth) {
-                           $q3->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
-                       });
-                })->orWhere(function ($q2) use ($firstDayOfMonth) {
-                    // No start_date (recurring), check if still active in this month
-                    $q2->whereNull('start_date')
-                       ->where(function ($q3) use ($firstDayOfMonth) {
-                           $q3->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
-                       });
-                });
-            });
-        } else {
-            // No specific date/month - show active/future schedules only - DEFAULT
-            $query->where(function ($q) {
-                $q->where(function ($q2) {
-                    // Has end_date in the future
-                    $q2->whereNotNull('end_date')
-                       ->where('end_date', '>=', now()->format('Y-m-d'));
-                })->orWhere(function ($q2) {
-                    // No end_date (permanent/recurring)
-                    $q2->whereNull('end_date');
-                });
-            });
-        }
+        // Apply filters
+        $this->applyFilters($query, $request);
 
         // Database-level sorting for performance (instead of in-memory sort)
         // Order: start_date DESC (nulls last) → day order (Senin-Sabtu) → start_time
@@ -119,7 +51,9 @@ class ScheduleController extends Controller
             ->orderByDesc('start_date')
             ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
             ->orderBy('start_time')
-            ->get();
+            ->orderBy('start_time')
+            ->paginate(100)
+            ->withQueryString();
 
         $labs = Lab::orderBy('name')->get();
         $types = $this->types;
@@ -739,6 +673,99 @@ class ScheduleController extends Controller
         }
 
         return $scheduleData;
+    }
+
+    /**
+     * Apply filters to the schedule query
+     */
+    private function applyFilters($query, Request $request)
+    {
+        // Filter by Lab
+        if ($request->filled('lab_id')) {
+            $query->where('lab_id', $request->lab_id);
+        }
+
+        // Filter by Type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter by Search (course/activity name or lecturer)
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('course', 'like', $searchTerm)
+                  ->orWhere('lecturer', 'like', $searchTerm)
+                  ->orWhere('komting', 'like', $searchTerm);
+            });
+        }
+
+        // Filter by Date (specific date) - HIGHEST PRIORITY
+        if ($request->filled('date')) {
+            // Note: Validation handled in index method
+            try {
+                $date = Carbon::parse($request->date);
+                $dayName = DayHelper::fromDate($date);
+                
+                $query->where('day', $dayName)
+                      ->where(function ($q) use ($request) {
+                          $q->where(function ($q2) use ($request) {
+                              // Has start_date, check range
+                              $q2->whereNotNull('start_date')
+                                 ->where('start_date', '<=', $request->date)
+                                 ->where(function ($q3) use ($request) {
+                                     $q3->whereNull('end_date')
+                                        ->orWhere('end_date', '>=', $request->date);
+                                 });
+                          })->orWhere(function ($q2) use ($request) {
+                              // No start_date (recurring), check end_date only
+                              $q2->whereNull('start_date')
+                                 ->where(function ($q3) use ($request) {
+                                     $q3->whereNull('end_date')
+                                        ->orWhere('end_date', '>=', $request->date);
+                                 });
+                          });
+                      });
+            } catch (\Exception $e) {
+                // Ignore parser error here as it's handled in index
+            }
+        } elseif ($request->filled('month')) {
+            // Filter by Month (broader than date) - SECOND PRIORITY
+            $yearMonth = $request->month; // Format: "2026-01"
+            $firstDayOfMonth = Carbon::parse($yearMonth . '-01');
+            $lastDayOfMonth = $firstDayOfMonth->copy()->endOfMonth();
+            
+            $query->where(function ($q) use ($firstDayOfMonth, $lastDayOfMonth) {
+                $q->where(function ($q2) use ($firstDayOfMonth, $lastDayOfMonth) {
+                    // Has start_date, check if schedule is active during this month
+                    $q2->whereNotNull('start_date')
+                       ->where('start_date', '<=', $lastDayOfMonth->format('Y-m-d'))
+                       ->where(function ($q3) use ($firstDayOfMonth) {
+                           $q3->whereNull('end_date')
+                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
+                       });
+                })->orWhere(function ($q2) use ($firstDayOfMonth) {
+                    // No start_date (recurring), check if still active in this month
+                    $q2->whereNull('start_date')
+                       ->where(function ($q3) use ($firstDayOfMonth) {
+                           $q3->whereNull('end_date')
+                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
+                       });
+                });
+            });
+        } else {
+            // No specific date/month - show active/future schedules only - DEFAULT
+            $query->where(function ($q) {
+                $q->where(function ($q2) {
+                    // Has end_date in the future
+                    $q2->whereNotNull('end_date')
+                       ->where('end_date', '>=', now()->format('Y-m-d'));
+                })->orWhere(function ($q2) {
+                    // No end_date (permanent/recurring)
+                    $q2->whereNull('end_date');
+                });
+            });
+        }
     }
 }
 
