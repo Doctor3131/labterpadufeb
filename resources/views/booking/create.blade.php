@@ -109,6 +109,7 @@
                         <div>
                             <h3 class="text-red-900 font-bold text-lg mb-2">⚠️ Konflik Jadwal!</h3>
                             <p class="text-red-800 font-semibold">{{ $errors->first('time_conflict') }}</p>
+                            <p class="text-red-700 text-sm mt-2">💡 Sepertinya baru saja ada peminjaman lain yang mengajukan di waktu dan lab yang sama, sehingga terjadi bentrok. Silakan pilih waktu atau ruangan lain.</p>
                         </div>
                     </div>
                 </div>

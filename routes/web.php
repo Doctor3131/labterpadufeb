@@ -14,16 +14,16 @@ Route::get('/', [LandingController::class, 'index'])->name('landing');
 // Rate limited to prevent spam submissions
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/booking', [BookingController::class, 'store'])
-    ->middleware('throttle:5,1') // Max 5 submissions per minute
+    ->middleware('throttle:10,1') // Max 10 submissions per minute
     ->name('booking.store');
 Route::get('/booking/success/{token}', [BookingController::class, 'success'])->name('booking.success');
 Route::post('/booking/available-labs', [BookingController::class, 'getAvailableLabs'])
-    ->middleware('throttle:30,1') // Max 30 requests per minute (for AJAX)
+    ->middleware('throttle:60,1') // Max 60 requests per minute (for AJAX)
     ->name('booking.available-labs');
 
 // Lab Availability API (rate limited)
 Route::get('/api/labs/available', [App\Http\Controllers\LabController::class, 'checkAvailability'])
-    ->middleware('throttle:30,1')
+    ->middleware('throttle:60,1')
     ->name('api.labs.available');
 
 // PDF Print (for re-download)
@@ -41,7 +41,7 @@ Route::get('/display', [App\Http\Controllers\ScheduleController::class, 'display
 // Auth Routes (rate limited to prevent brute force)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
-    ->middleware('throttle:5,1'); // Max 5 login attempts per minute
+    ->middleware('throttle:10,1'); // Max 10 login attempts per minute
 
 // Protected Routes (Admin/Super Admin only)
 // Uses 'admin' middleware to explicitly check role, not just authentication
