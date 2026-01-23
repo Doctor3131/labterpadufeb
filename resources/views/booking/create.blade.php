@@ -198,7 +198,7 @@
                         </label>
                     </div>
 
-                    <div class="mb-8">
+                    <div id="unit-selection" class="mb-8">
                         <label class="block text-gray-700 font-bold mb-4 text-lg">Unit</label>
                         <div class="space-y-3">
                             <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-yellow-50 transition-colors group">
@@ -590,7 +590,8 @@
                 if (bookingType && bookingType.value === 'pribadi') {
                     // For pribadi, unit type is not required
                      document.getElementById('btn-next-1').disabled = false;
-                     // Disable unit type inputs
+                     // Hide and disable unit type inputs
+                     document.getElementById('unit-selection').classList.add('hidden');
                      unitTypeInputs.forEach(input => {
                          input.disabled = true;
                          input.checked = false;
@@ -598,6 +599,7 @@
                      
                 } else {
                      // For others, unit type is required
+                     document.getElementById('unit-selection').classList.remove('hidden');
                      unitTypeInputs.forEach(input => input.disabled = false);
                      document.getElementById('btn-next-1').disabled = !(bookingType && unitType);
                 }
