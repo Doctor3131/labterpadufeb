@@ -109,7 +109,6 @@
                         <div>
                             <h3 class="text-red-900 font-bold text-lg mb-2">⚠️ Konflik Jadwal!</h3>
                             <p class="text-red-800 font-semibold">{{ $errors->first('time_conflict') }}</p>
-                            <p class="text-red-700 text-sm mt-2">💡 Tip: Gunakan fitur "Cek Ketersediaan" atau pilih waktu/ruangan yang berbeda.</p>
                         </div>
                     </div>
                 </div>
