@@ -273,7 +273,7 @@
                 <!-- Legend / Notice -->
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-600">
                     <div class="font-semibold mb-2">Keterangan Warna:</div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-yellow-500"></span>
                             <span><strong>Kuning:</strong> Perkuliahan Tetap</span>
@@ -285,10 +285,6 @@
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded bg-emerald-500"></span>
                             <span><strong>Hijau:</strong> Non-Perkuliahan</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-orange-500"></span>
-                            <span><strong>Oranye:</strong> Peminjaman Pribadi</span>
                         </div>
                     </div>
                 </div>

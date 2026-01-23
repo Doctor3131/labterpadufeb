@@ -66,21 +66,9 @@ class LabController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:labs,code,' . $lab->id,
             'description' => 'nullable|string',
-            'location' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
-            'status' => 'required|in:available,occupied,maintenance',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($lab->image) {
-                Storage::disk('public')->delete($lab->image);
-            }
-            $validated['image'] = $request->file('image')->store('labs', 'public');
-        }
 
         $lab->update($validated);
 
