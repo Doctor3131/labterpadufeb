@@ -50,7 +50,7 @@ class ScheduleController extends Controller
             });
         }
 
-        // Filter by Date (specific date)
+        // Filter by Date (specific date) - HIGHEST PRIORITY
         if ($request->filled('date')) {
             $date = Carbon::parse($request->date);
             $dayName = DayHelper::fromDate($date);
@@ -74,8 +74,32 @@ class ScheduleController extends Controller
                              });
                       });
                   });
+        } elseif ($request->filled('month')) {
+            // Filter by Month (broader than date) - SECOND PRIORITY
+            $yearMonth = $request->month; // Format: "2026-01"
+            $firstDayOfMonth = Carbon::parse($yearMonth . '-01');
+            $lastDayOfMonth = $firstDayOfMonth->copy()->endOfMonth();
+            
+            $query->where(function ($q) use ($firstDayOfMonth, $lastDayOfMonth) {
+                $q->where(function ($q2) use ($firstDayOfMonth, $lastDayOfMonth) {
+                    // Has start_date, check if schedule is active during this month
+                    $q2->whereNotNull('start_date')
+                       ->where('start_date', '<=', $lastDayOfMonth->format('Y-m-d'))
+                       ->where(function ($q3) use ($firstDayOfMonth) {
+                           $q3->whereNull('end_date')
+                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
+                       });
+                })->orWhere(function ($q2) use ($firstDayOfMonth) {
+                    // No start_date (recurring), check if still active in this month
+                    $q2->whereNull('start_date')
+                       ->where(function ($q3) use ($firstDayOfMonth) {
+                           $q3->whereNull('end_date')
+                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
+                       });
+                });
+            });
         } else {
-            // No specific date - show active/future schedules only
+            // No specific date/month - show active/future schedules only - DEFAULT
             $query->where(function ($q) {
                 $q->where(function ($q2) {
                     // Has end_date in the future

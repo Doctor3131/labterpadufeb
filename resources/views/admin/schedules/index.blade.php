@@ -53,6 +53,11 @@
         <div class="bg-white rounded-xl shadow-md p-3 md:p-4 mb-4 md:mb-6">
             <div class="space-y-3 md:space-y-0 md:flex md:flex-wrap md:gap-4">
                 <div class="md:flex-1 md:min-w-[150px]">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                    <input type="month" id="filter-month" value="{{ request('month') }}" 
+                           class="w-full px-3 py-2.5 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-base md:text-sm">
+                </div>
+                <div class="md:flex-1 md:min-w-[150px]">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
                     <input type="date" id="filter-date" value="{{ request('date') }}" 
                            class="w-full px-3 py-2.5 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-base md:text-sm">
@@ -226,6 +231,7 @@
         // Save filters to localStorage
         function saveFiltersToLocalStorage() {
             const filters = {
+                month: document.getElementById('filter-month').value,
                 date: document.getElementById('filter-date').value,
                 lab: document.getElementById('filter-lab').value,
                 type: document.getElementById('filter-type').value,
@@ -234,21 +240,20 @@
             localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
         }
 
-        // Load filters from localStorage
+        // Load filters from localStorage (silent mode - no AJAX trigger)
         function loadFiltersFromLocalStorage() {
             const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
             if (!savedFilters) return false;
 
             try {
                 const filters = JSON.parse(savedFilters);
+                
+                // Set values silently (before event listeners are attached)
+                document.getElementById('filter-month').value = filters.month || '';
                 document.getElementById('filter-date').value = filters.date || '';
                 document.getElementById('filter-lab').value = filters.lab || '';
                 document.getElementById('filter-type').value = filters.type || '';
                 document.getElementById('filter-search').value = filters.search || '';
-                
-                // Trigger change events to update custom selects
-                document.getElementById('filter-lab').dispatchEvent(new Event('change'));
-                document.getElementById('filter-type').dispatchEvent(new Event('change'));
                 
                 return true; // Filters were loaded
             } catch (e) {
@@ -264,6 +269,7 @@
 
         function loadSchedules() {
             const container = document.getElementById('schedule-container');
+            const filterMonth = document.getElementById('filter-month').value;
             const filterDate = document.getElementById('filter-date').value;
             const filterLab = document.getElementById('filter-lab').value;
             const filterType = document.getElementById('filter-type').value;
@@ -274,6 +280,7 @@
 
             // Build query string
             const params = new URLSearchParams();
+            if (filterMonth) params.append('month', filterMonth);
             if (filterDate) params.append('date', filterDate);
             if (filterLab) params.append('lab_id', filterLab);
             if (filterType) params.append('type', filterType);
@@ -312,6 +319,7 @@
         }
 
         function resetFilters() {
+            document.getElementById('filter-month').value = '';
             document.getElementById('filter-date').value = '';
             document.getElementById('filter-lab').value = '';
             document.getElementById('filter-type').value = '';
@@ -329,17 +337,20 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Target filter selects - initialize custom dropdowns
+            // STEP 1: Load saved filters from localStorage FIRST (before event listeners)
+            const filtersLoaded = loadFiltersFromLocalStorage();
+
+            // STEP 2: Initialize custom dropdowns (will read current values)
             const filterLab = document.getElementById('filter-lab');
             const filterType = document.getElementById('filter-type');
             
             if (filterLab) new CustomSelect(filterLab);
             if (filterType) new CustomSelect(filterType);
 
-            // Load saved filters from localStorage
-            const filtersLoaded = loadFiltersFromLocalStorage();
-
-            // Add event listeners for auto-filter
+            // STEP 3: Add event listeners for auto-filter
+            // Month filter - immediate
+            document.getElementById('filter-month').addEventListener('change', loadSchedules);
+            
             // Date filter - immediate
             document.getElementById('filter-date').addEventListener('change', loadSchedules);
             
@@ -358,7 +369,7 @@
             // Reset button
             document.getElementById('btn-reset').addEventListener('click', resetFilters);
 
-            // If filters were loaded from localStorage, apply them
+            // STEP 4: If filters were loaded from localStorage, apply them (AJAX call once)
             if (filtersLoaded) {
                 loadSchedules();
             }
