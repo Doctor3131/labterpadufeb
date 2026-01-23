@@ -29,20 +29,27 @@ class ScheduleController extends Controller
             // Get week offset
             $weekOffset = (int) $request->input('week_offset', 0);
             
+            // Get lab filter (comma-separated lab IDs)
+            $labIds = $request->input('labs') ? explode(',', $request->input('labs')) : [];
+            
             // Get week range from service
             [$startOfWeek, $endOfWeek] = $this->scheduleService->getWeekRange($weekOffset);
             
             // Get all schedules (regular + bookings)
-            $weekSchedules = $this->scheduleService->getWeekSchedules($startOfWeek, $endOfWeek);
+            $weekSchedules = $this->scheduleService->getWeekSchedules($startOfWeek, $endOfWeek, $labIds);
             
             // Format week label
             $weekLabel = $this->scheduleService->getWeekLabel($startOfWeek, $endOfWeek);
+            
+            // Get all labs for filter dropdown
+            $labs = Lab::orderBy('name')->get(['id', 'name']);
             
             return response()->json([
                 'week_start' => $startOfWeek->format('Y-m-d'),
                 'week_end' => $endOfWeek->format('Y-m-d'),
                 'week_label' => $weekLabel,
                 'schedules' => $weekSchedules->values(), // Reset keys for JSON array
+                'labs' => $labs,
             ]);
         
         } catch (\Exception $e) {

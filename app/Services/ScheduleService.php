@@ -33,15 +33,25 @@ class ScheduleService
 
     /**
      * Get all schedules (regular + bookings) for a given week
+     * @param Carbon $startOfWeek
+     * @param Carbon $endOfWeek
+     * @param array $labIds Filter by lab IDs (empty array = all labs)
      */
-    public function getWeekSchedules(Carbon $startOfWeek, Carbon $endOfWeek): Collection
+    public function getWeekSchedules(Carbon $startOfWeek, Carbon $endOfWeek, array $labIds = []): Collection
     {
         $schedules = collect();
 
         // 1. Fetch Regular Schedules
-        $labs = Lab::with(['schedules' => function ($query) use ($startOfWeek, $endOfWeek) {
+        $labsQuery = Lab::with(['schedules' => function ($query) use ($startOfWeek, $endOfWeek) {
             $query->activeBetweenDates($startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d'));
-        }, 'schedules.booking'])->get();
+        }, 'schedules.booking']);
+        
+        // Apply lab filter if provided
+        if (!empty($labIds)) {
+            $labsQuery->whereIn('id', $labIds);
+        }
+        
+        $labs = $labsQuery->get();
 
         foreach ($labs as $lab) {
             foreach ($lab->schedules as $schedule) {
@@ -57,6 +67,11 @@ class ScheduleService
                         continue;
                     }
 
+                    // SKIP PRIBADI BOOKINGS - don't show in public schedule
+                    if ($schedule->booking && $schedule->booking->booking_type === 'pribadi') {
+                        continue;
+                    }
+
                     // Prepare display data
                     $courseName = $schedule->course;
                     $lecturerName = $schedule->lecturer;
@@ -64,9 +79,7 @@ class ScheduleService
 
                     // Handle overrides for Booking-based schedules
                     if ($schedule->booking) {
-                         if ($schedule->booking->booking_type === 'pribadi') {
-                             $courseName = 'Peminjaman Pribadi';
-                         } elseif ($schedule->booking->booking_type === 'non_perkuliahan') {
+                         if ($schedule->booking->booking_type === 'non_perkuliahan') {
                              $courseName = $schedule->booking->activity_name;
                          }
                     }

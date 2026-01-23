@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Schedule;
 use App\Models\Booking;
+use App\Models\Lab;
 use Carbon\Carbon;
 
 use App\Services\ScheduleService;
@@ -49,6 +50,9 @@ class LandingController extends Controller
             ];
         }
 
-        return view('landing', compact('schedules', 'startOfWeek'));
+        // Get all labs for filter
+        $labs = Lab::orderBy('name')->get(['id', 'name']);
+
+        return view('landing', compact('schedules', 'startOfWeek', 'labs'));
     }
 }

@@ -86,6 +86,26 @@
                 </a>
             </div>
 
+            <!-- Filter Ruangan -->
+            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-4 lg:p-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <label for="labFilter" class="text-base lg:text-lg font-bold text-slate-800 whitespace-nowrap">Filter Ruangan:</label>
+                    <div class="flex-1 flex gap-3">
+                        <select id="labFilter" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white">
+                            <option value="">Semua Ruangan</option>
+                            @if(isset($labs) && $labs->count() > 0)
+                                @foreach($labs as $lab)
+                                    <option value="{{ $lab->name }}">{{ $lab->name }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                        <button id="clearLabFilter" class="px-4 py-2 text-sm text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors hidden whitespace-nowrap">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                 
                 <!-- Tabs -->
@@ -132,7 +152,7 @@
                                 </thead>
                                 <tbody class="text-sm lg:text-base">
                                     @forelse(($schedules[$day]['items'] ?? []) as $item)
-                                    <tr class="border-t border-slate-200 hover:bg-slate-50 transition">
+                                    <tr class="schedule-row border-t border-slate-200 hover:bg-slate-50 transition" data-lab="{{ $item['lab'] }}">
                                         <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
                                             {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
                                         </td>
@@ -179,7 +199,7 @@
                         <!-- Mobile Card View -->
                         <div class="lg:hidden p-4 space-y-3 bg-slate-50">
                             @forelse(($schedules[$day]['items'] ?? []) as $item)
-                            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all">
+                            <div class="schedule-row bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all" data-lab="{{ $item['lab'] }}">
                                 <!-- Header: Time & Room -->
                                 <div class="flex justify-between items-start mb-3">
                                     <div class="flex items-center text-slate-800 font-bold text-sm bg-slate-100 px-2.5 py-1 rounded-lg">
@@ -370,6 +390,8 @@
 
     <!-- JavaScript for Tabs -->
     <script>
+        let selectedLab = ''; // Track selected lab filter
+
         function showSchedule(day) {
             // Hide all schedules
             document.querySelectorAll('.schedule-content').forEach(el => {
@@ -389,7 +411,65 @@
             const activeTab = document.getElementById('tab-' + day);
             activeTab.classList.add('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
             activeTab.classList.remove('border-transparent', 'text-slate-600');
+
+            // Apply lab filter after switching tabs
+            applyLabFilter();
         }
+
+        // Lab Filter Functionality
+        function applyLabFilter() {
+            const allRows = document.querySelectorAll('.schedule-row');
+            const clearButton = document.getElementById('clearLabFilter');
+
+            // Show/hide clear button
+            if (selectedLab !== '') {
+                clearButton.classList.remove('hidden');
+            } else {
+                clearButton.classList.add('hidden');
+            }
+
+            // If no filter selected, show all rows
+            if (selectedLab === '') {
+                allRows.forEach(row => {
+                    row.style.display = '';
+                });
+                return;
+            }
+
+            // Filter rows based on selected lab
+            allRows.forEach(row => {
+                const labName = row.getAttribute('data-lab');
+                if (labName === selectedLab) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize filter dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            const labFilterSelect = document.getElementById('labFilter');
+            
+            if (labFilterSelect) {
+                labFilterSelect.addEventListener('change', function() {
+                    selectedLab = this.value;
+                    applyLabFilter();
+                });
+            }
+
+            // Clear filter button
+            const clearButton = document.getElementById('clearLabFilter');
+            if (clearButton) {
+                clearButton.addEventListener('click', function() {
+                    selectedLab = '';
+                    if (labFilterSelect) {
+                        labFilterSelect.value = '';
+                    }
+                    applyLabFilter();
+                });
+            }
+        });
 
         // Handle download form submit
         function handleDownloadSubmit(event) {

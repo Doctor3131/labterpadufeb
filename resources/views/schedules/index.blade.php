@@ -109,6 +109,19 @@
             </div>
         </div>
 
+        <!-- Filter Ruangan -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800">Filter Ruangan</h3>
+                <button id="clearFilter" class="text-sm text-yellow-600 hover:text-yellow-700 font-semibold hidden">
+                    Hapus Filter
+                </button>
+            </div>
+            <div id="labFilterContainer" class="flex flex-wrap gap-2">
+                <div class="text-sm text-gray-500">Memuat...</div>
+            </div>
+        </div>
+
         <!-- Schedule Table -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div id="scheduleContainer" class="p-6">
@@ -122,6 +135,8 @@
 
     <script>
         let currentWeekOffset = 0;
+        let selectedLabs = []; // Array of selected lab IDs
+        let allLabs = []; // Store all labs from API
 
         function loadSchedules(weekOffset) {
             const container = document.getElementById('scheduleContainer');
@@ -134,7 +149,13 @@
                 </div>
             `;
 
-            fetch(`{{ route('schedules.week') }}?week_offset=${weekOffset}`)
+            // Build query string with lab filter
+            let queryParams = `week_offset=${weekOffset}`;
+            if (selectedLabs.length > 0) {
+                queryParams += `&labs=${selectedLabs.join(',')}`;
+            }
+
+            fetch(`{{ route('schedules.week') }}?${queryParams}`)
                 .then(response => response.json())
                 .then(data => {
                     // Update week label and offset
@@ -143,6 +164,12 @@
                     console.log('Updating offset from:', currentWeekOffset, 'to:', weekOffset);
                     weekLabel.textContent = data.week_label;
                     currentWeekOffset = weekOffset;
+
+                    // Store labs and render filter (only on first load)
+                    if (data.labs && allLabs.length === 0) {
+                        allLabs = data.labs;
+                        renderLabFilter();
+                    }
 
                     // Show/Hide "Kembali ke Minggu Ini" button
                     const currentWeekButton = document.getElementById('currentWeekButtonContainer');
@@ -221,7 +248,7 @@
                                             </div>
                                             <h4 class="text-lg font-semibold text-gray-800">${schedule.course}</h4>
                                             <p class="text-gray-600 text-sm mt-1">Dosen: ${schedule.lecturer}</p>
-                                            ${schedule.komting ? `<p class="text-gray-500 text-sm">${(schedule.booking_type === 'pribadi' || schedule.booking_type === 'non_perkuliahan') ? 'Peminjam' : 'Komting'}: ${schedule.komting}</p>` : ''}
+                                            ${schedule.komting ? `<p class="text-gray-500 text-sm">${(schedule.booking_type === 'non_perkuliahan') ? 'Peminjam' : 'Komting'}: ${schedule.komting}</p>` : ''}
                                             ${schedule.student_count ? `<p class="text-gray-500 text-sm">Jumlah Mahasiswa: ${schedule.student_count} orang</p>` : ''}
                                         </div>
                                     </div>
@@ -251,6 +278,60 @@
                 });
         }
 
+        function renderLabFilter() {
+            const container = document.getElementById('labFilterContainer');
+            const clearButton = document.getElementById('clearFilter');
+            
+            if (allLabs.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-500">Tidak ada ruangan tersedia</div>';
+                return;
+            }
+
+            let html = '';
+            allLabs.forEach(lab => {
+                const isSelected = selectedLabs.includes(lab.id);
+                html += `
+                    <button 
+                        data-lab-id="${lab.id}" 
+                        class="lab-filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                            isSelected 
+                                ? 'bg-yellow-500 text-white shadow-md' 
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }"
+                    >
+                        ${lab.name}
+                    </button>
+                `;
+            });
+            
+            container.innerHTML = html;
+
+            // Show/hide clear button
+            if (selectedLabs.length > 0) {
+                clearButton.classList.remove('hidden');
+            } else {
+                clearButton.classList.add('hidden');
+            }
+
+            // Add click listeners
+            document.querySelectorAll('.lab-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const labId = parseInt(this.dataset.labId);
+                    
+                    if (selectedLabs.includes(labId)) {
+                        // Remove from selection
+                        selectedLabs = selectedLabs.filter(id => id !== labId);
+                    } else {
+                        // Add to selection
+                        selectedLabs.push(labId);
+                    }
+                    
+                    renderLabFilter();
+                    loadSchedules(currentWeekOffset);
+                });
+            });
+        }
+
         // Event listeners
         document.getElementById('prevWeek').addEventListener('click', () => {
             loadSchedules(currentWeekOffset - 1);
@@ -262,6 +343,12 @@
 
         document.getElementById('currentWeek').addEventListener('click', () => {
             loadSchedules(0);
+        });
+
+        document.getElementById('clearFilter').addEventListener('click', () => {
+            selectedLabs = [];
+            renderLabFilter();
+            loadSchedules(currentWeekOffset);
         });
 
         // Mobile menu toggle
