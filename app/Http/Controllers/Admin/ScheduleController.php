@@ -98,11 +98,14 @@ class ScheduleController extends Controller
             ->get();
 
         $labs = Lab::orderBy('name')->get();
-        
-        $days = DayHelper::SCHEDULE_DAYS;
         $types = $this->types;
 
-        return view('admin.schedules.index', compact('schedules', 'labs', 'days', 'types'));
+        // Return partial view for AJAX requests
+        if ($request->ajax()) {
+            return view('admin.schedules.partials.table', compact('schedules'))->render();
+        }
+
+        return view('admin.schedules.index', compact('schedules', 'labs', 'types'));
     }
 
     /**
