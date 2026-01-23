@@ -86,26 +86,6 @@
                 </a>
             </div>
 
-            <!-- Filter Ruangan -->
-            <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-4 lg:p-6 mb-6">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <label for="labFilter" class="text-base lg:text-lg font-bold text-slate-800 whitespace-nowrap">Filter Ruangan:</label>
-                    <div class="flex-1 flex gap-3">
-                        <select id="labFilter" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white">
-                            <option value="">Semua Ruangan</option>
-                            @if(isset($labs) && $labs->count() > 0)
-                                @foreach($labs as $lab)
-                                    <option value="{{ $lab->name }}">{{ $lab->name }}</option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <button id="clearLabFilter" class="px-4 py-2 text-sm text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors hidden whitespace-nowrap">
-                            Reset
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                 
                 <!-- Tabs -->
@@ -131,11 +111,24 @@
                 <div class="overflow-x-auto">
                     @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $day)
                     <div id="schedule-{{ $day }}" class="schedule-content {{ $day !== 'Senin' ? 'hidden' : '' }}">
-                        <!-- Date Header -->
-                        <div class="bg-gradient-to-r from-yellow-50 to-white px-6 py-3 border-b">
-                            <p class="text-sm font-semibold text-slate-700">
-                                📅 {{ $schedules[$day]['date_formatted'] ?? $day }}
-                            </p>
+                        <!-- Filter Ruangan -->
+                        <div class="bg-gradient-to-r from-yellow-50 to-white px-4 lg:px-6 py-3 border-b">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <label for="labFilter" class="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">Filter Ruangan:</label>
+                                <div class="flex-1 flex gap-2">
+                                    <select id="labFilter" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs lg:text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white">
+                                        <option value="">Semua Ruangan</option>
+                                        @if(isset($labs) && $labs->count() > 0)
+                                            @foreach($labs as $lab)
+                                                <option value="{{ $lab->name }}">{{ $lab->name }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <button id="clearLabFilter" class="px-3 py-2 text-xs lg:text-sm text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors hidden whitespace-nowrap">
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Desktop Table View -->
