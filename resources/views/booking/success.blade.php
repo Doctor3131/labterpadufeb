@@ -110,7 +110,7 @@
 
                     <div class="flex justify-between items-start border-b pb-2 gap-4">
                         <span class="text-gray-600 shrink-0">Tanggal:</span>
-                        <span class="font-semibold text-gray-800 text-right">{{ $booking->booking_date->format('d F Y') }} ({{ $booking->day }})</span>
+                        <span class="font-semibold text-gray-800 text-right">{{ $booking->booking_date->translatedFormat('d F Y') }} ({{ $booking->day }})</span>
                     </div>
 
                     <div class="flex justify-between items-start border-b pb-2 gap-4">
