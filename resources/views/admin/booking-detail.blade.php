@@ -145,14 +145,16 @@
                             </div>
                             <div>
                                 <p class="text-base font-bold text-gray-900">{{ $booking->pic_name }}</p>
-                                <p class="text-sm text-gray-500">{{ $booking->nim }}</p>
+                                <p class="text-sm text-gray-500">{{ $booking->nip ?: $booking->nim }}</p>
                             </div>
                         </div>
                         <div class="space-y-3 pt-2">
+                            @if($booking->study_program)
                             <div class="flex items-start">
                                 <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Program Studi</span>
                                 <span class="text-sm text-gray-800">{{ $booking->study_program }}</span>
                             </div>
+                            @endif
                             <div class="flex items-start">
                                 <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Telepon</span>
                                 <span class="text-sm text-gray-800">{{ $booking->phone_number }}</span>
@@ -265,14 +267,16 @@
                             </div>
                             <div>
                                 <p class="text-base font-bold text-gray-900">{{ $booking->pic_name }}</p>
-                                <p class="text-sm text-gray-500">{{ $booking->nim }}</p>
+                                <p class="text-sm text-gray-500">{{ $booking->nip ?: $booking->nim }}</p>
                             </div>
                         </div>
                         <div class="space-y-3 pt-2">
+                            @if($booking->study_program)
                             <div class="flex items-start">
                                 <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Program Studi</span>
                                 <span class="text-sm text-gray-800">{{ $booking->study_program }}</span>
                             </div>
+                            @endif
                             <div class="flex items-start">
                                 <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Telepon</span>
                                 <span class="text-sm text-gray-800">{{ $booking->phone_number }}</span>

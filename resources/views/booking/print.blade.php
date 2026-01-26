@@ -67,13 +67,15 @@
             <tr>
                 <td class="w-[250px] py-1 align-top">MATA KULIAH / KEGIATAN</td>
                 <td class="w-[10px] py-1 align-top">:</td>
-                <td class="py-1 font-bold">{{ $booking->course_name ?: $booking->activity_name }}</td>
+                <td class="py-1 font-bold">{{ $booking->course_name ?: $booking->activity_name ?: $booking->purpose }}</td>
             </tr>
+            @if($booking->study_program)
             <tr>
                 <td class="py-1">STRATA/JURUSAN</td>
                 <td class="py-1">:</td>
                 <td class="py-1">{{ $booking->study_program }}</td>
             </tr>
+            @endif
             <tr>
                 <td class="py-1">DOSEN PENGAMPU/ INSTRUKTUR</td>
                 <td class="py-1">:</td>
@@ -152,9 +154,14 @@
                 @endif
             </div>
             <div class="mt-1 flex justify-between">
-                @if($booking->booking_type === 'non_perkuliahan')
-                    <span>NIM.</span>
-                    <span>{{ $booking->nim ?: '....................' }}</span>
+                @if($booking->booking_type === 'non_perkuliahan' || $booking->booking_type === 'pribadi')
+                    @if($booking->nip)
+                        <span>NIP.</span>
+                        <span>{{ $booking->nip }}</span>
+                    @else
+                        <span>NIM.</span>
+                        <span>{{ $booking->nim ?: '....................' }}</span>
+                    @endif
                 @else
                     <span>NIP.</span>
                     <span>{{ $booking->lecturer_nip ?: '....................' }}</span>

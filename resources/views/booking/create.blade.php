@@ -227,6 +227,30 @@
                         Data Pribadi
                     </h3>
                     
+                    <!-- Status Fields for Pribadi (shown first for pribadi booking) -->
+                    <div id="pribadi-status-fields" class="hidden mb-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Pilih Status Terlebih Dahulu</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status <span class="text-red-500">*</span></label>
+                                <select name="applicant_status" id="applicant_status"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                    <option value="">Pilih Status</option>
+                                    <option value="Mahasiswa" {{ old('applicant_status') == 'Mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
+                                    <option value="Dosen" {{ old('applicant_status') == 'Dosen' ? 'selected' : '' }}>Dosen</option>
+                                    <option value="Pegawai" {{ old('applicant_status') == 'Pegawai' ? 'selected' : '' }}>Pegawai</option>
+                                    <option value="Lainnya" {{ old('applicant_status') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                </select>
+                            </div>
+                            <div id="custom-status-field" style="display: none;">
+                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status Lainnya <span class="text-red-500">*</span></label>
+                                <input type="text" data-name="custom_status" id="custom_status" value="{{ old('custom_status') }}"
+                                    placeholder="Masukkan status Anda"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
@@ -234,17 +258,25 @@
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
-                        <div>
+                        <div id="study-program-field">
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi <span class="text-red-500">*</span></label>
                             <input type="text" name="study_program" id="study_program" value="{{ old('study_program') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
-                        <div>
+                        <div id="nim-field">
                             <label class="block text-gray-700 text-sm font-semibold mb-2">NIM <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(14 digit)</span></label>
                             <input type="text" name="nim" id="nim" value="{{ old('nim') }}" required
                                 maxlength="14" pattern="[0-9]{14}" 
                                 placeholder="Contoh: 12010120130001"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
+
+                        <div id="nip-field" style="display: none;">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(Maksimal 18 digit)</span></label>
+                            <input type="text" data-name="nip" id="nip" value="{{ old('nip') }}"
+                                maxlength="18" pattern="[0-9]{1,18}" 
+                                placeholder="Contoh: 198505102010121001"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
@@ -331,23 +363,6 @@
                     <div id="pribadi-fields" class="hidden mb-6">
                         <h4 class="font-bold text-gray-800 mb-4">Data Peminjaman Pribadi</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status <span class="text-red-500">*</span></label>
-                                <select name="applicant_status" id="applicant_status"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                                    <option value="">Pilih Status</option>
-                                    <option value="Mahasiswa" {{ old('applicant_status') == 'Mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
-                                    <option value="Dosen" {{ old('applicant_status') == 'Dosen' ? 'selected' : '' }}>Dosen</option>
-                                    <option value="Pegawai" {{ old('applicant_status') == 'Pegawai' ? 'selected' : '' }}>Pegawai</option>
-                                    <option value="Lainnya" {{ old('applicant_status') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
-                                </select>
-                            </div>
-                            <div id="custom-status-field" style="display: none;">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status Lainnya <span class="text-red-500">*</span></label>
-                                <input type="text" data-name="custom_status" id="custom_status" value="{{ old('custom_status') }}"
-                                    placeholder="Masukkan status Anda"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            </div>
                              <div id="class-year-field" style="display: none;">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Angkatan <span class="text-red-500">*</span></label>
                                 <input type="text" data-name="class_year" id="class_year" value="{{ old('class_year') }}"
@@ -612,6 +627,7 @@
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.remove('hidden');
                         document.getElementById('pribadi-fields').classList.add('hidden');
+                        document.getElementById('pribadi-status-fields').classList.add('hidden');
                         
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', true);
@@ -620,6 +636,7 @@
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
                         document.getElementById('pribadi-fields').classList.remove('hidden');
+                        document.getElementById('pribadi-status-fields').classList.remove('hidden');
                         
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', false);
@@ -628,6 +645,7 @@
                         document.getElementById('perkuliahan-fields').classList.remove('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
                         document.getElementById('pribadi-fields').classList.add('hidden');
+                        document.getElementById('pribadi-status-fields').classList.add('hidden');
                         
                         setRequiredFields('perkuliahan-fields', true);
                         setRequiredFields('non-perkuliahan-fields', false);
@@ -650,6 +668,12 @@
             const classYearInput = document.getElementById('class_year');
             const customStatusField = document.getElementById('custom-status-field');
             const customStatusInput = document.getElementById('custom_status');
+            const studyProgramField = document.getElementById('study-program-field');
+            const studyProgramInput = document.getElementById('study_program');
+            const nimField = document.getElementById('nim-field');
+            const nimInput = document.getElementById('nim');
+            const nipField = document.getElementById('nip-field');
+            const nipInput = document.getElementById('nip');
             
             if (statusSelect && classYearField) {
                 // Function to toggle class year field and custom status field visibility
@@ -682,6 +706,62 @@
                         classYearInput.value = ''; // Clear value
                     }
                     
+                    // Toggle Program Studi, NIM, and NIP fields based on status
+                    if (status === 'Dosen' || status === 'Pegawai') {
+                        // Hide Program Studi and NIM
+                        if (studyProgramField) {
+                            studyProgramField.style.display = 'none';
+                            studyProgramInput.removeAttribute('required');
+                            studyProgramInput.value = '';
+                        }
+                        if (nimField) {
+                            nimField.style.display = 'none';
+                            nimInput.removeAttribute('required');
+                            nimInput.value = '';
+                        }
+                        // Show NIP
+                        if (nipField) {
+                            nipField.style.display = 'block';
+                            nipInput.setAttribute('name', 'nip');
+                            nipInput.setAttribute('required', 'required');
+                        }
+                    } else if (status === 'Lainnya') {
+                        // Hide ALL: Program Studi, NIM, and NIP for Lainnya
+                        if (studyProgramField) {
+                            studyProgramField.style.display = 'none';
+                            studyProgramInput.removeAttribute('required');
+                            studyProgramInput.value = '';
+                        }
+                        if (nimField) {
+                            nimField.style.display = 'none';
+                            nimInput.removeAttribute('required');
+                            nimInput.value = '';
+                        }
+                        if (nipField) {
+                            nipField.style.display = 'none';
+                            nipInput.removeAttribute('name');
+                            nipInput.removeAttribute('required');
+                            nipInput.value = '';
+                        }
+                    } else {
+                        // Show Program Studi and NIM for Mahasiswa
+                        if (studyProgramField) {
+                            studyProgramField.style.display = 'block';
+                            studyProgramInput.setAttribute('required', 'required');
+                        }
+                        if (nimField) {
+                            nimField.style.display = 'block';
+                            nimInput.setAttribute('required', 'required');
+                        }
+                        // Hide NIP
+                        if (nipField) {
+                            nipField.style.display = 'none';
+                            nipInput.removeAttribute('name');
+                            nipInput.removeAttribute('required');
+                            nipInput.value = '';
+                        }
+                    }
+                    
                     // Re-validate step 2
                     validateStep2();
                 }
@@ -696,6 +776,11 @@
                 if (customStatusInput) {
                     customStatusInput.addEventListener('input', validateStep2);
                 }
+                
+                // Also listen to NIP input
+                if (nipInput) {
+                    nipInput.addEventListener('input', validateStep2);
+                }
             }
         }
 
@@ -703,7 +788,7 @@
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
             const optionalFields = ['software_needs', 'equipment_needs', 'address']; // Fields that are always optional
-            const conditionalFields = ['class_year', 'custom_status']; // Fields handled by toggleFields()
+            const conditionalFields = ['class_year', 'custom_status', 'applicant_status', 'nip', 'nim', 'study_program']; // Fields handled by toggleFields() or conditional logic
             
             inputs.forEach(input => {
                 // Skip fields yang tidak punya name attribute (conditional fields)
@@ -740,10 +825,12 @@
 
         // Step 2 Validation
         function setupStep2Validation() {
-            const requiredFields = ['pic_name', 'study_program', 'nim', 'phone_number'];
+            const requiredFields = ['pic_name', 'study_program', 'nim', 'phone_number', 'nip'];
             requiredFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
-                field.addEventListener('input', validateStep2);
+                if (field) {
+                    field.addEventListener('input', validateStep2);
+                }
             });
             
             // Also listen to conditional fields
@@ -759,27 +846,42 @@
 
         function validateStep2() {
             const nama = document.getElementById('pic_name').value.trim();
-            const prodi = document.getElementById('study_program').value.trim();
-            const nim = document.getElementById('nim').value.trim();
             const telpon = document.getElementById('phone_number').value.trim();
 
-            let isValid = nama && prodi && nim.length === 14 && telpon.length >= 10;
+            let isValid = nama && telpon.length >= 10;
 
-            // Check conditional fields
+            // Check conditional fields based on booking type
             if (selectedBookingType === 'perkuliahan_tetap' || selectedBookingType === 'perkuliahan_tidak_tetap') {
+                const prodi = document.getElementById('study_program').value.trim();
+                const nim = document.getElementById('nim').value.trim();
                 const mataKuliah = document.getElementById('course_name').value.trim();
                 const dosen = document.getElementById('lecturer_name').value.trim();
                 const nip = document.getElementById('lecturer_nip').value.trim();
-                isValid = isValid && mataKuliah && dosen && nip;
+                isValid = isValid && prodi && nim.length === 14 && mataKuliah && dosen && nip;
             } else if (selectedBookingType === 'non_perkuliahan') {
+                const prodi = document.getElementById('study_program').value.trim();
+                const nim = document.getElementById('nim').value.trim();
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
                 const jenisKegiatan = document.getElementById('activity_type').value.trim();
                 const jabatan = document.getElementById('position').value.trim();
-                isValid = isValid && namaKegiatan && jenisKegiatan && jabatan;
+                isValid = isValid && prodi && nim.length === 14 && namaKegiatan && jenisKegiatan && jabatan;
             } else if (selectedBookingType === 'pribadi') {
                  const status = document.getElementById('applicant_status').value.trim();
                  const keperluan = document.getElementById('purpose').value.trim();
                  isValid = isValid && status && keperluan;
+                 
+                 // Check based on status
+                 if (status === 'Mahasiswa') {
+                     // Mahasiswa need Program Studi and NIM
+                     const prodi = document.getElementById('study_program').value.trim();
+                     const nim = document.getElementById('nim').value.trim();
+                     isValid = isValid && prodi && nim.length === 14;
+                 } else if (status === 'Dosen' || status === 'Pegawai') {
+                     // Dosen and Pegawai need NIP
+                     const nip = document.getElementById('nip').value.trim();
+                     isValid = isValid && nip.length > 0;
+                 }
+                 // Lainnya does not need Program Studi, NIM, or NIP
                  
                  // Status custom wajib jika pilih Lainnya
                  if (status === 'Lainnya') {
@@ -1018,7 +1120,16 @@
              }
             
             summary.push(`<div><strong>Nama:</strong> ${document.getElementById('pic_name').value}</div>`);
-            summary.push(`<div><strong>NIM:</strong> ${document.getElementById('nim').value}</div>`);
+            
+            // Display NIP or NIM based on what's filled
+            const nimValue = document.getElementById('nim').value;
+            const nipValue = document.getElementById('nip').value;
+            
+            if (nipValue) {
+                summary.push(`<div><strong>NIP:</strong> ${nipValue}</div>`);
+            } else if (nimValue) {
+                summary.push(`<div><strong>NIM:</strong> ${nimValue}</div>`);
+            }
             
             // Specific fields based on type
              if (selectedBookingType === 'pribadi') {

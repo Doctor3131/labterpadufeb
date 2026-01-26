@@ -16,6 +16,7 @@ class Booking extends Model
         'pic_name',
         'study_program',
         'nim',
+        'nip',
         'phone_number',
         'address',
         'applicant_status',

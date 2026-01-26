@@ -69,8 +69,43 @@ class BookingController extends Controller
             'booking_type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'unit_type' => 'required_unless:booking_type,pribadi|in:s1_tembalang,pascasarjana_pleburan',
             'pic_name' => 'required|string|max:255',
-            'study_program' => 'required|string|max:255',
-            'nim' => 'required|string|size:14|regex:/^[0-9]{14}$/',
+            'study_program' => [
+                function ($attribute, $value, $fail) use ($request) {
+                    $isPribadi = $request->booking_type === 'pribadi';
+                    $status = $request->applicant_status;
+                    
+                    // Program Studi not required for Dosen/Pegawai/Lainnya in pribadi booking
+                    if ($isPribadi && in_array($status, ['Dosen', 'Pegawai', 'Lainnya'])) {
+                        return; // Skip validation
+                    }
+                    
+                    // Required for other cases
+                    if (!$value) {
+                        $fail('Program Studi wajib diisi.');
+                    }
+                },
+                'nullable', 'string', 'max:255'
+            ],
+            'nim' => [
+                function ($attribute, $value, $fail) use ($request) {
+                    $isPribadi = $request->booking_type === 'pribadi';
+                    $status = $request->applicant_status;
+                    
+                    // NIM not required for Dosen/Pegawai/Lainnya in pribadi booking
+                    if ($isPribadi && in_array($status, ['Dosen', 'Pegawai', 'Lainnya'])) {
+                        return; // Skip validation
+                    }
+                    
+                    // Required for other cases
+                    if (!$value) {
+                        $fail('NIM wajib diisi.');
+                    } elseif (!preg_match('/^[0-9]{14}$/', $value)) {
+                        $fail('NIM harus berupa 14 digit angka.');
+                    }
+                },
+                'nullable', 'string', 'size:14', 'regex:/^[0-9]{14}$/'
+            ],
+            'nip' => 'required_if:applicant_status,Dosen,Pegawai|nullable|string|max:18|regex:/^[0-9]{1,18}$/',
             'phone_number' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
             'address' => 'required|string',
             'lab_id' => 'required|exists:labs,id',
@@ -106,9 +141,10 @@ class BookingController extends Controller
             ],
             
             // Personal Booking fields
-            'applicant_status' => 'required_if:booking_type,pribadi|string|max:255',
+            'applicant_status' => 'nullable|required_if:booking_type,pribadi|string|max:255',
+            'custom_status' => 'nullable|required_if:applicant_status,Lainnya|string|max:255',
             'class_year' => 'nullable|string|max:4',
-            'purpose' => 'required_if:booking_type,pribadi|string|max:255',
+            'purpose' => 'nullable|required_if:booking_type,pribadi|string|max:255',
             
             // Non-perkuliahan fields
             'activity_type' => 'required_if:booking_type,non_perkuliahan',
