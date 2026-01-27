@@ -13,10 +13,8 @@ class Lab extends Model
         'name',
         'code',
         'description',
-        'location',
         'capacity',
         'status',
-        'image',
     ];
 
     protected $casts = [

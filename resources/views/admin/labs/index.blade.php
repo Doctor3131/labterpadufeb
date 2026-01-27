@@ -54,8 +54,10 @@
                 <div class="p-5">
                     <div class="flex justify-between items-start mb-3">
                         <div>
-                            <span class="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ $lab->code }}</span>
-                            <h3 class="font-bold text-gray-800 text-lg mt-1">{{ $lab->name }}</h3>
+                            @if($lab->code)
+                                <span class="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ $lab->code }}</span>
+                            @endif
+                            <h3 class="font-bold text-gray-800 text-lg {{ $lab->code ? 'mt-1' : '' }}">{{ $lab->name }}</h3>
                         </div>
                         @php
                             $statusConfig = match($lab->status) {

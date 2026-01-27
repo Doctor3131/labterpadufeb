@@ -22,7 +22,7 @@
 
         <!-- Form Card -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 md:p-8">
-            <form action="{{ route('admin.labs.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.labs.store') }}" method="POST">
                 @csrf
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -31,7 +31,7 @@
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nama Lab <span class="text-red-500">*</span></label>
                         <input type="text" name="name" id="name" value="{{ old('name') }}" required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition @error('name') border-red-500 @enderror"
-                            placeholder="Contoh: Lab Digital">
+                            placeholder="Pasca">
                         @error('name')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -42,7 +42,7 @@
                         <label for="capacity" class="block text-sm font-medium text-gray-700 mb-2">Kapasitas (Orang) <span class="text-red-500">*</span></label>
                         <input type="number" name="capacity" id="capacity" value="{{ old('capacity') }}" required min="1"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition @error('capacity') border-red-500 @enderror"
-                            placeholder="0">
+                            placeholder="40">
                         @error('capacity')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror

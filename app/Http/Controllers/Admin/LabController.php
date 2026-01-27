@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Lab;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class LabController extends Controller
 {
@@ -33,17 +32,9 @@ class LabController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:labs,code',
-            'description' => 'nullable|string',
-            'location' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
-            'status' => 'required|in:available,occupied,maintenance',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'description' => 'nullable|string',
         ]);
-
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('labs', 'public');
-        }
 
         Lab::create($validated);
 
@@ -85,11 +76,6 @@ class LabController extends Controller
         if ($lab->schedules()->count() > 0 || $lab->bookings()->count() > 0) {
             return redirect()->route('admin.labs.index')
                 ->with('error', 'Lab tidak dapat dihapus karena memiliki jadwal atau booking aktif!');
-        }
-
-        // Delete image if exists
-        if ($lab->image) {
-            Storage::disk('public')->delete($lab->image);
         }
 
         $lab->delete();
