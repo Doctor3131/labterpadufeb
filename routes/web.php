@@ -74,6 +74,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->names('admin.inventories')
         ->except(['show']);
 
+    // Admin Reports
+    Route::get('/admin/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])
+        ->name('admin.reports.index');
+    Route::get('/admin/reports/export', [App\Http\Controllers\Admin\ReportController::class, 'export'])
+        ->name('admin.reports.export');
+    Route::get('/admin/reports/export-word', [App\Http\Controllers\Admin\ReportController::class, 'exportWord'])
+        ->name('admin.reports.export-word');
+
     // Admin Lab Management
     Route::resource('/admin/labs', App\Http\Controllers\Admin\LabController::class)
         ->names('admin.labs')
