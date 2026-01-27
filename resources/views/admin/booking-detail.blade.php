@@ -190,7 +190,7 @@
                                 </div>
                                 @if($booking->position)
                                 <div class="col-span-2 md:col-span-1">
-                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Jabatan Peminjam</dt>
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Posisi Peminjam</dt>
                                     <dd class="text-base text-gray-800">{{ $booking->position }}</dd>
                                 </div>
                                 @endif
