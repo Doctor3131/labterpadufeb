@@ -107,7 +107,6 @@ class BookingController extends Controller
             ],
             'nip' => 'required_if:applicant_status,Dosen,Pegawai|nullable|string|max:18|regex:/^[0-9]{1,18}$/',
             'phone_number' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
-            'address' => 'required|string',
             'lab_id' => 'required|exists:labs,id',
             'booking_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',

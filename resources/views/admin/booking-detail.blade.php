@@ -159,12 +159,6 @@
                                 <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Telepon</span>
                                 <span class="text-sm text-gray-800">{{ $booking->phone_number }}</span>
                             </div>
-                            @if($booking->address)
-                            <div class="flex items-start">
-                                <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Alamat</span>
-                                <span class="text-sm text-gray-800">{{ $booking->address }}</span>
-                            </div>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -281,12 +275,6 @@
                                 <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Telepon</span>
                                 <span class="text-sm text-gray-800">{{ $booking->phone_number }}</span>
                             </div>
-                            @if($booking->address)
-                            <div class="flex items-start">
-                                <span class="text-xs font-semibold text-gray-500 w-24 shrink-0 mt-0.5">Alamat</span>
-                                <span class="text-sm text-gray-800">{{ $booking->address }}</span>
-                            </div>
-                            @endif
                         </div>
                     </div>
                 </div>

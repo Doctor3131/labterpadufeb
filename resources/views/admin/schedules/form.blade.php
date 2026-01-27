@@ -200,7 +200,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jabatan Peminjam *</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Posisi Peminjam *</label>
                             <input type="text" name="position" id="position"
                                    value="{{ old('position', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->position : '') }}"
                                    placeholder="Contoh: Ketua Panitia"

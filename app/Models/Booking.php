@@ -18,7 +18,6 @@ class Booking extends Model
         'nim',
         'nip',
         'phone_number',
-        'address',
         'applicant_status',
         'custom_status',
         'class_year',

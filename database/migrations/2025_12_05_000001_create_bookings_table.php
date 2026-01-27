@@ -31,7 +31,6 @@ return new class extends Migration
             $table->string('study_program'); // Program Studi
             $table->string('nim');
             $table->string('phone_number'); // No Telpon
-            $table->text('address')->nullable(); // Alamat tempat tinggal
             
             // Personal Booking Details
             $table->string('applicant_status')->nullable(); // Status (Mahasiswa/Dosen/etc)

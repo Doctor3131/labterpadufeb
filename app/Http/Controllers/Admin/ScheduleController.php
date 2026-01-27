@@ -40,8 +40,6 @@ class ScheduleController extends Controller
 
         $query = Schedule::with(['lab', 'booking']);
 
-        $query = Schedule::with(['lab', 'booking']);
-
         // Apply filters
         $this->applyFilters($query, $request);
 
@@ -51,7 +49,6 @@ class ScheduleController extends Controller
             ->orderByRaw('CASE WHEN start_date IS NULL THEN 1 ELSE 0 END') // nulls last
             ->orderByDesc('start_date')
             ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
-            ->orderBy('start_time')
             ->orderBy('start_time')
             ->paginate(100)
             ->withQueryString();

@@ -342,7 +342,6 @@ class DatabaseSeeder extends Seeder
             'study_program' => 'Manajemen',
             'nim' => '12010122140001',
             'phone_number' => '081234567890',
-            'address' => 'Semarang',
             'lab_id' => Lab::where('name', 'EL. 309')->first()->id,
             'booking_date' => '2025-12-23', // Tuesday 2025-12-23
             'day' => 'Selasa',

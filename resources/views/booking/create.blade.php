@@ -287,12 +287,6 @@
                                 placeholder="Contoh: 081234567890"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Alamat Peminjam <span class="text-red-500">*</span></label>
-                            <textarea name="address" id="address" rows="3" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('address') }}</textarea>
-                        </div>
                     </div>
 
                     <!-- Dynamic Fields Based on Booking Type -->
@@ -787,7 +781,7 @@
         function setRequiredFields(containerId, required) {
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
-            const optionalFields = ['software_needs', 'equipment_needs', 'address']; // Fields that are always optional
+            const optionalFields = ['software_needs', 'equipment_needs']; // Fields that are always optional
             const conditionalFields = ['class_year', 'custom_status', 'applicant_status', 'nip', 'nim', 'study_program']; // Fields handled by toggleFields() or conditional logic
             
             inputs.forEach(input => {
