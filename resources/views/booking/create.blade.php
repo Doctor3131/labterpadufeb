@@ -479,7 +479,7 @@
                     
                     <div class="mb-6" id="upload-document-section">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">
-                            Upload KTM (Kartu Tanda Mahasiswa) <span class="text-red-500">*</span>
+                            Upload Dokumen Pendukung (KTM, Surat Lainnya) <span class="text-red-500">*</span>
                         </label>
                         <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
                             <input type="file" name="document" id="document" accept=".pdf" class="hidden" required>
