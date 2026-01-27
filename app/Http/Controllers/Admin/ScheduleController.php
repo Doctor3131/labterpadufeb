@@ -33,6 +33,7 @@ class ScheduleController extends Controller
             'date' => 'nullable|date_format:Y-m-d',
             'month' => 'nullable|date_format:Y-m',
             'lab_id' => 'nullable|exists:labs,id',
+            'day' => 'nullable|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'search' => 'nullable|string|max:255',
         ]);
@@ -688,6 +689,11 @@ class ScheduleController extends Controller
         // Filter by Type
         if ($request->filled('type')) {
             $query->where('type', $request->type);
+        }
+
+        // Filter by Day (manual day selection - independent of date filter)
+        if ($request->filled('day')) {
+            $query->where('day', $request->day);
         }
 
         // Filter by Search (course/activity name or lecturer)

@@ -73,6 +73,18 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="md:flex-1 md:min-w-[120px]">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Hari</label>
+                    <select id="filter-day" class="w-full px-3 py-2.5 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-base md:text-sm">
+                        <option value="">Semua Hari</option>
+                        <option value="Senin" {{ request('day') == 'Senin' ? 'selected' : '' }}>Senin</option>
+                        <option value="Selasa" {{ request('day') == 'Selasa' ? 'selected' : '' }}>Selasa</option>
+                        <option value="Rabu" {{ request('day') == 'Rabu' ? 'selected' : '' }}>Rabu</option>
+                        <option value="Kamis" {{ request('day') == 'Kamis' ? 'selected' : '' }}>Kamis</option>
+                        <option value="Jumat" {{ request('day') == 'Jumat' ? 'selected' : '' }}>Jumat</option>
+                        <option value="Sabtu" {{ request('day') == 'Sabtu' ? 'selected' : '' }}>Sabtu</option>
+                    </select>
+                </div>
                 <div class="md:flex-1 md:min-w-[150px]">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tipe</label>
                     <select id="filter-type" class="w-full px-3 py-2.5 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-base md:text-sm">
@@ -235,6 +247,7 @@
                     month: document.getElementById('filter-month').value,
                     date: document.getElementById('filter-date').value,
                     lab: document.getElementById('filter-lab').value,
+                    day: document.getElementById('filter-day').value,
                     type: document.getElementById('filter-type').value,
                     search: document.getElementById('filter-search').value
                 };
@@ -256,6 +269,7 @@
                 document.getElementById('filter-month').value = filters.month || '';
                 document.getElementById('filter-date').value = filters.date || '';
                 document.getElementById('filter-lab').value = filters.lab || '';
+                document.getElementById('filter-day').value = filters.day || '';
                 document.getElementById('filter-type').value = filters.type || '';
                 document.getElementById('filter-search').value = filters.search || '';
                 
@@ -302,6 +316,7 @@
                 const filterMonth = document.getElementById('filter-month').value;
                 const filterDate = document.getElementById('filter-date').value;
                 const filterLab = document.getElementById('filter-lab').value;
+                const filterDay = document.getElementById('filter-day').value;
                 const filterType = document.getElementById('filter-type').value;
                 const filterSearch = document.getElementById('filter-search').value;
 
@@ -310,6 +325,7 @@
                 if (filterMonth) params.append('month', filterMonth);
                 if (filterDate) params.append('date', filterDate);
                 if (filterLab) params.append('lab_id', filterLab);
+                if (filterDay) params.append('day', filterDay);
                 if (filterType) params.append('type', filterType);
                 if (filterSearch) params.append('search', filterSearch);
                 
@@ -400,11 +416,13 @@
             document.getElementById('filter-month').value = '';
             document.getElementById('filter-date').value = '';
             document.getElementById('filter-lab').value = '';
+            document.getElementById('filter-day').value = '';
             document.getElementById('filter-type').value = '';
             document.getElementById('filter-search').value = '';
             
             // Trigger change events to update custom selects
             document.getElementById('filter-lab').dispatchEvent(new Event('change'));
+            document.getElementById('filter-day').dispatchEvent(new Event('change'));
             document.getElementById('filter-type').dispatchEvent(new Event('change'));
             
             // Clear from localStorage
@@ -420,9 +438,11 @@
 
             // Initialize custom dropdowns
             const filterLab = document.getElementById('filter-lab');
+            const filterDay = document.getElementById('filter-day');
             const filterType = document.getElementById('filter-type');
             
             if (filterLab) new CustomSelect(filterLab);
+            if (filterDay) new CustomSelect(filterDay);
             if (filterType) new CustomSelect(filterType);
 
             // Add event listeners for auto-filter
@@ -444,6 +464,7 @@
                 triggerLoad();
             });
             document.getElementById('filter-lab').addEventListener('change', triggerLoad);
+            document.getElementById('filter-day').addEventListener('change', triggerLoad);
             document.getElementById('filter-type').addEventListener('change', triggerLoad);
             
             document.getElementById('filter-search').addEventListener('input', function() {
