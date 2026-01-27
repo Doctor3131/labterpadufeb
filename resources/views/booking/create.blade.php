@@ -187,7 +187,7 @@
                             <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required {{ old('booking_type') == 'non_perkuliahan' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
                                 <div class="font-bold text-gray-800 text-sm md:text-lg">Non-Perkuliahan</div>
-                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Kegiatan lain</div>
+                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Kegiatan lain (Ormawa,etc)</div>
                             </div>
                         </label>
                          <label class="booking-type-card cursor-pointer">
