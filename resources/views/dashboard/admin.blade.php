@@ -1,32 +1,10 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Dashboard Admin - LabDigitalFEB')
 
 @section('content')
 <!-- Header with Yellow Background -->
-<header class="bg-yellow-500 text-white shadow-md">
-    <div class="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <a href="{{ route('landing') }}">
-                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 sm:h-16 w-auto bg-white rounded-lg p-1">
-                </a>
-                <div>
-                    <p class="text-xs sm:text-sm text-yellow-100 font-bold">Dashboard Admin</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2 sm:space-x-4">
-                <span class="text-xs sm:text-sm hidden sm:inline">{{ auth()->user()->name }}</span>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="px-3 sm:px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition text-xs sm:text-sm">
-                        Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</header>
+
 
 <div class="min-h-screen bg-gray-50 py-3 sm:py-4 md:py-8">
     <div class="container mx-auto px-3 sm:px-4">
@@ -69,27 +47,12 @@
             <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                     <div class="mb-2 sm:mb-0">
-                        <p class="text-gray-500 text-xs sm:text-sm mb-1">Terpakai</p>
-                        <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ $labs->where('status', 'occupied')->count() }}</p>
+                        <p class="text-gray-500 text-xs sm:text-sm mb-1">Nonaktif</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ $labs->where('status', 'inactive')->count() }}</p>
                     </div>
                     <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center">
                         <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                    <div class="mb-2 sm:mb-0">
-                        <p class="text-gray-500 text-xs sm:text-sm mb-1">Maintenance</p>
-                        <p class="text-2xl sm:text-3xl font-bold text-gray-600">{{ $labs->where('status', 'maintenance')->count() }}</p>
-                    </div>
-                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
                         </svg>
                     </div>
                 </div>
@@ -110,9 +73,8 @@
                 <table class="w-full">
                     <thead>
                         <tr class="border-b-2 border-gray-200">
-                            <th class="text-left py-3 px-4 text-gray-600 font-semibold">Kode</th>
                             <th class="text-left py-3 px-4 text-gray-600 font-semibold">Nama Ruangan</th>
-                            <th class="text-left py-3 px-4 text-gray-600 font-semibold">Lokasi</th>
+                            <th class="text-left py-3 px-4 text-gray-600 font-semibold">Deskripsi</th>
                             <th class="text-left py-3 px-4 text-gray-600 font-semibold">Kapasitas</th>
                             <th class="text-left py-3 px-4 text-gray-600 font-semibold">Status</th>
                             <th class="text-left py-3 px-4 text-gray-600 font-semibold">Aksi</th>
@@ -121,19 +83,14 @@
                     <tbody>
                         @foreach($labs as $lab)
                         <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-                            <td class="py-3 px-4 font-medium text-gray-800">{{ $lab->code }}</td>
-                            <td class="py-3 px-4 text-gray-700">{{ $lab->name }}</td>
-                            <td class="py-3 px-4 text-gray-600">{{ $lab->location }}</td>
+                            <td class="py-3 px-4 font-medium text-gray-800">{{ $lab->name }}</td>
+                            <td class="py-3 px-4 text-gray-600">{{ $lab->description ?: '-' }}</td>
                             <td class="py-3 px-4 text-gray-600">{{ $lab->capacity }} orang</td>
                             <td class="py-3 px-4">
                                 <span class="px-3 py-1 text-xs font-semibold rounded-full
-                                    {{ $lab->status === 'available' ? 'bg-green-100 text-green-700' : '' }}
-                                    {{ $lab->status === 'occupied' ? 'bg-red-100 text-red-700' : '' }}
-                                    {{ $lab->status === 'maintenance' ? 'bg-gray-100 text-gray-700' : '' }}
+                                    {{ $lab->status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}
                                 ">
-                                    {{ $lab->status === 'available' ? 'Tersedia' : '' }}
-                                    {{ $lab->status === 'occupied' ? 'Terpakai' : '' }}
-                                    {{ $lab->status === 'maintenance' ? 'Maintenance' : '' }}
+                                    {{ $lab->status === 'available' ? 'Aktif' : 'Nonaktif' }}
                                 </span>
                             </td>
                             <td class="py-3 px-4">

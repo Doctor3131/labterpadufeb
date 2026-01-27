@@ -22,7 +22,7 @@
 
         <!-- Form Card -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 md:p-8">
-            <form action="{{ route('admin.labs.update', $lab->id) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.labs.update', $lab->id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 

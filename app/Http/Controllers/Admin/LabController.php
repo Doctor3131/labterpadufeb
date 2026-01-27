@@ -13,7 +13,7 @@ class LabController extends Controller
      */
     public function index()
     {
-        $labs = Lab::withCount(['schedules', 'bookings'])->orderBy('code')->get();
+        $labs = Lab::withCount(['schedules', 'bookings'])->orderBy('name')->get();
         return view('admin.labs.index', compact('labs'));
     }
 
@@ -89,7 +89,7 @@ class LabController extends Controller
      */
     public function toggleStatus(Lab $lab)
     {
-        $newStatus = $lab->status === 'available' ? 'maintenance' : 'available';
+        $newStatus = $lab->status === 'available' ? 'inactive' : 'available';
         
         $lab->update(['status' => $newStatus]);
 

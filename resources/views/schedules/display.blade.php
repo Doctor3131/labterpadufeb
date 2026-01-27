@@ -174,7 +174,6 @@
             
             // Only scroll if content is taller than container
             if (contentHeight <= containerHeight) {
-                console.log('Content fits in viewport, no scrolling needed');
                 return;
             }
             

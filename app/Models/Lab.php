@@ -11,7 +11,6 @@ class Lab extends Model
 
     protected $fillable = [
         'name',
-        'code',
         'description',
         'capacity',
         'status',
@@ -45,6 +44,11 @@ class Lab extends Model
      */
     public function isAvailable($day, $startTime, $endTime, $date = null)
     {
+        // Check if lab is active
+        if ($this->status !== 'available') {
+            return false;
+        }
+
         // Check recurring schedules (perkuliahan tetap)
         $hasScheduleConflict = $this->schedules()
             ->where('day', $day)
