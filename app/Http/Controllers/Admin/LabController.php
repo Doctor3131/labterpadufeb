@@ -38,7 +38,7 @@ class LabController extends Controller
             'location' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
             'status' => 'required|in:available,occupied,maintenance',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         if ($request->hasFile('image')) {

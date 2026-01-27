@@ -136,7 +136,7 @@ class BookingController extends Controller
                         // Non-mahasiswa (Dosen/Pegawai/Lainnya) -> Optional
                     }
                 },
-                'file', 'mimes:pdf', 'max:2048'
+                'file', 'mimes:pdf', 'max:5120'
             ],
             
             // Personal Booking fields
