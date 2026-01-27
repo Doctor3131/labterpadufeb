@@ -83,19 +83,19 @@
                         Feedback
                     </a>
                     @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.users.create') }}" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center">
+                        <a href="{{ route('admin.users.index') }}" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center">
                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
                             </svg>
-                            User Baru
+                            Kelola User
                         </a>
                     @endif
-                    <div class="flex items-center space-x-1.5 px-2.5 py-1.5 bg-gray-100 rounded-lg">
+                    <a href="{{ route('profile.show') }}" class="flex items-center space-x-1.5 px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all">
                         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
                         <span class="text-xs font-medium text-gray-700">{{ auth()->user()->name }}</span>
-                    </div>
+                    </a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" onclick="return confirm('Yakin ingin logout?')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center">
@@ -121,14 +121,17 @@
         <!-- Mobile Menu (Hidden by default) -->
         <div id="mobile-menu" class="hidden lg:hidden border-t border-gray-100 bg-white">
             <div class="px-4 pt-2 pb-4 space-y-2">
-                <div class="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-lg mb-2">
+                <a href="{{ route('profile.show') }}" class="flex items-center space-x-3 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg mb-2 transition-all">
                     <div class="bg-yellow-100 p-2 rounded-full">
                          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
                     </div>
-                    <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
-                </div>
+                    <div>
+                        <span class="text-sm font-medium text-gray-700 block">{{ auth()->user()->name }}</span>
+                        <span class="text-xs text-gray-500">Pengaturan Akun</span>
+                    </div>
+                </a>
 
                 <a href="{{ route('landing') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-yellow-600 hover:bg-yellow-50">
                     <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,11 +176,11 @@
                 </a>
 
                 @if(auth()->user()->isSuperAdmin())
-                    <a href="{{ route('admin.users.create') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-yellow-600 hover:bg-yellow-50">
+                    <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.users.*') ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
                         </svg>
-                        Buat User Baru
+                        Kelola User
                     </a>
                 @endif
 
