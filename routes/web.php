@@ -6,9 +6,15 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FeedbackController;
 
 // Public Routes
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+// Feedback Routes (Public)
+Route::post('/feedback', [FeedbackController::class, 'store'])
+    ->middleware('throttle:5,1') // Max 5 submissions per minute
+    ->name('feedback.store');
 
 // Booking Routes (Public - No Authentication Required)
 // Rate limited to prevent spam submissions
@@ -74,6 +80,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->except(['show']);
     Route::post('/admin/labs/{lab}/toggle-status', [App\Http\Controllers\Admin\LabController::class, 'toggleStatus'])
         ->name('admin.labs.toggle-status');
+
+    // Admin Feedback Management
+    Route::get('/admin/feedbacks', [FeedbackController::class, 'index'])->name('admin.feedbacks.index');
+    Route::put('/admin/feedbacks/{id}', [FeedbackController::class, 'update'])->name('admin.feedbacks.update');
 });
 
 // Super Admin Only Routes

@@ -28,6 +28,14 @@
                         Jadwal
                     </a>
 
+                    <!-- Laporkan Masalah Button -->
+                    <button onclick="openFeedbackModal()" class="hidden lg:inline-flex items-center px-4 py-2 text-slate-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
+                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Laporkan Masalah
+                    </button>
+
                     <!-- Login/Dashboard Button -->
                     @auth
                         <a href="{{ route('dashboard') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
@@ -42,6 +50,18 @@
             </div>
         </div>
     </nav>
+
+    <!-- Success Message -->
+    @if(session('success'))
+        <div class="bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-4 mx-4 lg:mx-8 mt-4 rounded-r-lg shadow-sm animate-pulse">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
 
     <!-- Hero Section -->
     <section class="relative bg-yellow-500 text-white overflow-hidden">
@@ -341,6 +361,79 @@
         </div>
     </section>
 
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 transform transition-all">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="bg-yellow-100 p-2 rounded-lg">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Laporkan Masalah</h3>
+                        <p class="text-sm text-gray-500">Sampaikan masalah atau feedback Anda. Tim kami akan meninjau laporan Anda.</p>
+                    </div>
+                </div>
+                <button onclick="closeFeedbackModal()" class="text-gray-400 hover:text-gray-600 transition p-1 rounded-full hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form action="{{ route('feedback.store') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+                
+                <!-- Judul Laporan -->
+                <div>
+                    <label for="feedback_title" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Judul Laporan <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="feedback_title" 
+                        name="title" 
+                        placeholder="Masukkan judul laporan"
+                        required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition"
+                    >
+                </div>
+
+                <!-- Detail Laporan -->
+                <div>
+                    <label for="feedback_detail" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Detail Laporan <span class="text-red-500">*</span>
+                    </label>
+                    <textarea 
+                        id="feedback_detail" 
+                        name="detail" 
+                        rows="5" 
+                        placeholder="Jelaskan detail laporan Anda..."
+                        required
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition resize-none"
+                    ></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end pt-2">
+                    <button 
+                        type="submit"
+                        class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        Kirim Laporan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-slate-800 text-slate-400 py-5">
         <div class="container mx-auto px-4 lg:px-8 text-center">
@@ -474,6 +567,38 @@
             window.open(`/booking/print/${token}`, '_blank');
             return false;
         }
+
+        // Feedback Modal Functions
+        function openFeedbackModal() {
+            const modal = document.getElementById('feedbackModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFeedbackModal() {
+            const modal = document.getElementById('feedbackModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+            // Reset form
+            document.getElementById('feedback_title').value = '';
+            document.getElementById('feedback_detail').value = '';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('feedbackModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFeedbackModal();
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFeedbackModal();
+            }
+        });
 
     </script>
 
