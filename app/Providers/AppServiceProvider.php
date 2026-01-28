@@ -22,8 +22,9 @@ class AppServiceProvider extends ServiceProvider
         // Set Carbon locale to Indonesian
         \Carbon\Carbon::setLocale('id');
 
-        // Force HTTPS in production (Railway, etc.) to prevent mixed content errors
-        if (config('app.env') === 'production') {
+        // Force HTTPS only if explicitly enabled via env variable
+        // This prevents issues on internal servers that use HTTP
+        if (env('FORCE_HTTPS', false) || str_starts_with(config('app.url'), 'https://')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
     }
