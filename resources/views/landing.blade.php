@@ -134,9 +134,9 @@
                         <!-- Filter Ruangan -->
                         <div class="bg-gradient-to-r from-yellow-50 to-white px-4 lg:px-6 py-3 border-b">
                             <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                                <label for="labFilter" class="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">Filter Ruangan:</label>
+                                <label for="labFilter-{{ $day }}" class="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">Filter Ruangan:</label>
                                 <div class="flex-1 flex gap-2">
-                                    <select id="labFilter" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs lg:text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white">
+                                    <select id="labFilter-{{ $day }}" class="labFilter flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs lg:text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white">
                                         <option value="">Semua Ruangan</option>
                                         @if(isset($labs) && $labs->count() > 0)
                                             @foreach($labs as $lab)
@@ -144,7 +144,7 @@
                                             @endforeach
                                         @endif
                                     </select>
-                                    <button id="clearLabFilter" class="px-3 py-2 text-xs lg:text-sm text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors hidden whitespace-nowrap">
+                                    <button class="clearLabFilter px-3 py-2 text-xs lg:text-sm text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors hidden whitespace-nowrap">
                                         Reset
                                     </button>
                                 </div>
@@ -196,7 +196,7 @@
                                         </td>
                                     </tr>
                                     @empty
-                                    <tr>
+                                    <tr class="default-empty-state">
                                         <td colspan="5" class="px-6 py-12 text-center text-slate-500">
                                             <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -269,7 +269,7 @@
                                 </div>
                             </div>
                             @empty
-                            <div class="text-center py-12 px-4">
+                            <div class="default-empty-state text-center py-12 px-4">
                                 <div class="bg-white rounded-full p-4 inline-flex mb-4 shadow-sm">
                                     <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -472,8 +472,6 @@
 
     <!-- JavaScript for Tabs -->
     <script>
-        let selectedLab = ''; // Track selected lab filter
-
         function showSchedule(day) {
             // Hide all schedules
             document.querySelectorAll('.schedule-content').forEach(el => {
@@ -493,15 +491,16 @@
             const activeTab = document.getElementById('tab-' + day);
             activeTab.classList.add('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
             activeTab.classList.remove('border-transparent', 'text-slate-600');
-
-            // Apply lab filter after switching tabs
-            applyLabFilter();
         }
 
         // Lab Filter Functionality
-        function applyLabFilter() {
-            const allRows = document.querySelectorAll('.schedule-row');
-            const clearButton = document.getElementById('clearLabFilter');
+        function applyLabFilter(scheduleContainer, selectedLab, clearButton) {
+            // Get all rows within this specific schedule container
+            const allRows = scheduleContainer.querySelectorAll('.schedule-row');
+            const defaultEmptyStates = scheduleContainer.querySelectorAll('.default-empty-state');
+            
+            // Remove any existing filter empty state messages
+            scheduleContainer.querySelectorAll('.filter-empty-state').forEach(el => el.remove());
 
             // Show/hide clear button
             if (selectedLab !== '') {
@@ -510,47 +509,92 @@
                 clearButton.classList.add('hidden');
             }
 
-            // If no filter selected, show all rows
+            // If no filter selected, show all rows and default empty states
             if (selectedLab === '') {
                 allRows.forEach(row => {
                     row.style.display = '';
                 });
+                defaultEmptyStates.forEach(el => {
+                    el.style.display = '';
+                });
                 return;
             }
 
+            // Hide default empty states when filter is active
+            defaultEmptyStates.forEach(el => {
+                el.style.display = 'none';
+            });
+
             // Filter rows based on selected lab
+            let visibleCount = 0;
             allRows.forEach(row => {
                 const labName = row.getAttribute('data-lab');
                 if (labName === selectedLab) {
                     row.style.display = '';
+                    visibleCount++;
                 } else {
                     row.style.display = 'none';
                 }
             });
+
+            // If no rows are visible after filtering, show empty state message
+            if (visibleCount === 0) {
+                // Desktop table
+                const desktopTable = scheduleContainer.querySelector('.hidden.lg\\:block table tbody');
+                if (desktopTable) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.className = 'filter-empty-state';
+                    emptyRow.innerHTML = `
+                        <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <p class="text-lg font-bold text-slate-700">Ruangan ${selectedLab} Kosong</p>
+                            <p class="text-sm text-slate-400 mt-2">Tidak ada peminjaman pada hari ini</p>
+                        </td>
+                    `;
+                    desktopTable.appendChild(emptyRow);
+                }
+
+                // Mobile view
+                const mobileView = scheduleContainer.querySelector('.lg\\:hidden');
+                if (mobileView) {
+                    const emptyCard = document.createElement('div');
+                    emptyCard.className = 'filter-empty-state text-center py-12 px-4';
+                    emptyCard.innerHTML = `
+                        <div class="bg-white rounded-full p-4 inline-flex mb-4 shadow-sm">
+                            <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <p class="text-slate-700 font-bold mb-1">Ruangan ${selectedLab} Kosong</p>
+                        <p class="text-slate-500 text-sm">Tidak ada peminjaman pada hari ini</p>
+                    `;
+                    mobileView.appendChild(emptyCard);
+                }
+            }
         }
 
-        // Initialize filter dropdown
+        // Initialize filter dropdowns
         document.addEventListener('DOMContentLoaded', function() {
-            const labFilterSelect = document.getElementById('labFilter');
-            
-            if (labFilterSelect) {
-                labFilterSelect.addEventListener('change', function() {
-                    selectedLab = this.value;
-                    applyLabFilter();
+            // Setup filter for each day
+            document.querySelectorAll('.labFilter').forEach(function(filterSelect) {
+                const scheduleContainer = filterSelect.closest('.schedule-content');
+                const clearButton = scheduleContainer.querySelector('.clearLabFilter');
+                
+                // Filter change event
+                filterSelect.addEventListener('change', function() {
+                    applyLabFilter(scheduleContainer, this.value, clearButton);
                 });
-            }
 
-            // Clear filter button
-            const clearButton = document.getElementById('clearLabFilter');
-            if (clearButton) {
-                clearButton.addEventListener('click', function() {
-                    selectedLab = '';
-                    if (labFilterSelect) {
-                        labFilterSelect.value = '';
-                    }
-                    applyLabFilter();
-                });
-            }
+                // Clear filter button
+                if (clearButton) {
+                    clearButton.addEventListener('click', function() {
+                        filterSelect.value = '';
+                        applyLabFilter(scheduleContainer, '', clearButton);
+                    });
+                }
+            });
         });
 
         // Handle download form submit
