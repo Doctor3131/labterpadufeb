@@ -22,15 +22,15 @@
                 <div class="flex items-center gap-2 lg:gap-4">
                     <!-- Desktop Menu -->
                     <!-- Laporkan Masalah Button -->
-                    <button onclick="openFeedbackModal()" class="hidden lg:inline-flex items-center px-4 py-2 text-slate-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onclick="openFeedbackModal()" class="hidden lg:inline-flex items-center px-4 py-2 text-slate-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-300 animate-fade-in-down animation-delay-200">
+                        <svg class="w-5 h-5 mr-1 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                         Report
                     </button>
 
-                    <a href="{{ route('schedules.index') }}" class="hidden lg:inline-flex items-center px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('schedules.index') }}" class="hidden lg:inline-flex items-center px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-300 animate-fade-in-down animation-delay-300">
+                        <svg class="w-5 h-5 mr-1 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         Jadwal
@@ -38,11 +38,11 @@
 
                     <!-- Login/Dashboard Button -->
                     @auth
-                        <a href="{{ route('dashboard') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                        <a href="{{ route('dashboard') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-xl hover:scale-110 transition-all duration-300 text-sm lg:text-base whitespace-nowrap animate-fade-in-down animation-delay-400">
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                        <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-xl hover:scale-110 transition-all duration-300 text-sm lg:text-base whitespace-nowrap animate-fade-in-down animation-delay-400">
                             Login
                         </a>
                     @endauth
@@ -68,17 +68,17 @@
         {{-- <div class="absolute inset-0 bg-grid-white/10"></div> --}}
         <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md">
+                <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md animate-fade-in-up animation-delay-100">
                     Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium Digital
                 </h2>
-                <p class="text-base lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-6 lg:mb-10">
+                <p class="text-base lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-6 lg:mb-10 animate-fade-in-up animation-delay-200">
                     Pantau jadwal praktikum dan ajukan penggunaan fasilitas laboratorium secara terintegrasi
                 </p>
                 
                 <!-- CTA Button - Center untuk semua device -->
-                <div class="flex justify-center">
-                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 lg:px-12 lg:py-5 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-105">
-                        <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex justify-center animate-fade-in-up animation-delay-300">
+                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 lg:px-12 lg:py-5 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110 animate-pulse-subtle">
+                        <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5 transition-transform group-hover:rotate-90 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                         </svg>
                         Ajukan Peminjaman
@@ -92,7 +92,7 @@
     <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">
             <!-- Week Info -->
-            <div class="text-center mb-6">
+            <div class="text-center mb-6 animate-fade-in-up animation-delay-400">
                 <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Jadwal Minggu Ini</h2>
                 <p class="text-slate-600">
                     {{ $startOfWeek->isoFormat('D MMMM') }} - {{ $startOfWeek->copy()->endOfWeek()->isoFormat('D MMMM Y') }}
@@ -106,7 +106,7 @@
                 </a>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in-up animation-delay-500">
                 
                 <!-- Tabs -->
                 <div class="border-b border-slate-200 overflow-x-auto">
@@ -473,9 +473,12 @@
     <!-- JavaScript for Tabs -->
     <script>
         function showSchedule(day) {
-            // Hide all schedules
+            // Hide all schedules with fade out
             document.querySelectorAll('.schedule-content').forEach(el => {
-                el.classList.add('hidden');
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.classList.add('hidden');
+                }, 200);
             });
             
             // Remove active state from all tabs
@@ -484,14 +487,28 @@
                 tab.classList.add('border-transparent', 'text-slate-600');
             });
             
-            // Show selected schedule
-            document.getElementById('schedule-' + day).classList.remove('hidden');
+            // Show selected schedule with fade in
+            setTimeout(() => {
+                const selectedSchedule = document.getElementById('schedule-' + day);
+                selectedSchedule.classList.remove('hidden');
+                setTimeout(() => {
+                    selectedSchedule.style.opacity = '1';
+                }, 50);
+            }, 200);
             
-            // Activate selected tab
+            // Activate selected tab with smooth transition
             const activeTab = document.getElementById('tab-' + day);
             activeTab.classList.add('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
             activeTab.classList.remove('border-transparent', 'text-slate-600');
         }
+
+        // Add smooth opacity transition to schedule contents
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.schedule-content').forEach(el => {
+                el.style.transition = 'opacity 0.3s ease-in-out';
+                el.style.opacity = el.classList.contains('hidden') ? '0' : '1';
+            });
+        });
 
         // Lab Filter Functionality
         function applyLabFilter(scheduleContainer, selectedLab, clearButton) {
