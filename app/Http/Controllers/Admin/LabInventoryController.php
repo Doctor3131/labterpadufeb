@@ -45,7 +45,8 @@ class LabInventoryController extends Controller
      */
     public function create(Lab $lab)
     {
-        $items = Item::with('assetTypeCode')->orderBy('name')->get();
+        // Get unique items by name to prevent duplicates in dropdown
+        $items = Item::with('assetTypeCode')->get()->unique('name')->sortBy('name');
         $assetTypeCodes = AssetTypeCode::orderBy('name')->get();
         $trackingModes = TrackingModeEnum::cases();
         $conditions = ConditionEnum::cases();
@@ -68,15 +69,48 @@ class LabInventoryController extends Controller
         $mode = TrackingModeEnum::from($validated['tracking_mode']);
         $condition = ConditionEnum::from($validated['condition']);
 
+        // Handle Asset Type Code (Find or Create on fly) for Structured Tag
+        $assetTypeCodeId = null;
+        if ($mode === TrackingModeEnum::STRUCTURED_TAG && !empty($validated['asset_type_code'])) {
+            $codeStr = $validated['asset_type_code'];
+            
+            // Map code to name (hardcoded map to match view)
+            $names = [
+                'H3' => 'PC AIO',
+                'I2' => 'TV',
+                'BRK' => 'Bracket',
+                'J1' => 'Speaker',
+                'O1' => 'Laptop',
+                'L1' => 'Printer',
+                'P' => 'Samsung Tab',
+            ];
+            $name = $names[$codeStr] ?? $codeStr;
+
+            $assetTypeCode = AssetTypeCode::firstOrCreate(
+                ['code' => $codeStr],
+                [
+                    'name' => $name,
+                    'default_tracking_mode' => TrackingModeEnum::STRUCTURED_TAG,
+                    'is_borrowable' => true
+                ]
+            );
+            $assetTypeCodeId = $assetTypeCode->id;
+        }
+
         // Get or create item
         if (!empty($validated['new_item_name'])) {
-            $item = Item::create([
-                'name' => $validated['new_item_name'],
-                'asset_type_code_id' => $validated['asset_type_code_id'] ?? null,
-                'tracking_mode' => $mode,
-            ]);
+            $item = Item::firstOrCreate(
+                ['name' => $validated['new_item_name']],
+                [
+                    'asset_type_code_id' => $assetTypeCodeId,
+                    'tracking_mode' => $mode,
+                    'description' => $validated['item_description'] ?? null,
+                ]
+            );
         } else {
             $item = Item::findOrFail($validated['item_id']);
+            // Reset type code if item didn't have one? Or keep existing. 
+            // For new inventory flow, usually we use existing item's config.
         }
 
         // Get or create batch
@@ -108,9 +142,33 @@ class LabInventoryController extends Controller
                     break;
 
                 case TrackingModeEnum::SEAT_NUMBER:
-                    // Parse seat numbers (comma or space separated)
-                    $seatNumbers = preg_split('/[\s,]+/', $validated['seat_numbers']);
-                    $seatNumbers = array_filter(array_map('trim', $seatNumbers));
+                    // Auto-generate numeric seat numbers
+                    $startSeat = $validated['start_seat'] ?? null;
+                    
+                    if (!$startSeat) {
+                        // Find max seat number for this lab + item
+                        // We check asset tags ending with numbers
+                        $item = $batch->item;
+                        $existingTags = \App\Models\AssetUnit::where('lab_id', $lab->id)
+                            ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
+                            ->pluck('asset_tag')
+                            ->toArray();
+                            
+                        $max = 0;
+                        foreach ($existingTags as $tag) {
+                            $parts = explode('-', $tag);
+                            $seat = end($parts);
+                            if (is_numeric($seat)) {
+                                $max = max($max, (int)$seat);
+                            }
+                        }
+                        $startSeat = $max + 1;
+                    }
+
+                    $seatNumbers = [];
+                    for ($i = 0; $i < $validated['quantity']; $i++) {
+                        $seatNumbers[] = (string)($startSeat + $i);
+                    }
                     
                     $units = $this->inventoryService->addSeatNumberInventory(
                         $lab->id,
@@ -118,7 +176,7 @@ class LabInventoryController extends Controller
                         $seatNumbers,
                         $condition
                     );
-                    $message = count($units) . " unit berhasil ditambahkan dengan seat number.";
+                    $message = count($units) . " unit berhasil ditambahkan dengan nomor kursi/meja " . implode(', ', $seatNumbers);
                     break;
 
                 case TrackingModeEnum::AGGREGATE:
@@ -156,7 +214,7 @@ class LabInventoryController extends Controller
 
         $conditionCounts = AssetUnit::where('lab_id', $lab->id)
             ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
-            ->selectRaw('condition, COUNT(*) as count')
+            ->selectRaw('`condition`, COUNT(*) as count')
             ->groupBy('condition')
             ->pluck('count', 'condition');
 
@@ -248,14 +306,24 @@ class LabInventoryController extends Controller
      */
     public function getBatches(Item $item)
     {
-        $batches = $item->batches()->get()->map(function ($batch) {
+        // Handle duplicate items: find all batches for items with the same name
+        $batches = Batch::whereHas('item', function ($query) use ($item) {
+            $query->where('name', $item->name);
+        })
+        ->with('item') // Eager load if needed
+        ->get()
+        ->unique(function ($batch) {
+            return $batch->proc_source_code . $batch->arrival_mmyy;
+        })
+        ->map(function ($batch) {
             return [
                 'id' => $batch->id,
                 'label' => "{$batch->proc_source_code}.{$batch->arrival_mmyy} - {$batch->arrival_formatted}",
                 'proc_source_code' => $batch->proc_source_code,
                 'arrival_mmyy' => $batch->arrival_mmyy,
             ];
-        });
+        })
+        ->values(); // Reset keys after unique
 
         return response()->json($batches);
     }

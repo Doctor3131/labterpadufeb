@@ -45,7 +45,7 @@ class InventoryService
             $typeCode = $batch->item->assetTypeCode?->code ?? 'XX';
             
             // Normalize lab code (remove dots/dashes)
-            $labCode = $this->normalizeLabCode($lab->code);
+            $labCode = $this->normalizeLabCode($lab->name);
             
             $createdUnits = [];
             
@@ -138,7 +138,7 @@ class InventoryService
             $batch = Batch::with('item')->findOrFail($batchId);
             $lab = Lab::findOrFail($labId);
             
-            $labCode = $this->normalizeLabCode($lab->code);
+            $labCode = $this->normalizeLabCode($lab->name);
             $itemPrefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $batch->item->name), 0, 3));
             
             $createdUnits = [];
@@ -361,7 +361,7 @@ class InventoryService
         int $labId
     ): int {
         $lab = Lab::findOrFail($labId);
-        $labCode = $this->normalizeLabCode($lab->code);
+        $labCode = $this->normalizeLabCode($lab->name);
         
         $maxSeq = AssetUnit::where('proc_source_code', $procSource)
             ->where('arrival_mmyy', $arrivalMmyy)
@@ -416,7 +416,7 @@ class InventoryService
         $unitCounts = AssetUnit::where('lab_id', $labId)
             ->join('batches', 'asset_units.batch_id', '=', 'batches.id')
             ->join('items', 'batches.item_id', '=', 'items.id')
-            ->selectRaw('items.id as item_id, items.name as item_name, items.tracking_mode, asset_units.condition, COUNT(*) as count')
+            ->selectRaw('items.id as item_id, items.name as item_name, items.tracking_mode, asset_units.`condition`, COUNT(*) as count')
             ->groupBy('items.id', 'items.name', 'items.tracking_mode', 'asset_units.condition')
             ->get();
         
@@ -424,7 +424,7 @@ class InventoryService
         $balanceCounts = InventoryBalance::where('lab_id', $labId)
             ->join('batches', 'inventory_balances.batch_id', '=', 'batches.id')
             ->join('items', 'batches.item_id', '=', 'items.id')
-            ->selectRaw('items.id as item_id, items.name as item_name, items.tracking_mode, inventory_balances.condition, SUM(quantity) as count')
+            ->selectRaw('items.id as item_id, items.name as item_name, items.tracking_mode, inventory_balances.`condition`, SUM(quantity) as count')
             ->groupBy('items.id', 'items.name', 'items.tracking_mode', 'inventory_balances.condition')
             ->get();
         

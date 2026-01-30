@@ -112,30 +112,71 @@
             <!-- New Batch Fields -->
             <div x-show="batchId === 'new'" class="mb-6 p-4 bg-blue-50 rounded-lg space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <!-- Source Code Field -->
+                    <div x-show="trackingMode === 'STRUCTURED_TAG'">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Kode Sumber Pengadaan *</label>
-                        <input type="text" name="proc_source_code" value="{{ old('proc_source_code', '01') }}" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                            placeholder="01" maxlength="10">
-                        <p class="text-xs text-gray-500 mt-1">Contoh: 01 = Pengadaan Rutin</p>
+                        <select name="proc_source_code" :disabled="trackingMode !== 'STRUCTURED_TAG'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <option value="01" {{ old('proc_source_code') == '01' ? 'selected' : '' }}>01 - Universitas</option>
+                            <option value="02" {{ old('proc_source_code') == '02' ? 'selected' : '' }}>02 - Lainnya</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Sumber dana pengadaan</p>
                     </div>
+
+                    <!-- Hidden input moved here to not mess up grid -->
+                    <input type="hidden" name="proc_source_code" value="01" :disabled="trackingMode === 'STRUCTURED_TAG'">
+
+                    <!-- Arrival Date (MMYY) -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Bulan/Tahun Datang (MMYY) *</label>
-                        <input type="text" name="arrival_mmyy" value="{{ old('arrival_mmyy') }}" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                            placeholder="1023" maxlength="4">
-                        <p class="text-xs text-gray-500 mt-1">Contoh: 1023 = Oktober 2023</p>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Waktu Datang *</label>
+                        
+                        <!-- Format 1023 (Structured Tag) -->
+                        <div x-show="trackingMode === 'STRUCTURED_TAG'">
+                            <input type="text" name="arrival_mmyy_text" value="{{ old('arrival_mmyy_text', '1023') }}" 
+                                :disabled="trackingMode !== 'STRUCTURED_TAG'"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                placeholder="1023" maxlength="4">
+                            <p class="text-xs text-gray-500 mt-1">Format: MMYY (Contoh: 1023)</p>
+                        </div>
+
+                        <!-- Format Dropdown (Other Modes) -->
+                        <div x-show="trackingMode !== 'STRUCTURED_TAG'" class="grid grid-cols-2 gap-2">
+                            <div>
+                                <select name="arrival_month" :disabled="trackingMode === 'STRUCTURED_TAG'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                    <option value="" disabled selected>Bulan</option>
+                                    @foreach(range(1, 12) as $m)
+                                        <option value="{{ sprintf('%02d', $m) }}" {{ old('arrival_month') == sprintf('%02d', $m) ? 'selected' : '' }}>
+                                            {{ DateTime::createFromFormat('!m', $m)->format('F') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <input type="number" name="arrival_year" value="{{ old('arrival_year', date('Y')) }}" 
+                                    :disabled="trackingMode === 'STRUCTURED_TAG'"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                    placeholder="Tahun (YYYY)" min="2000" max="2100">
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Specification Field -->
+                <div>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Spesifikasi (Opsional)</label>
+                     <input type="text" name="item_description" value="{{ old('item_description') }}" 
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                         placeholder="Contoh: RAM 8GB, SSD 512GB">
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Sumber</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Sumber (Opsional)</label>
                         <input type="text" name="source_description" value="{{ old('source_description') }}" 
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                             placeholder="APBN / Hibah / dll">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Harga per Unit (Rp)</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Harga per Unit (Rp) (Opsional)</label>
                         <input type="number" name="unit_price" value="{{ old('unit_price') }}" step="0.01" min="0"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                             placeholder="15000000">
@@ -152,6 +193,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Unit *</label>
                         <input type="number" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="999"
+                            :disabled="trackingMode !== 'STRUCTURED_TAG'"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
                     <div>
@@ -173,18 +215,30 @@
             </div>
 
             <!-- Seat Number Fields -->
-            <div x-show="trackingMode === 'SEAT_NUMBER'" class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Kursi/Meja *</label>
-                <textarea name="seat_numbers" rows="3" 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder="01, 02, 03, 04, 05&#10;atau&#10;A1 A2 A3 B1 B2 B3">{{ old('seat_numbers') }}</textarea>
-                <p class="text-xs text-gray-500 mt-1">Pisahkan dengan koma, spasi, atau enter</p>
+            <div x-show="trackingMode === 'SEAT_NUMBER'" class="mb-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Unit *</label>
+                        <input type="number" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="999"
+                            :disabled="trackingMode !== 'SEAT_NUMBER'"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Mulai dari Nomor</label>
+                        <input type="number" name="start_seat" value="{{ old('start_seat') }}" min="1"
+                            :disabled="trackingMode !== 'SEAT_NUMBER'"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                            placeholder="Auto">
+                        <p class="text-xs text-gray-500 mt-1">Kosongkan untuk lanjut dari nomor terakhir</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Aggregate Fields -->
             <div x-show="trackingMode === 'AGGREGATE'" class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah *</label>
                 <input type="number" name="quantity" value="{{ old('quantity', 1) }}" min="1"
+                    :disabled="trackingMode !== 'AGGREGATE'"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
             </div>
 

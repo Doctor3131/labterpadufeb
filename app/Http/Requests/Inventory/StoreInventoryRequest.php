@@ -14,15 +14,36 @@ class StoreInventoryRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        // Handle direct MMYY input (from Structured Tag mode)
+        if ($this->has('arrival_mmyy_text') && $this->input('tracking_mode') === TrackingModeEnum::STRUCTURED_TAG->value) {
+            $this->merge([
+                'arrival_mmyy' => $this->input('arrival_mmyy_text'),
+            ]);
+        }
+        // Handle split input (from other modes)
+        elseif ($this->has(['arrival_month', 'arrival_year'])) {
+            $this->merge([
+                'arrival_mmyy' => $this->input('arrival_month') . substr($this->input('arrival_year'), -2),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         $rules = [
             'tracking_mode' => ['required', Rule::enum(TrackingModeEnum::class)],
             'item_id' => ['required_without:new_item_name', 'nullable', 'exists:items,id'],
             'new_item_name' => ['required_without:item_id', 'nullable', 'string', 'max:255'],
-            'batch_id' => ['required_without:new_batch', 'nullable', 'exists:batches,id'],
+            'batch_id' => ['required'], // 'new' or valid ID
             'condition' => ['required', Rule::enum(ConditionEnum::class)],
         ];
+        
+        // Validate batch_id exists if it's not 'new'
+        if ($this->input('batch_id') !== 'new') {
+            $rules['batch_id'][] = 'exists:batches,id';
+        }
 
         // New batch fields
         if ($this->input('batch_id') === null || $this->input('batch_id') === 'new') {
@@ -41,7 +62,8 @@ class StoreInventoryRequest extends FormRequest
             $rules['subtype'] = ['nullable', 'string', 'max:50'];
             $rules['asset_type_code_id'] = ['required', 'exists:asset_type_codes,id'];
         } elseif ($mode === TrackingModeEnum::SEAT_NUMBER->value) {
-            $rules['seat_numbers'] = ['required', 'string'];
+            $rules['quantity'] = ['required', 'integer', 'min:1', 'max:999'];
+            $rules['start_seat'] = ['nullable', 'integer', 'min:1'];
         } elseif ($mode === TrackingModeEnum::AGGREGATE->value) {
             $rules['quantity'] = ['required', 'integer', 'min:1'];
         }
