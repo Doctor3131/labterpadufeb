@@ -123,6 +123,12 @@
                                     Lihat Saldo
                                 </a>
                             @endif
+                            <button onclick="confirmDeleteItem('{{ $item['id'] }}', '{{ $item['name'] }}', {{ $item['total'] }})" class="ml-2 inline-flex items-center px-3 py-2 bg-red-50 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Hapus
+                            </button>
                         </div>
                     </div>
                 @endforeach
@@ -189,19 +195,28 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @if($item['tracking_mode'] !== 'AGGREGATE')
-                                        <a href="{{ route('admin.labs.inventory.units', [$lab, $item['id']]) }}" class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-50 transition-colors" title="Lihat Unit">
+                                    <div class="flex items-center justify-center gap-2">
+                                        @if($item['tracking_mode'] !== 'AGGREGATE')
+                                            <a href="{{ route('admin.labs.inventory.units', [$lab, $item['id']]) }}" class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-50 transition-colors" title="Lihat Unit">
+                                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                                </svg>
+                                            </a>
+                                        @else
+                                            <a href="{{ route('admin.labs.inventory.balances', [$lab, $item['id']]) }}" class="text-orange-600 hover:text-orange-800 p-1 rounded-md hover:bg-orange-50 transition-colors" title="Lihat Saldo">
+                                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                                </svg>
+                                            </a>
+                                        @endif
+                                        
+                                        <!-- Delete Item Button -->
+                                        <button onclick="confirmDeleteItem('{{ $item['id'] }}', '{{ $item['name'] }}', {{ $item['total'] }})" class="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-red-50 transition-colors" title="Hapus Barang">
                                             <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
-                                        </a>
-                                    @else
-                                        <a href="{{ route('admin.labs.inventory.balances', [$lab, $item['id']]) }}" class="text-orange-600 hover:text-orange-800 p-1 rounded-md hover:bg-orange-50 transition-colors" title="Lihat Saldo">
-                                            <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                            </svg>
-                                        </a>
-                                    @endif
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -226,4 +241,58 @@
             </div>
         @endif
     </div>
+
+    <!-- Delete Item Confirmation Modal -->
+    <div id="deleteItemModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4 text-center">Hapus Barang</h3>
+                <div class="mt-2 px-4 py-3">
+                    <p class="text-sm text-gray-500 text-center">
+                        Apakah Anda yakin ingin menghapus <strong id="deleteItemName"></strong>?
+                        <br><span class="text-red-600 font-semibold"><span id="deleteItemCount"></span> unit</span> akan dihapus secara permanen.
+                    </p>
+                </div>
+                <div class="flex gap-3 px-4 py-3">
+                    <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none">
+                        Batal
+                    </button>
+                    <form id="deleteItemForm" method="POST" class="flex-1">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none">
+                            Hapus
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        function confirmDeleteItem(itemId, itemName, itemCount) {
+            document.getElementById('deleteItemName').textContent = itemName;
+            document.getElementById('deleteItemCount').textContent = itemCount;
+            document.getElementById('deleteItemForm').action = `{{ route('admin.labs.inventory', $lab) }}/${itemId}`;
+            document.getElementById('deleteItemModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteItemModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('deleteItemModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+    </script>
+    @endpush
 @endsection

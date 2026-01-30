@@ -206,6 +206,9 @@ class LabInventoryController extends Controller
      */
     public function showUnits(Lab $lab, Item $item)
     {
+        // Load asset type code relationship
+        $item->load('assetTypeCode');
+        
         $units = AssetUnit::where('lab_id', $lab->id)
             ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
             ->with('batch')
@@ -232,6 +235,9 @@ class LabInventoryController extends Controller
      */
     public function showBalances(Lab $lab, Item $item)
     {
+        // Load asset type code relationship
+        $item->load('assetTypeCode');
+        
         $balances = InventoryBalance::where('lab_id', $lab->id)
             ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
             ->with('batch')
@@ -326,5 +332,85 @@ class LabInventoryController extends Controller
         ->values(); // Reset keys after unique
 
         return response()->json($batches);
+    }
+
+    /**
+     * Delete all inventory for an item in a lab
+     */
+    public function destroyItem(Lab $lab, Item $item)
+    {
+        try {
+            // Delete all asset units for this item in this lab
+            $deletedUnits = AssetUnit::where('lab_id', $lab->id)
+                ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
+                ->delete();
+
+            // Delete all inventory balances for this item in this lab
+            $deletedBalances = InventoryBalance::where('lab_id', $lab->id)
+                ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
+                ->delete();
+
+            $totalDeleted = $deletedUnits + $deletedBalances;
+
+            return redirect()
+                ->route('admin.labs.inventory', $lab)
+                ->with('success', "Berhasil menghapus {$totalDeleted} unit {$item->name} dari {$lab->name}.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a single asset unit
+     */
+    public function destroyUnit(AssetUnit $unit)
+    {
+        try {
+            $lab = $unit->lab;
+            $item = $unit->batch->item;
+            $assetTag = $unit->asset_tag;
+
+            $unit->delete();
+
+            return redirect()
+                ->route('admin.labs.inventory.units', [$lab, $item])
+                ->with('success', "Berhasil menghapus unit {$assetTag}.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus unit: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Bulk delete asset units
+     */
+    public function bulkDestroyUnits(Request $request)
+    {
+        $request->validate([
+            'unit_ids' => 'required|array|min:1',
+            'unit_ids.*' => 'exists:asset_units,id',
+        ]);
+
+        try {
+            // Get first unit to determine lab and item for redirect
+            $firstUnit = AssetUnit::with('batch.item', 'lab')->find($request->unit_ids[0]);
+            
+            if (!$firstUnit) {
+                return back()->with('error', 'Unit tidak ditemukan.');
+            }
+
+            $lab = $firstUnit->lab;
+            $item = $firstUnit->batch->item;
+            
+            $deletedCount = AssetUnit::whereIn('id', $request->unit_ids)->delete();
+
+            return redirect()
+                ->route('admin.labs.inventory.units', [$lab, $item])
+                ->with('success', "Berhasil menghapus {$deletedCount} unit.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus unit: ' . $e->getMessage());
+        }
     }
 }
