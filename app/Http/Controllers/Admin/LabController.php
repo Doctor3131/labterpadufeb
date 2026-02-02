@@ -36,6 +36,9 @@ class LabController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        // Auto-generate code from name
+        $validated['code'] = str_replace([' ', '.'], '-', $validated['name']);
+        
         Lab::create($validated);
 
         return redirect()->route('admin.labs.index')
@@ -57,10 +60,13 @@ class LabController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'capacity' => 'required|integer|min:1',
+            'description' => 'nullable|string',
         ]);
 
+        // Auto-generate code from name
+        $validated['code'] = str_replace([' ', '.'], '-', $validated['name']);
+        
         $lab->update($validated);
 
         return redirect()->route('admin.labs.index')

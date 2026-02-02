@@ -48,6 +48,8 @@ class DatabaseSeeder extends Seeder
         // Create Labs
         Lab::create([
             'name' => 'EL. 301',
+            'code' => 'EL-301',
+            'location' => 'Gedung E Lantai 3',
             'description' => 'Laboratorium komputer lantai 3',
             'capacity' => 50,
             'status' => 'available',
@@ -55,6 +57,8 @@ class DatabaseSeeder extends Seeder
 
         Lab::create([
             'name' => 'EL. 306',
+            'code' => 'EL-306',
+            'location' => 'Gedung E Lantai 3',
             'description' => 'Laboratorium komputer lantai 3',
             'capacity' => 45,
             'status' => 'available',
@@ -62,6 +66,8 @@ class DatabaseSeeder extends Seeder
 
         Lab::create([
             'name' => 'EL. 307',
+            'code' => 'EL-307',
+            'location' => 'Gedung E Lantai 3',
             'description' => 'Laboratorium komputer lantai 3',
             'capacity' => 40,
             'status' => 'available',
@@ -69,6 +75,8 @@ class DatabaseSeeder extends Seeder
 
         Lab::create([
             'name' => 'EL. 309',
+            'code' => 'EL-309',
+            'location' => 'Gedung E Lantai 3',
             'description' => 'Laboratorium komputer lantai 3',
             'capacity' => 30,
             'status' => 'available',

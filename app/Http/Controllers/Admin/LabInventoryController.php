@@ -211,7 +211,7 @@ class LabInventoryController extends Controller
         
         $units = AssetUnit::where('lab_id', $lab->id)
             ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
-            ->with('batch')
+            ->with(['batch', 'transactionLines.transaction'])
             ->orderByRaw("CASE WHEN subtype = 'ADMIN' THEN 0 ELSE 1 END")
             ->orderBy('asset_tag')
             ->paginate(50);
@@ -413,5 +413,34 @@ class LabInventoryController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus unit: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Display transaction ledger for a lab
+     */
+    public function ledger(Lab $lab, Request $request)
+    {
+        $query = \App\Models\InventoryTransaction::where('lab_id', $lab->id)
+            ->with(['user', 'lines.assetUnit', 'lines.inventoryBalance.batch.item']);
+
+        // Filter by transaction type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter by date range
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $transactions = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return view('admin.labs.inventory.ledger', [
+            'lab' => $lab,
+            'transactions' => $transactions,
+        ]);
     }
 }

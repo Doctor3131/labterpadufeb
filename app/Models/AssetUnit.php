@@ -87,4 +87,20 @@ class AssetUnit extends Model
     {
         return $query->where('asset_tag', 'like', "%{$search}%");
     }
+
+    /**
+     * Get the latest condition change notes for this unit
+     */
+    public function getLatestConditionNotes(): ?string
+    {
+        $latestTransaction = $this->transactionLines()
+            ->with('transaction')
+            ->whereHas('transaction', function ($query) {
+                $query->where('type', \App\Enums\TransactionTypeEnum::CONDITION_CHANGE);
+            })
+            ->latest()
+            ->first();
+
+        return $latestTransaction?->transaction?->notes;
+    }
 }

@@ -77,6 +77,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Inventory Management (Lab-based)
     Route::get('/admin/labs/{lab}/inventory', [App\Http\Controllers\Admin\LabInventoryController::class, 'index'])
         ->name('admin.labs.inventory');
+    Route::get('/admin/labs/{lab}/inventory/ledger', [App\Http\Controllers\Admin\LabInventoryController::class, 'ledger'])
+        ->name('admin.labs.inventory.ledger');
     Route::get('/admin/labs/{lab}/inventory/create', [App\Http\Controllers\Admin\LabInventoryController::class, 'create'])
         ->name('admin.labs.inventory.create');
     Route::post('/admin/labs/{lab}/inventory', [App\Http\Controllers\Admin\LabInventoryController::class, 'store'])
