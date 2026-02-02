@@ -212,6 +212,7 @@ class LabInventoryController extends Controller
         $units = AssetUnit::where('lab_id', $lab->id)
             ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
             ->with('batch')
+            ->orderByRaw("CASE WHEN subtype = 'ADMIN' THEN 0 ELSE 1 END")
             ->orderBy('asset_tag')
             ->paginate(50);
 
