@@ -142,6 +142,7 @@ class BookingController extends Controller
             // Personal Booking fields
             'applicant_status' => 'nullable|required_if:booking_type,pribadi|string|max:255',
             'custom_status' => 'nullable|required_if:applicant_status,Lainnya|string|max:255',
+            'custom_study_program' => 'nullable|required_if:study_program,Lainnya|string|max:255',
             'class_year' => 'nullable|string|max:4',
             'purpose' => 'nullable|required_if:booking_type,pribadi|string|max:255',
             
@@ -164,6 +165,11 @@ class BookingController extends Controller
         return DB::transaction(function () use ($request, $validated) {
             // Lock the lab row to prevent concurrent bookings
             $lab = Lab::lockForUpdate()->findOrFail($validated['lab_id']);
+            
+            // If user selected "Lainnya" for study program, use custom value
+            if (isset($validated['study_program']) && $validated['study_program'] === 'Lainnya' && !empty($validated['custom_study_program'])) {
+                $validated['study_program'] = $validated['custom_study_program'];
+            }
             
             // Use consistent timezone (Asia/Jakarta)
             $date = Carbon::parse($validated['booking_date'])->timezone('Asia/Jakarta');

@@ -260,7 +260,29 @@
 
                         <div id="study-program-field">
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi <span class="text-red-500">*</span></label>
-                            <input type="text" name="study_program" id="study_program" value="{{ old('study_program') }}" required
+                            <select name="study_program" id="study_program" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                <option value="" disabled selected>Pilih Program Studi</option>
+                                
+                                <option value="S1- Ekonomi" {{ old('study_program') == 'S1- Ekonomi' ? 'selected' : '' }}>S1- Ekonomi</option>
+                                <option value="S1- Manajemen" {{ old('study_program') == 'S1- Manajemen' ? 'selected' : '' }}>S1- Manajemen</option>
+                                <option value="S1- Akuntansi" {{ old('study_program') == 'S1- Akuntansi' ? 'selected' : '' }}>S1- Akuntansi</option>
+                                <option value="S1- Ekonomi Islam" {{ old('study_program') == 'S1- Ekonomi Islam' ? 'selected' : '' }}>S1- Ekonomi Islam</option>
+                                <option value="S1- Bisnis Digital" {{ old('study_program') == 'S1- Bisnis Digital' ? 'selected' : '' }}>S1- Bisnis Digital</option>
+                                <option value="S2- Ekonomi" {{ old('study_program') == 'S2- Ekonomi' ? 'selected' : '' }}>S2- Ekonomi</option>
+                                <option value="S2- Manajemen" {{ old('study_program') == 'S2- Manajemen' ? 'selected' : '' }}>S2- Manajemen</option>
+                                <option value="S2- Akuntansi" {{ old('study_program') == 'S2- Akuntansi' ? 'selected' : '' }}>S2- Akuntansi</option>
+                                <option value="Sekolah Vokasi" {{ old('study_program') == 'Sekolah Vokasi' ? 'selected' : '' }}>Sekolah Vokasi</option>
+                                <option value="S3- PDIE Ilmu Ekonomi" {{ old('study_program') == 'S3- PDIE Ilmu Ekonomi' ? 'selected' : '' }}>S3- PDIE Ilmu Ekonomi</option>
+                                <option value="S3- PDIE Akuntansi" {{ old('study_program') == 'S3- PDIE Akuntansi' ? 'selected' : '' }}>S3- PDIE Akuntansi</option>
+                                <option value="S3- PDIE Manajemen" {{ old('study_program') == 'S3- PDIE Manajemen' ? 'selected' : '' }}>S3- PDIE Manajemen</option>
+                                <option value="Lainnya" {{ old('study_program') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            </select>
+                        </div>
+
+                        <div id="custom-study-program-field" style="display: none;">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi Lainnya <span class="text-red-500">*</span></label>
+                            <input type="text" id="custom_study_program" value="{{ old('custom_study_program') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
@@ -562,6 +584,7 @@
             setupNavigationButtons();
             setupFileUpload();
             setupApplicantStatusListener();
+            setupStudyProgramListener();
 
             setupRealtimeValidation();
             preventEnterSubmit();
@@ -655,6 +678,36 @@
             checkStep1Validity();
         }
 
+        // Setup listener untuk program studi dropdown
+        let studyProgramToggleCustomField; // Make it accessible
+        function setupStudyProgramListener() {
+            const studyProgramSelect = document.getElementById('study_program');
+            const studyProgramField = document.getElementById('study-program-field');
+            const customStudyProgramField = document.getElementById('custom-study-program-field');
+            const customStudyProgramInput = document.getElementById('custom_study_program');
+            
+            if (studyProgramSelect && customStudyProgramField) {
+                studyProgramToggleCustomField = function() {
+                    // Only show custom field if parent study program field is visible AND value is 'Lainnya'
+                    const isStudyProgramVisible = studyProgramField && studyProgramField.style.display !== 'none';
+                    
+                    if (isStudyProgramVisible && studyProgramSelect.value === 'Lainnya') {
+                        customStudyProgramField.style.display = 'block';
+                        customStudyProgramInput.setAttribute('name', 'custom_study_program');
+                        customStudyProgramInput.setAttribute('required', 'required');
+                    } else {
+                        customStudyProgramField.style.display = 'none';
+                        customStudyProgramInput.removeAttribute('name');
+                        customStudyProgramInput.removeAttribute('required');
+                        customStudyProgramInput.value = '';
+                    }
+                };
+                
+                studyProgramSelect.addEventListener('change', studyProgramToggleCustomField);
+                studyProgramToggleCustomField(); // Run on load
+            }
+        }
+
         // Setup listener untuk status peminjam (Mahasiswa/Dosen/Pegawai/Lainnya)
         function setupApplicantStatusListener() {
             const statusSelect = document.getElementById('applicant_status');
@@ -664,6 +717,8 @@
             const customStatusInput = document.getElementById('custom_status');
             const studyProgramField = document.getElementById('study-program-field');
             const studyProgramInput = document.getElementById('study_program');
+            const customStudyProgramField = document.getElementById('custom-study-program-field');
+            const customStudyProgramInput = document.getElementById('custom_study_program');
             const nimField = document.getElementById('nim-field');
             const nimInput = document.getElementById('nim');
             const nipField = document.getElementById('nip-field');
@@ -708,6 +763,13 @@
                             studyProgramInput.removeAttribute('required');
                             studyProgramInput.value = '';
                         }
+                        // Hide custom study program field
+                        if (customStudyProgramField) {
+                            customStudyProgramField.style.display = 'none';
+                            customStudyProgramInput.removeAttribute('name');
+                            customStudyProgramInput.removeAttribute('required');
+                            customStudyProgramInput.value = '';
+                        }
                         if (nimField) {
                             nimField.style.display = 'none';
                             nimInput.removeAttribute('required');
@@ -725,6 +787,13 @@
                             studyProgramField.style.display = 'none';
                             studyProgramInput.removeAttribute('required');
                             studyProgramInput.value = '';
+                        }
+                        // Hide custom study program field
+                        if (customStudyProgramField) {
+                            customStudyProgramField.style.display = 'none';
+                            customStudyProgramInput.removeAttribute('name');
+                            customStudyProgramInput.removeAttribute('required');
+                            customStudyProgramInput.value = '';
                         }
                         if (nimField) {
                             nimField.style.display = 'none';
@@ -758,6 +827,11 @@
                     
                     // Re-validate step 2
                     validateStep2();
+                    
+                    // Also trigger custom study program toggle to hide it when program studi is hidden
+                    if (typeof studyProgramToggleCustomField === 'function') {
+                        studyProgramToggleCustomField();
+                    }
                 }
                 
                 // Initial check on page load
@@ -828,7 +902,7 @@
             });
             
             // Also listen to conditional fields
-            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'position', 'applicant_status', 'class_year', 'purpose', 'custom_status'].forEach(fieldId => {
+            ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'position', 'applicant_status', 'class_year', 'purpose', 'custom_status', 'custom_study_program'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) {
                     // Use 'change' for select elements, 'input' for text/textarea
@@ -851,6 +925,13 @@
                 const mataKuliah = document.getElementById('course_name').value.trim();
                 const dosen = document.getElementById('lecturer_name').value.trim();
                 const nip = document.getElementById('lecturer_nip').value.trim();
+                
+                // Check custom study program if 'Lainnya' is selected
+                if (prodi === 'Lainnya') {
+                    const customProdi = document.getElementById('custom_study_program');
+                    isValid = isValid && customProdi && customProdi.value.trim();
+                }
+                
                 isValid = isValid && prodi && nim.length === 14 && mataKuliah && dosen && nip;
             } else if (selectedBookingType === 'non_perkuliahan') {
                 const prodi = document.getElementById('study_program').value.trim();
@@ -858,6 +939,13 @@
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
                 const jenisKegiatan = document.getElementById('activity_type').value.trim();
                 const jabatan = document.getElementById('position').value.trim();
+                
+                // Check custom study program if 'Lainnya' is selected
+                if (prodi === 'Lainnya') {
+                    const customProdi = document.getElementById('custom_study_program');
+                    isValid = isValid && customProdi && customProdi.value.trim();
+                }
+                
                 isValid = isValid && prodi && nim.length === 14 && namaKegiatan && jenisKegiatan && jabatan;
             } else if (selectedBookingType === 'pribadi') {
                  const status = document.getElementById('applicant_status').value.trim();
@@ -869,6 +957,13 @@
                      // Mahasiswa need Program Studi and NIM
                      const prodi = document.getElementById('study_program').value.trim();
                      const nim = document.getElementById('nim').value.trim();
+                     
+                     // Check custom study program if 'Lainnya' is selected
+                     if (prodi === 'Lainnya') {
+                         const customProdi = document.getElementById('custom_study_program');
+                         isValid = isValid && customProdi && customProdi.value.trim();
+                     }
+                     
                      isValid = isValid && prodi && nim.length === 14;
                  } else if (status === 'Dosen' || status === 'Pegawai') {
                      // Dosen and Pegawai need NIP
