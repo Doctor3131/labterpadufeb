@@ -58,7 +58,6 @@
                     <div class="flex justify-between items-start mb-3">
                         <div>
                             <h3 class="font-bold text-gray-800 text-xl">{{ $lab->name }}</h3>
-                            <p class="text-amber-700 text-sm mt-1 font-medium">{{ $lab->code }}</p>
                         </div>
                         @php
                             $statusConfig = match($lab->status) {

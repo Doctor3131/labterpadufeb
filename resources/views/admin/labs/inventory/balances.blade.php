@@ -16,7 +16,7 @@
     <!-- Header -->
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-800">{{ $item->name }}</h1>
-        <p class="text-sm text-gray-600">{{ $lab->name }} ({{ $lab->code }}) • Mode Agregat</p>
+        <p class="text-sm text-gray-600">{{ $lab->name }} • Mode Agregat</p>
     </div>
 
     <!-- Item Specifications -->

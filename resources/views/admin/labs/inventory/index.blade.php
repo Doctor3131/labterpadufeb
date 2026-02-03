@@ -17,7 +17,6 @@
     <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Inventaris {{ $lab->name }}</h1>
-            <p class="text-sm text-gray-600">Kode: {{ $lab->code }} • {{ $lab->location }}</p>
         </div>
         <div class="flex gap-3">
             <a href="{{ route('admin.labs.inventory.ledger', $lab) }}" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-md transition-all">

@@ -139,13 +139,12 @@ class InventoryService
             $lab = Lab::findOrFail($labId);
             
             $labCode = $this->normalizeLabCode($lab->name);
-            $itemPrefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $batch->item->name), 0, 3));
             
             $createdUnits = [];
             
             foreach ($seatNumbers as $seat) {
-                // Format: {labCode}-{itemPrefix}-{seat}
-                $assetTag = "{$labCode}-{$itemPrefix}-{$seat}";
+                // Format: hanya nomor seat saja
+                $assetTag = (string)$seat;
                 
                 $unit = AssetUnit::create([
                     'batch_id' => $batchId,
@@ -412,19 +411,23 @@ class InventoryService
     {
         $lab = Lab::findOrFail($labId);
         
-        // Get unit counts by item and condition
-        $unitCounts = AssetUnit::where('lab_id', $labId)
+        // Get unit counts by item and condition (for SEAT_NUMBER and STRUCTURED_TAG modes)
+        $unitCounts = DB::table('asset_units')
+            ->where('asset_units.lab_id', $labId)
             ->join('batches', 'asset_units.batch_id', '=', 'batches.id')
             ->join('items', 'batches.item_id', '=', 'items.id')
-            ->selectRaw('items.id as item_id, items.name as item_name, items.tracking_mode, asset_units.`condition`, COUNT(*) as count')
+            ->select('items.id as item_id', 'items.name as item_name', 'items.tracking_mode', 'asset_units.condition as condition')
+            ->selectRaw('COUNT(*) as count')
             ->groupBy('items.id', 'items.name', 'items.tracking_mode', 'asset_units.condition')
             ->get();
         
-        // Get aggregate balances
-        $balanceCounts = InventoryBalance::where('lab_id', $labId)
+        // Get aggregate balances (for AGGREGATE mode)
+        $balanceCounts = DB::table('inventory_balances')
+            ->where('inventory_balances.lab_id', $labId)
             ->join('batches', 'inventory_balances.batch_id', '=', 'batches.id')
             ->join('items', 'batches.item_id', '=', 'items.id')
-            ->selectRaw('items.id as item_id, items.name as item_name, items.tracking_mode, inventory_balances.`condition`, SUM(quantity) as count')
+            ->select('items.id as item_id', 'items.name as item_name', 'items.tracking_mode', 'inventory_balances.condition as condition')
+            ->selectRaw('SUM(inventory_balances.quantity) as count')
             ->groupBy('items.id', 'items.name', 'items.tracking_mode', 'inventory_balances.condition')
             ->get();
         
@@ -449,12 +452,13 @@ class InventoryService
                 ];
             }
             
-            $conditionValue = $row->condition instanceof ConditionEnum 
-                ? $row->condition->value 
-                : $row->condition;
+            // Now condition is always a string from DB::table
+            $conditionValue = $row->condition;
             
-            $summary[$itemId]['conditions'][$conditionValue] += $row->count;
-            $summary[$itemId]['total'] += $row->count;
+            if (isset($summary[$itemId]['conditions'][$conditionValue])) {
+                $summary[$itemId]['conditions'][$conditionValue] += $row->count;
+                $summary[$itemId]['total'] += $row->count;
+            }
         }
         
         return array_values($summary);

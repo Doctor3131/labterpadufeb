@@ -31,8 +31,6 @@
                         {{ $lab->name }}
                     </span>
                     <span class="text-amber-300">•</span>
-                    <span>{{ $lab->code }}</span>
-                    <span class="text-amber-300">•</span>
                     <span class="font-semibold text-amber-900">{{ $units->total() }} unit</span>
                 </div>
             </div>

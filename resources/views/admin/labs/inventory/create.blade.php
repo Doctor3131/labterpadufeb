@@ -16,7 +16,7 @@
     <!-- Header -->
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Tambah Inventaris</h1>
-        <p class="text-sm text-gray-600">{{ $lab->name }} ({{ $lab->code }})</p>
+        <p class="text-sm text-gray-600">{{ $lab->name }}</p>
     </div>
 
     <!-- Errors -->

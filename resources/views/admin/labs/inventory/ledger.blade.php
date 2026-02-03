@@ -31,8 +31,6 @@
                         {{ $lab->name }}
                     </span>
                     <span class="text-gray-400">•</span>
-                    <span>{{ $lab->code }}</span>
-                    <span class="text-gray-400">•</span>
                     <span class="font-medium text-gray-900">{{ $transactions->total() }} transaksi</span>
                 </div>
             </div>
@@ -48,8 +46,6 @@
                     <option value="">Semua Tipe</option>
                     <option value="RECEIPT" {{ request('type') == 'RECEIPT' ? 'selected' : '' }}>Penerimaan Barang</option>
                     <option value="CONDITION_CHANGE" {{ request('type') == 'CONDITION_CHANGE' ? 'selected' : '' }}>Perubahan Kondisi</option>
-                    <option value="TRANSFER" {{ request('type') == 'TRANSFER' ? 'selected' : '' }}>Transfer</option>
-                    <option value="ADJUSTMENT" {{ request('type') == 'ADJUSTMENT' ? 'selected' : '' }}>Penyesuaian</option>
                 </select>
             </div>
             <div class="flex-1">

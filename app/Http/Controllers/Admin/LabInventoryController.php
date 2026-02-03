@@ -115,13 +115,17 @@ class LabInventoryController extends Controller
 
         // Get or create batch
         if (empty($validated['batch_id']) || $validated['batch_id'] === 'new') {
-            $batch = Batch::create([
-                'item_id' => $item->id,
-                'proc_source_code' => $validated['proc_source_code'],
-                'arrival_mmyy' => $validated['arrival_mmyy'],
-                'source_description' => $validated['source_description'] ?? null,
-                'unit_price' => $validated['unit_price'] ?? null,
-            ]);
+            $batch = Batch::firstOrCreate(
+                [
+                    'item_id' => $item->id,
+                    'proc_source_code' => $validated['proc_source_code'],
+                    'arrival_mmyy' => $validated['arrival_mmyy'],
+                ],
+                [
+                    'source_description' => $validated['source_description'] ?? null,
+                    'unit_price' => $validated['unit_price'] ?? null,
+                ]
+            );
         } else {
             $batch = Batch::findOrFail($validated['batch_id']);
         }
@@ -176,7 +180,7 @@ class LabInventoryController extends Controller
                         $seatNumbers,
                         $condition
                     );
-                    $message = count($units) . " unit berhasil ditambahkan dengan nomor kursi/meja " . implode(', ', $seatNumbers);
+                    $message = count($units) . " unit berhasil ditambahkan";
                     break;
 
                 case TrackingModeEnum::AGGREGATE:
@@ -213,7 +217,11 @@ class LabInventoryController extends Controller
             ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
             ->with(['batch', 'transactionLines.transaction'])
             ->orderByRaw("CASE WHEN subtype = 'ADMIN' THEN 0 ELSE 1 END")
-            ->orderBy('asset_tag')
+            // For SEAT_NUMBER mode, sort numerically; otherwise sort as string
+            ->when($item->tracking_mode === TrackingModeEnum::SEAT_NUMBER, 
+                fn($q) => $q->orderByRaw('CAST(asset_tag AS UNSIGNED)'),
+                fn($q) => $q->orderBy('asset_tag')
+            )
             ->paginate(50);
 
         $conditionCounts = AssetUnit::where('lab_id', $lab->id)
