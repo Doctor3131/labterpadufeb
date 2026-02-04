@@ -65,7 +65,7 @@
 
             <!-- Mode Tracking -->
             <div class="flex flex-col space-y-1">
-                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Mode Tracking</span>
+                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Tipe Aset</span>
                 <span class="inline-flex items-center w-fit px-3 py-1 rounded-md text-xs font-medium border
                     {{ $item->tracking_mode->value === 'STRUCTURED_TAG' ? 'bg-purple-50 text-purple-700 border-purple-200' : 
                        ($item->tracking_mode->value === 'SEAT_NUMBER' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-orange-50 text-orange-700 border-orange-200') }}">
@@ -111,7 +111,7 @@
 
             <!-- Total Units -->
             <div class="flex flex-col space-y-1">
-                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Total Unit</span>
+                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Total Aset</span>
                 <span class="text-lg font-bold text-amber-600">{{ $units->total() }} <span class="text-sm font-normal text-amber-700">unit</span></span>
             </div>
 

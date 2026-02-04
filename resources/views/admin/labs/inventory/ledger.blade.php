@@ -22,7 +22,7 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <h1 class="text-2xl font-semibold text-gray-900 mb-1">Catatan Pembukuan Inventaris</h1>
+                <h1 class="text-2xl font-semibold text-gray-900 mb-1">Log Update Inventaris</h1>
                 <div class="flex items-center gap-3 text-sm text-gray-600">
                     <span class="inline-flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
