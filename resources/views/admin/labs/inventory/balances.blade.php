@@ -150,54 +150,104 @@
             </div>
 
             <!-- Transfer Form -->
-            <div class="border-t border-gray-200 px-6 py-4 bg-gray-50">
-                <h4 class="text-sm font-semibold text-gray-700 mb-3">Transfer Antar Kondisi</h4>
-                <form action="{{ route('admin.labs.inventory.transfer', $lab) }}" method="POST" class="flex flex-wrap items-end gap-3">
+            <div class="border-t border-gray-200 px-6 py-4 bg-gradient-to-br from-gray-50 to-blue-50">
+                <div class="mb-4">
+                    <h4 class="text-base font-bold text-gray-800 mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                        Ubah Status Kondisi Barang
+                    </h4>
+                    <p class="text-sm text-gray-600 ml-7">
+                        Gunakan form ini untuk memindahkan barang dari satu kondisi ke kondisi lainnya
+                        <span class="text-gray-500">(contoh: dari Baik ke Rusak jika barang mengalami kerusakan)</span>
+                    </p>
+                </div>
+
+                <form action="{{ route('admin.labs.inventory.transfer', $lab) }}" method="POST" class="space-y-4">
                     @csrf
                     <input type="hidden" name="batch_id" value="{{ $batchId }}">
                     
-                    <div>
-                        <label class="block text-xs text-gray-500 mb-1">Dari</label>
-                        <select name="from_condition" required class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                            @foreach($conditions as $condition)
-                                @php $qty = $batchBalances->firstWhere('condition', $condition)?->quantity ?? 0; @endphp
-                                <option value="{{ $condition->value }}" {{ $qty == 0 ? 'disabled' : '' }}>
-                                    {{ $condition->label() }} ({{ $qty }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <div class="bg-white rounded-lg p-4 border-2 border-blue-100 shadow-sm">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <!-- From Condition -->
+                            <div class="flex-1 min-w-[200px]">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <span class="bg-red-100 text-red-800 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mr-2">1</span>
+                                    Kondisi Awal (Dari)
+                                </label>
+                                <select name="from_condition" required 
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                    @foreach($conditions as $condition)
+                                        @php $qty = $batchBalances->firstWhere('condition', $condition)?->quantity ?? 0; @endphp
+                                        <option value="{{ $condition->value }}" {{ $qty == 0 ? 'disabled' : '' }}>
+                                            {{ $condition->label() }} - Tersedia: {{ $qty }} unit
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Pilih kondisi barang saat ini</p>
+                            </div>
 
-                    <div class="flex items-center text-gray-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                        </svg>
-                    </div>
+                            <!-- Arrow -->
+                            <div class="flex flex-col items-center justify-center pt-6">
+                                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                </svg>
+                            </div>
 
-                    <div>
-                        <label class="block text-xs text-gray-500 mb-1">Ke</label>
-                        <select name="to_condition" required class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                            @foreach($conditions as $condition)
-                                <option value="{{ $condition->value }}">{{ $condition->label() }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                            <!-- To Condition -->
+                            <div class="flex-1 min-w-[200px]">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <span class="bg-green-100 text-green-800 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mr-2">2</span>
+                                    Kondisi Tujuan (Ke)
+                                </label>
+                                <select name="to_condition" required 
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                    @foreach($conditions as $condition)
+                                        <option value="{{ $condition->value }}">{{ $condition->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Pilih kondisi baru untuk barang</p>
+                            </div>
 
-                    <div>
-                        <label class="block text-xs text-gray-500 mb-1">Jumlah</label>
-                        <input type="number" name="quantity" min="1" required 
-                            class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                    </div>
+                            <!-- Quantity -->
+                            <div class="w-32">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mr-2">3</span>
+                                    Jumlah
+                                </label>
+                                <input type="number" name="quantity" min="1" required 
+                                    placeholder="0"
+                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-bold text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <p class="text-xs text-gray-500 mt-1 text-center">Unit</p>
+                            </div>
+                        </div>
 
-                    <div class="flex-1 min-w-[150px]">
-                        <label class="block text-xs text-gray-500 mb-1">Catatan</label>
-                        <input type="text" name="notes" placeholder="Opsional" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                    </div>
+                        <!-- Notes Section -->
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                </svg>
+                                Catatan (Opsional)
+                            </label>
+                            <input type="text" name="notes" 
+                                placeholder="Contoh: Rusak karena terjatuh, Sedang diperbaiki, dll." 
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">Tambahkan alasan atau keterangan perubahan kondisi</p>
+                        </div>
 
-                    <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg text-sm transition-all">
-                        Transfer
-                    </button>
+                        <!-- Submit Button -->
+                        <div class="mt-4 flex justify-end">
+                            <button type="submit" 
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Proses Transfer
+                            </button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
