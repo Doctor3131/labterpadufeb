@@ -9,8 +9,11 @@
     ];
 
     $class = $colors[$type] ?? 'bg-yellow-100 text-yellow-800';
+    
+    // Handle null lab (for pribadi bookings without lab assignment)
+    $displayLab = $lab ?? '-';
 @endphp
 
 <span {{ $attributes->merge(['class' => "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold $class"]) }}>
-    {{ $lab }}
+    {{ $displayLab }}
 </span>

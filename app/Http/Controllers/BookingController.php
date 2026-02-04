@@ -65,8 +65,12 @@ class BookingController extends Controller
         ]);
 
         try {
+            // Use constants from Booking model for validation
+            $bookingTypesRule = 'required|in:' . implode(',', Booking::BOOKING_TYPES);
+            $activityTypesRule = 'required_if:booking_type,non_perkuliahan|in:' . implode(',', Booking::ACTIVITY_TYPES);
+            
             $validated = $request->validate([
-            'booking_type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'booking_type' => $bookingTypesRule,
             'unit_type' => 'required_unless:booking_type,pribadi|in:s1_tembalang,pascasarjana_pleburan',
             'pic_name' => 'required|string|max:255',
             'study_program' => [
@@ -107,7 +111,9 @@ class BookingController extends Controller
             ],
             'nip' => 'required_if:applicant_status,Dosen,Pegawai|nullable|string|max:18|regex:/^[0-9]{1,18}$/',
             'phone_number' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
-            'lab_id' => 'required|exists:labs,id',
+            // Lab is required UNLESS it's a personal booking (pribadi)
+            // Personal bookings don't select lab - assignment done on-site by assistants
+            'lab_id' => 'required_unless:booking_type,pribadi|nullable|exists:labs,id',
             'booking_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
@@ -147,7 +153,7 @@ class BookingController extends Controller
             'purpose' => 'nullable|required_if:booking_type,pribadi|string|max:255',
             
             // Non-perkuliahan fields
-            'activity_type' => 'required_if:booking_type,non_perkuliahan',
+            'activity_type' => $activityTypesRule,
             'position' => 'required_if:booking_type,non_perkuliahan|string|max:255',
             'equipment_needs' => 'nullable|string',
             'activity_name' => 'required_if:booking_type,non_perkuliahan|string|max:255',
@@ -163,23 +169,29 @@ class BookingController extends Controller
 
         // Use transaction with lock to prevent race condition (double booking)
         return DB::transaction(function () use ($request, $validated) {
-            // Lock the lab row to prevent concurrent bookings
-            $lab = Lab::lockForUpdate()->findOrFail($validated['lab_id']);
+            $isPribadi = $request->booking_type === 'pribadi';
             
             // If user selected "Lainnya" for study program, use custom value
             if (isset($validated['study_program']) && $validated['study_program'] === 'Lainnya' && !empty($validated['custom_study_program'])) {
                 $validated['study_program'] = $validated['custom_study_program'];
             }
             
-            // Use consistent timezone (Asia/Jakarta)
-            $date = Carbon::parse($validated['booking_date'])->timezone('Asia/Jakarta');
+            // Note: Timezone already set to Asia/Jakarta in config/app.php
+            $date = Carbon::parse($validated['booking_date']);
             $day = DayHelper::fromIndex($date->dayOfWeek);
 
-            // Check availability inside the transaction (after lock)
-            if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['booking_date'])) {
-                return back()->withErrors([
-                    'time_conflict' => 'Ruangan ' . $lab->name . ' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda (' . $validated['start_time'] . ' - ' . $validated['end_time'] . '). Silakan pilih waktu atau ruangan lain.'
-                ])->withInput();
+            // For non-pribadi bookings: check lab availability and conflicts
+            // Pribadi bookings skip this - no lab selection, no conflict check
+            if (!$isPribadi) {
+                // Lock the lab row to prevent concurrent bookings
+                $lab = Lab::lockForUpdate()->findOrFail($validated['lab_id']);
+                
+                // Check availability inside the transaction (after lock)
+                if (!$lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['booking_date'])) {
+                    return back()->withErrors([
+                        'time_conflict' => 'Ruangan ' . $lab->name . ' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda (' . $validated['start_time'] . ' - ' . $validated['end_time'] . '). Silakan pilih waktu atau ruangan lain.'
+                    ])->withInput();
+                }
             }
 
             // Handle document upload
@@ -188,13 +200,13 @@ class BookingController extends Controller
                 $validated['document_path'] = $path;
             }
 
-            // Set is_recurring for perkuliahan tetap
+            // Set is_recurring for perkuliahan tetap (pribadi is never recurring)
             $validated['is_recurring'] = $request->booking_type === 'perkuliahan_tetap';
 
             // Generate unique tracking token
             $validated['tracking_token'] = bin2hex(random_bytes(16));
 
-            // Day already set above during conflict check
+            // Set day for booking
             $validated['day'] = $day;
 
             // Create booking (inside transaction - prevents race condition)
@@ -202,7 +214,8 @@ class BookingController extends Controller
 
             // Log for debugging (no PII)
             Log::info('Booking created successfully', [
-                'booking_id' => $booking->id
+                'booking_id' => $booking->id,
+                'booking_type' => $request->booking_type
             ]);
 
             // Redirect using tracking_token (secure)

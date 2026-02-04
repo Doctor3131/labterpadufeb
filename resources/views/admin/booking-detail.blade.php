@@ -118,7 +118,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Laboratorium</label>
-                            <p class="text-base md:text-lg font-medium text-gray-900">{{ $booking->lab->name }}</p>
+                            <p class="text-base md:text-lg font-medium text-gray-900">{{ $booking->lab?->name ?? '-' }}</p>
+                            @if(!$booking->lab && $booking->booking_type === 'pribadi')
+                                <p class="text-xs text-gray-500 mt-1">Ditentukan di tempat oleh asisten lab</p>
+                            @endif
                         </div>
                          <div class="border-t border-gray-100 pt-4">
                             <div class="flex items-center justify-between">

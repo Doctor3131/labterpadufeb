@@ -114,7 +114,11 @@
                 <td class="py-1 align-top">LAB YANG DIGUNAKAN</td>
                 <td class="py-1 align-top">:</td>
                 <td class="py-1">
-                    {{ $booking->lab->name }} (kap. {{ $booking->lab->capacity }})
+                    @if($booking->lab)
+                        {{ $booking->lab->name }} (kap. {{ $booking->lab->capacity }})
+                    @else
+                        Ditentukan di tempat oleh asisten lab
+                    @endif
                 </td>
             </tr>
             <tr>

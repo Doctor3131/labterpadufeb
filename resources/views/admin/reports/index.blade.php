@@ -152,7 +152,7 @@
                                 <x-booking-badge :type="$booking->booking_type" class="text-xs" />
                             </td>
                             <td class="px-4 py-3">
-                                <span class="text-sm font-medium text-gray-800">{{ $booking->lab->name }}</span>
+                                <span class="text-sm font-medium text-gray-800">{{ $booking->lab?->name ?? '-' }}</span>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-600">
                                 {{ $booking->day }}

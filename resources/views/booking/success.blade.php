@@ -105,7 +105,13 @@
 
                     <div class="flex justify-between items-start border-b pb-2 gap-4">
                         <span class="text-gray-600 shrink-0">Laboratorium:</span>
-                        <span class="font-semibold text-gray-800 text-right">{{ $booking->lab->name }}</span>
+                        <span class="font-semibold text-gray-800 text-right">
+                            @if($booking->lab)
+                                {{ $booking->lab->name }}
+                            @else
+                                <span class="text-orange-600">Ditentukan di tempat</span>
+                            @endif
+                        </span>
                     </div>
 
                     <div class="flex justify-between items-start border-b pb-2 gap-4">

@@ -438,7 +438,8 @@
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
-                        <div class="md:col-span-2">
+                        <!-- Lab Selection Container - Hidden for pribadi bookings -->
+                        <div id="lab-selection-container" class="md:col-span-2">
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Pilih Laboratorium <span class="text-red-500">*</span></label>
                             <select name="lab_id" id="labSelect" required disabled
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100">
@@ -508,7 +509,7 @@
                             <label for="document" class="cursor-pointer">
                                 <div class="text-4xl mb-2">📄</div>
                                 <div class="text-gray-700 font-semibold mb-1">Klik untuk upload dokumen</div>
-                                <div class="text-sm text-gray-500 mb-1">PDF maksimal 2MB</div>
+                                <div class="text-sm text-gray-500 mb-1">PDF maksimal 5MB</div>
                                 <div class="text-xs text-gray-400">Jika file terlalu besar, silakan compress terlebih dahulu</div>
                                 <div id="file-name" class="text-sm text-yellow-600 font-medium mt-2"></div>
                             </label>
@@ -668,6 +669,9 @@
                         setRequiredFields('non-perkuliahan-fields', false);
                         setRequiredFields('pribadi-fields', false);
                     }
+                    
+                    // Toggle lab selection based on booking type
+                    toggleLabSelection();
                 }
             }
 
@@ -998,7 +1002,10 @@
 
             [bookingDate, participantCount, startTime, endTime].forEach(field => {
                 field.addEventListener('change', function() {
-                    fetchAvailableLabs();
+                    // Only fetch labs for non-pribadi bookings
+                    if (selectedBookingType !== 'pribadi') {
+                        fetchAvailableLabs();
+                    }
                     validateStep3();
                 });
             });
@@ -1018,12 +1025,38 @@
             const endTime = document.getElementById('end_time').value;
             const lab = document.getElementById('labSelect').value;
 
-            const isValid = bookingDate && participantCount && startTime && endTime && lab;
+            // For pribadi bookings, lab is not required
+            const isPribadi = selectedBookingType === 'pribadi';
+            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab);
             document.getElementById('btn-next-3').disabled = !isValid;
+        }
+
+        // Toggle lab selection visibility based on booking type
+        function toggleLabSelection() {
+            const labContainer = document.getElementById('lab-selection-container');
+            const labSelect = document.getElementById('labSelect');
+            
+            if (selectedBookingType === 'pribadi') {
+                // Hide lab selection for pribadi
+                labContainer.classList.add('hidden');
+                // Disable and clear lab select
+                labSelect.disabled = true;
+                labSelect.value = '';
+                labSelect.removeAttribute('required');
+            } else {
+                // Show lab selection for other types
+                labContainer.classList.remove('hidden');
+                labSelect.setAttribute('required', 'required');
+            }
         }
 
         // Fetch Available Labs
         function fetchAvailableLabs() {
+            // Skip for pribadi bookings - they don't need lab selection
+            if (selectedBookingType === 'pribadi') {
+                return;
+            }
+            
             const bookingDate = document.getElementById('booking_date').value;
             const participantCount = document.getElementById('participant_count').value;
             const startTime = document.getElementById('start_time').value;

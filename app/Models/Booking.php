@@ -9,6 +9,39 @@ class Booking extends Model
 {
     use HasFactory;
 
+    /**
+     * Valid booking types
+     */
+    public const BOOKING_TYPES = [
+        'perkuliahan_tetap',
+        'perkuliahan_tidak_tetap',
+        'non_perkuliahan',
+        'pribadi',
+    ];
+
+    /**
+     * Valid activity types for non-perkuliahan bookings
+     * Centralized to avoid duplication between migration ENUM and validation rules
+     */
+    public const ACTIVITY_TYPES = [
+        'Seminar',
+        'Workshop',
+        'Pelatihan',
+        'Rapat',
+        'Ujian',
+        'Lainnya',
+    ];
+
+    /**
+     * Valid applicant statuses for pribadi bookings
+     */
+    public const APPLICANT_STATUSES = [
+        'Mahasiswa',
+        'Dosen',
+        'Pegawai',
+        'Lainnya',
+    ];
+
     protected $fillable = [
         'lab_id',
         'booking_type',
@@ -114,5 +147,30 @@ class Booking extends Model
     public function isPribadi()
     {
         return $this->booking_type === 'pribadi';
+    }
+
+    /**
+     * Scope to filter bookings that overlap with a specific time range.
+     * Centralized time overlap logic - same as Schedule::scopeOverlappingTime
+     */
+    public function scopeOverlappingTime($query, $startTime, $endTime)
+    {
+        return $query->where(function ($q) use ($startTime, $endTime) {
+            // New booking starts during existing booking
+            $q->where(function ($sub) use ($startTime, $endTime) {
+                $sub->where('start_time', '<=', $startTime)
+                    ->where('end_time', '>', $startTime);
+            })
+            // New booking ends during existing booking
+            ->orWhere(function ($sub) use ($startTime, $endTime) {
+                $sub->where('start_time', '<', $endTime)
+                    ->where('end_time', '>=', $endTime);
+            })
+            // New booking completely covers existing booking
+            ->orWhere(function ($sub) use ($startTime, $endTime) {
+                $sub->where('start_time', '>=', $startTime)
+                    ->where('end_time', '<=', $endTime);
+            });
+        });
     }
 }

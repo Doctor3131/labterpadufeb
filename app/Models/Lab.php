@@ -72,23 +72,7 @@ class Lab extends Model
             $hasBookingConflict = $this->bookings()
                 ->where('booking_date', $date)
                 ->where('status', 'pending') // Only check pending bookings (approved ones already have schedules)
-                ->where(function ($query) use ($startTime, $endTime) {
-                    $query->where(function ($q) use ($startTime, $endTime) {
-                        // New booking starts during existing booking
-                        $q->where('start_time', '<=', $startTime)
-                          ->where('end_time', '>', $startTime);
-                    })
-                    ->orWhere(function ($q) use ($startTime, $endTime) {
-                        // New booking ends during existing booking
-                        $q->where('start_time', '<', $endTime)
-                          ->where('end_time', '>=', $endTime);
-                    })
-                    ->orWhere(function ($q) use ($startTime, $endTime) {
-                        // New booking completely covers existing booking
-                        $q->where('start_time', '>=', $startTime)
-                          ->where('end_time', '<=', $endTime);
-                    });
-                })
+                ->overlappingTime($startTime, $endTime)
                 ->exists();
 
             if ($hasBookingConflict) {

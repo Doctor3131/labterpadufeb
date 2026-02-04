@@ -103,7 +103,7 @@
                 <!-- Header dengan badges dan tanggal -->
                 <div class="flex items-start justify-between gap-2 mb-0">
                     <div class="flex flex-wrap items-center gap-2 flex-1">
-                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                        <x-room-badge :lab="$booking->lab?->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
                         <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
                         <!-- Waktu Dibuat - Inline -->
                         <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
@@ -253,7 +253,7 @@
                             </svg>
                             Disetujui
                         </span>
-                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                        <x-room-badge :lab="$booking->lab?->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
                         <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
                     </div>
                     <!-- Tanggal & Waktu - Compact -->
@@ -371,7 +371,7 @@
                             </svg>
                             Ditolak
                         </span>
-                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                        <x-room-badge :lab="$booking->lab?->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
                         <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
                     </div>
                     <!-- Tanggal & Waktu - Compact -->

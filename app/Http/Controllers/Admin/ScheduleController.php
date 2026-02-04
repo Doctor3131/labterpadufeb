@@ -609,11 +609,13 @@ class ScheduleController extends Controller
             $rules['komting'] = 'nullable|string|max:255';
         } elseif ($request->type === 'non_perkuliahan') {
             $rules['activity_name'] = 'required|string|max:255';
-            $rules['activity_type'] = 'required|in:Seminar,Workshop,Pelatihan,Rapat,Ujian,Lainnya';
+            // Use constant from Booking model to avoid duplication with migration ENUM
+            $rules['activity_type'] = 'required|in:' . implode(',', Booking::ACTIVITY_TYPES);
             $rules['position'] = 'required|string|max:255';
         } elseif ($request->type === 'pribadi') {
             $rules['purpose'] = 'required|string|max:255';
-            $rules['applicant_status'] = 'required|in:Mahasiswa,Dosen,Pegawai,Lainnya';
+            // Use constant from Booking model to avoid duplication
+            $rules['applicant_status'] = 'required|in:' . implode(',', Booking::APPLICANT_STATUSES);
             
             // Validate class_year only if status is Mahasiswa
             if ($request->applicant_status === 'Mahasiswa') {

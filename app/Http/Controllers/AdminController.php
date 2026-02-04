@@ -52,25 +52,38 @@ class AdminController extends Controller
      */
     public function approve($id)
     {
-        $booking = Booking::findOrFail($id);
-        
-        // CRITICAL: Check for schedule conflicts BEFORE approving
-        $bookingDate = \Carbon\Carbon::parse($booking->booking_date);
-        $conflictCheck = $this->checkScheduleConflict(
-            $booking->lab_id,
-            $booking->day,
-            $booking->start_time,
-            $booking->end_time,
-            $bookingDate->format('Y-m-d'),
-            $booking->is_recurring ? null : $bookingDate->format('Y-m-d')
-        );
+        // Use transaction with lock to prevent race condition when 2 admins approve simultaneously
+        return DB::transaction(function () use ($id) {
+            // Lock the booking row to prevent concurrent approvals
+            $booking = Booking::lockForUpdate()->findOrFail($id);
+            
+            // Check if already processed (race condition guard)
+            if ($booking->status !== 'pending') {
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
+            }
+            
+            $isPribadi = $booking->booking_type === 'pribadi';
+            
+            // For non-pribadi bookings: check for schedule conflicts
+            // Pribadi bookings skip conflict check - no lab, no schedule created
+            if (!$isPribadi) {
+                $bookingDate = Carbon::parse($booking->booking_date);
+                $conflictCheck = $this->checkScheduleConflict(
+                    $booking->lab_id,
+                    $booking->day,
+                    $booking->start_time,
+                    $booking->end_time,
+                    $bookingDate->format('Y-m-d'),
+                    $booking->is_recurring ? null : $bookingDate->format('Y-m-d')
+                );
 
-        if ($conflictCheck) {
-            return redirect()->route('admin.dashboard')
-                ->with('error', 'Tidak dapat menyetujui peminjaman: ' . $conflictCheck);
-        }
-        
-        DB::transaction(function () use ($booking) {
+                if ($conflictCheck) {
+                    return redirect()->route('admin.dashboard')
+                        ->with('error', 'Tidak dapat menyetujui peminjaman: ' . $conflictCheck);
+                }
+            }
+            
             // Update booking status
             $updateData = [
                 'status' => 'approved',
@@ -84,61 +97,57 @@ class AdminController extends Controller
             $booking->update($updateData);
 
             // Create schedule entry from approved booking
-            // Important: Use Carbon with Asia/Jakarta timezone to get correct day
-            $bookingDate = \Carbon\Carbon::parse($booking->booking_date)->timezone('Asia/Jakarta');
-            
-            $scheduleData = [
-                'lab_id' => $booking->lab_id,
-                'day' => $booking->day, // Use day from booking (already correct)
-                'start_time' => $booking->start_time,
-                'end_time' => $booking->end_time,
-                'booking_id' => $booking->id,
-                'student_count' => $booking->participant_count,
-            ];
-
-            // Tentukan type dan data spesifik berdasarkan booking_type
-            if ($booking->is_recurring) {
-                // Perkuliahan tetap - recurring schedule
-                $scheduleData['type'] = 'perkuliahan_tetap';
-                $scheduleData['start_date'] = $bookingDate->toDateString();
-                $scheduleData['end_date'] = null; // Recurring tanpa batas
-                $scheduleData['course'] = $booking->course_name;
-                $scheduleData['lecturer'] = $booking->lecturer_name;
-                $scheduleData['komting'] = $booking->pic_name;
-            } else {
-                // One-time booking - use booking_type directly
-                $scheduleData['type'] = $booking->booking_type; // perkuliahan_tidak_tetap, non_perkuliahan, or pribadi
-                $scheduleData['start_date'] = $bookingDate->toDateString();
-                $scheduleData['end_date'] = $bookingDate->toDateString();
+            // SKIP for pribadi bookings - they don't appear in public schedule
+            if (!$isPribadi) {
+                $bookingDate = Carbon::parse($booking->booking_date);
                 
-                // Map data based on booking type
-                if ($booking->booking_type === 'perkuliahan_tidak_tetap') {
+                $scheduleData = [
+                    'lab_id' => $booking->lab_id,
+                    'day' => $booking->day,
+                    'start_time' => $booking->start_time,
+                    'end_time' => $booking->end_time,
+                    'booking_id' => $booking->id,
+                    'student_count' => $booking->participant_count,
+                ];
+
+                // Tentukan type dan data spesifik berdasarkan booking_type
+                if ($booking->is_recurring) {
+                    // Perkuliahan tetap - recurring schedule
+                    $scheduleData['type'] = 'perkuliahan_tetap';
+                    $scheduleData['start_date'] = $bookingDate->toDateString();
+                    $scheduleData['end_date'] = null; // Recurring tanpa batas
                     $scheduleData['course'] = $booking->course_name;
                     $scheduleData['lecturer'] = $booking->lecturer_name;
                     $scheduleData['komting'] = $booking->pic_name;
-                } elseif ($booking->booking_type === 'non_perkuliahan') {
-                    $scheduleData['course'] = $booking->activity_name;
-                    $scheduleData['lecturer'] = null;
-                    $scheduleData['komting'] = null;
-                } elseif ($booking->booking_type === 'pribadi') {
-                    $scheduleData['course'] = $booking->purpose ?? 'Peminjaman Pribadi';
-                    $scheduleData['lecturer'] = null;
-                    $scheduleData['komting'] = null;
                 } else {
-                    // Fallback for unknown booking type
-                    $scheduleData['course'] = $booking->course_name ?? $booking->activity_name ?? $booking->purpose ?? 'Peminjaman';
-                    $scheduleData['lecturer'] = null;
-                    $scheduleData['komting'] = null;
+                    // One-time booking - use booking_type directly
+                    $scheduleData['type'] = $booking->booking_type;
+                    $scheduleData['start_date'] = $bookingDate->toDateString();
+                    $scheduleData['end_date'] = $bookingDate->toDateString();
+                    
+                    // Map data based on booking type
+                    if ($booking->booking_type === 'perkuliahan_tidak_tetap') {
+                        $scheduleData['course'] = $booking->course_name;
+                        $scheduleData['lecturer'] = $booking->lecturer_name;
+                        $scheduleData['komting'] = $booking->pic_name;
+                    } elseif ($booking->booking_type === 'non_perkuliahan') {
+                        $scheduleData['course'] = $booking->activity_name;
+                        $scheduleData['lecturer'] = null;
+                        $scheduleData['komting'] = null;
+                    } else {
+                        // Fallback for unknown booking type
+                        $scheduleData['course'] = $booking->course_name ?? $booking->activity_name ?? 'Peminjaman';
+                        $scheduleData['lecturer'] = null;
+                        $scheduleData['komting'] = null;
+                    }
                 }
+
+                Schedule::create($scheduleData);
             }
-
-            Schedule::create($scheduleData);
-        });
-
-
-
-        return redirect()->route('admin.dashboard')
-            ->with('success', 'Peminjaman berhasil disetujui!');
+            
+            return redirect()->route('admin.dashboard')
+                ->with('success', 'Peminjaman berhasil disetujui!');
+        }); // End DB::transaction
     }
 
     /**
@@ -163,11 +172,6 @@ class AdminController extends Controller
         ]);
         
         DB::transaction(function () use ($booking, $request) {
-            // Delete related schedule if exists
-            if ($booking->schedule) {
-                $booking->schedule->delete();
-            }
-            
             // Update booking status
             $updateData = [
                 'status' => 'rejected',
