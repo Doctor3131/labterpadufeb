@@ -181,8 +181,8 @@ class InventoryService
         ConditionEnum $condition = ConditionEnum::BAIK
     ): InventoryBalance {
         return DB::transaction(function () use ($labId, $batchId, $qty, $condition) {
-            // Find or create balance record
-            $balance = InventoryBalance::firstOrCreate(
+            // Find or create balance record with lock to prevent race condition
+            $balance = InventoryBalance::lockForUpdate()->firstOrCreate(
                 [
                     'batch_id' => $batchId,
                     'lab_id' => $labId,
@@ -288,19 +288,19 @@ class InventoryService
         ?string $notes = null
     ): array {
         return DB::transaction(function () use ($labId, $batchId, $fromCondition, $toCondition, $qty, $notes) {
-            // Get source balance
+            // Get source balance with lock to prevent race condition
             $fromBalance = InventoryBalance::where([
                 'batch_id' => $batchId,
                 'lab_id' => $labId,
                 'condition' => $fromCondition,
-            ])->firstOrFail();
+            ])->lockForUpdate()->firstOrFail();
             
             if ($fromBalance->quantity < $qty) {
                 throw new \Exception("Jumlah tidak mencukupi. Tersedia: {$fromBalance->quantity}, diminta: {$qty}");
             }
             
-            // Get or create target balance
-            $toBalance = InventoryBalance::firstOrCreate(
+            // Get or create target balance with lock
+            $toBalance = InventoryBalance::lockForUpdate()->firstOrCreate(
                 [
                     'batch_id' => $batchId,
                     'lab_id' => $labId,
