@@ -103,21 +103,76 @@
             <p class="text-sm md:text-base text-gray-600 px-4">Formulir Permohonan Akses Penggunaan Data BPS yang Dikelola Oleh Laboratorium Komputer FEB Universitas Diponegoro</p>
         </div>
 
-        <!-- Info Box -->
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 md:p-6 mb-6">
-            <h3 class="font-bold text-blue-800 mb-2 flex items-center">
+        <!-- Tata Tertib Box -->
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 md:p-6 mb-4">
+            <h3 class="font-bold text-red-800 mb-2 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                TATA TERTIB PENGGUNAAN DATA BPS FEB Universitas Diponegoro
+            </h3>
+            <p class="text-sm text-red-700 font-medium">
+                Tidak memperjualbelikan atau menyebarluaskan data yang telah diberikan tanpa ijin FEB-UNDIP
+            </p>
+        </div>
+
+        <!-- Mekanisme Box -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 md:p-6 mb-4">
+            <h3 class="font-bold text-blue-800 mb-3 flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                 </svg>
-                Tata Tertib Penggunaan Data BPS
+                MEKANISME
             </h3>
-            <p class="text-sm text-blue-700 mb-3">
-                Tidak memperjualbelikan atau menyebarluaskan data yang telah diberikan tanpa ijin FEB-UNDIP
-            </p>
-            <div class="text-sm text-blue-600 space-y-1">
-                <p>• Data akan dikirimkan dalam bentuk link G-Drive dalam 1-3 hari kerja</p>
-                <p>• Setelah 3 hari data akan dihapus dari link G-Drive</p>
-                <p>• Untuk kode variabel, lihat <a href="https://bit.ly/LegendaDataBPS" target="_blank" class="underline font-semibold hover:text-blue-800">Legenda Data BPS</a></p>
+            <ol class="text-sm text-blue-700 space-y-2 list-decimal list-inside">
+                <li>Pemohon mengisi formulir permohonan akses penggunaan data</li>
+                <li>Pemohon memilih jenis data dan kode variabel yang diperlukan</li>
+                <li>Pihak Laboratorium Komputer FEB Universitas Diponegoro akan memproses permohonan</li>
+                <li>Data akan dikirimkan dalam bentuk link G-Drive oleh pihak Laboratorium Komputer FEB-UNDIP kepada pemohon melalui surel pemohon dalam 1 - 3 hari kerja</li>
+                <li>Pengguna harap segera mengunduh data, setelah 3 hari data akan kami hapus dari link G-Drive</li>
+                <li>Pengguna membaca dan memahami master data (keterangan data), kuesioner data yang telah disediakan pada <a href="https://bit.ly/LegendaDataBPS" target="_blank" class="underline font-semibold hover:text-blue-800">https://bit.ly/LegendaDataBPS</a> untuk memudahkan dalam interpretasi data, pastikan scroll ke kanan atau bawah untuk memastikan master data telah terlihat secara menyeluruh</li>
+            </ol>
+        </div>
+
+        <!-- Kode Data & Format Surat Box -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- Kode Data BPS -->
+            <div class="bg-green-50 border border-green-200 rounded-xl p-4 md:p-6">
+                <h3 class="font-bold text-green-800 mb-2 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                    </svg>
+                    KODE DATA BPS
+                </h3>
+                <p class="text-sm text-green-700 mb-3">
+                    Untuk mempermudah proses filtering data, silahkan mengunduh legenda data dan memilih kode variabel yang diperlukan pada link berikut:
+                </p>
+                <a href="https://bit.ly/LegendaDataBPS" target="_blank" class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Legenda Data BPS
+                </a>
+            </div>
+
+            <!-- Format Surat -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 md:p-6">
+                <h3 class="font-bold text-yellow-800 mb-2 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                    </svg>
+                    SURAT PERNYATAAN KESANGGUPAN
+                </h3>
+                <p class="text-sm text-yellow-700 mb-3">
+                    Format surat dapat diunduh pada link berikut:
+                </p>
+                <a href="https://bit.ly/SuratPernyataanKesanggupanMenjagaInformasi" target="_blank" class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded-lg hover:bg-yellow-700 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Surat Pernyataan Kesanggupan
+                </a>
             </div>
         </div>
 

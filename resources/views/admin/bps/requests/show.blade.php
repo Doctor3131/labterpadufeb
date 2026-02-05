@@ -123,19 +123,6 @@
                     </a>
                 </div>
             </div>
-
-            <!-- Admin Notes -->
-            <div class="mt-6">
-                <h3 class="font-semibold text-gray-700 mb-2">Catatan Admin</h3>
-                <form action="{{ route('admin.bps.requests.notes', $bpsRequest) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <textarea name="admin_notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Tambahkan catatan...">{{ $bpsRequest->admin_notes }}</textarea>
-                    <button type="submit" class="mt-2 px-4 py-2 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-300">
-                        Simpan Catatan
-                    </button>
-                </form>
-            </div>
         </div>
     </div>
 

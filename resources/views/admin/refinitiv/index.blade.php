@@ -3,6 +3,16 @@
 @section('title', 'Kelola Permintaan Refinitiv - Admin')
 
 @section('content')
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali ke Dashboard
+        </a>
+    </div>
+
     <!-- Header -->
     <div class="mb-6">
         <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 md:p-6 shadow-lg">

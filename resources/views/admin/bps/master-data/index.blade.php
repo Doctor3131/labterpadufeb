@@ -43,7 +43,6 @@
                         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nama Kategori</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Sub Data</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Status</th>
-                        <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Urutan</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
                     </tr>
                 </thead>
@@ -74,9 +73,6 @@
                                     {{ $master->is_active ? 'Aktif' : 'Nonaktif' }}
                                 </button>
                             </form>
-                        </td>
-                        <td class="px-6 py-4 text-center text-gray-600">
-                            {{ $master->sort_order }}
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
