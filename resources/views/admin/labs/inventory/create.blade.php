@@ -76,7 +76,7 @@
 
             <!-- New Item Fields -->
             <div x-show="!itemId" class="mb-6 p-4 bg-gray-50 rounded-lg">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Barang Baru *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Aset Baru *</label>
                 <input type="text" name="new_item_name" value="{{ old('new_item_name') }}" 
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     placeholder="Contoh: Laptop Dell Latitude 5520">

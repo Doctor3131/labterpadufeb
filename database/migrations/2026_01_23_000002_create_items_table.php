@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Nama barang: Laptop Dell, PC AIO HP, dll
+            $table->string('name'); // Nama Aset: Laptop Dell, PC AIO HP, dll
             $table->foreignId('asset_type_code_id')->nullable()->constrained('asset_type_codes')->nullOnDelete();
             $table->enum('tracking_mode', ['STRUCTURED_TAG', 'SEAT_NUMBER', 'AGGREGATE']);
             $table->text('description')->nullable();

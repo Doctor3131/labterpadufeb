@@ -48,7 +48,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <!-- Nama Barang -->
             <div class="flex flex-col space-y-1">
-                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Nama Barang</span>
+                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Nama Aset</span>
                 <span class="text-sm font-medium text-amber-900">{{ $item->name }}</span>
             </div>
 
@@ -320,28 +320,37 @@
     </div>
 
     <!-- Bulk Delete Confirmation Modal -->
-    <div id="bulkDeleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div id="bulkDeleteModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="relative mx-auto w-full max-w-md px-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6">
+                <!-- Icon -->
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 mb-4">
+                    <svg class="h-8 w-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                 </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4 text-center">Hapus Unit Terpilih</h3>
-                <div class="mt-2 px-4 py-3">
-                    <p class="text-sm text-gray-500 text-center">
-                        Apakah Anda yakin ingin menghapus <strong><span id="deleteCount"></span> unit</strong> yang dipilih?
-                        <br><span class="text-red-600">Tindakan ini tidak dapat dibatalkan.</span>
+
+                <!-- Title -->
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Hapus Barang</h3>
+                
+                <!-- Message -->
+                <div class="mb-6">
+                    <p class="text-sm text-gray-600 text-center">
+                        Apakah Anda yakin ingin menghapus
+                    </p>
+                    <p class="text-sm text-gray-900 text-center font-semibold mt-1">
+                        <span id="deleteCount"></span> unit akan dihapus secara permanen.
                     </p>
                 </div>
-                <div class="flex gap-3 px-4 py-3">
-                    <button onclick="closeBulkDeleteModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none">
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <button onclick="closeBulkDeleteModal()" class="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
                         Batal
                     </button>
                     <form id="bulkDeleteForm" method="POST" action="{{ route('admin.inventory.bulk-delete') }}" class="flex-1">
                         @csrf
-                        <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none">
+                        <button type="submit" class="w-full px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500">
                             Hapus
                         </button>
                     </form>

@@ -30,7 +30,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Nama Barang -->
             <div class="flex flex-col">
-                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Nama Barang</span>
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Nama Aset</span>
                 <span class="text-base font-medium text-gray-900">{{ $item->name }}</span>
             </div>
 
