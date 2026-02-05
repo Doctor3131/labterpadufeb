@@ -74,6 +74,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->names('admin.schedules')
         ->except(['show']);
 
+    // Admin Inventory Management (Global overview)
+    Route::get('/admin/inventory', [App\Http\Controllers\Admin\LabInventoryController::class, 'globalIndex'])
+        ->name('admin.inventory.index');
+
     // Admin Inventory Management (Lab-based)
     Route::get('/admin/labs/{lab}/inventory', [App\Http\Controllers\Admin\LabInventoryController::class, 'index'])
         ->name('admin.labs.inventory');

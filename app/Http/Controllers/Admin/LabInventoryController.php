@@ -27,6 +27,63 @@ class LabInventoryController extends Controller
     }
 
     /**
+     * Display global inventory overview (all labs)
+     */
+    public function globalIndex()
+    {
+        $labs = Lab::orderBy('name')->get();
+        
+        // Get summary for each lab
+        $labSummaries = [];
+        $globalTotals = [
+            'BAIK' => 0,
+            'RUSAK' => 0,
+            'HILANG' => 0,
+            'MAINTENANCE' => 0,
+            'total_items' => 0,
+        ];
+        
+        foreach ($labs as $lab) {
+            $summary = $this->inventoryService->getLabInventorySummary($lab->id);
+            $totals = [
+                'BAIK' => collect($summary)->sum(fn($s) => $s['conditions']['BAIK']),
+                'RUSAK' => collect($summary)->sum(fn($s) => $s['conditions']['RUSAK']),
+                'HILANG' => collect($summary)->sum(fn($s) => $s['conditions']['HILANG']),
+                'MAINTENANCE' => collect($summary)->sum(fn($s) => $s['conditions']['MAINTENANCE']),
+                'total_items' => count($summary),
+            ];
+            
+            $labSummaries[] = [
+                'lab' => $lab,
+                'totals' => $totals,
+                'total_units' => array_sum([$totals['BAIK'], $totals['RUSAK'], $totals['HILANG'], $totals['MAINTENANCE']]),
+            ];
+            
+            // Add to global totals
+            $globalTotals['BAIK'] += $totals['BAIK'];
+            $globalTotals['RUSAK'] += $totals['RUSAK'];
+            $globalTotals['HILANG'] += $totals['HILANG'];
+            $globalTotals['MAINTENANCE'] += $totals['MAINTENANCE'];
+            $globalTotals['total_items'] += $totals['total_items'];
+        }
+        
+        // Get items grouped by Tracking Mode
+        $items = Item::with(['batches.assetUnits', 'batches.inventoryBalances', 'assetTypeCode'])
+            ->orderBy('name')
+            ->get();
+            
+        $groupedItems = $items->groupBy(fn($item) => $item->tracking_mode->value);
+
+        return view('admin.inventory.global', [
+            'labSummaries' => $labSummaries,
+            'globalTotals' => $globalTotals,
+            'conditions' => ConditionEnum::cases(),
+            'groupedItems' => $groupedItems,
+            'trackingModes' => TrackingModeEnum::cases(),
+        ]);
+    }
+
+    /**
      * Display inventory summary for a lab
      */
     public function index(Lab $lab)
