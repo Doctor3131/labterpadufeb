@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Schedule;
+use App\Models\BpsRequest;
+use App\Models\RefinitivRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -13,10 +15,26 @@ use Carbon\Carbon;
 class AdminController extends Controller
 {
     /**
-     * Show admin dashboard with pending bookings
-     * Paginated to improve performance with large datasets
+     * Show admin dashboard with 3 cards (Lab, BPS, Refinitiv)
      */
     public function dashboard()
+    {
+        // Get counts for each service
+        $labPendingCount = Booking::where('status', 'pending')->count();
+        $bpsPendingCount = BpsRequest::where('status', 'pending')->count();
+        $refinitivPendingCount = RefinitivRequest::where('attendance_status', 'menunggu')->count();
+
+        return view('admin.dashboard', compact(
+            'labPendingCount',
+            'bpsPendingCount',
+            'refinitivPendingCount'
+        ));
+    }
+
+    /**
+     * Show lab bookings management
+     */
+    public function labBookings()
     {
         // Paginate each status separately with custom page parameter names
         // This allows independent pagination for each tab
@@ -35,9 +53,8 @@ class AdminController extends Controller
             ->orderBy('updated_at', 'desc')
             ->paginate(15, ['*'], 'rejected_page');
 
-        return view('admin.dashboard', compact('pendingBookings', 'approvedBookings', 'rejectedBookings'));
+        return view('admin.lab-bookings', compact('pendingBookings', 'approvedBookings', 'rejectedBookings'));
     }
-
     /**
      * Show booking detail
      */

@@ -255,7 +255,12 @@
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
                             <input type="text" name="pic_name" id="pic_name" value="{{ old('pic_name') }}" required
+                                pattern="[a-zA-Z\s\.']+"
+                                title="Hanya huruf, spasi, titik, dan apostrof yang diperbolehkan"
+                                oninput="this.value = this.value.replace(/[^a-zA-Z\s\.']/g, '')"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">Masukkan nama lengkap (huruf saja)</p>
+                            <p id="pic_name-error" class="text-xs text-red-500 mt-1 hidden"></p>
                         </div>
 
                         <div id="study-program-field">
@@ -291,23 +296,35 @@
                             <input type="text" name="nim" id="nim" value="{{ old('nim') }}" required
                                 maxlength="14" pattern="[0-9]{14}" 
                                 placeholder="Contoh: 12010120130001"
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
+                            <p id="nim-error" class="text-xs text-red-500 mt-1 hidden"></p>
                         </div>
 
                         <div id="nip-field" style="display: none;">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(Maksimal 18 digit)</span></label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(18 digit)</span></label>
                             <input type="text" data-name="nip" id="nip" value="{{ old('nip') }}"
-                                maxlength="18" pattern="[0-9]{1,18}" 
+                                maxlength="18" pattern="[0-9]{18}" 
                                 placeholder="Contoh: 198505102010121001"
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18)"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">NIP harus 18 digit angka</p>
+                            <p id="nip-error" class="text-xs text-red-500 mt-1 hidden"></p>
                         </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(10-15 digit)</span></label>
-                            <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number') }}" required
-                                minlength="10" maxlength="15" pattern="[0-9+]{10,15}"
+                            <input type="tel" name="phone_number" id="phone_number" value="{{ old('phone_number') }}" required
+                                minlength="10" maxlength="15" pattern="^08[0-9]{8,13}$"
                                 placeholder="Contoh: 081234567890"
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15)"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">Nomor harus diawali 08 dan 10-15 digit</p>
+                            <p id="phone_number-error" class="text-xs text-red-500 mt-1 hidden"></p>
                         </div>
                     </div>
 
@@ -328,8 +345,10 @@
                             <div>
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen <span class="text-red-500">*</span></label>
                                 <input type="text" name="lecturer_nip" id="lecturer_nip" value="{{ old('lecturer_nip') }}"
-                                    maxlength="18" pattern="[0-9]{1,18}"
-                                    placeholder="Maksimal 18 digit"
+                                    maxlength="18" pattern="[0-9]{18}"
+                                    placeholder="18 digit angka"
+                                    inputmode="numeric"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18)"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">
@@ -575,6 +594,34 @@
         let currentStep = 1;
         const totalSteps = 4;
         let selectedBookingType = '';
+
+        // Helper function to show field errors
+        function showFieldError(fieldId, message) {
+            const errorEl = document.getElementById(fieldId + '-error');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        // Helper function to clear field errors
+        function clearFieldError(fieldId) {
+            const errorEl = document.getElementById(fieldId + '-error');
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.classList.add('hidden');
+            }
+        }
+
+        // Clear errors on input for numeric fields
+        ['nim', 'nip', 'phone_number'].forEach(function(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', function() {
+                    clearFieldError(fieldId);
+                });
+            }
+        });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -919,8 +966,12 @@
         function validateStep2() {
             const nama = document.getElementById('pic_name').value.trim();
             const telpon = document.getElementById('phone_number').value.trim();
+            
+            // Phone validation: must start with 08 and be 10-15 digits
+            const phonePattern = /^08[0-9]{8,13}$/;
+            const phoneValid = phonePattern.test(telpon);
 
-            let isValid = nama && telpon.length >= 10;
+            let isValid = nama && phoneValid;
 
             // Check conditional fields based on booking type
             if (selectedBookingType === 'perkuliahan_tetap' || selectedBookingType === 'perkuliahan_tidak_tetap') {
@@ -970,9 +1021,9 @@
                      
                      isValid = isValid && prodi && nim.length === 14;
                  } else if (status === 'Dosen' || status === 'Pegawai') {
-                     // Dosen and Pegawai need NIP
+                     // Dosen and Pegawai need NIP (18 digits)
                      const nip = document.getElementById('nip').value.trim();
-                     isValid = isValid && nip.length > 0;
+                     isValid = isValid && nip.length === 18;
                  }
                  // Lainnya does not need Program Studi, NIM, or NIP
                  

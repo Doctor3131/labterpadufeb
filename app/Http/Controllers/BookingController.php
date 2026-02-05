@@ -72,7 +72,7 @@ class BookingController extends Controller
             $validated = $request->validate([
             'booking_type' => $bookingTypesRule,
             'unit_type' => 'required_unless:booking_type,pribadi|in:s1_tembalang,pascasarjana_pleburan',
-            'pic_name' => 'required|string|max:255',
+            'pic_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\']+$/'],
             'study_program' => [
                 function ($attribute, $value, $fail) use ($request) {
                     $isPribadi = $request->booking_type === 'pribadi';
@@ -109,8 +109,22 @@ class BookingController extends Controller
                 },
                 'nullable', 'string', 'size:14', 'regex:/^[0-9]{14}$/'
             ],
-            'nip' => 'required_if:applicant_status,Dosen,Pegawai|nullable|string|max:18|regex:/^[0-9]{1,18}$/',
-            'phone_number' => 'required|string|min:10|max:15|regex:/^[0-9+]{10,15}$/',
+            'nip' => [
+                function ($attribute, $value, $fail) use ($request) {
+                    $status = $request->applicant_status;
+                    
+                    // NIP required for Dosen/Pegawai
+                    if (in_array($status, ['Dosen', 'Pegawai'])) {
+                        if (!$value) {
+                            $fail('NIP wajib diisi untuk Dosen/Pegawai.');
+                        } elseif (!preg_match('/^[0-9]{18}$/', $value)) {
+                            $fail('NIP harus berupa 18 digit angka.');
+                        }
+                    }
+                },
+                'nullable', 'string', 'size:18', 'regex:/^[0-9]{18}$/'
+            ],
+            'phone_number' => ['required', 'string', 'regex:/^08[0-9]{8,13}$/'],
             // Lab is required UNLESS it's a personal booking (pribadi)
             // Personal bookings don't select lab - assignment done on-site by assistants
             'lab_id' => 'required_unless:booking_type,pribadi|nullable|exists:labs,id',
