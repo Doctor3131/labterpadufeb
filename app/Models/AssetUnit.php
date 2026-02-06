@@ -57,6 +57,14 @@ class AssetUnit extends Model
     }
 
     /**
+     * Get borrowing items for this unit
+     */
+    public function borrowingItems(): HasMany
+    {
+        return $this->hasMany(AssetBorrowingItem::class);
+    }
+
+    /**
      * Check if unit is usable (good condition and available)
      */
     public function isUsable(): bool

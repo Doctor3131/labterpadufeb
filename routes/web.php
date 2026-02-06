@@ -7,6 +7,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\AssetBorrowingController;
 
 // Public Routes
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -34,6 +35,16 @@ Route::get('/api/labs/available', [App\Http\Controllers\LabController::class, 'c
 
 // PDF Print (for re-download)
 Route::get('/booking/print/{token}', [BookingController::class, 'print'])->name('booking.print');
+
+// Asset Borrowing Routes (Public - No Authentication Required)
+Route::get('/asset-borrowing', [AssetBorrowingController::class, 'create'])->name('asset-borrowing.create');
+Route::post('/asset-borrowing', [AssetBorrowingController::class, 'store'])
+    ->middleware('throttle:10,1') // Max 10 submissions per minute
+    ->name('asset-borrowing.store');
+Route::get('/asset-borrowing/success/{id}', [AssetBorrowingController::class, 'success'])->name('asset-borrowing.success');
+Route::get('/asset-borrowing/available-assets', [AssetBorrowingController::class, 'getAvailableAssets'])
+    ->middleware('throttle:60,1')
+    ->name('asset-borrowing.available-assets');
 
 // Schedule Routes (Public)
 Route::get('/schedules', function () {
@@ -124,6 +135,20 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Feedback Management
     Route::get('/admin/feedbacks', [FeedbackController::class, 'index'])->name('admin.feedbacks.index');
     Route::put('/admin/feedbacks/{id}', [FeedbackController::class, 'update'])->name('admin.feedbacks.update');
+    
+    // Admin Asset Borrowing Management Actions
+    Route::get('/admin/asset-borrowings/{id}', [AdminController::class, 'showAssetBorrowing'])
+        ->name('admin.asset-borrowings.show');
+    Route::get('/admin/asset-borrowings/{id}/data', [AdminController::class, 'getAssetBorrowingData'])
+        ->name('admin.asset-borrowings.data');
+    Route::post('/admin/asset-borrowings/{id}/approve', [AdminController::class, 'approveAssetBorrowing'])
+        ->name('admin.asset-borrowings.approve');
+    Route::post('/admin/asset-borrowings/{id}/reject', [AdminController::class, 'rejectAssetBorrowing'])
+        ->name('admin.asset-borrowings.reject');
+    Route::post('/admin/asset-borrowings/{id}/handout', [AdminController::class, 'handoutAssetBorrowing'])
+        ->name('admin.asset-borrowings.handout');
+    Route::post('/admin/asset-borrowings/{id}/receive', [AdminController::class, 'receiveAssetBorrowing'])
+        ->name('admin.asset-borrowings.receive');
 });
 
 // Super Admin Only Routes

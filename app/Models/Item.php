@@ -40,6 +40,14 @@ class Item extends Model
     }
 
     /**
+     * Get all borrowing items
+     */
+    public function borrowingItems(): HasMany
+    {
+        return $this->hasMany(AssetBorrowingItem::class);
+    }
+
+    /**
      * Check if this item tracks individual units
      */
     public function hasIndividualUnits(): bool
