@@ -50,18 +50,4 @@ class BpsRequestController extends Controller
 
         return back()->with('success', 'Permintaan data berhasil ditandai selesai!');
     }
-
-    /**
-     * Add admin notes
-     */
-    public function updateNotes(Request $req, BpsRequest $request)
-    {
-        $validated = $req->validate([
-            'admin_notes' => 'nullable|string|max:1000',
-        ]);
-
-        $request->update($validated);
-
-        return back()->with('success', 'Catatan berhasil disimpan!');
-    }
 }

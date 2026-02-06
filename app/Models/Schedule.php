@@ -21,6 +21,7 @@ class Schedule extends Model
         'type',
         'booking_id',
         'komting',
+        'komting_phone',
         'student_count',
     ];
 

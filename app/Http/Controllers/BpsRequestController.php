@@ -8,8 +8,9 @@ use App\Models\BpsSubData;
 use App\Models\BpsRequestVariable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class BpsRequestController extends Controller
 {
@@ -31,20 +32,39 @@ class BpsRequestController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug logging
+        Log::info('BPS Request submitted', [
+            'selected_data' => $request->input('selected_data'),
+            'selected_master' => $request->input('selected_master'),
+            'applicant_type' => $request->input('applicant_type'),
+        ]);
+
+        // Check if at least one dataset is selected (either sub-data or single-level master)
+        $hasSelectedData = !empty($request->input('selected_data', []));
+        $hasSelectedMaster = !empty($request->input('selected_master', []));
+        
+        if (!$hasSelectedData && !$hasSelectedMaster) {
+            return back()->withInput()->withErrors(['selected_data' => 'Pilih minimal satu dataset']);
+        }
+
         // Base validation rules
         $rules = [
             'applicant_type' => 'required|in:mahasiswa,dosen',
-            'name' => 'required|string|max:255|regex:/^[a-zA-Z\s\.\']+$/',
-            'email' => 'required|email:rfc,dns|max:255',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
             'phone' => ['required', 'string', 'regex:/^08[0-9]{8,13}$/'],
             'purpose' => 'required|in:' . implode(',', BpsRequest::PURPOSES),
             'purpose_other' => 'required_if:purpose,Lainnya|nullable|string|max:255',
             'has_lecturer_collaboration' => 'required|boolean',
-            'collaborating_lecturer_name' => 'required_if:has_lecturer_collaboration,1|nullable|string|max:255',
-            'selected_data' => 'required|array|min:1',
+            'collaborating_lecturer_name' => ['required_if:has_lecturer_collaboration,1', 'nullable', 'string', 'max:255'],
+            'selected_data' => 'nullable|array',
             'selected_data.*' => 'exists:bps_sub_data,id',
-            'variables' => 'required|array',
+            'selected_master' => 'nullable|array',
+            'selected_master.*' => 'exists:bps_master_data,id',
+            'variables' => 'nullable|array',
             'variables.*' => 'nullable|string|max:1000',
+            'master_variables' => 'nullable|array',
+            'master_variables.*' => 'nullable|string|max:1000',
             'statement_letter' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'agreement_accepted' => 'required|accepted',
         ];
@@ -63,10 +83,9 @@ class BpsRequestController extends Controller
             $rules['nip'] = ['required', 'string', 'regex:/^[0-9]{18}$/'];
         }
 
-        $validated = $request->validate($rules, [
+        $messages = [
             'applicant_type.required' => 'Pilih status peminjam',
             'name.required' => 'Nama wajib diisi',
-            'name.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, dan apostrof',
             'email.required' => 'Email wajib diisi',
             'email.email' => 'Format email tidak valid',
             'phone.required' => 'Nomor WhatsApp wajib diisi',
@@ -91,7 +110,19 @@ class BpsRequestController extends Controller
             'statement_letter.max' => 'Ukuran surat pernyataan maksimal 5MB',
             'agreement_accepted.required' => 'Anda harus menyetujui peraturan penggunaan data',
             'agreement_accepted.accepted' => 'Anda harus menyetujui peraturan penggunaan data',
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            Log::warning('BPS Request validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'input' => $request->except(['ktm', 'statement_letter']),
+            ]);
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
 
         try {
             DB::beginTransaction();
@@ -125,27 +156,45 @@ class BpsRequestController extends Controller
                 'status' => 'pending',
             ]);
 
-            // Attach selected datasets
-            $bpsRequest->subData()->attach($validated['selected_data']);
+            // Attach selected datasets (sub-data)
+            if (!empty($validated['selected_data'])) {
+                $bpsRequest->subData()->attach($validated['selected_data']);
 
-            // Save variables for each selected dataset
-            foreach ($validated['selected_data'] as $subDataId) {
-                if (isset($validated['variables'][$subDataId]) && !empty($validated['variables'][$subDataId])) {
-                    BpsRequestVariable::create([
-                        'request_id' => $bpsRequest->id,
-                        'sub_data_id' => $subDataId,
-                        'variables' => $validated['variables'][$subDataId],
-                    ]);
+                // Save variables for each selected sub-data
+                foreach ($validated['selected_data'] as $subDataId) {
+                    if (isset($validated['variables'][$subDataId]) && !empty($validated['variables'][$subDataId])) {
+                        BpsRequestVariable::create([
+                            'request_id' => $bpsRequest->id,
+                            'sub_data_id' => $subDataId,
+                            'variables' => $validated['variables'][$subDataId],
+                        ]);
+                    }
+                }
+            }
+
+            // Save single-level master data (has_sub_data = false)
+            if (!empty($validated['selected_master'])) {
+                foreach ($validated['selected_master'] as $masterId) {
+                    if (isset($validated['master_variables'][$masterId]) && !empty($validated['master_variables'][$masterId])) {
+                        BpsRequestVariable::create([
+                            'request_id' => $bpsRequest->id,
+                            'master_id' => $masterId,
+                            'sub_data_id' => null,
+                            'variables' => $validated['master_variables'][$masterId],
+                        ]);
+                    }
                 }
             }
 
             DB::commit();
 
-            return redirect()->route('bps.success', ['token' => $bpsRequest->tracking_token])
+            return redirect()->route('bps.success', ['id' => $bpsRequest->id])
                 ->with('success', 'Permohonan data BPS berhasil diajukan!');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            Log::error('BPS request submission error: ' . $e->getMessage());
             
             // Clean up uploaded files if transaction failed
             if (isset($statementLetterPath)) {
@@ -163,9 +212,9 @@ class BpsRequestController extends Controller
     /**
      * Show success page after submission
      */
-    public function success($token)
+    public function success($id)
     {
-        $bpsRequest = BpsRequest::where('tracking_token', $token)->firstOrFail();
+        $bpsRequest = BpsRequest::findOrFail($id);
         
         return view('bps.success', compact('bpsRequest'));
     }

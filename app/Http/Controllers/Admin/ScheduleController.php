@@ -589,11 +589,12 @@ class ScheduleController extends Controller
             $rules['course_name'] = 'required|string|max:255';
             $rules['lecturer_name'] = 'required|string|max:255';
             $rules['komting'] = 'nullable|string|max:255';
+            $rules['komting_phone'] = 'nullable|string|max:20';
         } elseif ($request->type === 'non_perkuliahan') {
             $rules['activity_name'] = 'required|string|max:255';
             // Use constant from Booking model to avoid duplication with migration ENUM
             $rules['activity_type'] = 'required|in:' . implode(',', Booking::ACTIVITY_TYPES);
-            $rules['position'] = 'required|string|max:255';
+            $rules['position'] = 'nullable|string|max:255'; // Made optional
         } else {
             // Regular type - fallback
             $rules['course'] = 'required|string|max:255';
@@ -625,10 +626,12 @@ class ScheduleController extends Controller
             $scheduleData['course'] = $validated['course_name'];
             $scheduleData['lecturer'] = $validated['lecturer_name'];
             $scheduleData['komting'] = $validated['komting'] ?? null;
+            $scheduleData['komting_phone'] = $validated['komting_phone'] ?? null;
         } elseif ($type === 'non_perkuliahan') {
             $scheduleData['course'] = $validated['activity_name'];
             $scheduleData['lecturer'] = null;
             $scheduleData['komting'] = null;
+            $scheduleData['komting_phone'] = null;
         } else {
             // Regular type - fallback
             $scheduleData['course'] = $validated['course'] ?? 'Peminjaman';

@@ -39,7 +39,7 @@ class BpsMasterDataController extends Controller
             'code' => 'required|string|max:50|unique:bps_master_data,code',
             'description' => 'nullable|string|max:500',
             'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
+            'has_sub_data' => 'boolean',
         ]);
 
         BpsMasterData::create($validated);
@@ -66,7 +66,7 @@ class BpsMasterDataController extends Controller
             'code' => 'required|string|max:50|unique:bps_master_data,code,' . $masterDatum->id,
             'description' => 'nullable|string|max:500',
             'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
+            'has_sub_data' => 'boolean',
         ]);
 
         $masterDatum->update($validated);

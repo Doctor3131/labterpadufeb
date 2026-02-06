@@ -16,12 +16,12 @@ class BpsMasterData extends Model
         'code',
         'description',
         'is_active',
-        'sort_order',
+        'has_sub_data',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'sort_order' => 'integer',
+        'has_sub_data' => 'boolean',
     ];
 
     /**
@@ -29,7 +29,7 @@ class BpsMasterData extends Model
      */
     public function subData()
     {
-        return $this->hasMany(BpsSubData::class, 'master_id')->orderBy('sort_order');
+        return $this->hasMany(BpsSubData::class, 'master_id')->orderBy('name');
     }
 
     /**
@@ -39,7 +39,7 @@ class BpsMasterData extends Model
     {
         return $this->hasMany(BpsSubData::class, 'master_id')
             ->where('is_active', true)
-            ->orderBy('sort_order');
+            ->orderBy('name');
     }
 
     /**
@@ -55,6 +55,6 @@ class BpsMasterData extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('sort_order');
+        return $query->orderBy('name');
     }
 }

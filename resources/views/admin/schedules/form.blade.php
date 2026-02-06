@@ -172,6 +172,13 @@
                                    placeholder="Contoh: Ahmad Faizal"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">No. Telepon Komting</label>
+                            <input type="text" name="komting_phone" id="komting_phone"
+                                   value="{{ old('komting_phone', $schedule->komting_phone ?? '') }}"
+                                   placeholder="Contoh: 08123456789"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        </div>
                     </div>
                 </div>
 
@@ -200,7 +207,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Posisi Peminjam *</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Posisi Peminjam</label>
                             <input type="text" name="position" id="position"
                                    value="{{ old('position', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->position : '') }}"
                                    placeholder="Contoh: Ketua Panitia"
@@ -369,7 +376,7 @@
             if (!container) return;
             
             const inputs = container.querySelectorAll('input, select, textarea');
-            const optionalFields = ['equipment_needs', 'lecturer', 'komting'];
+            const optionalFields = ['equipment_needs', 'lecturer', 'komting', 'komting_phone', 'position'];
             
             inputs.forEach(input => {
                 const fieldName = input.name || input.id;

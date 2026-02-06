@@ -56,7 +56,8 @@
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
         }
-        .dataset-checkbox:checked + label {
+        .dataset-checkbox:checked + label,
+        .master-checkbox:checked + label {
             background-color: #dbeafe;
             border-color: #3b82f6;
         }
@@ -66,10 +67,12 @@
         .sub-data-item:hover {
             background-color: #f0f9ff;
         }
-        .variable-input-container {
+        .variable-input-container,
+        .master-variable-container {
             display: none;
         }
-        .variable-input-container.show {
+        .variable-input-container.show,
+        .master-variable-container.show {
             display: block;
         }
     </style>
@@ -180,7 +183,7 @@
         <div class="bg-white rounded-xl shadow-lg p-4 md:p-8">
             <!-- Error Messages -->
             @if ($errors->any())
-                <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div id="error-box" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center mb-2">
                         <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -193,6 +196,15 @@
                         @endforeach
                     </ul>
                 </div>
+                <script>
+                    // Scroll to error box on page load
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const errorBox = document.getElementById('error-box');
+                        if (errorBox) {
+                            errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    });
+                </script>
             @endif
 
             <!-- Step Indicator -->
@@ -269,7 +281,6 @@
                             Alamat Surel (Email) <span class="text-red-500">*</span>
                         </label>
                         <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                             title="Masukkan alamat email yang valid"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="email@gmail.com (bukan SSO)">
@@ -317,7 +328,7 @@
                         <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" required
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="08xxxxxxxxxx"
-                            pattern="^08[0-9]{8,13}$"
+                            pattern="08[0-9]{8,13}"
                             minlength="10"
                             maxlength="15"
                             inputmode="numeric"
@@ -449,33 +460,58 @@
                                 </svg>
                             </button>
                             <div class="master-accordion-content hidden p-4 bg-white border-t">
-                                @if($master->activeSubData->count() > 0)
-                                    <div class="space-y-2">
-                                        @foreach($master->activeSubData as $subData)
-                                        <div class="sub-data-item">
-                                            <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
-                                                <input type="checkbox" name="selected_data[]" value="{{ $subData->id }}" 
-                                                    class="dataset-checkbox mt-1 mr-3 text-blue-600 focus:ring-blue-500 rounded"
-                                                    data-subdata-id="{{ $subData->id }}"
-                                                    data-subdata-name="{{ $subData->name }}"
-                                                    {{ in_array($subData->id, old('selected_data', [])) ? 'checked' : '' }}>
-                                                <span class="text-gray-700">{{ $subData->name }}</span>
-                                            </label>
-                                            <!-- Variable input for this dataset -->
-                                            <div class="variable-input-container ml-8 mt-2" id="var-container-{{ $subData->id }}">
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Kode Variabel untuk {{ $subData->name }}:
+                                @if($master->has_sub_data)
+                                    {{-- Master data with sub-data: show sub-data checkboxes --}}
+                                    @if($master->activeSubData->count() > 0)
+                                        <div class="space-y-2">
+                                            @foreach($master->activeSubData as $subData)
+                                            <div class="sub-data-item">
+                                                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                                                    <input type="checkbox" name="selected_data[]" value="{{ $subData->id }}" 
+                                                        class="dataset-checkbox mt-1 mr-3 text-blue-600 focus:ring-blue-500 rounded"
+                                                        data-subdata-id="{{ $subData->id }}"
+                                                        data-subdata-name="{{ $subData->name }}"
+                                                        {{ in_array($subData->id, old('selected_data', [])) ? 'checked' : '' }}>
+                                                    <span class="text-gray-700">{{ $subData->name }}</span>
                                                 </label>
-                                                <textarea name="variables[{{ $subData->id }}]" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                    placeholder="Contoh: B41K10 B41K7 R1208">{{ old('variables.'.$subData->id) }}</textarea>
-                                                <p class="text-xs text-gray-500 mt-1">*Pisahkan kode dengan spasi. Gunakan huruf kapital.</p>
+                                                <!-- Variable input for this dataset -->
+                                                <div class="variable-input-container ml-8 mt-2" id="var-container-{{ $subData->id }}">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                        Kode Variabel untuk {{ $subData->name }}:
+                                                    </label>
+                                                    <textarea name="variables[{{ $subData->id }}]" rows="2"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                        placeholder="Contoh: B41K10 B41K7 R1208">{{ old('variables.'.$subData->id) }}</textarea>
+                                                    <p class="text-xs text-gray-500 mt-1">*Pisahkan kode dengan spasi. Gunakan huruf kapital.</p>
+                                                </div>
                                             </div>
+                                            @endforeach
                                         </div>
-                                        @endforeach
-                                    </div>
+                                    @else
+                                        <p class="text-sm text-gray-500 italic">Belum ada data tersedia untuk kategori ini</p>
+                                    @endif
                                 @else
-                                    <p class="text-sm text-gray-500 italic">Belum ada data tersedia untuk kategori ini</p>
+                                    {{-- Single-level master data: direct variable input --}}
+                                    <div class="sub-data-item">
+                                        <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                                            <input type="checkbox" name="selected_master[]" value="{{ $master->id }}" 
+                                                class="master-checkbox mt-1 mr-3 text-blue-600 focus:ring-blue-500 rounded"
+                                                data-master-id="{{ $master->id }}"
+                                                data-master-name="{{ $master->name }}"
+                                                {{ in_array($master->id, old('selected_master', [])) ? 'checked' : '' }}>
+                                            <span class="text-gray-700">Pilih {{ $master->name }}</span>
+                                        </label>
+                                        <!-- Variable input for this master data -->
+                                        <div class="master-variable-container ml-8 mt-2" id="master-var-container-{{ $master->id }}">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                                Kode Variabel untuk {{ $master->name }}:
+                                            </label>
+                                            <textarea name="master_variables[{{ $master->id }}]" rows="2"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                placeholder="Contoh: B41K10 B41K7 R1208">{{ old('master_variables.'.$master->id) }}</textarea>
+                                            <p class="text-xs text-gray-500 mt-1">*Pisahkan kode dengan spasi. Gunakan huruf kapital.</p>
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -745,17 +781,28 @@
             }
 
             if (step === 2) {
-                const selectedData = document.querySelectorAll('input[name="selected_data[]"]:checked');
-                if (selectedData.length === 0) {
+                const selectedSubData = document.querySelectorAll('input[name="selected_data[]"]:checked');
+                const selectedMaster = document.querySelectorAll('input[name="selected_master[]"]:checked');
+                
+                if (selectedSubData.length === 0 && selectedMaster.length === 0) {
                     alert('Pilih minimal satu dataset');
                     return false;
                 }
 
-                // Check if variables are filled for selected datasets
+                // Check if variables are filled for selected sub-data
                 let hasVariables = false;
-                selectedData.forEach(checkbox => {
+                selectedSubData.forEach(checkbox => {
                     const subDataId = checkbox.dataset.subdataId;
                     const variableInput = document.querySelector(`textarea[name="variables[${subDataId}]"]`);
+                    if (variableInput && variableInput.value.trim()) {
+                        hasVariables = true;
+                    }
+                });
+
+                // Check if variables are filled for selected single-level master data
+                selectedMaster.forEach(checkbox => {
+                    const masterId = checkbox.dataset.masterId;
+                    const variableInput = document.querySelector(`textarea[name="master_variables[${masterId}]"]`);
                     if (variableInput && variableInput.value.trim()) {
                         hasVariables = true;
                     }
@@ -846,7 +893,7 @@
             });
         });
 
-        // Handle dataset checkbox
+        // Handle dataset checkbox (sub-data)
         document.querySelectorAll('.dataset-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 const subDataId = this.dataset.subdataId;
@@ -862,17 +909,43 @@
             });
         });
 
+        // Handle master checkbox (single-level data)
+        document.querySelectorAll('.master-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const masterId = this.dataset.masterId;
+                const container = document.getElementById('master-var-container-' + masterId);
+                
+                if (this.checked) {
+                    container.classList.add('show');
+                } else {
+                    container.classList.remove('show');
+                }
+
+                updateSelectedSummary();
+            });
+        });
+
         function updateSelectedSummary() {
-            const selectedCheckboxes = document.querySelectorAll('.dataset-checkbox:checked');
+            const selectedSubData = document.querySelectorAll('.dataset-checkbox:checked');
+            const selectedMaster = document.querySelectorAll('.master-checkbox:checked');
             const summary = document.getElementById('selected-data-summary');
             const list = document.getElementById('selected-data-list');
             
-            if (selectedCheckboxes.length > 0) {
+            if (selectedSubData.length > 0 || selectedMaster.length > 0) {
                 summary.classList.remove('hidden');
                 list.innerHTML = '';
-                selectedCheckboxes.forEach(cb => {
+                
+                // Add sub-data items
+                selectedSubData.forEach(cb => {
                     const li = document.createElement('li');
                     li.textContent = '• ' + cb.dataset.subdataName;
+                    list.appendChild(li);
+                });
+                
+                // Add single-level master items
+                selectedMaster.forEach(cb => {
+                    const li = document.createElement('li');
+                    li.textContent = '• ' + cb.dataset.masterName;
                     list.appendChild(li);
                 });
             } else {
@@ -932,6 +1005,29 @@
                 }
             });
 
+            // Determine initial step based on validation errors
+            @if($errors->any())
+                // Check which step has errors
+                const step1Fields = ['applicant_type', 'name', 'email', 'phone', 'nim', 'nip', 'study_program', 'study_program_other', 'purpose', 'purpose_other', 'has_lecturer_collaboration', 'collaborating_lecturer_name'];
+                const step2Fields = ['selected_data', 'selected_master', 'variables', 'master_variables'];
+                const step3Fields = ['ktm', 'statement_letter', 'agreement_accepted'];
+                
+                const errors = @json($errors->keys());
+                let targetStep = 1;
+                
+                for (const field of errors) {
+                    if (step3Fields.some(f => field.startsWith(f))) {
+                        targetStep = Math.max(targetStep, 3);
+                    } else if (step2Fields.some(f => field.startsWith(f))) {
+                        targetStep = Math.max(targetStep, 2);
+                    }
+                }
+                
+                if (targetStep > 1) {
+                    showStep(targetStep);
+                }
+            @endif
+
             // Trigger change events for pre-filled values
             const checkedApplicant = document.querySelector('input[name="applicant_type"]:checked');
             if (checkedApplicant) {
@@ -952,6 +1048,13 @@
             document.querySelectorAll('.dataset-checkbox:checked').forEach(cb => {
                 const subDataId = cb.dataset.subdataId;
                 document.getElementById('var-container-' + subDataId).classList.add('show');
+            });
+
+            // Show variable containers for pre-checked single-level master data
+            document.querySelectorAll('.master-checkbox:checked').forEach(cb => {
+                const masterId = cb.dataset.masterId;
+                const container = document.getElementById('master-var-container-' + masterId);
+                if (container) container.classList.add('show');
             });
 
             updateSelectedSummary();

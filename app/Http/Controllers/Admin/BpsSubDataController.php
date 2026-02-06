@@ -37,7 +37,6 @@ class BpsSubDataController extends Controller
             'code' => 'nullable|string|max:50',
             'description' => 'nullable|string|max:500',
             'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
         ]);
 
         $validated['master_id'] = $master->id;
@@ -65,7 +64,6 @@ class BpsSubDataController extends Controller
             'code' => 'nullable|string|max:50',
             'description' => 'nullable|string|max:500',
             'is_active' => 'boolean',
-            'sort_order' => 'integer|min:0',
         ]);
 
         $subDatum->update($validated);

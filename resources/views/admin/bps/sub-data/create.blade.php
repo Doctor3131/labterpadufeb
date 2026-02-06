@@ -46,13 +46,6 @@
                 </div>
 
                 <div>
-                    <label for="sort_order" class="block text-sm font-semibold text-gray-700 mb-2">Urutan</label>
-                    <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', 0) }}" min="0"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
-                    @error('sort_order')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
                     <label class="flex items-center">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
                             class="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500">

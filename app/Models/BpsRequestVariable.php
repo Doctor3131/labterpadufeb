@@ -14,6 +14,7 @@ class BpsRequestVariable extends Model
     protected $fillable = [
         'request_id',
         'sub_data_id',
+        'master_id',
         'variables',
     ];
 
@@ -31,5 +32,13 @@ class BpsRequestVariable extends Model
     public function subData()
     {
         return $this->belongsTo(BpsSubData::class, 'sub_data_id');
+    }
+
+    /**
+     * Get the master data this belongs to (for single-level data)
+     */
+    public function masterData()
+    {
+        return $this->belongsTo(BpsMasterData::class, 'master_id');
     }
 }

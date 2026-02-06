@@ -41,6 +41,25 @@ class BpsRequest extends Model
         'completed',
     ];
 
+    /**
+     * Valid study programs
+     */
+    public const STUDY_PROGRAMS = [
+        'S1- Ekonomi',
+        'S1- Manajemen',
+        'S1- Akuntansi',
+        'S1- Ekonomi Islam',
+        'S1- Bisnis Digital',
+        'S2- Ekonomi',
+        'S2- Manajemen',
+        'S2- Akuntansi',
+        'Sekolah Vokasi',
+        'S3- PDIE Ilmu Ekonomi',
+        'S3- PDIE Akuntansi',
+        'S3- PDIE Manajemen',
+        'Lainnya',
+    ];
+
     protected $fillable = [
         'applicant_type',
         'name',
@@ -59,8 +78,6 @@ class BpsRequest extends Model
         'status',
         'completed_at',
         'handled_by',
-        'tracking_token',
-        'admin_notes',
     ];
 
     protected $casts = [
@@ -68,32 +85,6 @@ class BpsRequest extends Model
         'agreement_accepted' => 'boolean',
         'completed_at' => 'datetime',
     ];
-
-    /**
-     * Boot the model
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            if (empty($model->tracking_token)) {
-                $model->tracking_token = static::generateTrackingToken();
-            }
-        });
-    }
-
-    /**
-     * Generate unique tracking token
-     */
-    public static function generateTrackingToken(): string
-    {
-        do {
-            $token = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 12));
-        } while (static::where('tracking_token', $token)->exists());
-
-        return $token;
-    }
 
     /**
      * Get the user who handled this request

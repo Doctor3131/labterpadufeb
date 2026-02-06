@@ -85,20 +85,4 @@ class RefinitivRequestController extends Controller
         
         return redirect()->back()->with('success', 'Status kehadiran berhasil direset.');
     }
-
-    /**
-     * Update admin notes.
-     */
-    public function updateNotes(Request $request, RefinitivRequest $refinitivRequest)
-    {
-        $validated = $request->validate([
-            'admin_notes' => 'nullable|string|max:1000',
-        ]);
-        
-        $refinitivRequest->update([
-            'admin_notes' => $validated['admin_notes'],
-        ]);
-        
-        return redirect()->back()->with('success', 'Catatan berhasil disimpan.');
-    }
 }

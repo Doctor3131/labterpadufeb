@@ -28,7 +28,6 @@
                 </div>
             </div>
             <div class="text-right text-sm text-gray-500">
-                <p>Tracking: <span class="font-mono font-bold">{{ $bpsRequest->tracking_token }}</span></p>
                 <p>Dibuat: {{ $bpsRequest->created_at->format('d/m/Y H:i') }}</p>
             </div>
         </div>
@@ -136,6 +135,7 @@
         </h2>
         
         <div class="space-y-4">
+            {{-- Sub-data based datasets --}}
             @foreach($bpsRequest->subData as $subData)
             <div class="border rounded-xl p-4">
                 <div class="flex items-start justify-between mb-2">
@@ -151,6 +151,25 @@
                 
                 @if($variable && $variable->variables)
                 <div class="mt-3 bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1">Kode Variabel:</p>
+                    <p class="font-mono text-sm text-gray-800">{{ $variable->variables }}</p>
+                </div>
+                @endif
+            </div>
+            @endforeach
+
+            {{-- Single-level master data (has_sub_data = false) --}}
+            @foreach($bpsRequest->variables->whereNotNull('master_id') as $variable)
+            <div class="border rounded-xl p-4 border-indigo-200 bg-indigo-50/30">
+                <div class="flex items-start justify-between mb-2">
+                    <div>
+                        <span class="text-xs text-indigo-600 uppercase tracking-wide font-semibold">Data Langsung</span>
+                        <h4 class="font-semibold text-gray-800">{{ $variable->masterData->name ?? 'Unknown' }}</h4>
+                    </div>
+                </div>
+                
+                @if($variable->variables)
+                <div class="mt-3 bg-white rounded-lg p-3">
                     <p class="text-xs text-gray-500 mb-1">Kode Variabel:</p>
                     <p class="font-mono text-sm text-gray-800">{{ $variable->variables }}</p>
                 </div>

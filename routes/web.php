@@ -47,7 +47,7 @@ Route::get('/bps', [BpsRequestController::class, 'create'])->name('bps.create');
 Route::post('/bps', [BpsRequestController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('bps.store');
-Route::get('/bps/success/{token}', [BpsRequestController::class, 'success'])->name('bps.success');
+Route::get('/bps/success/{id}', [BpsRequestController::class, 'success'])->name('bps.success');
 Route::get('/api/bps/sub-data/{master}', [BpsRequestController::class, 'getSubData'])->name('api.bps.sub-data');
 
 // Refinitiv Data Request Routes (Public)
@@ -125,7 +125,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/bps/requests', [App\Http\Controllers\Admin\BpsRequestController::class, 'index'])->name('admin.bps.requests.index');
     Route::get('/admin/bps/requests/{request}', [App\Http\Controllers\Admin\BpsRequestController::class, 'show'])->name('admin.bps.requests.show');
     Route::put('/admin/bps/requests/{request}/complete', [App\Http\Controllers\Admin\BpsRequestController::class, 'markCompleted'])->name('admin.bps.requests.complete');
-    Route::put('/admin/bps/requests/{request}/notes', [App\Http\Controllers\Admin\BpsRequestController::class, 'updateNotes'])->name('admin.bps.requests.notes');
 
     // Admin BPS Master Data CRUD
     Route::resource('/admin/bps/master-data', App\Http\Controllers\Admin\BpsMasterDataController::class)
@@ -149,7 +148,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/refinitiv/{request}/hadir', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'markHadir'])->name('admin.refinitiv.hadir');
     Route::put('/admin/refinitiv/{request}/tidak-hadir', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'markTidakHadir'])->name('admin.refinitiv.tidak-hadir');
     Route::put('/admin/refinitiv/{request}/reset', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'resetStatus'])->name('admin.refinitiv.reset');
-    Route::put('/admin/refinitiv/{request}/notes', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'updateNotes'])->name('admin.refinitiv.notes');
 });
 
 // Super Admin Only Routes

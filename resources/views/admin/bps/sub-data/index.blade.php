@@ -52,7 +52,6 @@
                         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nama</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Kode</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Status</th>
-                        <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Urutan</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
                     </tr>
                 </thead>
@@ -80,9 +79,6 @@
                                 </button>
                             </form>
                         </td>
-                        <td class="px-6 py-4 text-center text-gray-600">
-                            {{ $sub->sort_order }}
-                        </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('admin.bps.sub-data.edit', [$master, $sub]) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
@@ -104,7 +100,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
                             Belum ada sub data untuk kategori ini
                         </td>
                     </tr>

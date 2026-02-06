@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BpsRequest;
 use App\Models\RefinitivRequest;
+use App\Models\Schedule;
 use App\Models\Lab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -44,43 +46,123 @@ class ReportController extends Controller
 
     /**
      * Build base query with common filters for Lab bookings
+     * Now includes manually added schedules (without booking_id) as "approved" entries
      */
     private function buildLabQuery(Request $request)
     {
-        $query = Booking::with('lab')
-            ->whereIn('status', ['approved', 'pending', 'rejected']);
+        // Get approved bookings
+        $bookingsQuery = Booking::with('lab')
+            ->whereIn('status', ['approved']);
 
         if ($request->filled('start_month')) {
             $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
-            $query->where('created_at', '>=', $startDate);
+            $bookingsQuery->where('created_at', '>=', $startDate);
         }
 
         if ($request->filled('end_month')) {
             $endDate = Carbon::parse($request->end_month . '-01')->endOfMonth();
-            $query->where('created_at', '<=', $endDate);
+            $bookingsQuery->where('created_at', '<=', $endDate);
         }
 
         if ($request->filled('lab_id')) {
-            $query->where('lab_id', $request->lab_id);
+            $bookingsQuery->where('lab_id', $request->lab_id);
         }
 
         if ($request->filled('type')) {
-            $query->where('booking_type', $request->type);
+            $bookingsQuery->where('booking_type', $request->type);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        return $bookingsQuery;
+    }
+
+    /**
+     * Get manually added schedules (without booking_id) transformed to booking-like format
+     */
+    private function getManualSchedules(Request $request)
+    {
+        $schedulesQuery = Schedule::with('lab')
+            ->whereNull('booking_id'); // Only schedules added manually by admin
+
+        if ($request->filled('start_month')) {
+            $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
+            $schedulesQuery->where('created_at', '>=', $startDate);
         }
 
-        return $query;
+        if ($request->filled('end_month')) {
+            $endDate = Carbon::parse($request->end_month . '-01')->endOfMonth();
+            $schedulesQuery->where('created_at', '<=', $endDate);
+        }
+
+        if ($request->filled('lab_id')) {
+            $schedulesQuery->where('lab_id', $request->lab_id);
+        }
+
+        if ($request->filled('type')) {
+            $schedulesQuery->where('type', $request->type);
+        }
+
+        $schedules = $schedulesQuery->get();
+
+        // Transform schedules to booking-like format
+        return $schedules->map(function ($schedule) {
+            return (object) [
+                'id' => 'schedule_' . $schedule->id,
+                'created_at' => $schedule->created_at,
+                'pic_name' => $schedule->komting ?? $schedule->lecturer ?? 'Admin',
+                'booking_type' => $schedule->type,
+                'lab' => $schedule->lab,
+                'lab_id' => $schedule->lab_id,
+                'day' => $schedule->day,
+                'booking_date' => $schedule->start_date,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
+                'participant_count' => $schedule->student_count ?? 0,
+                'status' => 'approved', // Manual schedules are always "approved"
+                'is_manual_schedule' => true, // Flag to identify
+            ];
+        });
+    }
+
+    /**
+     * Get combined lab data (bookings + manual schedules) with pagination
+     */
+    private function getCombinedLabData(Request $request, $perPage = 50)
+    {
+        // Get bookings
+        $bookings = $this->buildLabQuery($request)->get()->map(function ($booking) {
+            $booking->is_manual_schedule = false;
+            return $booking;
+        });
+
+        // Get manual schedules
+        $manualSchedules = $this->getManualSchedules($request);
+
+        // Merge and sort by created_at desc
+        $combined = $bookings->concat($manualSchedules)
+            ->sortByDesc('created_at')
+            ->values();
+
+        // Manual pagination
+        $page = request()->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+        $items = $combined->slice($offset, $perPage)->values();
+
+        return new LengthAwarePaginator(
+            $items,
+            $combined->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
     }
 
     /**
      * Build base query for BPS requests
+     * Only includes completed/sent requests
      */
     private function buildBpsQuery(Request $request)
     {
-        $query = BpsRequest::query();
+        $query = BpsRequest::where('status', 'completed'); // Only completed/sent
 
         if ($request->filled('start_month')) {
             $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
@@ -97,10 +179,11 @@ class ReportController extends Controller
 
     /**
      * Build base query for Refinitiv requests
+     * Only includes requests marked as attended (hadir)
      */
     private function buildRefinitivQuery(Request $request)
     {
-        $query = RefinitivRequest::query();
+        $query = RefinitivRequest::where('attendance_status', 'hadir'); // Only attended
 
         if ($request->filled('start_month')) {
             $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
@@ -152,15 +235,14 @@ class ReportController extends Controller
             'end_month' => 'nullable|date_format:Y-m',
             'lab_id' => 'nullable|exists:labs,id',
             'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
-            'status' => 'nullable|in:approved,pending,rejected',
         ]);
 
         $reportType = $request->get('report_type', 'lab');
         $data = collect();
         
         if ($reportType === 'lab') {
-            $query = $this->buildLabQuery($request);
-            $data = $query->orderBy('created_at', 'desc')->paginate(50)->withQueryString();
+            // Use combined data (bookings + manual schedules)
+            $data = $this->getCombinedLabData($request);
         } elseif ($reportType === 'bps') {
             $query = $this->buildBpsQuery($request);
             $data = $query->orderBy('created_at', 'desc')->paginate(50)->withQueryString();
@@ -172,6 +254,14 @@ class ReportController extends Controller
         $labs = Lab::orderBy('name')->get();
         $types = $this->typeLabels;
         $reportTypes = $this->reportTypes;
+
+        // Return partial view for AJAX requests
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.reports.partials.table', compact('data', 'reportType', 'reportTypes'))->render(),
+                'total' => $data->total(),
+            ]);
+        }
 
         return view('admin.reports.index', compact('data', 'labs', 'types', 'reportType', 'reportTypes'));
     }
@@ -185,6 +275,8 @@ class ReportController extends Controller
             'report_type' => 'nullable|in:lab,bps,refinitiv',
             'start_month' => 'nullable|date_format:Y-m',
             'end_month' => 'nullable|date_format:Y-m',
+            'lab_id' => 'nullable|exists:labs,id',
+            'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
         ]);
 
         $reportType = $request->get('report_type', 'lab');
@@ -206,17 +298,28 @@ class ReportController extends Controller
 
     /**
      * Export Lab bookings to CSV
+     * Includes both approved bookings and manual schedules
      */
     private function exportLabCsv(Request $request, $headers)
     {
-        $bookings = $this->buildLabQuery($request)->orderBy('created_at', 'desc')->get();
+        // Get bookings
+        $bookings = $this->buildLabQuery($request)->orderBy('created_at', 'desc')->get()->map(function ($booking) {
+            $booking->is_manual_schedule = false;
+            return $booking;
+        });
 
-        $callback = function () use ($bookings) {
+        // Get manual schedules
+        $manualSchedules = $this->getManualSchedules($request);
+
+        // Merge and sort
+        $combined = $bookings->concat($manualSchedules)->sortByDesc('created_at');
+
+        $callback = function () use ($combined) {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
             fputcsv($file, [
-                'Tanggal Booking Dibuat',
+                'Tanggal Dibuat',
                 'Nama Peminjam',
                 'Tipe Peminjaman',
                 'Laboratorium',
@@ -226,20 +329,22 @@ class ReportController extends Controller
                 'Jam Selesai',
                 'Jumlah Peserta',
                 'Status',
+                'Sumber',
             ]);
 
-            foreach ($bookings as $booking) {
+            foreach ($combined as $item) {
                 fputcsv($file, [
-                    Carbon::parse($booking->created_at)->format('d/m/Y H:i'),
-                    $booking->pic_name,
-                    $this->typeLabels[$booking->booking_type] ?? $booking->booking_type,
-                    $booking->lab->name ?? '-',
-                    $booking->day,
-                    Carbon::parse($booking->booking_date)->format('d/m/Y'),
-                    Carbon::parse($booking->start_time)->format('H:i'),
-                    Carbon::parse($booking->end_time)->format('H:i'),
-                    $booking->participant_count,
-                    $this->statusLabels[$booking->status] ?? $booking->status,
+                    Carbon::parse($item->created_at)->format('d/m/Y H:i'),
+                    $item->pic_name,
+                    $this->typeLabels[$item->booking_type] ?? $item->booking_type,
+                    $item->lab->name ?? '-',
+                    $item->day,
+                    $item->booking_date ? Carbon::parse($item->booking_date)->format('d/m/Y') : '-',
+                    Carbon::parse($item->start_time)->format('H:i'),
+                    Carbon::parse($item->end_time)->format('H:i'),
+                    $item->participant_count,
+                    $this->statusLabels[$item->status] ?? $item->status,
+                    $item->is_manual_schedule ? 'Jadwal Manual Admin' : 'Booking',
                 ]);
             }
 
@@ -340,6 +445,8 @@ class ReportController extends Controller
             'report_type' => 'nullable|in:lab,bps,refinitiv',
             'start_month' => 'nullable|date_format:Y-m',
             'end_month' => 'nullable|date_format:Y-m',
+            'lab_id' => 'nullable|exists:labs,id',
+            'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
         ]);
 
         $reportType = $request->get('report_type', 'lab');
@@ -376,13 +483,25 @@ class ReportController extends Controller
 
     /**
      * Export Lab bookings to Word
+     * Includes both approved bookings and manual schedules
      */
     private function exportLabWord(Request $request, $headers)
     {
-        $bookings = $this->buildLabQuery($request)->orderBy('created_at', 'desc')->get();
+        // Get bookings
+        $bookings = $this->buildLabQuery($request)->orderBy('created_at', 'desc')->get()->map(function ($booking) {
+            $booking->is_manual_schedule = false;
+            return $booking;
+        });
+
+        // Get manual schedules
+        $manualSchedules = $this->getManualSchedules($request);
+
+        // Merge and sort
+        $combined = $bookings->concat($manualSchedules)->sortByDesc('created_at');
+
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('LAPORAN PEMINJAMAN LABORATORIUM', 'Lab Digital FEB UNDIP', $dateRangeText, $bookings->count() . ' peminjaman');
+        $html = $this->getWordHeader('LAPORAN PEMINJAMAN LABORATORIUM', 'Lab Digital FEB UNDIP', $dateRangeText, $combined->count() . ' peminjaman');
         
         $html .= '
             <table>
@@ -403,19 +522,19 @@ class ReportController extends Controller
                 <tbody>';
 
         $no = 1;
-        foreach ($bookings as $booking) {
+        foreach ($combined as $item) {
             $html .= '
                     <tr>
                         <td class="center">' . $no++ . '</td>
-                        <td>' . Carbon::parse($booking->created_at)->format('d/m/Y H:i') . '</td>
-                        <td>' . htmlspecialchars($booking->pic_name) . '</td>
-                        <td>' . htmlspecialchars($this->typeLabels[$booking->booking_type] ?? $booking->booking_type) . '</td>
-                        <td>' . htmlspecialchars($booking->lab->name ?? '-') . '</td>
-                        <td class="center">' . htmlspecialchars($booking->day) . '</td>
-                        <td class="center">' . Carbon::parse($booking->booking_date)->format('d/m/Y') . '</td>
-                        <td class="center">' . Carbon::parse($booking->start_time)->format('H:i') . '-' . Carbon::parse($booking->end_time)->format('H:i') . '</td>
-                        <td class="center">' . $booking->participant_count . '</td>
-                        <td class="center">' . htmlspecialchars($this->statusLabels[$booking->status] ?? $booking->status) . '</td>
+                        <td>' . Carbon::parse($item->created_at)->format('d/m/Y H:i') . '</td>
+                        <td>' . htmlspecialchars($item->pic_name) . '</td>
+                        <td>' . htmlspecialchars($this->typeLabels[$item->booking_type] ?? $item->booking_type) . '</td>
+                        <td>' . htmlspecialchars($item->lab->name ?? '-') . '</td>
+                        <td class="center">' . htmlspecialchars($item->day) . '</td>
+                        <td class="center">' . ($item->booking_date ? Carbon::parse($item->booking_date)->format('d/m/Y') : '-') . '</td>
+                        <td class="center">' . Carbon::parse($item->start_time)->format('H:i') . '-' . Carbon::parse($item->end_time)->format('H:i') . '</td>
+                        <td class="center">' . $item->participant_count . '</td>
+                        <td class="center">' . htmlspecialchars($this->statusLabels[$item->status] ?? $item->status) . '</td>
                     </tr>';
         }
 
