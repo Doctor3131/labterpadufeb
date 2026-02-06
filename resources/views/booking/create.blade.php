@@ -187,7 +187,7 @@
                             <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required {{ old('booking_type') == 'non_perkuliahan' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
                                 <div class="font-bold text-gray-800 text-sm md:text-lg">Non-Perkuliahan</div>
-                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Kegiatan lain (Ormawa,etc)</div>
+                                <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Kegiatan lain (Ormawa, Pelatihan, etc)</div>
                             </div>
                         </label>
                          <label class="booking-type-card cursor-pointer">
@@ -407,7 +407,7 @@
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Keperluan <span class="text-red-500">*</span></label>
                                 <input type="text" name="purpose" id="purpose" value="{{ old('purpose') }}"
-                                    placeholder="Contoh: Ujian, Kuliah, Mengerjakan tugas pribadi"
+                                    placeholder="Contoh: Ujian, Mengerjakan tugas pribadi"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                         </div>
@@ -498,6 +498,38 @@
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notice Peminjaman Berulang untuk Perkuliahan Tetap - Generic (ketika belum lengkap) -->
+                    <div id="recurring-booking-notice-generic" class="hidden mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-blue-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold text-blue-800">ℹ️ Peminjaman Berulang</p>
+                                <p class="text-sm text-blue-700 mt-1">
+                                    Peminjaman akan berulang sesuai hari, jam, dan lab yang dipilih setiap minggu.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notice Peminjaman Berulang untuk Perkuliahan Tetap - Specific (ketika sudah lengkap) -->
+                    <div id="recurring-booking-notice-specific" class="hidden mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-blue-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold text-blue-800">ℹ️ Peminjaman Berulang</p>
+                                <p class="text-sm text-blue-700 mt-1">
+                                    Peminjaman akan berulang setiap hari <span id="recurring-day-name" class="font-semibold"></span> 
+                                    di jam <span id="recurring-time-range" class="font-semibold"></span> 
+                                    di lab <span id="recurring-lab-name" class="font-semibold"></span>.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -719,6 +751,9 @@
                     
                     // Toggle lab selection based on booking type
                     toggleLabSelection();
+                    
+                    // Update recurring booking notice based on booking type
+                    updateRecurringBookingNotice();
                 }
             }
 
@@ -1044,6 +1079,51 @@
         }
 
         // Step 3 Validation
+        // Update recurring booking notice for perkuliahan tetap
+        function updateRecurringBookingNotice() {
+            const recurringNoticeGeneric = document.getElementById('recurring-booking-notice-generic');
+            const recurringNoticeSpecific = document.getElementById('recurring-booking-notice-specific');
+            const recurringDayName = document.getElementById('recurring-day-name');
+            const recurringTimeRange = document.getElementById('recurring-time-range');
+            const recurringLabName = document.getElementById('recurring-lab-name');
+            
+            const bookingDate = document.getElementById('booking_date').value;
+            const startTime = document.getElementById('start_time').value;
+            const endTime = document.getElementById('end_time').value;
+            const labSelect = document.getElementById('labSelect');
+            const selectedLabOption = labSelect.options[labSelect.selectedIndex];
+            
+            // Only show for perkuliahan_tetap
+            if (selectedBookingType === 'perkuliahan_tetap') {
+                // Check if all fields are filled
+                if (bookingDate && startTime && endTime && labSelect.value) {
+                    // Show specific notice with actual values
+                    const date = new Date(bookingDate);
+                    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    const dayName = dayNames[date.getDay()];
+                    
+                    // Get lab name from selected option text (e.g. "EL. 309 (Kap: 30)" -> "EL. 309")
+                    const labFullText = selectedLabOption.textContent;
+                    const labName = labFullText.split(' (')[0];
+                    
+                    recurringDayName.textContent = dayName;
+                    recurringTimeRange.textContent = startTime + ' - ' + endTime;
+                    recurringLabName.textContent = labName;
+                    
+                    recurringNoticeGeneric.classList.add('hidden');
+                    recurringNoticeSpecific.classList.remove('hidden');
+                } else {
+                    // Show generic notice
+                    recurringNoticeGeneric.classList.remove('hidden');
+                    recurringNoticeSpecific.classList.add('hidden');
+                }
+            } else {
+                // Hide both notices for non perkuliahan_tetap
+                recurringNoticeGeneric.classList.add('hidden');
+                recurringNoticeSpecific.classList.add('hidden');
+            }
+        }
+
         function setupStep3Validation() {
             const bookingDate = document.getElementById('booking_date');
             const participantCount = document.getElementById('participant_count');
@@ -1058,12 +1138,14 @@
                         fetchAvailableLabs();
                     }
                     validateStep3();
+                    updateRecurringBookingNotice();
                 });
             });
 
             labSelect.addEventListener('change', function() {
                 validateStep3();
                 checkCapacityWarning();
+                updateRecurringBookingNotice();
             });
 
             // No need to check conflict when date/time changes
@@ -1329,25 +1411,32 @@
             summary.push(`<div><strong>Waktu:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</div>`);
             summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('participant_count').value} orang</div>`);
             
-            const labSelect = document.getElementById('labSelect');
-            const labName = labSelect.options[labSelect.selectedIndex].text;
-            summary.push(`<div><strong>Lab:</strong> ${labName}</div>`);
-
-            document.getElementById('booking-summary').innerHTML = summary.join('');
-
-            // Check and display capacity warning
-            const participantCount = parseInt(document.getElementById('participant_count').value);
-            const labCapacity = parseInt(labSelect.options[labSelect.selectedIndex].dataset.capacity);
+            // Lab and capacity warning only shown for non-pribadi bookings
             const warningBox = document.getElementById('capacity-warning-text');
+            if (selectedBookingType !== 'pribadi') {
+                const labSelect = document.getElementById('labSelect');
+                const labName = labSelect.options[labSelect.selectedIndex].text;
+                summary.push(`<div><strong>Lab:</strong> ${labName}</div>`);
+                
+                document.getElementById('booking-summary').innerHTML = summary.join('');
 
-            if (labCapacity < participantCount) {
-                // Show warning
-                document.getElementById('warning-participant-count').textContent = participantCount;
-                document.getElementById('warning-lab-capacity').textContent = labCapacity;
-                document.getElementById('warning-overflow').textContent = participantCount - labCapacity;
-                warningBox.classList.remove('hidden');
+                // Check and display capacity warning
+                const participantCount = parseInt(document.getElementById('participant_count').value);
+                const labCapacity = parseInt(labSelect.options[labSelect.selectedIndex].dataset.capacity);
+
+                if (labCapacity < participantCount) {
+                    // Show warning
+                    document.getElementById('warning-participant-count').textContent = participantCount;
+                    document.getElementById('warning-lab-capacity').textContent = labCapacity;
+                    document.getElementById('warning-overflow').textContent = participantCount - labCapacity;
+                    warningBox.classList.remove('hidden');
+                } else {
+                    // Hide warning
+                    warningBox.classList.add('hidden');
+                }
             } else {
-                // Hide warning
+                document.getElementById('booking-summary').innerHTML = summary.join('');
+                // Hide capacity warning for pribadi bookings
                 warningBox.classList.add('hidden');
             }
         }

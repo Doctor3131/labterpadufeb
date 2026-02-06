@@ -107,7 +107,7 @@
                 <p class="text-gray-500 text-sm mb-4">Kelola permintaan data BPS</p>
                 
                 <div class="flex items-center justify-between mb-4">
-                    <span class="text-gray-600 text-sm">Menunggu:</span>
+                    <span class="text-gray-600 text-sm">Pending:</span>
                     <span class="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-bold">
                         {{ $bpsPendingCount }}
                     </span>
@@ -141,7 +141,7 @@
                 <p class="text-gray-500 text-sm mb-4">Kelola akses data Refinitiv</p>
                 
                 <div class="flex items-center justify-between mb-4">
-                    <span class="text-gray-600 text-sm">Menunggu:</span>
+                    <span class="text-gray-600 text-sm">Pending:</span>
                     <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
                         {{ $refinitivPendingCount }}
                     </span>

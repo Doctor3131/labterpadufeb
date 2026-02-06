@@ -253,6 +253,19 @@
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+
+                                <!-- Program Studi Lainnya (conditional) -->
+                                <div id="study_program_other_field" class="md:col-span-2 hidden">
+                                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                                        Program Studi Lainnya <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="study_program_other" id="study_program_other_input" value="{{ old('study_program_other') }}"
+                                        placeholder="Tuliskan program studi Anda"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                    @error('study_program_other')
+                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
 
@@ -465,6 +478,8 @@
             const nipInput = document.getElementById('nip_input');
             const studyProgramField = document.getElementById('study_program_field');
             const studyProgramSelect = document.getElementById('study_program_select');
+            const studyProgramOtherField = document.getElementById('study_program_other_field');
+            const studyProgramOtherInput = document.getElementById('study_program_other_input');
             const ktmField = document.getElementById('ktm_field');
             const ktmRequired = document.getElementById('ktm_required');
             const ktmFileInput = document.getElementById('ktm_file');
@@ -486,6 +501,8 @@
                     studyProgramField.classList.add('hidden');
                     studyProgramSelect.removeAttribute('required');
                     studyProgramSelect.value = '';
+                    studyProgramOtherField.classList.add('hidden');
+                    studyProgramOtherInput.value = '';
                     
                     ktmField.classList.add('hidden');
                     ktmFileInput.removeAttribute('required');
@@ -499,6 +516,7 @@
                     
                     studyProgramField.classList.remove('hidden');
                     studyProgramSelect.setAttribute('required', 'required');
+                    updateStudyProgramOther();
                     
                     ktmField.classList.remove('hidden');
                     ktmFileInput.setAttribute('required', 'required');
@@ -528,6 +546,19 @@
                     }
                 });
             });
+
+            // Study Program select changes
+            function updateStudyProgramOther() {
+                if (studyProgramSelect.value === 'Lainnya') {
+                    studyProgramOtherField.classList.remove('hidden');
+                    studyProgramOtherInput.setAttribute('required', 'required');
+                } else {
+                    studyProgramOtherField.classList.add('hidden');
+                    studyProgramOtherInput.removeAttribute('required');
+                }
+            }
+            
+            studyProgramSelect.addEventListener('change', updateStudyProgramOther);
 
             // Initialize state on page load
             updateFormForApplicantType();

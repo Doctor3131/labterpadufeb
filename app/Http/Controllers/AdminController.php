@@ -22,7 +22,7 @@ class AdminController extends Controller
         // Get counts for each service
         $labPendingCount = Booking::where('status', 'pending')->count();
         $bpsPendingCount = BpsRequest::where('status', 'pending')->count();
-        $refinitivPendingCount = RefinitivRequest::where('attendance_status', 'menunggu')->count();
+        $refinitivPendingCount = RefinitivRequest::where('attendance_status', 'pending')->count();
 
         return view('admin.dashboard', compact(
             'labPendingCount',

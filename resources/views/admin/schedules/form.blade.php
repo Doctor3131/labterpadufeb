@@ -221,62 +221,6 @@
                     </div>
                 </div>
 
-                <!-- Pribadi Fields -->
-                <div id="pribadi-fields" class="hidden mt-6">
-                    <h4 class="font-bold text-gray-800 mb-4 text-lg">Data Peminjaman Pribadi</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Status *</label>
-                            <select name="applicant_status" id="applicant_status"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                                <option value="">Pilih Status</option>
-                                @php
-                                    $currentStatus = old('applicant_status', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->applicant_status : '');
-                                    // If custom_status exists, set applicant_status to "Lainnya"
-                                    if ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi' && $schedule->booking->custom_status) {
-                                        $currentStatus = 'Lainnya';
-                                    }
-                                @endphp
-                                <option value="Mahasiswa" {{ $currentStatus == 'Mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
-                                <option value="Dosen" {{ $currentStatus == 'Dosen' ? 'selected' : '' }}>Dosen</option>
-                                <option value="Pegawai" {{ $currentStatus == 'Pegawai' ? 'selected' : '' }}>Pegawai</option>
-                                <option value="Lainnya" {{ $currentStatus == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
-                            </select>
-                        </div>
-                        
-                        <div id="custom-status-field" style="display: none;">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Status Lainnya *</label>
-                            <input type="text" name="custom_status" id="custom_status"
-                                   value="{{ old('custom_status', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->custom_status : '') }}"
-                                   placeholder="Masukkan status Anda"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Peminjam *</label>
-                            <input type="text" name="applicant_name" id="applicant_name"
-                                   value="{{ old('applicant_name', $schedule->lecturer ?? '') }}"
-                                   placeholder="Contoh: Budi Santoso"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        </div>
-
-                        <div id="class-year-field" style="display: none;">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Angkatan *</label>
-                            <input type="text" name="class_year" id="class_year"
-                                   value="{{ old('class_year', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->class_year : '') }}"
-                                   placeholder="Contoh: 2023" maxlength="4"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Keperluan *</label>
-                            <input type="text" name="purpose" id="purpose"
-                                   value="{{ old('purpose', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'pribadi') ? $schedule->booking->purpose : '') }}"
-                                   placeholder="Contoh: Ujian, Kuliah, Mengerjakan tugas pribadi"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Submit Button -->
                 <div class="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
                     <button type="submit" class="flex-1 py-3.5 md:py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all text-base">
@@ -396,12 +340,6 @@
         const typeSelect = document.getElementById('typeSelect');
         const perkuliahanFields = document.getElementById('perkuliahan-fields');
         const nonPerkuliahanFields = document.getElementById('non-perkuliahan-fields');
-        const pribadiFields = document.getElementById('pribadi-fields');
-        const applicantStatusSelect = document.getElementById('applicant_status');
-        const classYearField = document.getElementById('class-year-field');
-        const classYearInput = document.getElementById('class_year');
-        const customStatusField = document.getElementById('custom-status-field');
-        const customStatusInput = document.getElementById('custom_status');
 
         // Function to show/hide fields based on type
         function updateFieldsVisibility() {
@@ -410,12 +348,10 @@
             // Hide all conditional sections first
             perkuliahanFields.classList.add('hidden');
             nonPerkuliahanFields.classList.add('hidden');
-            pribadiFields.classList.add('hidden');
             
             // Disable all conditional fields
             setFieldsRequired('perkuliahan-fields', false);
             setFieldsRequired('non-perkuliahan-fields', false);
-            setFieldsRequired('pribadi-fields', false);
             
             // Show and enable appropriate section
             if (selectedType === 'perkuliahan_tetap' || selectedType === 'perkuliahan_tidak_tetap') {
@@ -424,11 +360,6 @@
             } else if (selectedType === 'non_perkuliahan') {
                 nonPerkuliahanFields.classList.remove('hidden');
                 setFieldsRequired('non-perkuliahan-fields', true);
-            } else if (selectedType === 'pribadi') {
-                pribadiFields.classList.remove('hidden');
-                setFieldsRequired('pribadi-fields', true);
-                // Check if we need to show class year field or custom status field
-                updatePribadiFields();
             }
         }
 
@@ -438,7 +369,7 @@
             if (!container) return;
             
             const inputs = container.querySelectorAll('input, select, textarea');
-            const optionalFields = ['equipment_needs', 'lecturer', 'komting', 'class_year', 'custom_status'];
+            const optionalFields = ['equipment_needs', 'lecturer', 'komting'];
             
             inputs.forEach(input => {
                 const fieldName = input.name || input.id;
@@ -465,49 +396,12 @@
             });
         }
 
-        // Function to toggle fields for Pribadi status
-        function updatePribadiFields() {
-            if (!applicantStatusSelect) return;
-            
-            const status = applicantStatusSelect.value;
-            
-            // Toggle Class Year (Only for Mahasiswa)
-            if (status === 'Mahasiswa') {
-                classYearField.style.display = 'block';
-                classYearInput.setAttribute('required', 'required');
-                classYearInput.removeAttribute('disabled');
-            } else {
-                classYearField.style.display = 'none';
-                classYearInput.removeAttribute('required');
-                classYearInput.setAttribute('disabled', 'disabled');
-                // Don't clear value immediately in case user switches back
-            }
-            
-            // Toggle Custom Status (Only for Lainnya)
-            if (status === 'Lainnya') {
-                customStatusField.style.display = 'block';
-                customStatusInput.setAttribute('required', 'required');
-                customStatusInput.removeAttribute('disabled');
-            } else {
-                customStatusField.style.display = 'none';
-                customStatusInput.removeAttribute('required');
-                customStatusInput.setAttribute('disabled', 'disabled');
-            }
-        }
-
         // Event listeners
         typeSelect.addEventListener('change', updateFieldsVisibility);
-        if (applicantStatusSelect) {
-            applicantStatusSelect.addEventListener('change', updatePribadiFields);
-        }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             updateFieldsVisibility();
-            // Also update pribadi fields if type is pribadi on page load
-            if (typeSelect.value === 'pribadi') {
-                updatePribadiFields();
-            }
         });
 
         // Real-time validation for day in date range

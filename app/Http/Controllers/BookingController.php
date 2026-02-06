@@ -159,11 +159,11 @@ class BookingController extends Controller
                 'file', 'mimes:pdf', 'max:5120'
             ],
             
-            // Personal Booking fields
-            'applicant_status' => 'nullable|required_if:booking_type,pribadi|string|max:255',
-            'custom_status' => 'nullable|required_if:applicant_status,Lainnya|string|max:255',
-            'custom_study_program' => 'nullable|required_if:study_program,Lainnya|string|max:255',
-            'class_year' => 'nullable|string|max:4',
+            // Personal Booking fields - validate against allowed values
+            'applicant_status' => 'nullable|required_if:booking_type,pribadi|in:' . implode(',', Booking::APPLICANT_STATUSES),
+            'custom_status' => 'nullable|required_if:applicant_status,Lainnya|string|max:255|regex:/^[a-zA-Z0-9\s\.\-]+$/',
+            'custom_study_program' => 'nullable|required_if:study_program,Lainnya|string|max:255|regex:/^[a-zA-Z0-9\s\.\-]+$/',
+            'class_year' => 'nullable|string|max:4|regex:/^[0-9]{4}$/',
             'purpose' => 'nullable|required_if:booking_type,pribadi|string|max:255',
             
             // Non-perkuliahan fields
@@ -179,7 +179,7 @@ class BookingController extends Controller
             'software_needs' => 'nullable|string|max:255',
         ]);
 
-        Log::info('Validation passed', ['lab_id' => $validated['lab_id']]);
+        Log::info('Validation passed', ['lab_id' => $validated['lab_id'] ?? null]);
 
         // Use transaction with lock to prevent race condition (double booking)
         return DB::transaction(function () use ($request, $validated) {

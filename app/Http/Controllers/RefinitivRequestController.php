@@ -59,6 +59,10 @@ class RefinitivRequestController extends Controller
             $rules['purpose_other'] = 'required|string|max:255';
         }
 
+        if (!$isDosen && $request->input('study_program') === 'Lainnya') {
+            $rules['study_program_other'] = 'required|string|max:255';
+        }
+
         if ($request->input('purpose') === 'penelitian_dosen') {
             $rules['lecturer_name'] = 'required|string|max:255';
         }
@@ -77,6 +81,7 @@ class RefinitivRequestController extends Controller
             'study_program.required' => 'Program Studi wajib dipilih',
             'purpose.required' => 'Keperluan penggunaan data wajib dipilih',
             'purpose_other.required' => 'Keperluan lainnya wajib diisi',
+            'study_program_other.required' => 'Program studi lainnya wajib diisi',
             'lecturer_name.required' => 'Nama dosen wajib diisi',
             'usage_date.required' => 'Tanggal pemakaian wajib diisi',
             'usage_date.after_or_equal' => 'Tanggal pemakaian minimal hari ini',
@@ -117,7 +122,7 @@ class RefinitivRequestController extends Controller
                 'whatsapp' => $validated['whatsapp'],
                 'affiliation' => $validated['affiliation'],
                 'applicant_type' => $validated['applicant_type'],
-                'study_program' => $isDosen ? null : $validated['study_program'],
+                'study_program' => $isDosen ? null : ($validated['study_program'] === 'Lainnya' ? $validated['study_program_other'] : $validated['study_program']),
                 'purpose' => $validated['purpose'],
                 'purpose_other' => $validated['purpose_other'] ?? null,
                 'lecturer_name' => $validated['lecturer_name'] ?? null,

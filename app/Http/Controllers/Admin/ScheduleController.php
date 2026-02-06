@@ -21,7 +21,6 @@ class ScheduleController extends Controller
         'perkuliahan_tetap' => 'Perkuliahan Tetap',
         'perkuliahan_tidak_tetap' => 'Perkuliahan Tidak Tetap',
         'non_perkuliahan' => 'Non Perkuliahan',
-        'pribadi' => 'Pribadi',
     ];
     /**
      * Display a listing of schedules
@@ -34,7 +33,7 @@ class ScheduleController extends Controller
             'month' => 'nullable|date_format:Y-m',
             'lab_id' => 'nullable|exists:labs,id',
             'day' => 'nullable|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
-            'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan',
             'search' => 'nullable|string|max:255',
         ]);
 
@@ -383,23 +382,6 @@ class ScheduleController extends Controller
                     $bookingData['activity_type'] = $validated['activity_type'];
                     $bookingData['position'] = $validated['position'];
                     $bookingData['equipment_needs'] = $request->equipment_needs; // optional field
-                    
-                } elseif ($request->type === 'pribadi') {
-                    $bookingData['purpose'] = $validated['purpose'];
-                    $bookingData['applicant_status'] = $validated['applicant_status'];
-                    
-                    if (isset($validated['class_year'])) {
-                        $bookingData['class_year'] = $validated['class_year'];
-                    } else {
-                        $bookingData['class_year'] = null;
-                    }
-                    
-                    // Save custom_status when applicant_status is "Lainnya"
-                    if (isset($validated['custom_status'])) {
-                        $bookingData['custom_status'] = $validated['custom_status'];
-                    } else {
-                        $bookingData['custom_status'] = null;
-                    }
                 } else {
                     $bookingData['activity_name'] = $validated['course'];
                 }
@@ -572,7 +554,7 @@ class ScheduleController extends Controller
 
         if ($pendingBookings->count() > 0) {
             $bookingList = $pendingBookings->map(function ($booking) {
-                $name = $booking->course_name ?? $booking->activity_name ?? 'Peminjaman Pribadi';
+                $name = $booking->course_name ?? $booking->activity_name ?? 'Peminjaman';
                 $date = Carbon::parse($booking->booking_date)->format('d/m/Y');
                 $time = Carbon::parse($booking->start_time)->format('H:i') . ' - ' . Carbon::parse($booking->end_time)->format('H:i');
                 return "{$name} ({$date}, {$time})";
@@ -596,7 +578,7 @@ class ScheduleController extends Controller
             'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
+            'type' => 'required|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'student_count' => 'required|integer|min:1',
@@ -612,20 +594,6 @@ class ScheduleController extends Controller
             // Use constant from Booking model to avoid duplication with migration ENUM
             $rules['activity_type'] = 'required|in:' . implode(',', Booking::ACTIVITY_TYPES);
             $rules['position'] = 'required|string|max:255';
-        } elseif ($request->type === 'pribadi') {
-            $rules['purpose'] = 'required|string|max:255';
-            // Use constant from Booking model to avoid duplication
-            $rules['applicant_status'] = 'required|in:' . implode(',', Booking::APPLICANT_STATUSES);
-            
-            // Validate class_year only if status is Mahasiswa
-            if ($request->applicant_status === 'Mahasiswa') {
-                $rules['class_year'] = 'required|string|max:4';
-            }
-            
-            // Validate custom_status if status is Lainnya
-            if ($request->applicant_status === 'Lainnya') {
-                $rules['custom_status'] = 'required|string|max:255';
-            }
         } else {
             // Regular type - fallback
             $rules['course'] = 'required|string|max:255';
@@ -659,10 +627,6 @@ class ScheduleController extends Controller
             $scheduleData['komting'] = $validated['komting'] ?? null;
         } elseif ($type === 'non_perkuliahan') {
             $scheduleData['course'] = $validated['activity_name'];
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-        } elseif ($type === 'pribadi') {
-            $scheduleData['course'] = $validated['purpose'];
             $scheduleData['lecturer'] = null;
             $scheduleData['komting'] = null;
         } else {

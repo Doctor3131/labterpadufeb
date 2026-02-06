@@ -78,7 +78,7 @@
                 <!-- CTA Buttons - Center untuk semua device -->
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-300">
                     <!-- Button Peminjaman Lab -->
-                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 lg:px-10 lg:py-4 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110 animate-pulse-subtle">
+                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-8 py-3 lg:px-10 lg:py-4 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110">
                         <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5 transition-transform group-hover:rotate-90 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>

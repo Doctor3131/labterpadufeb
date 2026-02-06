@@ -138,34 +138,101 @@
                     <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    Dokumen
+                    Dokumen Pemohon
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                @if($request->ktm_file || $request->statement_file)
+                <div class="space-y-4">
+                    {{-- KTM (Mahasiswa only) --}}
                     @if($request->ktm_file)
                     <div class="border border-gray-200 rounded-lg p-4">
-                        <label class="text-sm text-gray-500 block mb-2">KTM</label>
-                        <a href="{{ Storage::url($request->ktm_file) }}" target="_blank"
-                           class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                            Lihat KTM
-                        </a>
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-sm font-medium text-gray-700">KTM (Kartu Tanda Mahasiswa)</label>
+                            <span class="text-xs text-gray-500">{{ strtoupper(pathinfo($request->ktm_file, PATHINFO_EXTENSION)) }}</span>
+                        </div>
+                        @php
+                            $ktmExt = strtolower(pathinfo($request->ktm_file, PATHINFO_EXTENSION));
+                            $isKtmImage = in_array($ktmExt, ['jpg', 'jpeg', 'png']);
+                        @endphp
+                        @if($isKtmImage)
+                        <div class="mb-3 border rounded-lg overflow-hidden bg-gray-50">
+                            <img src="{{ Storage::url($request->ktm_file) }}" alt="KTM" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ Storage::url($request->ktm_file) }}', 'KTM')">
+                        </div>
+                        @endif
+                        <div class="flex gap-2">
+                            <a href="{{ Storage::url($request->ktm_file) }}" target="_blank"
+                               class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Lihat
+                            </a>
+                            <a href="{{ Storage::url($request->ktm_file) }}" download
+                               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Download
+                            </a>
+                        </div>
+                    </div>
+                    @elseif($request->isStudent())
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <label class="text-sm font-medium text-gray-700 block mb-2">KTM (Kartu Tanda Mahasiswa)</label>
+                        <p class="text-gray-500 text-sm italic">Belum diupload</p>
                     </div>
                     @endif
+
+                    {{-- Surat Pernyataan --}}
+                    @if($request->statement_file)
                     <div class="border border-gray-200 rounded-lg p-4">
-                        <label class="text-sm text-gray-500 block mb-2">Surat Pernyataan</label>
-                        <a href="{{ Storage::url($request->statement_file) }}" target="_blank"
-                           class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                            Lihat Surat
-                        </a>
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-sm font-medium text-gray-700">Surat Pernyataan Kesanggupan</label>
+                            <span class="text-xs text-gray-500">{{ strtoupper(pathinfo($request->statement_file, PATHINFO_EXTENSION)) }}</span>
+                        </div>
+                        @php
+                            $statementExt = strtolower(pathinfo($request->statement_file, PATHINFO_EXTENSION));
+                            $isStatementImage = in_array($statementExt, ['jpg', 'jpeg', 'png']);
+                        @endphp
+                        @if($isStatementImage)
+                        <div class="mb-3 border rounded-lg overflow-hidden bg-gray-50">
+                            <img src="{{ Storage::url($request->statement_file) }}" alt="Surat Pernyataan" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ Storage::url($request->statement_file) }}', 'Surat Pernyataan')">
+                        </div>
+                        @endif
+                        <div class="flex gap-2">
+                            <a href="{{ Storage::url($request->statement_file) }}" target="_blank"
+                               class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Lihat
+                            </a>
+                            <a href="{{ Storage::url($request->statement_file) }}" download
+                               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Download
+                            </a>
+                        </div>
                     </div>
+                    @else
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <label class="text-sm font-medium text-gray-700 block mb-2">Surat Pernyataan Kesanggupan</label>
+                        <p class="text-gray-500 text-sm italic">Belum diupload</p>
+                    </div>
+                    @endif
                 </div>
+                @else
+                <div class="text-center py-6 bg-gray-50 rounded-lg">
+                    <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-gray-500">Tidak ada dokumen yang diupload</p>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -242,4 +309,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80" onclick="closeImageModal()">
+        <div class="relative max-w-4xl max-h-[90vh] m-4">
+            <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <img id="modalImage" src="" alt="" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl">
+            <p id="modalTitle" class="text-white text-center mt-3 text-lg font-medium"></p>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+<script>
+    function openImageModal(src, title) {
+        const modal = document.getElementById('imageModal');
+        const image = document.getElementById('modalImage');
+        const titleEl = document.getElementById('modalTitle');
+        
+        image.src = src;
+        titleEl.textContent = title;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>
+@endpush

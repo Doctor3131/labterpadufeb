@@ -350,6 +350,16 @@
                         </select>
                     </div>
 
+                    <!-- Study Program Other (for Lainnya) -->
+                    <div id="study-program-other-field" class="mb-4 hidden">
+                        <label for="study_program_other" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Program Studi Lainnya <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="study_program_other" name="study_program_other" value="{{ old('study_program_other') }}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Tuliskan program studi Anda">
+                    </div>
+
                     <!-- Purpose -->
                     <div class="mb-4">
                         <label class="block text-sm font-semibold text-gray-700 mb-3">
@@ -768,7 +778,13 @@
                 document.getElementById('nim-field').classList.toggle('hidden', !isMahasiswa);
                 document.getElementById('nip-field').classList.toggle('hidden', isMahasiswa);
                 document.getElementById('study-program-field').classList.toggle('hidden', !isMahasiswa);
+                document.getElementById('study-program-other-field').classList.toggle('hidden', !isMahasiswa || document.getElementById('study_program').value !== 'Lainnya');
                 document.getElementById('ktm-upload-field').classList.toggle('hidden', !isMahasiswa);
+
+                // Update study program other field when applicant type changes
+                if (!isMahasiswa) {
+                    document.getElementById('study_program_other').required = false;
+                }
 
                 // Update collaboration label
                 const collabLabel = document.getElementById('collab-label');
@@ -785,6 +801,21 @@
                 document.getElementById('ktm').required = isMahasiswa;
             });
         });
+
+        // Handle study program change
+        document.getElementById('study_program').addEventListener('change', function() {
+            const isOther = this.value === 'Lainnya';
+            document.getElementById('study-program-other-field').classList.toggle('hidden', !isOther);
+            document.getElementById('study_program_other').required = isOther;
+        });
+
+        // Initialize study program other visibility on page load
+        (function() {
+            const studyProgramSelect = document.getElementById('study_program');
+            const isOther = studyProgramSelect.value === 'Lainnya';
+            document.getElementById('study-program-other-field').classList.toggle('hidden', !isOther);
+            document.getElementById('study_program_other').required = isOther;
+        })();
 
         // Handle purpose change
         document.querySelectorAll('input[name="purpose"]').forEach(radio => {

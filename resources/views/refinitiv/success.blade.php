@@ -85,14 +85,6 @@
                     </div>
                 </div>
 
-                <!-- Contact Info -->
-                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                    <p class="text-sm text-blue-700">
-                        <strong>WhatsApp Anda:</strong> {{ $request->whatsapp }}<br>
-                        <span class="text-xs">Kami mungkin akan menghubungi Anda melalui nomor ini jika diperlukan.</span>
-                    </p>
-                </div>
-
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-3">
                     <a href="{{ route('landing') }}" 

@@ -54,6 +54,11 @@ class BpsRequestController extends Controller
             $rules['nim'] = ['required', 'string', 'regex:/^[0-9]{14}$/'];
             $rules['study_program'] = 'required|string|max:255';
             $rules['ktm'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:5120';
+            
+            // Add study_program_other validation when "Lainnya" is selected
+            if ($request->input('study_program') === 'Lainnya') {
+                $rules['study_program_other'] = 'required|string|max:255';
+            }
         } else {
             $rules['nip'] = ['required', 'string', 'regex:/^[0-9]{18}$/'];
         }
@@ -71,6 +76,7 @@ class BpsRequestController extends Controller
             'nip.required' => 'NIP wajib diisi untuk dosen',
             'nip.regex' => 'NIP harus 18 digit angka',
             'study_program.required' => 'Program studi wajib diisi untuk mahasiswa',
+            'study_program_other.required' => 'Program studi lainnya wajib diisi',
             'purpose.required' => 'Keperluan penggunaan data wajib dipilih',
             'purpose_other.required_if' => 'Jelaskan keperluan lainnya',
             'collaborating_lecturer_name.required_if' => 'Nama dosen pembimbing wajib diisi',
@@ -106,7 +112,9 @@ class BpsRequestController extends Controller
                 'nim' => $validated['nim'] ?? null,
                 'nip' => $validated['nip'] ?? null,
                 'phone' => $validated['phone'],
-                'study_program' => $validated['study_program'] ?? null,
+                'study_program' => isset($validated['study_program']) 
+                    ? ($validated['study_program'] === 'Lainnya' ? $validated['study_program_other'] : $validated['study_program']) 
+                    : null,
                 'purpose' => $validated['purpose'],
                 'purpose_other' => $validated['purpose_other'] ?? null,
                 'has_lecturer_collaboration' => $validated['has_lecturer_collaboration'],
