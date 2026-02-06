@@ -16,7 +16,7 @@
     <!-- Header -->
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">Inventaris</h1>
-        <p class="text-gray-600">Ringkasan inventaris seluruh laboratorium</p>
+        <p class="text-gray-600">Data Inventaris Seluruh Laboratorium</p>
     </div>
 
     <!-- Global Summary Stats -->
@@ -27,11 +27,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
             </div>
-            Ringkasan Global
+            Data Aset Keseluruhan
         </h2>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-purple-200 transition-colors">
-                <div class="text-sm text-gray-500 mb-1 font-medium">Total Jenis Barang</div>
+                <div class="text-sm text-gray-500 mb-1 font-medium">Total Jenis Aset</div>
                 <div class="text-3xl font-bold text-gray-800">{{ $globalTotals['total_items'] }}</div>
             </div>
             <div class="bg-green-50 rounded-xl p-4 border border-green-100 hover:border-green-200 transition-colors">
@@ -71,7 +71,7 @@
                             </div>
                         </div>
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                             {{ $groupedItems[$mode->value]->unique('name')->count() }} Jenis Barang
+                             {{ $groupedItems[$mode->value]->unique('name')->count() }} Jenis Aset
                         </span>
                     </div>
                     
@@ -81,7 +81,9 @@
                                 <tr>
                                     <th class="px-6 py-4 w-16 text-center">No</th>
                                     <th class="px-6 py-4">Barang</th>
-                                    <th class="px-6 py-4 text-center w-48">Tipe Aset</th>
+                                    @if($mode->value === 'STRUCTURED_TAG')
+                                        <th class="px-6 py-4 text-center w-48">Tipe Aset</th>
+                                    @endif
                                     <th class="px-6 py-4 text-center w-32">Jumlah Total</th>
                                     <th class="px-6 py-4 text-right w-48">Tahun Pengadaan</th>
                                 </tr>
@@ -107,15 +109,20 @@
                                                 <div class="text-sm text-gray-500 mt-0.5 truncate" title="{{ $item->description }}">{{ $item->description }}</div>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 text-center">
-                                            @if($item->assetTypeCode)
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                                                    {{ $item->assetTypeCode->name }}
-                                                </span>
-                                            @else
-                                                <span class="text-gray-300">-</span>
-                                            @endif
-                                        </td>
+                                        @if($mode->value === 'STRUCTURED_TAG')
+                                            <td class="px-6 py-4 text-center">
+                                                @if($item->assetTypeCode)
+                                                    <div class="inline-flex flex-col items-center gap-0.5">
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200 font-mono">
+                                                            {{ $item->assetTypeCode->code }}
+                                                        </span>
+                                                        <span class="text-xs text-gray-500">{{ $item->assetTypeCode->name }}</span>
+                                                    </div>
+                                                @else
+                                                    <span class="text-gray-300">-</span>
+                                                @endif
+                                            </td>
+                                        @endif
                                         <td class="px-6 py-4 text-center">
                                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-blue-50 text-blue-700">
                                                 {{ $totalUnits }}
