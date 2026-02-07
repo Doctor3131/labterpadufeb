@@ -135,8 +135,9 @@ class BpsRequestController extends Controller
                 $ktmPath = $request->file('ktm')->store('bps/ktm', 'public');
             }
 
-            // Create the request
+            // Create the request with generated token
             $bpsRequest = BpsRequest::create([
+                'token' => BpsRequest::generateToken(),
                 'applicant_type' => $validated['applicant_type'],
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -188,7 +189,7 @@ class BpsRequestController extends Controller
 
             DB::commit();
 
-            return redirect()->route('bps.success', ['id' => $bpsRequest->id])
+            return redirect()->route('bps.success', ['token' => $bpsRequest->token])
                 ->with('success', 'Permohonan data BPS berhasil diajukan!');
 
         } catch (\Exception $e) {
@@ -212,9 +213,9 @@ class BpsRequestController extends Controller
     /**
      * Show success page after submission
      */
-    public function success($id)
+    public function success($token)
     {
-        $bpsRequest = BpsRequest::findOrFail($id);
+        $bpsRequest = BpsRequest::where('token', $token)->firstOrFail();
         
         return view('bps.success', compact('bpsRequest'));
     }
@@ -226,8 +227,9 @@ class BpsRequestController extends Controller
     {
         $subData = BpsSubData::where('master_id', $masterId)
             ->active()
-            ->ordered()
-            ->get(['id', 'name', 'code']);
+            ->ordered();
+
+        return response()->json($subData->get(['id', 'name']));
 
         return response()->json($subData);
     }
