@@ -34,7 +34,6 @@ class BpsSubDataController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50',
             'description' => 'nullable|string|max:500',
             'is_active' => 'boolean',
         ]);
@@ -61,7 +60,6 @@ class BpsSubDataController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50',
             'description' => 'nullable|string|max:500',
             'is_active' => 'boolean',
         ]);

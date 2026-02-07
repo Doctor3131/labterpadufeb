@@ -47,7 +47,7 @@ Route::get('/bps', [BpsRequestController::class, 'create'])->name('bps.create');
 Route::post('/bps', [BpsRequestController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('bps.store');
-Route::get('/bps/success/{id}', [BpsRequestController::class, 'success'])->name('bps.success');
+Route::get('/bps/success/{token}', [BpsRequestController::class, 'success'])->name('bps.success');
 Route::get('/api/bps/sub-data/{master}', [BpsRequestController::class, 'getSubData'])->name('api.bps.sub-data');
 
 // Refinitiv Data Request Routes (Public)

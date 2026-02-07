@@ -50,7 +50,6 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nama</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Kode</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Status</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
                     </tr>
@@ -61,14 +60,7 @@
                         <td class="px-6 py-4">
                             <p class="font-medium text-gray-800">{{ $sub->name }}</p>
                             @if($sub->description)
-                                <p class="text-xs text-gray-500 mt-1">{{ Str::limit($sub->description, 50) }}</p>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @if($sub->code)
-                                <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{{ $sub->code }}</span>
-                            @else
-                                <span class="text-gray-400">-</span>
+                                <p class="text-xs text-gray-500 mt-1">{{ Str::limit($sub->description, 80) }}</p>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-center">
@@ -100,7 +92,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="3" class="px-6 py-12 text-center text-gray-500">
                             Belum ada sub data untuk kategori ini
                         </td>
                     </tr>

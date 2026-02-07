@@ -61,6 +61,7 @@ class BpsRequest extends Model
     ];
 
     protected $fillable = [
+        'token',
         'applicant_type',
         'name',
         'email',
@@ -144,5 +145,17 @@ class BpsRequest extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    /**
+     * Generate unique token for secure URL access
+     */
+    public static function generateToken(): string
+    {
+        do {
+            $token = bin2hex(random_bytes(32));
+        } while (self::where('token', $token)->exists());
+
+        return $token;
     }
 }

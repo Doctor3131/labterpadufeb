@@ -436,6 +436,11 @@
                             <input type="date" name="booking_date" id="booking_date" value="{{ old('booking_date') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">⚠️ Peminjaman tidak tersedia pada hari Minggu</p>
+                            <!-- Sunday Warning -->
+                            <div id="sunday-warning" class="hidden mt-2 bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-sm">
+                                ⚠️ Hari Minggu tidak tersedia untuk peminjaman lab. Silakan pilih tanggal lain.
+                            </div>
                         </div>
 
                         <div>
@@ -1157,10 +1162,26 @@
             const startTime = document.getElementById('start_time').value;
             const endTime = document.getElementById('end_time').value;
             const lab = document.getElementById('labSelect').value;
+            const sundayWarning = document.getElementById('sunday-warning');
+
+            // Check if selected date is a Sunday
+            let isSunday = false;
+            if (bookingDate) {
+                const date = new Date(bookingDate);
+                isSunday = date.getDay() === 0; // 0 = Sunday
+                
+                if (isSunday) {
+                    sundayWarning.classList.remove('hidden');
+                } else {
+                    sundayWarning.classList.add('hidden');
+                }
+            } else {
+                sundayWarning.classList.add('hidden');
+            }
 
             // For pribadi bookings, lab is not required
             const isPribadi = selectedBookingType === 'pribadi';
-            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab);
+            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab) && !isSunday;
             document.getElementById('btn-next-3').disabled = !isValid;
         }
 

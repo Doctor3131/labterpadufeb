@@ -595,10 +595,8 @@ class ScheduleController extends Controller
             // Use constant from Booking model to avoid duplication with migration ENUM
             $rules['activity_type'] = 'required|in:' . implode(',', Booking::ACTIVITY_TYPES);
             $rules['position'] = 'nullable|string|max:255'; // Made optional
-        } else {
-            // Regular type - fallback
-            $rules['course'] = 'required|string|max:255';
         }
+        // Note: No fallback for unknown types - validation will fail if type is invalid
 
         return $rules;
     }
@@ -632,12 +630,8 @@ class ScheduleController extends Controller
             $scheduleData['lecturer'] = null;
             $scheduleData['komting'] = null;
             $scheduleData['komting_phone'] = null;
-        } else {
-            // Regular type - fallback
-            $scheduleData['course'] = $validated['course'] ?? 'Peminjaman';
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
         }
+        // Note: No fallback for unknown types - should be caught by validation
 
         return $scheduleData;
     }

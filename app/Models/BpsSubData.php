@@ -14,7 +14,6 @@ class BpsSubData extends Model
     protected $fillable = [
         'master_id',
         'name',
-        'code',
         'description',
         'is_active',
     ];

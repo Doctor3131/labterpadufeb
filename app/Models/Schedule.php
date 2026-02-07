@@ -174,9 +174,27 @@ class Schedule extends Model
             });
         });
     }
+    /**
+     * Get formatted start time (H:i)
+     */
+    public function getFormattedStartTimeAttribute(): string
+    {
+        return \Carbon\Carbon::parse($this->start_time)->format('H:i');
+    }
 
+    /**
+     * Get formatted end time (H:i)
+     */
+    public function getFormattedEndTimeAttribute(): string
+    {
+        return \Carbon\Carbon::parse($this->end_time)->format('H:i');
+    }
+
+    /**
+     * Get time range string (start - end)
+     */
     public function getTimeRangeAttribute()
     {
-        return \Carbon\Carbon::parse($this->start_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($this->end_time)->format('H:i');
+        return $this->formatted_start_time . ' - ' . $this->formatted_end_time;
     }
 }

@@ -128,35 +128,58 @@ class BookingController extends Controller
             // Lab is required UNLESS it's a personal booking (pribadi)
             // Personal bookings don't select lab - assignment done on-site by assistants
             'lab_id' => 'required_unless:booking_type,pribadi|nullable|exists:labs,id',
-            'booking_date' => 'required|date',
+            'booking_date' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    $date = Carbon::parse($value);
+                    if ($date->isSunday()) {
+                        $fail('Peminjaman lab tidak tersedia pada hari Minggu.');
+                    }
+                },
+            ],
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'participant_count' => 'required|integer|min:1',
             // Document validation:
             // 1. Required if NOT personal booking
             // 2. Required if personal booking AND applicant status is 'Mahasiswa'
+            // Note: All validation in closure to avoid running file rules on optional empty file
             'document' => [
+                'nullable',
                 function ($attribute, $value, $fail) use ($request) {
                     $isPribadi = $request->booking_type === 'pribadi';
                     $isMahasiswa = $request->applicant_status === 'Mahasiswa';
+                    $hasFile = $request->hasFile('document');
 
-                    if (!$isPribadi) {
-                        // Not pribadi (perkuliahan/non-perkuliahan) -> Required
-                        if (!$request->hasFile('document')) {
-                            $fail('Dokumen pendukung (Surat/KTM) wajib diupload.');
+                    // Check if document is required
+                    $isRequired = !$isPribadi || ($isPribadi && $isMahasiswa);
+                    
+                    if ($isRequired && !$hasFile) {
+                        $message = $isPribadi 
+                            ? 'Foto/Scan KTM wajib diupload untuk mahasiswa.'
+                            : 'Dokumen pendukung (Surat/KTM) wajib diupload.';
+                        $fail($message);
+                        return;
+                    }
+
+                    // Validate file type and size only if file is uploaded
+                    if ($hasFile) {
+                        $file = $request->file('document');
+                        $allowedMimes = ['pdf'];
+                        $maxSize = 5120; // 5MB in KB
+
+                        if (!in_array($file->getClientOriginalExtension(), $allowedMimes) && 
+                            !in_array($file->getMimeType(), ['application/pdf'])) {
+                            $fail('Dokumen harus berformat PDF.');
+                            return;
                         }
-                    } else {
-                        // Pribadi
-                        if ($isMahasiswa) {
-                            // Mahasiswa -> Required KTM
-                            if (!$request->hasFile('document')) {
-                                $fail('Foto/Scan KTM wajib diupload untuk mahasiswa.');
-                            }
+
+                        if ($file->getSize() > $maxSize * 1024) {
+                            $fail('Ukuran dokumen maksimal 5MB.');
                         }
-                        // Non-mahasiswa (Dosen/Pegawai/Lainnya) -> Optional
                     }
                 },
-                'file', 'mimes:pdf', 'max:5120'
             ],
             
             // Personal Booking fields - validate against allowed values

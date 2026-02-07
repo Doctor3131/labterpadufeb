@@ -30,14 +30,6 @@
                 </div>
 
                 <div>
-                    <label for="code" class="block text-sm font-semibold text-gray-700 mb-2">Kode (Opsional)</label>
-                    <input type="text" id="code" name="code" value="{{ old('code') }}"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        placeholder="Contoh: SUS2023MAR">
-                    @error('code')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
                     <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi</label>
                     <textarea id="description" name="description" rows="3"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"

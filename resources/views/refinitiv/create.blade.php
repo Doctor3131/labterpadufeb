@@ -329,9 +329,14 @@
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
                                         Tanggal Pemakaian <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="date" name="usage_date" value="{{ old('usage_date') }}" required
+                                    <input type="date" name="usage_date" id="usage_date_input" value="{{ old('usage_date') }}" required
                                         min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white @error('usage_date') border-red-500 @enderror">
+                                    <p class="text-xs text-gray-500 mt-1">⚠️ Pemakaian tidak tersedia pada hari Minggu</p>
+                                    <!-- Sunday Warning -->
+                                    <div id="sunday-warning" class="hidden mt-2 bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-sm">
+                                        ⚠️ Hari Minggu tidak tersedia untuk pemakaian data Refinitiv. Silakan pilih tanggal lain.
+                                    </div>
                                     @error('usage_date')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
@@ -574,10 +579,47 @@
                 }
             }
 
+            // Sunday validation for usage_date
+            const usageDateInput = document.getElementById('usage_date_input');
+            const sundayWarning = document.getElementById('sunday-warning');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            function validateSunday() {
+                if (usageDateInput.value) {
+                    const date = new Date(usageDateInput.value);
+                    const isSunday = date.getDay() === 0; // 0 = Sunday
+                    
+                    if (isSunday) {
+                        sundayWarning.classList.remove('hidden');
+                        usageDateInput.classList.add('border-red-500');
+                    } else {
+                        sundayWarning.classList.add('hidden');
+                        usageDateInput.classList.remove('border-red-500');
+                    }
+                } else {
+                    sundayWarning.classList.add('hidden');
+                    usageDateInput.classList.remove('border-red-500');
+                }
+            }
+            
+            usageDateInput.addEventListener('change', validateSunday);
+            validateSunday(); // Run on load in case old value was Sunday
+
             // Form submission with validation
             document.getElementById('refinitivForm').addEventListener('submit', function(e) {
                 const isDosen = typeDosen.checked;
                 const whatsapp = document.getElementById('whatsapp_input').value.trim();
+                
+                // Check for Sunday
+                if (usageDateInput.value) {
+                    const date = new Date(usageDateInput.value);
+                    if (date.getDay() === 0) {
+                        e.preventDefault();
+                        alert('Pemakaian data Refinitiv tidak tersedia pada hari Minggu. Silakan pilih tanggal lain.');
+                        usageDateInput.focus();
+                        return false;
+                    }
+                }
                 
                 // Validate WhatsApp
                 if (!/^08[0-9]{8,13}$/.test(whatsapp)) {

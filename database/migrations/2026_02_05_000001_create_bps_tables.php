@@ -21,11 +21,11 @@ return new class extends Migration
         // Master Data Categories (e.g., SUSENAS, SAKERNAS, STPIM)
         Schema::create('bps_master_data', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // e.g., "SUSENAS - Survei Sosial Ekonomi Nasional"
-            $table->string('code')->unique(); // e.g., "SUSENAS"
+            $table->string('name');
+            $table->string('code')->unique();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->integer('sort_order')->default(0);
+            $table->boolean('has_sub_data')->default(true);
             $table->timestamps();
         });
 
@@ -33,28 +33,27 @@ return new class extends Migration
         Schema::create('bps_sub_data', function (Blueprint $table) {
             $table->id();
             $table->foreignId('master_id')->constrained('bps_master_data')->onDelete('cascade');
-            $table->string('name'); // e.g., "Survei Sosial Ekonomi Nasional 2023 Maret"
-            $table->string('code')->nullable(); // Optional code
+            $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->integer('sort_order')->default(0);
             $table->timestamps();
         });
 
         // BPS Data Requests
         Schema::create('bps_requests', function (Blueprint $table) {
             $table->id();
+            $table->string('token', 64)->unique(); // For secure URL access
             
             // Applicant Type
             $table->enum('applicant_type', ['mahasiswa', 'dosen']);
             
             // Applicant Info
             $table->string('name');
-            $table->string('email'); // Non-SSO email
-            $table->string('nim')->nullable(); // For mahasiswa
-            $table->string('nip')->nullable(); // For dosen
-            $table->string('phone'); // WhatsApp number
-            $table->string('study_program')->nullable(); // For mahasiswa only
+            $table->string('email');
+            $table->string('nim')->nullable();
+            $table->string('nip')->nullable();
+            $table->string('phone');
+            $table->string('study_program')->nullable();
             
             // Purpose
             $table->enum('purpose', [
@@ -67,15 +66,15 @@ return new class extends Migration
                 'Riset',
                 'Lainnya'
             ]);
-            $table->string('purpose_other')->nullable(); // If 'Lainnya' selected
+            $table->string('purpose_other')->nullable();
             
             // Collaboration with lecturer
             $table->boolean('has_lecturer_collaboration')->default(false);
             $table->string('collaborating_lecturer_name')->nullable();
             
             // Documents
-            $table->string('ktm_path')->nullable(); // For mahasiswa
-            $table->string('statement_letter_path'); // Surat Pernyataan Kesanggupan
+            $table->string('ktm_path')->nullable();
+            $table->string('statement_letter_path');
             
             // Agreement
             $table->boolean('agreement_accepted')->default(false);
@@ -85,8 +84,7 @@ return new class extends Migration
             $table->timestamp('completed_at')->nullable();
             $table->foreignId('handled_by')->nullable()->constrained('users')->onDelete('set null');
             
-            // Tracking
-            $table->string('tracking_token', 32)->unique();
+            // Admin notes
             $table->text('admin_notes')->nullable();
             
             $table->timestamps();
@@ -106,8 +104,9 @@ return new class extends Migration
         Schema::create('bps_request_variables', function (Blueprint $table) {
             $table->id();
             $table->foreignId('request_id')->constrained('bps_requests')->onDelete('cascade');
-            $table->foreignId('sub_data_id')->constrained('bps_sub_data')->onDelete('cascade');
-            $table->text('variables'); // Variable codes, e.g., "B41K10 B41K7 R1208"
+            $table->foreignId('master_id')->nullable()->constrained('bps_master_data')->onDelete('cascade');
+            $table->foreignId('sub_data_id')->nullable()->constrained('bps_sub_data')->onDelete('cascade');
+            $table->text('variables');
             $table->timestamps();
             
             $table->unique(['request_id', 'sub_data_id']);

@@ -38,7 +38,17 @@ class RefinitivRequestController extends Controller
             'affiliation' => 'required|in:internal_feb,internal_undip,eksternal',
             'applicant_type' => 'required|in:dosen,mahasiswa',
             'purpose' => 'required|in:skripsi,thesis,disertasi,lomba,tugas_mk,penelitian_dosen,lainnya',
-            'usage_date' => 'required|date|after_or_equal:today',
+            'usage_date' => [
+                'required',
+                'date',
+                'after_or_equal:today',
+                function ($attribute, $value, $fail) {
+                    $date = Carbon::parse($value);
+                    if ($date->isSunday()) {
+                        $fail('Peminjaman data Refinitiv tidak tersedia pada hari Minggu.');
+                    }
+                },
+            ],
             'session' => 'required|in:sesi_1,sesi_2,sesi_3',
             'variables' => 'required|string|max:2000',
             'statement_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
