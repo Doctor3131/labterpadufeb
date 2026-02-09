@@ -489,6 +489,11 @@
                                 </select>
                             </div>
                         </div>
+                        
+                        <!-- Time Validation Error -->
+                        <div class="md:col-span-2">
+                            <p id="time-error" class="text-sm text-red-500 hidden"><strong>* Jam Selesai harus setelah Jam Mulai</strong></p>
+                        </div>
 
                         <!-- Lab Selection Container - Hidden for pribadi bookings -->
                         <div id="lab-selection-container" class="md:col-span-2">
@@ -1191,6 +1196,7 @@
             const endTime = document.getElementById('end_time').value;
             const lab = document.getElementById('labSelect').value;
             const sundayWarning = document.getElementById('sunday-warning');
+            const timeError = document.getElementById('time-error');
 
             // Check if selected date is a Sunday
             let isSunday = false;
@@ -1207,9 +1213,27 @@
                 sundayWarning.classList.add('hidden');
             }
 
+            // Validate time - end time must be after start time
+            let isTimeValid = true;
+            if (startTime && endTime) {
+                const [startH, startM] = startTime.split(':').map(Number);
+                const [endH, endM] = endTime.split(':').map(Number);
+                const startMinutes = startH * 60 + startM;
+                const endMinutes = endH * 60 + endM;
+                
+                if (endMinutes <= startMinutes) {
+                    isTimeValid = false;
+                    timeError.classList.remove('hidden');
+                } else {
+                    timeError.classList.add('hidden');
+                }
+            } else {
+                timeError.classList.add('hidden');
+            }
+
             // For pribadi bookings, lab is not required
             const isPribadi = selectedBookingType === 'pribadi';
-            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab) && !isSunday;
+            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab) && !isSunday && isTimeValid;
             document.getElementById('btn-next-3').disabled = !isValid;
         }
 
@@ -1347,12 +1371,9 @@
             let requiredUpload = true;
             
             if (selectedBookingType === 'pribadi') {
-                 const status = document.getElementById('applicant_status').value;
-                 if (status !== 'Mahasiswa') {
-                     // Non-mahasiswa pribadi: Hide and Not Required
-                     showUpload = false;
-                     requiredUpload = false;
-                 }
+                 // Pribadi: Hide and Not Required for all
+                 showUpload = false;
+                 requiredUpload = false;
             }
             
             if (showUpload) {

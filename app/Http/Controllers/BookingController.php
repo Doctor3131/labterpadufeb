@@ -143,23 +143,19 @@ class BookingController extends Controller
             'participant_count' => 'required|integer|min:1',
             // Document validation:
             // 1. Required if NOT personal booking
-            // 2. Required if personal booking AND applicant status is 'Mahasiswa'
+            // 2. NOT required for personal bookings (pribadi) at all
             // Note: All validation in closure to avoid running file rules on optional empty file
             'document' => [
                 'nullable',
                 function ($attribute, $value, $fail) use ($request) {
                     $isPribadi = $request->booking_type === 'pribadi';
-                    $isMahasiswa = $request->applicant_status === 'Mahasiswa';
                     $hasFile = $request->hasFile('document');
 
-                    // Check if document is required
-                    $isRequired = !$isPribadi || ($isPribadi && $isMahasiswa);
+                    // Document is NOT required for pribadi bookings
+                    $isRequired = !$isPribadi;
                     
                     if ($isRequired && !$hasFile) {
-                        $message = $isPribadi 
-                            ? 'Foto/Scan KTM wajib diupload untuk mahasiswa.'
-                            : 'Dokumen pendukung (Surat/KTM) wajib diupload.';
-                        $fail($message);
+                        $fail('Dokumen pendukung (Surat/KTM) wajib diupload.');
                         return;
                     }
 

@@ -69,13 +69,30 @@ class Lab extends Model
 
         // Check one-time bookings (only if date is provided)
         if ($date) {
+            // Check 1: Exact date match for NON-recurring pending bookings
             $hasBookingConflict = $this->bookings()
                 ->where('booking_date', $date)
-                ->where('status', 'pending') // Only check pending bookings (approved ones already have schedules)
+                ->where('status', 'pending')
+                ->where('is_recurring', false)
                 ->overlappingTime($startTime, $endTime)
                 ->exists();
 
             if ($hasBookingConflict) {
+                return false;
+            }
+
+            // Check 2: Day-of-week match for RECURRING pending bookings
+            // A recurring booking (perkuliahan_tetap) blocks the same day every week
+            // starting from booking_date
+            $hasRecurringConflict = $this->bookings()
+                ->where('day', $day)  // Same day of week
+                ->where('status', 'pending')
+                ->where('is_recurring', true)
+                ->where('booking_date', '<=', $date)  // Requested date is on/after booking starts
+                ->overlappingTime($startTime, $endTime)
+                ->exists();
+
+            if ($hasRecurringConflict) {
                 return false;
             }
         }

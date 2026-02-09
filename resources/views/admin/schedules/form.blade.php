@@ -53,7 +53,7 @@
 
         <!-- Form -->
         <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6">
-            <form action="{{ $isEdit ? route('admin.schedules.update', $schedule->id) : route('admin.schedules.store') }}" method="POST">
+            <form id="scheduleForm" action="{{ $isEdit ? route('admin.schedules.update', $schedule->id) : route('admin.schedules.store') }}" method="POST">
                 @csrf
                 @if($isEdit)
                     @method('PUT')
@@ -127,6 +127,7 @@
                                 @endforeach
                             </select>
                         </div>
+                        <p id="time-error" class="text-xs text-red-500 mt-1 hidden"><strong>* Jam Selesai harus setelah Jam Mulai</strong></p>
                     </div>
 
                     <!-- Start Date -->
@@ -307,6 +308,67 @@
         }
         
         document.addEventListener('DOMContentLoaded', setupTimeDropdowns);
+
+        // Time Validation - Ensure end time > start time
+        function validateTimeSelection() {
+            const startTimeEl = document.getElementById('startTime');
+            const endTimeEl = document.getElementById('endTime');
+            const timeError = document.getElementById('time-error');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            if (!startTimeEl || !endTimeEl || !timeError) return true;
+            
+            const startTime = startTimeEl.value;
+            const endTime = endTimeEl.value;
+            
+            // Skip validation if either time is not set
+            if (!startTime || !endTime) {
+                timeError.classList.add('hidden');
+                return true;
+            }
+            
+            // Compare times (format HH:MM)
+            const [startH, startM] = startTime.split(':').map(Number);
+            const [endH, endM] = endTime.split(':').map(Number);
+            const startMinutes = startH * 60 + startM;
+            const endMinutes = endH * 60 + endM;
+            
+            if (endMinutes <= startMinutes) {
+                // Invalid - end time is not after start time
+                timeError.classList.remove('hidden');
+                if (submitBtn) submitBtn.disabled = true;
+                return false;
+            } else {
+                // Valid
+                timeError.classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+                return true;
+            }
+        }
+        
+        // Add event listener for time changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const startTimeEl = document.getElementById('startTime');
+            const endTimeEl = document.getElementById('endTime');
+            
+            if (startTimeEl) {
+                startTimeEl.addEventListener('change', validateTimeSelection);
+            }
+            if (endTimeEl) {
+                endTimeEl.addEventListener('change', validateTimeSelection);
+            }
+            
+            // Also validate on form submit
+            const form = document.getElementById('scheduleForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (!validateTimeSelection()) {
+                        e.preventDefault();
+                        document.getElementById('time-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+        });
 
         // Time-First Flow Variables
         const daySelectEl = document.getElementById('daySelect');
