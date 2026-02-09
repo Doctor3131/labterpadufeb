@@ -452,14 +452,42 @@
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai <span class="text-red-500">*</span></label>
-                            <input type="time" name="start_time" id="start_time" value="{{ old('start_time') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <input type="hidden" name="start_time" id="start_time" value="{{ old('start_time') }}" required>
+                            <div class="flex gap-2">
+                                <select id="start_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                    <option value="" disabled selected>Jam</option>
+                                    @foreach(range(0, 23) as $h)
+                                        <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="self-center font-bold text-gray-400">:</span>
+                                <select id="start_minute" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                    <option value="" disabled selected>Menit</option>
+                                    @foreach(range(0, 55, 5) as $m)
+                                        <option value="{{ sprintf('%02d', $m) }}">{{ sprintf('%02d', $m) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Selesai <span class="text-red-500">*</span></label>
-                            <input type="time" name="end_time" id="end_time" value="{{ old('end_time') }}" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            <input type="hidden" name="end_time" id="end_time" value="{{ old('end_time') }}" required>
+                            <div class="flex gap-2">
+                                <select id="end_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                    <option value="" disabled selected>Jam</option>
+                                    @foreach(range(0, 23) as $h)
+                                        <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="self-center font-bold text-gray-400">:</span>
+                                <select id="end_minute" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                    <option value="" disabled selected>Menit</option>
+                                    @foreach(range(0, 55, 5) as $m)
+                                        <option value="{{ sprintf('%02d', $m) }}">{{ sprintf('%02d', $m) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Lab Selection Container - Hidden for pribadi bookings -->
@@ -1525,6 +1553,54 @@
                     field.setAttribute('data-conditional-required', 'true');
                 }
             });
+        });
+
+        // Time Dropdown Logic
+        function setupTimeDropdowns() {
+            const timeInputs = ['start', 'end'];
+            
+            timeInputs.forEach(prefix => {
+                const hourSelect = document.getElementById(prefix + '_hour');
+                const minuteSelect = document.getElementById(prefix + '_minute');
+                const hiddenInput = document.getElementById(prefix + '_time');
+                
+                function updateHiddenInput() {
+                    if (hourSelect.value && minuteSelect.value) {
+                        hiddenInput.value = `${hourSelect.value}:${minuteSelect.value}`;
+                        
+                        // Trigger change event manually for fetchAvailableLabs and validation
+                        hiddenInput.dispatchEvent(new Event('change'));
+                    } else {
+                        hiddenInput.value = '';
+                    }
+                }
+                
+                // Initialize from hidden input (e.g. old value)
+                if (hiddenInput.value) {
+                    const [h, m] = hiddenInput.value.split(':');
+                    if (h) hourSelect.value = h;
+                    if (m) minuteSelect.value = m;
+                }
+                
+                hourSelect.addEventListener('change', updateHiddenInput);
+                minuteSelect.addEventListener('change', updateHiddenInput);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupTimeDropdowns(); // Add this line
+            updateStepIndicator();
+            setupBookingTypeListener();
+            setupStep2Validation();
+            setupStep3Validation();
+            setupNavigationButtons();
+            setupFileUpload();
+            setupApplicantStatusListener();
+            setupStudyProgramListener();
+
+            setupRealtimeValidation();
+            preventEnterSubmit();
         });
 
         // Realtime Validation Logic

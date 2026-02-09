@@ -79,7 +79,7 @@
                         <p>Silahkan langsung menuju ke lokasi berikut pada <strong>tanggal dan sesi yang telah Anda pilih</strong>:</p>
                         <div class="bg-white rounded-lg p-4 mt-3">
                             <p class="font-bold text-gray-800">📍 Gedung Laboratorium FEB-UNDIP</p>
-                            <p class="text-gray-600">Lantai 3, Ruangan <strong>EL. 3.05</strong></p>
+                            <p class="text-gray-600">Lantai 3, <strong>Ruangan Digilib</strong></p>
                         </div>
                         <p class="mt-3">Lakukan konfirmasi kepada asisten lab untuk diarahkan lebih lanjut.</p>
                     </div>

@@ -60,7 +60,7 @@
                                 <li>Mengisi formulir permohonan <strong>paling lambat sehari sebelum</strong> jadwal penggunaan</li>
                                 <li>Menuliskan jadwal penggunaan dan mengisi seluruh formulir</li>
                                 <li>Menggunakan lab Refinitiv sesuai tanggal dan sesi yang diajukan</li>
-                                <li>Menuju ruang <strong>EL.3.05</strong> di Gedung Laboratorium FEB-UNDIP lt.3</li>
+                                <li>Menuju <strong>Ruangan Digilib</strong> di Gedung Laboratorium FEB-UNDIP lt.3</li>
                             </ol>
                         </div>
                     </div>
@@ -439,7 +439,7 @@
                                             {{ old('understood') ? 'checked' : '' }}
                                             class="w-5 h-5 text-yellow-600 rounded focus:ring-yellow-500 mt-0.5">
                                         <span class="ml-3 text-gray-700 text-sm">
-                                            <strong>Setelah mengirim form</strong>, silahkan untuk langsung menuju Gd. Lab lantai 3 di ruangan <strong>EL. 3.05</strong> untuk melakukan konfirmasi kepada asisten lab <strong>sesuai jadwal pemakaian yang diajukan</strong>, untuk diarahkan lebih lanjut, terima kasih.
+                                            <strong>Setelah mengirim form</strong>, silahkan untuk langsung menuju Gd. Lab lantai 3 di <strong>Ruangan Digilib</strong> untuk melakukan konfirmasi kepada asisten lab <strong>sesuai jadwal pemakaian yang diajukan</strong>, untuk diarahkan lebih lanjut, terima kasih.
                                             <span class="text-red-500">*</span>
                                         </span>
                                     </label>

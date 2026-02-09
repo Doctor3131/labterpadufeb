@@ -88,17 +88,45 @@
                     <!-- Start Time -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Mulai *</label>
-                        <input type="time" name="start_time" id="startTime" required
-                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : '') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        <input type="hidden" name="start_time" id="startTime" required
+                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : '') }}">
+                        <div class="flex gap-2">
+                            <select id="start_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                <option value="" disabled selected>Jam</option>
+                                @foreach(range(0, 23) as $h)
+                                    <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
+                                @endforeach
+                            </select>
+                            <span class="self-center font-bold text-gray-400">:</span>
+                            <select id="start_minute" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                <option value="" disabled selected>Menit</option>
+                                @foreach(range(0, 55, 5) as $m)
+                                    <option value="{{ sprintf('%02d', $m) }}">{{ sprintf('%02d', $m) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <!-- End Time -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Selesai *</label>
-                        <input type="time" name="end_time" id="endTime" required
-                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : '') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        <input type="hidden" name="end_time" id="endTime" required
+                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : '') }}">
+                        <div class="flex gap-2">
+                            <select id="end_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                <option value="" disabled selected>Jam</option>
+                                @foreach(range(0, 23) as $h)
+                                    <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
+                                @endforeach
+                            </select>
+                            <span class="self-center font-bold text-gray-400">:</span>
+                            <select id="end_minute" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
+                                <option value="" disabled selected>Menit</option>
+                                @foreach(range(0, 55, 5) as $m)
+                                    <option value="{{ sprintf('%02d', $m) }}">{{ sprintf('%02d', $m) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Start Date -->
@@ -242,6 +270,44 @@
     </div>
 
     <script>
+        // Time Dropdown Logic
+        function setupTimeDropdowns() {
+            const timeInputs = [
+                { id: 'start', inputId: 'startTime' },
+                { id: 'end', inputId: 'endTime' }
+            ];
+            
+            timeInputs.forEach(config => {
+                const hourSelect = document.getElementById(config.id + '_hour');
+                const minuteSelect = document.getElementById(config.id + '_minute');
+                const hiddenInput = document.getElementById(config.inputId);
+                
+                if (!hourSelect || !minuteSelect || !hiddenInput) return;
+
+                function updateHiddenInput() {
+                    if (hourSelect.value && minuteSelect.value) {
+                        hiddenInput.value = `${hourSelect.value}:${minuteSelect.value}`;
+                        hiddenInput.dispatchEvent(new Event('change'));
+                    } else {
+                        hiddenInput.value = '';
+                        hiddenInput.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                // Initialize
+                if (hiddenInput.value) {
+                    const [h, m] = hiddenInput.value.split(':');
+                    if (h) hourSelect.value = h;
+                    if (m) minuteSelect.value = m;
+                }
+                
+                hourSelect.addEventListener('change', updateHiddenInput);
+                minuteSelect.addEventListener('change', updateHiddenInput);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', setupTimeDropdowns);
+
         // Time-First Flow Variables
         const daySelectEl = document.getElementById('daySelect');
         const startTimeEl = document.getElementById('startTime');

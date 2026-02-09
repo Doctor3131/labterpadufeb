@@ -26,7 +26,7 @@
         .animation-delay-400 { animation-delay: 0.4s; opacity: 0; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen">
+<body class="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen flex flex-col">
     
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
@@ -45,29 +45,31 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-br from-yellow-500 via-yellow-400 to-orange-400 text-white overflow-hidden">
-        <div class="absolute inset-0 bg-black/10"></div>
-        <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-16 relative z-10">
-            <div class="max-w-3xl mx-auto text-center">
-                <h1 class="text-3xl lg:text-4xl font-bold mb-4 drop-shadow-md animate-fade-in-up animation-delay-100">
-                    Peminjaman Data
-                </h1>
-                <p class="text-lg text-yellow-50 drop-shadow animate-fade-in-up animation-delay-200">
-                    Pilih jenis data yang ingin Anda pinjam
-                </p>
+    <!-- Main Content Wrapper -->
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="relative bg-gradient-to-br from-yellow-500 via-yellow-400 to-orange-400 text-white overflow-hidden pb-24 lg:pb-32">
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="container mx-auto px-4 lg:px-8 pt-12 lg:pt-16 pb-12 lg:pb-16 relative z-10">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-3xl lg:text-4xl font-bold mb-4 drop-shadow-md animate-fade-in-up animation-delay-100">
+                        Peminjaman Data
+                    </h1>
+                    <p class="text-lg text-yellow-50 drop-shadow animate-fade-in-up animation-delay-200">
+                        Pilih jenis data yang ingin Anda pinjam
+                    </p>
+                </div>
             </div>
-        </div>
-        <!-- Wave Decoration -->
-        <div class="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 50L48 45.7C96 41.3 192 32.7 288 30.2C384 27.7 480 31.3 576 39.8C672 48.3 768 61.7 864 65.8C960 70 1056 65 1152 55.2C1248 45.3 1344 30.7 1392 23.3L1440 16V100H1392C1344 100 1248 100 1152 100C1056 100 960 100 864 100C768 100 672 100 576 100C480 100 384 100 288 100C192 100 96 100 48 100H0V50Z" fill="#f8fafc"/>
-            </svg>
-        </div>
-    </section>
+            <!-- Wave Decoration -->
+            <div class="absolute bottom-0 left-0 right-0 -mb-1">
+                <svg viewBox="0 0 1440 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 50L48 45.7C96 41.3 192 32.7 288 30.2C384 27.7 480 31.3 576 39.8C672 48.3 768 61.7 864 65.8C960 70 1056 65 1152 55.2C1248 45.3 1344 30.7 1392 23.3L1440 16V100H1392C1344 100 1248 100 1152 100C1056 100 960 100 864 100C768 100 672 100 576 100C480 100 384 100 288 100C192 100 96 100 48 100H0V50Z" fill="#f8fafc"/>
+                </svg>
+            </div>
+        </section>
 
-    <!-- Main Content -->
-    <section class="py-12 lg:py-16">
+        <!-- Main Content -->
+        <section class="pb-12 pt-0 lg:pb-16 lg:pt-0">
         <div class="container mx-auto px-4 lg:px-8">
             <div class="max-w-4xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
@@ -128,6 +130,7 @@
             </div>
         </div>
     </section>
+    </main>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 py-6">
