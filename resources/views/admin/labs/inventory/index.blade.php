@@ -60,21 +60,21 @@
             $totalHilang = collect($summary)->sum(fn($s) => $s['conditions']['HILANG']);
             $totalMaintenance = collect($summary)->sum(fn($s) => $s['conditions']['MAINTENANCE']);
         @endphp
-        <div class="bg-green-50 rounded-xl p-4 border border-green-200">
-            <div class="text-3xl font-bold text-green-700">{{ $totalBaik }}</div>
-            <div class="text-sm text-green-600 font-medium">Baik</div>
+        <div class="bg-white rounded-xl p-4 border border-gray-200">
+            <div class="text-3xl font-bold text-gray-700">{{ $totalBaik }}</div>
+            <div class="text-sm text-gray-600 font-medium">Baik</div>
         </div>
-        <div class="bg-red-50 rounded-xl p-4 border border-red-200">
-            <div class="text-3xl font-bold text-red-700">{{ $totalRusak }}</div>
-            <div class="text-sm text-red-600 font-medium">Rusak</div>
+        <div class="bg-white rounded-xl p-4 border border-gray-200">
+            <div class="text-3xl font-bold text-gray-700">{{ $totalRusak }}</div>
+            <div class="text-sm text-gray-600 font-medium">Rusak</div>
         </div>
-        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+        <div class="bg-white rounded-xl p-4 border border-gray-200">
             <div class="text-3xl font-bold text-gray-700">{{ $totalHilang }}</div>
             <div class="text-sm text-gray-600 font-medium">Hilang</div>
         </div>
-        <div class="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-            <div class="text-3xl font-bold text-yellow-700">{{ $totalMaintenance }}</div>
-            <div class="text-sm text-yellow-600 font-medium">Maintenance</div>
+        <div class="bg-white rounded-xl p-4 border border-gray-200">
+            <div class="text-3xl font-bold text-gray-700">{{ $totalMaintenance }}</div>
+            <div class="text-sm text-gray-600 font-medium">Maintenance</div>
         </div>
     </div>
 
@@ -96,21 +96,21 @@
                         </div>
                         
                         <div class="grid grid-cols-4 gap-2 text-center mb-3">
-                            <div class="bg-green-50 rounded-lg p-2">
-                                <div class="text-lg font-bold text-green-700">{{ $item['conditions']['BAIK'] }}</div>
-                                <div class="text-xs text-green-600">Baik</div>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <div class="text-lg font-bold text-gray-700">{{ $item['conditions']['BAIK'] }}</div>
+                                <div class="text-xs text-gray-600">Baik</div>
                             </div>
-                            <div class="bg-red-50 rounded-lg p-2">
-                                <div class="text-lg font-bold text-red-700">{{ $item['conditions']['RUSAK'] }}</div>
-                                <div class="text-xs text-red-600">Rusak</div>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <div class="text-lg font-bold text-gray-700">{{ $item['conditions']['RUSAK'] }}</div>
+                                <div class="text-xs text-gray-600">Rusak</div>
                             </div>
                             <div class="bg-gray-50 rounded-lg p-2">
                                 <div class="text-lg font-bold text-gray-700">{{ $item['conditions']['HILANG'] }}</div>
                                 <div class="text-xs text-gray-600">Hilang</div>
                             </div>
-                            <div class="bg-yellow-50 rounded-lg p-2">
-                                <div class="text-lg font-bold text-yellow-700">{{ $item['conditions']['MAINTENANCE'] }}</div>
-                                <div class="text-xs text-yellow-600">Maint.</div>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <div class="text-lg font-bold text-gray-700">{{ $item['conditions']['MAINTENANCE'] }}</div>
+                                <div class="text-xs text-gray-600">Maint.</div>
                             </div>
                         </div>
 
@@ -149,16 +149,16 @@
                             <th class="px-6 py-4 font-semibold">Nama Aset</th>
                             <th class="px-6 py-4 font-semibold text-center">Mode</th>
                             <th class="px-6 py-4 font-semibold text-center">
-                                <span class="text-green-600">Baik</span>
+                                <span class="text-gray-600">Baik</span>
                             </th>
                             <th class="px-6 py-4 font-semibold text-center">
-                                <span class="text-red-600">Rusak</span>
+                                <span class="text-gray-600">Rusak</span>
                             </th>
                             <th class="px-6 py-4 font-semibold text-center">
                                 <span class="text-gray-600">Hilang</span>
                             </th>
                             <th class="px-6 py-4 font-semibold text-center">
-                                <span class="text-yellow-600">Maintenance</span>
+                                <span class="text-gray-600">Maintenance</span>
                             </th>
                             <th class="px-6 py-4 font-semibold text-center">Total</th>
                             <th class="px-6 py-4 font-semibold text-center">Aksi</th>
@@ -177,22 +177,22 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-green-100 text-green-800 text-sm font-bold px-2.5 py-0.5 rounded-full">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-gray-100 text-gray-700 text-sm font-bold px-2.5 py-0.5 rounded-full">
                                         {{ $item['conditions']['BAIK'] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-red-100 text-red-800 text-sm font-bold px-2.5 py-0.5 rounded-full">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-gray-100 text-gray-700 text-sm font-bold px-2.5 py-0.5 rounded-full">
                                         {{ $item['conditions']['RUSAK'] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-gray-100 text-gray-800 text-sm font-bold px-2.5 py-0.5 rounded-full">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-gray-100 text-gray-700 text-sm font-bold px-2.5 py-0.5 rounded-full">
                                         {{ $item['conditions']['HILANG'] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-yellow-100 text-yellow-800 text-sm font-bold px-2.5 py-0.5 rounded-full">
+                                    <span class="inline-flex items-center justify-center min-w-[2rem] bg-gray-100 text-gray-700 text-sm font-bold px-2.5 py-0.5 rounded-full">
                                         {{ $item['conditions']['MAINTENANCE'] }}
                                     </span>
                                 </td>

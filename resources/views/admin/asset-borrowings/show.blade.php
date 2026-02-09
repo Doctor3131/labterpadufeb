@@ -385,6 +385,74 @@
     </div>
 </div>
 
+<!-- Reject Asset Borrowing Modal -->
+<div id="rejectAssetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
+        <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold">Tolak Peminjaman</h3>
+                    <p class="text-sm text-red-100">Berikan alasan penolakan</p>
+                </div>
+            </div>
+            <button onclick="closeRejectModal()" class="text-white/80 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="rejectAssetForm" method="POST">
+            @csrf
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-3">
+                        Alasan Penolakan <span class="text-red-500">*</span>
+                    </label>
+                    <textarea 
+                        name="rejection_reason" 
+                        id="rejectionReasonInput"
+                        rows="4" 
+                        required
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all" 
+                        placeholder="Jelaskan alasan penolakan peminjaman ini..."
+                    ></textarea>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        Alasan akan dikirimkan kepada peminjam
+                    </p>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button 
+                        type="button" 
+                        onclick="closeRejectModal()" 
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-all"
+                    >
+                        Batal
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Tolak Peminjaman
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     // Reuse same functions from dashboard
@@ -408,35 +476,20 @@
     };
 
     window.rejectAssetBorrowing = function(id) {
-        const reason = prompt('❌ Alasan penolakan (wajib):');
-        if (reason === null) {
-            return;
-        }
-        
-        if (!reason || reason.trim() === '') {
-            alert('Alasan penolakan harus diisi!');
-            return;
-        }
-        
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/asset-borrowings/${id}/reject`;
-        
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = '{{ csrf_token() }}';
-        form.appendChild(csrfInput);
-        
-        const reasonInput = document.createElement('input');
-        reasonInput.type = 'hidden';
-        reasonInput.name = 'rejection_reason';
-        reasonInput.value = reason;
-        form.appendChild(reasonInput);
-        
-        document.body.appendChild(form);
-        form.submit();
+        // Open reject modal
+        document.getElementById('rejectAssetModal').classList.remove('hidden');
+        document.getElementById('rejectAssetModal').classList.add('flex');
+        document.getElementById('rejectAssetForm').action = `/admin/asset-borrowings/${id}/reject`;
+        document.getElementById('rejectionReasonInput').value = '';
+        document.getElementById('rejectionReasonInput').focus();
     };
+
+    // Close reject modal
+    function closeRejectModal() {
+        document.getElementById('rejectAssetModal').classList.add('hidden');
+        document.getElementById('rejectAssetModal').classList.remove('flex');
+        document.getElementById('rejectAssetForm').reset();
+    }
 
     window.handoutAssetBorrowing = function(id) {
         // Open handout modal

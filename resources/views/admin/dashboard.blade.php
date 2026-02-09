@@ -121,7 +121,7 @@
         </div>
 
     <!-- Pending Bookings -->
-    <div id="pending-tab" class="tab-content p-3 md:p-6">
+    <div id="pending-tab" class="tab-content hidden p-3 md:p-6">
         @forelse($pendingBookings as $booking)
             <div class="booking-card bg-yellow-50 rounded-2xl shadow-lg hover:shadow-2xl mb-3 p-4 border-l-4 border-yellow-500 transition-all">
                 <!-- Header dengan badges dan tanggal -->
@@ -990,6 +990,74 @@
     </div>
 </div>
 
+<!-- Reject Asset Borrowing Modal -->
+<div id="rejectAssetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
+        <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold">Tolak Peminjaman</h3>
+                    <p class="text-sm text-red-100">Berikan alasan penolakan</p>
+                </div>
+            </div>
+            <button onclick="closeRejectModal()" class="text-white/80 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="rejectAssetForm" method="POST">
+            @csrf
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-3">
+                        Alasan Penolakan <span class="text-red-500">*</span>
+                    </label>
+                    <textarea 
+                        name="rejection_reason" 
+                        id="rejectionReasonInput"
+                        rows="4" 
+                        required
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all" 
+                        placeholder="Jelaskan alasan penolakan peminjaman ini..."
+                    ></textarea>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        Alasan akan dikirimkan kepada peminjam
+                    </p>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button 
+                        type="button" 
+                        onclick="closeRejectModal()" 
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-all"
+                    >
+                        Batal
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Tolak Peminjaman
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -1031,30 +1099,62 @@
 
     // Tab switching with smooth animations
     function showTab(tabName) {
-        // Hide all tabs
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.add('hidden');
-        });
+        // Determine which section this tab belongs to
+        const isLabTab = ['pending', 'approved', 'rejected'].includes(tabName);
+        const isAssetTab = ['asset-pending', 'asset-approved', 'asset-completed'].includes(tabName);
         
-        // Remove active state from all buttons
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.classList.remove('border-yellow-500', 'text-yellow-700', 'border-green-500', 'text-green-700', 'border-red-500', 'text-red-700', 'border-purple-500', 'text-purple-700', 'border-blue-500', 'text-blue-700');
-            btn.classList.add('border-transparent', 'text-gray-500');
+        // Hide only tabs in the same section
+        if (isLabTab) {
+            // Hide all lab booking tabs
+            document.getElementById('pending-tab').classList.add('hidden');
+            document.getElementById('approved-tab').classList.add('hidden');
+            document.getElementById('rejected-tab').classList.add('hidden');
             
-            // Reset icon backgrounds
-            const iconBg = btn.querySelector('div.bg-yellow-100, div.bg-green-100, div.bg-red-100, div.bg-purple-100, div.bg-blue-100');
-            if (iconBg) {
-                iconBg.classList.remove('bg-yellow-100', 'bg-green-100', 'bg-red-100', 'bg-purple-100', 'bg-blue-100');
-                iconBg.classList.add('bg-gray-100');
-            }
+            // Remove active state from all lab tab buttons
+            document.querySelectorAll('#lab-section .tab-button').forEach(btn => {
+                btn.classList.remove('border-yellow-500', 'text-yellow-700', 'border-green-500', 'text-green-700', 'border-red-500', 'text-red-700');
+                btn.classList.add('border-transparent', 'text-gray-500');
+                
+                // Reset icon backgrounds
+                const iconBg = btn.querySelector('div.bg-yellow-100, div.bg-green-100, div.bg-red-100');
+                if (iconBg) {
+                    iconBg.classList.remove('bg-yellow-100', 'bg-green-100', 'bg-red-100');
+                    iconBg.classList.add('bg-gray-100');
+                }
+                
+                // Update badge colors
+                const badge = btn.querySelector('span.rounded-full');
+                if (badge) {
+                    badge.classList.remove('bg-yellow-500', 'text-white', 'bg-green-500', 'bg-red-500');
+                    badge.classList.add('bg-gray-300', 'text-gray-700');
+                }
+            });
+        } else if (isAssetTab) {
+            // Hide all asset borrowing tabs
+            document.getElementById('asset-pending-tab').classList.add('hidden');
+            document.getElementById('asset-approved-tab').classList.add('hidden');
+            document.getElementById('asset-completed-tab').classList.add('hidden');
             
-            // Update badge colors
-            const badge = btn.querySelector('span.rounded-full');
-            if (badge) {
-                badge.classList.remove('bg-yellow-500', 'text-white', 'bg-green-500', 'bg-red-500', 'bg-purple-500', 'bg-blue-500');
-                badge.classList.add('bg-gray-300', 'text-gray-700');
-            }
-        });
+            // Remove active state from all asset tab buttons
+            document.querySelectorAll('#asset-section .tab-button').forEach(btn => {
+                btn.classList.remove('border-purple-500', 'text-purple-700', 'border-blue-500', 'text-blue-700', 'border-green-500', 'text-green-700');
+                btn.classList.add('border-transparent', 'text-gray-500');
+                
+                // Reset icon backgrounds
+                const iconBg = btn.querySelector('div.bg-purple-100, div.bg-blue-100, div.bg-green-100');
+                if (iconBg) {
+                    iconBg.classList.remove('bg-purple-100', 'bg-blue-100', 'bg-green-100');
+                    iconBg.classList.add('bg-gray-100');
+                }
+                
+                // Update badge colors
+                const badge = btn.querySelector('span.rounded-full');
+                if (badge) {
+                    badge.classList.remove('bg-purple-500', 'text-white', 'bg-blue-500', 'bg-green-500');
+                    badge.classList.add('bg-gray-300', 'text-gray-700');
+                }
+            });
+        }
         
         // Show selected tab
         document.getElementById(tabName + '-tab').classList.remove('hidden');
@@ -1180,21 +1280,29 @@
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Check which pagination parameter exists
+        // Check which pagination parameter exists for Lab section
         if (urlParams.has('approved_page')) {
             showTab('approved');
         } else if (urlParams.has('rejected_page')) {
             showTab('rejected');
         } else if (urlParams.has('pending_page')) {
             showTab('pending');
-        } else if (urlParams.has('asset_pending_page')) {
+        } else {
+            // Default: show pending tab for lab section
+            showTab('pending');
+        }
+        
+        // Check which pagination parameter exists for Asset section
+        if (urlParams.has('asset_pending_page')) {
             showTab('asset-pending');
         } else if (urlParams.has('asset_approved_page')) {
             showTab('asset-approved');
         } else if (urlParams.has('asset_completed_page')) {
             showTab('asset-completed');
+        } else {
+            // Default: show asset-pending tab for asset section
+            showTab('asset-pending');
         }
-        // If no pagination parameter, default tab (pending) is already shown
     });
 
     // Asset Borrowing Actions - defined in window scope
@@ -1224,37 +1332,20 @@
     window.rejectAssetBorrowing = function(id) {
         console.log('Reject clicked for ID:', id);
         
-        const reason = prompt('❌ Alasan penolakan (wajib):');
-        if (reason === null) { // User clicked cancel
-            return;
-        }
-        
-        if (!reason || reason.trim() === '') {
-            alert('Alasan penolakan harus diisi!');
-            return;
-        }
-        
-        console.log('Creating form for reject...');
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/asset-borrowings/${id}/reject`;
-        
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = '{{ csrf_token() }}';
-        form.appendChild(csrfInput);
-        
-        const reasonInput = document.createElement('input');
-        reasonInput.type = 'hidden';
-        reasonInput.name = 'rejection_reason';
-        reasonInput.value = reason;
-        form.appendChild(reasonInput);
-        
-        document.body.appendChild(form);
-        console.log('Submitting form...', form);
-        form.submit();
+        // Open reject modal
+        document.getElementById('rejectAssetModal').classList.remove('hidden');
+        document.getElementById('rejectAssetModal').classList.add('flex');
+        document.getElementById('rejectAssetForm').action = `/admin/asset-borrowings/${id}/reject`;
+        document.getElementById('rejectionReasonInput').value = '';
+        document.getElementById('rejectionReasonInput').focus();
     };
+
+    // Close reject modal
+    function closeRejectModal() {
+        document.getElementById('rejectAssetModal').classList.add('hidden');
+        document.getElementById('rejectAssetModal').classList.remove('flex');
+        document.getElementById('rejectAssetForm').reset();
+    }
 
     window.handoutAssetBorrowing = function(id) {
         // Open handout modal

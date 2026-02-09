@@ -353,13 +353,41 @@
             const mahasiswaFields = document.getElementById('mahasiswa-fields');
             const staffFields = document.getElementById('staff-fields');
             
+            // Store original name attributes and clear all hidden fields
+            mahasiswaFields.querySelectorAll('input').forEach(input => {
+                if (!input.dataset.originalName) {
+                    input.dataset.originalName = input.getAttribute('name');
+                }
+                input.removeAttribute('name');
+                input.value = '';
+            });
+            staffFields.querySelectorAll('input').forEach(input => {
+                if (!input.dataset.originalName) {
+                    input.dataset.originalName = input.getAttribute('name');
+                }
+                input.removeAttribute('name');
+                input.value = '';
+            });
+            
             mahasiswaFields.classList.add('hidden');
             staffFields.classList.add('hidden');
             
             if (this.value === 'Mahasiswa') {
                 mahasiswaFields.classList.remove('hidden');
+                // Restore name attributes for visible inputs
+                mahasiswaFields.querySelectorAll('input').forEach(input => {
+                    if (input.dataset.originalName) {
+                        input.setAttribute('name', input.dataset.originalName);
+                    }
+                });
             } else if (this.value === 'Dosen' || this.value === 'Staff') {
                 staffFields.classList.remove('hidden');
+                // Restore name attributes for visible inputs
+                staffFields.querySelectorAll('input').forEach(input => {
+                    if (input.dataset.originalName) {
+                        input.setAttribute('name', input.dataset.originalName);
+                    }
+                });
             }
         });
 
