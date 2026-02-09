@@ -87,8 +87,11 @@
                         <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
                     </a>
                 </div>
-                <a href="{{ route('login') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-6 py-2 rounded-lg font-bold transition-all shadow-sm hover:shadow-md text-sm md:text-base whitespace-nowrap">
-                    Login
+                <a href="{{ route('data.index') }}" class="px-4 py-2 text-gray-600 hover:text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all duration-300 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Kembali
                 </a>
             </div>
         </div>
@@ -263,6 +266,7 @@
                                 </div>
                             </label>
                         </div>
+                        <p id="applicant_type-error" class="text-xs text-red-500 mt-1 hidden text-center"></p>
                     </div>
 
                     <!-- Name -->
@@ -273,6 +277,7 @@
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Masukkan nama lengkap">
+                        <p id="name-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Email -->
@@ -359,6 +364,7 @@
                             <option value="S3- PDIE Manajemen" {{ old('study_program') == 'S3- PDIE Manajemen' ? 'selected' : '' }}>S3- PDIE Manajemen</option>
                             <option value="Lainnya" {{ old('study_program') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                         </select>
+                        <p id="study_program-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Study Program Other (for Lainnya) -->
@@ -369,6 +375,7 @@
                         <input type="text" id="study_program_other" name="study_program_other" value="{{ old('study_program_other') }}"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Tuliskan program studi Anda">
+                        <p id="study_program_other-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Purpose -->
@@ -384,6 +391,7 @@
                             </label>
                             @endforeach
                         </div>
+                        <p id="purpose-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Purpose Other -->
@@ -394,6 +402,7 @@
                         <input type="text" id="purpose_other" name="purpose_other" value="{{ old('purpose_other') }}"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Jelaskan keperluan Anda">
+                        <p id="purpose_other-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Lecturer Collaboration -->
@@ -411,6 +420,7 @@
                                 <span class="text-gray-700">Tidak</span>
                             </label>
                         </div>
+                        <p id="has_lecturer_collaboration-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Collaborating Lecturer Name -->
@@ -421,6 +431,7 @@
                         <input type="text" id="collaborating_lecturer_name" name="collaborating_lecturer_name" value="{{ old('collaborating_lecturer_name') }}"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Masukkan nama dosen pembimbing/kolaborator">
+                        <p id="collaborating_lecturer_name-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <div class="flex justify-end">
@@ -443,6 +454,13 @@
                     <p class="text-sm text-gray-600 mb-4">
                         Pilih dataset yang Anda perlukan, lalu masukkan kode variabel untuk masing-masing dataset.
                     </p>
+                    
+                    <div id="step-2-error" class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start">
+                        <svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <span id="step-2-error-text"></span>
+                    </div>
 
                     <!-- Master Data Accordion -->
                     <div class="space-y-4 mb-6" id="master-data-container">
@@ -563,6 +581,7 @@
                             </label>
                             <p id="ktm-filename" class="text-sm text-blue-600 mt-2 font-medium hidden"></p>
                         </div>
+                        <p id="ktm-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Statement Letter Upload -->
@@ -584,6 +603,7 @@
                             </label>
                             <p id="statement_letter-filename" class="text-sm text-blue-600 mt-2 font-medium hidden"></p>
                         </div>
+                        <p id="statement_letter-error" class="text-xs text-red-500 mt-1 hidden"></p>
                     </div>
 
                     <!-- Agreement -->
@@ -595,6 +615,7 @@
                                 Bahwa saya tidak akan memperjualbelikan atau menyebarluaskan data yang saya peroleh dari Laboratorium Komputer FEB Universitas Diponegoro.
                             </span>
                         </label>
+                        <p id="agreement_accepted-error" class="text-xs text-red-500 mt-1 hidden ml-7"></p>
                     </div>
 
                     <div class="flex justify-between">
@@ -623,7 +644,7 @@
         function showFieldError(fieldId, message) {
             const errorEl = document.getElementById(fieldId + '-error');
             if (errorEl) {
-                errorEl.textContent = message;
+                errorEl.innerHTML = '<strong>* ' + message + '</strong>';
                 errorEl.classList.remove('hidden');
             } else {
                 alert(message);
@@ -639,7 +660,7 @@
         }
 
         // Clear errors on input
-        ['nim', 'nip', 'phone', 'email'].forEach(function(fieldId) {
+        ['nim', 'nip', 'phone', 'email', 'name', 'study_program_other', 'purpose_other', 'collaborating_lecturer_name'].forEach(function(fieldId) {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.addEventListener('input', function() {
@@ -647,6 +668,22 @@
                 });
             }
         });
+
+        // Clear radio/select errors
+        ['applicant_type', 'purpose', 'has_lecturer_collaboration'].forEach(name => {
+            document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+                input.addEventListener('change', () => clearFieldError(name));
+            });
+        });
+
+        ['study_program'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', () => clearFieldError(id));
+        });
+        
+        // Clear checkbox errors
+        document.querySelector('input[name="agreement_accepted"]')?.addEventListener('change', () => clearFieldError('agreement_accepted'));
+        document.getElementById('ktm')?.addEventListener('change', () => clearFieldError('ktm'));
+        document.getElementById('statement_letter')?.addEventListener('change', () => clearFieldError('statement_letter'));
 
         // Step navigation
         function showStep(step) {
@@ -680,6 +717,8 @@
         }
 
         function validateStep(step) {
+            let isValid = true;
+            
             if (step === 1) {
                 const applicantType = document.querySelector('input[name="applicant_type"]:checked');
                 const name = document.getElementById('name').value.trim();
@@ -689,93 +728,86 @@
                 const hasCollaboration = document.querySelector('input[name="has_lecturer_collaboration"]:checked');
 
                 if (!applicantType) {
-                    alert('Pilih status pemohon');
-                    return false;
+                    showFieldError('applicant_type', 'Pilih status pemohon');
+                    isValid = false;
                 }
                 if (!name) {
-                    alert('Nama wajib diisi');
-                    return false;
+                    showFieldError('name', 'Nama wajib diisi');
+                    isValid = false;
                 }
                 if (!email) {
-                    alert('Email wajib diisi');
-                    return false;
-                }
-
-                // Validate email format
-                const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                if (!emailPattern.test(email)) {
-                    showFieldError('email', 'Format email tidak valid');
-                    document.getElementById('email').focus();
-                    return false;
+                    showFieldError('email', 'Email wajib diisi');
+                    isValid = false;
+                } else {
+                     // Validate email format
+                    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailPattern.test(email)) {
+                        showFieldError('email', 'Format email tidak valid');
+                        isValid = false;
+                    }
                 }
 
                 if (!phone) {
-                    alert('Nomor WhatsApp wajib diisi');
-                    return false;
+                     showFieldError('phone', 'Nomor WhatsApp wajib diisi');
+                     isValid = false;
+                } else {
+                    // Validate phone format
+                    if (!/^08[0-9]{8,13}$/.test(phone)) {
+                        showFieldError('phone', 'Nomor WhatsApp harus diawali 08 dan berisi 10-15 digit angka');
+                        isValid = false;
+                    }
                 }
 
-                // Validate phone format
-                if (!/^08[0-9]{8,13}$/.test(phone)) {
-                    showFieldError('phone', 'Nomor WhatsApp harus diawali 08 dan berisi 10-15 digit angka');
-                    document.getElementById('phone').focus();
-                    return false;
-                }
-
-                if (applicantType.value === 'mahasiswa') {
+                if (applicantType && applicantType.value === 'mahasiswa') {
                     const nim = document.getElementById('nim').value.trim();
                     const studyProgram = document.getElementById('study_program').value;
                     if (!nim) {
                         showFieldError('nim', 'NIM wajib diisi untuk mahasiswa');
-                        document.getElementById('nim').focus();
-                        return false;
-                    }
-                    if (!/^[0-9]{14}$/.test(nim)) {
+                        isValid = false;
+                    } else if (!/^[0-9]{14}$/.test(nim)) {
                         showFieldError('nim', 'NIM harus 14 digit angka');
-                        document.getElementById('nim').focus();
-                        return false;
+                        isValid = false;
                     }
                     if (!studyProgram) {
-                        alert('Program studi wajib dipilih untuk mahasiswa');
-                        document.getElementById('study_program').focus();
-                        return false;
+                        showFieldError('study_program', 'Program studi wajib dipilih untuk mahasiswa');
+                        isValid = false;
+                    } else if (studyProgram === 'Lainnya') {
+                         const spOther = document.getElementById('study_program_other').value.trim();
+                         if (!spOther) {
+                             showFieldError('study_program_other', 'Tuliskan program studi Anda');
+                             isValid = false;
+                         }
                     }
-                } else {
+                } else if (applicantType && applicantType.value === 'dosen') {
                     const nip = document.getElementById('nip').value.trim();
                     if (!nip) {
                         showFieldError('nip', 'NIP wajib diisi untuk dosen');
-                        document.getElementById('nip').focus();
-                        return false;
-                    }
-                    if (!/^[0-9]{18}$/.test(nip)) {
+                        isValid = false;
+                    } else if (!/^[0-9]{18}$/.test(nip)) {
                         showFieldError('nip', 'NIP harus 18 digit angka');
-                        document.getElementById('nip').focus();
-                        return false;
+                        isValid = false;
                     }
                 }
 
                 if (!purpose) {
-                    alert('Pilih keperluan penggunaan data');
-                    return false;
-                }
-
-                if (purpose.value === 'Lainnya') {
+                    showFieldError('purpose', 'Pilih keperluan penggunaan data');
+                    isValid = false;
+                } else if (purpose.value === 'Lainnya') {
                     const purposeOther = document.getElementById('purpose_other').value.trim();
                     if (!purposeOther) {
-                        alert('Jelaskan keperluan lainnya');
-                        return false;
+                        showFieldError('purpose_other', 'Jelaskan keperluan lainnya');
+                        isValid = false;
                     }
                 }
 
                 if (!hasCollaboration) {
-                    alert('Pilih apakah bekerja sama dengan dosen');
-                    return false;
-                }
-
-                if (hasCollaboration.value === '1') {
+                    showFieldError('has_lecturer_collaboration', 'Pilih apakah bekerja sama dengan dosen');
+                    isValid = false;
+                } else if (hasCollaboration.value === '1') {
                     const lecturerName = document.getElementById('collaborating_lecturer_name').value.trim();
                     if (!lecturerName) {
-                        alert('Nama dosen pembimbing wajib diisi');
-                        return false;
+                         showFieldError('collaborating_lecturer_name', 'Nama dosen pembimbing wajib diisi');
+                         isValid = false;
                     }
                 }
             }
@@ -783,9 +815,15 @@
             if (step === 2) {
                 const selectedSubData = document.querySelectorAll('input[name="selected_data[]"]:checked');
                 const selectedMaster = document.querySelectorAll('input[name="selected_master[]"]:checked');
+                const errorBox = document.getElementById('step-2-error');
+                const errorText = document.getElementById('step-2-error-text');
                 
+                // Reset error
+                errorBox.classList.add('hidden');
+
                 if (selectedSubData.length === 0 && selectedMaster.length === 0) {
-                    alert('Pilih minimal satu dataset');
+                    errorText.textContent = 'Pilih minimal satu dataset';
+                    errorBox.classList.remove('hidden');
                     return false;
                 }
 
@@ -809,12 +847,21 @@
                 });
 
                 if (!hasVariables) {
-                    alert('Isi kode variabel untuk minimal satu dataset yang dipilih');
+                    errorText.textContent = 'Isi kode variabel untuk minimal satu dataset yang dipilih';
+                    errorBox.classList.remove('hidden');
                     return false;
                 }
             }
 
-            return true;
+            if (!isValid) {
+                 // Scroll to first error?
+                 const firstError = document.querySelector('.text-red-500:not(.hidden)');
+                 if (firstError) {
+                     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                 }
+            }
+
+            return isValid;
         }
 
         // Handle applicant type change
@@ -906,6 +953,11 @@
                 }
 
                 updateSelectedSummary();
+                // Clear step 2 error if any data selected
+                const errorBox = document.getElementById('step-2-error');
+                if (!errorBox.classList.contains('hidden')) {
+                     errorBox.classList.add('hidden');
+                }
             });
         });
 
@@ -922,6 +974,11 @@
                 }
 
                 updateSelectedSummary();
+                 // Clear step 2 error if any data selected
+                const errorBox = document.getElementById('step-2-error');
+                if (!errorBox.classList.contains('hidden')) {
+                     errorBox.classList.add('hidden');
+                }
             });
         });
 
@@ -959,6 +1016,7 @@
             if (input.files && input.files[0]) {
                 filename.textContent = '✓ ' + input.files[0].name;
                 filename.classList.remove('hidden');
+                clearFieldError(fieldId);
             } else {
                 filename.classList.add('hidden');
             }
@@ -968,33 +1026,36 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Form submission handler for final validation
             document.getElementById('bpsForm').addEventListener('submit', function(e) {
-                // Validate step 4 before submission
+                // Validate step 3 before submission
                 const isMahasiswa = document.querySelector('input[name="applicant_type"]:checked')?.value === 'mahasiswa';
+                let isValid = true;
                 
                 // Check required file uploads
                 const statementLetter = document.getElementById('statement_letter');
                 if (!statementLetter.files || statementLetter.files.length === 0) {
-                    e.preventDefault();
-                    alert('Silakan upload Surat Pernyataan Kesanggupan');
-                    return false;
+                    showFieldError('statement_letter', 'Silakan upload Surat Pernyataan Kesanggupan');
+                    isValid = false;
                 }
                 
                 // KTM is required for mahasiswa
                 if (isMahasiswa) {
                     const ktm = document.getElementById('ktm');
                     if (!ktm.files || ktm.files.length === 0) {
-                        e.preventDefault();
-                        alert('Silakan upload KTM untuk mahasiswa');
-                        return false;
+                        showFieldError('ktm', 'Silakan upload KTM untuk mahasiswa');
+                        isValid = false;
                     }
                 }
                 
                 // Check agreement checkbox
                 const agreement = document.querySelector('input[name="agreement_accepted"]');
                 if (!agreement.checked) {
-                    e.preventDefault();
-                    alert('Anda harus menyetujui pernyataan kesanggupan menjaga informasi');
-                    return false;
+                     showFieldError('agreement_accepted', 'Anda harus menyetujui pernyataan kesanggupan menjaga informasi');
+                     isValid = false;
+                }
+                
+                if (!isValid) {
+                     e.preventDefault();
+                     return false;
                 }
                 
                 // Disable submit button to prevent double submission
@@ -1027,6 +1088,7 @@
                     showStep(targetStep);
                 }
             @endif
+
 
             // Trigger change events for pre-filled values
             const checkedApplicant = document.querySelector('input[name="applicant_type"]:checked');

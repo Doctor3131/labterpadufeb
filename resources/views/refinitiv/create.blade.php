@@ -98,7 +98,7 @@
     <section class="py-8 lg:py-12">
         <div class="container mx-auto px-4 lg:px-8">
             <div class="max-w-4xl mx-auto">
-                <form action="{{ route('refinitiv.store') }}" method="POST" enctype="multipart/form-data" id="refinitivForm">
+                <form action="{{ route('refinitiv.store') }}" method="POST" enctype="multipart/form-data" id="refinitivForm" novalidate>
                     @csrf
                     
                     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -147,6 +147,7 @@
                                     @error('applicant_type')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="applicant_type-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Nama -->
@@ -154,12 +155,13 @@
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
                                         Nama <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" name="name" value="{{ old('name') }}" required
+                                    <input type="text" name="name" id="name" value="{{ old('name') }}" required
                                         placeholder="Nama lengkap Anda"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('name') border-red-500 @enderror">
                                     @error('name')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="name-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- NIM (for Mahasiswa) -->
@@ -175,6 +177,7 @@
                                         oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nim') border-red-500 @enderror">
                                     <p class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
+                                    <p id="nim-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                     @error('nim')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
@@ -193,6 +196,7 @@
                                         oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18)"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nip') border-red-500 @enderror">
                                     <p class="text-xs text-gray-500 mt-1">NIP harus 18 digit angka</p>
+                                    <p id="nip-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                     @error('nip')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
@@ -212,6 +216,7 @@
                                         oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15)"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('whatsapp') border-red-500 @enderror">
                                     <p class="text-xs text-gray-500 mt-1">Nomor harus diawali 08 dan 10-15 digit</p>
+                                    <p id="whatsapp-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                     @error('whatsapp')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
@@ -235,6 +240,7 @@
                                     @error('affiliation')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="affiliation-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Program Studi (for Mahasiswa only) -->
@@ -242,7 +248,7 @@
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
                                         Program Studi <span class="text-red-500">*</span>
                                     </label>
-                                    <select name="study_program" id="study_program_select"
+                                    <select name="study_program" id="study_program"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('study_program') border-red-500 @enderror">
                                         <option value="">Pilih Program Studi</option>
                                         @foreach($studyPrograms as $program)
@@ -252,6 +258,7 @@
                                     @error('study_program')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="study_program-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Program Studi Lainnya (conditional) -->
@@ -265,6 +272,7 @@
                                     @error('study_program_other')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="study_program_other-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
                             </div>
                         </div>
@@ -295,6 +303,7 @@
                                     @error('purpose')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="purpose-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Purpose Other (conditional) -->
@@ -302,12 +311,13 @@
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
                                         Keperluan Lainnya <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" name="purpose_other" value="{{ old('purpose_other') }}"
+                                    <input type="text" name="purpose_other" id="purpose_other" value="{{ old('purpose_other') }}"
                                         placeholder="Tuliskan keperluan Anda"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                     @error('purpose_other')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="purpose_other-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Lecturer Name (conditional) -->
@@ -316,12 +326,13 @@
                                         Penelitian/Project dengan Dosen <span class="text-red-500">*</span>
                                         <span class="text-gray-500 font-normal text-xs block">*Tuliskan nama dosen</span>
                                     </label>
-                                    <input type="text" name="lecturer_name" value="{{ old('lecturer_name') }}"
+                                    <input type="text" name="lecturer_name" id="lecturer_name" value="{{ old('lecturer_name') }}"
                                         placeholder="Nama dosen pembimbing/kolaborasi"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                                     @error('lecturer_name')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="lecturer_name-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Tanggal Pemakaian -->
@@ -340,6 +351,7 @@
                                     @error('usage_date')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="usage_date-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Sesi/Pukul -->
@@ -360,6 +372,7 @@
                                     @error('session')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="session-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Variabel -->
@@ -368,12 +381,13 @@
                                         Variabel yang dibutuhkan? <span class="text-red-500">*</span>
                                         <span class="text-gray-500 font-normal text-xs block">Format Penulisan Variabel: (Variabel 1, Variabel 2, Variabel 3, dst)</span>
                                     </label>
-                                    <textarea name="variables" rows="3" required
+                                    <textarea name="variables" id="variables" rows="3" required
                                         placeholder="Contoh: Harga Saham, Volume Trading, Market Cap, ROE, ROA"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white @error('variables') border-red-500 @enderror">{{ old('variables') }}</textarea>
                                     @error('variables')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="variables-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
                             </div>
                         </div>
@@ -399,6 +413,7 @@
                                     @error('ktm_file')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="ktm_file-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Surat Pernyataan Upload -->
@@ -414,12 +429,13 @@
                                     @error('statement_file')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="statement_file-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Agreement Checkbox -->
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                     <label class="flex items-start cursor-pointer">
-                                        <input type="checkbox" name="agreement" value="1" required
+                                        <input type="checkbox" name="agreement" id="agreement" value="1" required
                                             {{ old('agreement') ? 'checked' : '' }}
                                             class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-0.5">
                                         <span class="ml-3 text-gray-700 text-sm">
@@ -430,12 +446,13 @@
                                     @error('agreement')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="agreement-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Understood Checkbox -->
                                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                                     <label class="flex items-start cursor-pointer">
-                                        <input type="checkbox" name="understood" value="1" required
+                                        <input type="checkbox" name="understood" id="understood" value="1" required
                                             {{ old('understood') ? 'checked' : '' }}
                                             class="w-5 h-5 text-yellow-600 rounded focus:ring-yellow-500 mt-0.5">
                                         <span class="ml-3 text-gray-700 text-sm">
@@ -446,6 +463,7 @@
                                     @error('understood')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="understood-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Submit Button -->
@@ -482,7 +500,7 @@
             const nimInput = document.getElementById('nim_input');
             const nipInput = document.getElementById('nip_input');
             const studyProgramField = document.getElementById('study_program_field');
-            const studyProgramSelect = document.getElementById('study_program_select');
+            const studyProgramSelect = document.getElementById('study_program');
             const studyProgramOtherField = document.getElementById('study_program_other_field');
             const studyProgramOtherInput = document.getElementById('study_program_other_input');
             const ktmField = document.getElementById('ktm_field');
@@ -579,10 +597,91 @@
                 }
             }
 
+            // Helper to show/hide errors
+            function showFieldError(fieldId, message) {
+                const errorEl = document.getElementById(fieldId + '-error');
+                const inputEl = document.getElementById(fieldId + '_input');
+                // Also check if there's no _input suffix (e.g. selects, radios might not have it or have different ID)
+                const inputElNoSuffix = document.getElementById(fieldId);
+                
+                if (errorEl) {
+                    errorEl.innerHTML = '<strong>* ' + message + '</strong>';
+                    errorEl.classList.remove('hidden');
+                }
+                
+                if (inputEl) {
+                    inputEl.classList.add('border-red-500');
+                    inputEl.classList.remove('border-gray-300');
+                    inputEl.focus();
+                } else if (inputElNoSuffix) {
+                    inputElNoSuffix.classList.add('border-red-500');
+                    inputElNoSuffix.classList.remove('border-gray-300');
+                    inputElNoSuffix.focus();
+                }
+            }
+
+            function clearFieldError(fieldId) {
+                const errorEl = document.getElementById(fieldId + '-error');
+                const inputEl = document.getElementById(fieldId + '_input');
+                const inputElNoSuffix = document.getElementById(fieldId);
+                
+                if (errorEl) {
+                    errorEl.classList.add('hidden');
+                }
+                
+                if (inputEl) {
+                    inputEl.classList.remove('border-red-500');
+                    inputEl.classList.add('border-gray-300');
+                } else if (inputElNoSuffix) {
+                    inputElNoSuffix.classList.remove('border-red-500');
+                    inputElNoSuffix.classList.add('border-gray-300');
+                }
+            }
+
+            // Clear errors on input/change
+            const fieldsToWatch = [
+                { id: 'name', event: 'input' },
+                { id: 'whatsapp', event: 'input' },
+                { id: 'nim', event: 'input' },
+                { id: 'nip', event: 'input' },
+                { id: 'study_program_other', event: 'input' },
+                { id: 'purpose_other', event: 'input' },
+                { id: 'lecturer_name', event: 'input' },
+                { id: 'variables', event: 'input' },
+                { id: 'usage_date', event: 'change' },
+                { id: 'ktm_file', event: 'change' },
+                { id: 'statement_file', event: 'change' },
+                { id: 'agreement', event: 'change' },
+                { id: 'understood', event: 'change' }
+            ];
+
+            fieldsToWatch.forEach(field => {
+                const input = document.getElementById(field.id) || document.getElementById(field.id + '_input');
+                if (input) {
+                    input.addEventListener(field.event, () => clearFieldError(field.id));
+                }
+            });
+
+            // Special handling for Radios and Selects
+            document.querySelectorAll('input[name="applicant_type"]').forEach(radio => {
+                radio.addEventListener('change', () => clearFieldError('applicant_type'));
+            });
+            document.querySelectorAll('input[name="affiliation"]').forEach(radio => {
+                radio.addEventListener('change', () => clearFieldError('affiliation'));
+            });
+            if (studyProgramSelect) {
+                studyProgramSelect.addEventListener('change', () => clearFieldError('study_program'));
+            }
+            document.querySelectorAll('input[name="purpose"]').forEach(radio => {
+                radio.addEventListener('change', () => clearFieldError('purpose'));
+            });
+            document.querySelectorAll('input[name="session"]').forEach(radio => {
+                radio.addEventListener('change', () => clearFieldError('session'));
+            });
+
             // Sunday validation for usage_date
             const usageDateInput = document.getElementById('usage_date_input');
             const sundayWarning = document.getElementById('sunday-warning');
-            const submitBtn = document.getElementById('submitBtn');
             
             function validateSunday() {
                 if (usageDateInput.value) {
@@ -602,49 +701,151 @@
                 }
             }
             
-            usageDateInput.addEventListener('change', validateSunday);
-            validateSunday(); // Run on load in case old value was Sunday
+            if (usageDateInput) {
+                usageDateInput.addEventListener('change', validateSunday);
+                validateSunday(); // Run on load
+            }
 
             // Form submission with validation
             document.getElementById('refinitivForm').addEventListener('submit', function(e) {
+                let isValid = true;
                 const isDosen = typeDosen.checked;
-                const whatsapp = document.getElementById('whatsapp_input').value.trim();
                 
-                // Check for Sunday
-                if (usageDateInput.value) {
-                    const date = new Date(usageDateInput.value);
-                    if (date.getDay() === 0) {
-                        e.preventDefault();
-                        alert('Pemakaian data Refinitiv tidak tersedia pada hari Minggu. Silakan pilih tanggal lain.');
-                        usageDateInput.focus();
+                // Helper to validate and show error
+                function validateField(fieldId, condition, message) {
+                    if (condition) {
+                        showFieldError(fieldId, message);
+                        isValid = false;
                         return false;
                     }
+                    return true;
                 }
-                
-                // Validate WhatsApp
-                if (!/^08[0-9]{8,13}$/.test(whatsapp)) {
-                    e.preventDefault();
-                    alert('Nomor WhatsApp harus diawali 08 dan berisi 10-15 digit angka');
-                    document.getElementById('whatsapp_input').focus();
-                    return false;
+
+                // 1. Data Diri
+                // Applicant Type
+                if (!document.querySelector('input[name="applicant_type"]:checked')) {
+                    showFieldError('applicant_type', 'Status pemohon harus dipilih');
+                    isValid = false;
                 }
-                
+
+                // Name
+                const nameInput = document.querySelector('input[name="name"]');
+                validateField('name', !nameInput.value.trim(), 'Nama wajib diisi');
+
+                // NIM / NIP
                 if (isDosen) {
                     const nip = nipInput.value.trim();
-                    if (!/^[0-9]{18}$/.test(nip)) {
-                        e.preventDefault();
-                        alert('NIP harus 18 digit angka');
-                        nipInput.focus();
-                        return false;
+                    if (validateField('nip', !nip, 'NIP wajib diisi')) {
+                        if (!/^[0-9]{18}$/.test(nip)) {
+                             showFieldError('nip', 'NIP harus 18 digit angka');
+                             isValid = false;
+                        }
                     }
                 } else {
                     const nim = nimInput.value.trim();
-                    if (!/^[0-9]{14}$/.test(nim)) {
-                        e.preventDefault();
-                        alert('NIM harus 14 digit angka');
-                        nimInput.focus();
-                        return false;
+                    if (validateField('nim', !nim, 'NIM wajib diisi')) {
+                         if (!/^[0-9]{14}$/.test(nim)) {
+                             showFieldError('nim', 'NIM harus 14 digit angka');
+                             isValid = false;
+                         }
                     }
+                    
+                    // Study Program
+                    const studyProgram = studyProgramSelect.value;
+                    if (validateField('study_program', !studyProgram, 'Program studi wajib dipilih')) {
+                        if (studyProgram === 'Lainnya') {
+                             const studyProgramOther = studyProgramOtherInput.value.trim();
+                             validateField('study_program_other', !studyProgramOther, 'Program studi lainnya wajib diisi');
+                        }
+                    }
+
+                    // KTM Check
+                    if (ktmFileInput.hasAttribute('required') && ktmFileInput.files.length === 0) {
+                        showFieldError('ktm_file', 'Upload KTM wajib untuk mahasiswa');
+                        isValid = false;
+                    }
+                }
+
+                // WhatsApp
+                const whatsapp = document.getElementById('whatsapp_input').value.trim();
+                if (validateField('whatsapp', !whatsapp, 'Nomor WhatsApp wajib diisi')) {
+                    if (!/^08[0-9]{8,13}$/.test(whatsapp)) {
+                        showFieldError('whatsapp', 'Nomor WhatsApp harus diawali 08 dan 10-15 digit');
+                        isValid = false;
+                    }
+                }
+
+                // Affiliation
+                 if (!document.querySelector('input[name="affiliation"]:checked')) {
+                    showFieldError('affiliation', 'Keterangan wajib dipilih');
+                    isValid = false;
+                }
+
+                // 2. Keperluan & Jadwal
+                // Purpose
+                const purposeChecked = document.querySelector('input[name="purpose"]:checked');
+                if (!purposeChecked) {
+                    showFieldError('purpose', 'Keperluan penggunaan data wajib dipilih');
+                    isValid = false;
+                } else {
+                    if (purposeChecked.value === 'lainnya') {
+                        const purposeOther = document.querySelector('input[name="purpose_other"]').value.trim();
+                        validateField('purpose_other', !purposeOther, 'Keperluan lainnya wajib diisi');
+                    }
+                    if (purposeChecked.value === 'penelitian_dosen') {
+                         const lecturerName = document.querySelector('input[name="lecturer_name"]').value.trim();
+                         validateField('lecturer_name', !lecturerName, 'Nama dosen wajib diisi');
+                    }
+                }
+
+                // Usage Date
+                const usageDate = usageDateInput.value;
+                 if (validateField('usage_date', !usageDate, 'Tanggal pemakaian wajib diisi')) {
+                    const date = new Date(usageDate);
+                    if (date.getDay() === 0) {
+                         sundayWarning.classList.remove('hidden');
+                         usageDateInput.classList.add('border-red-500');
+                         isValid = false;
+                    }
+                 }
+
+                 // Session
+                  if (!document.querySelector('input[name="session"]:checked')) {
+                    showFieldError('session', 'Sesi/Pukul wajib dipilih');
+                    isValid = false;
+                }
+
+                // Variables
+                const variables = document.querySelector('textarea[name="variables"]').value.trim();
+                validateField('variables', !variables, 'Variabel wajib diisi');
+
+                // 3. Dokumen
+                // Statement File
+                 if (document.getElementById('statement_file').files.length === 0) {
+                     showFieldError('statement_file', 'Surat pernyataan wajib diupload');
+                     isValid = false;
+                 }
+
+                 // Agreement
+                 if (!document.querySelector('input[name="agreement"]').checked) {
+                     showFieldError('agreement', 'Anda harus menyetujui pernyataan ini');
+                     isValid = false;
+                 }
+
+                 // Understood
+                 if (!document.querySelector('input[name="understood"]').checked) {
+                     showFieldError('understood', 'Anda harus menyetujui pernyataan ini');
+                     isValid = false;
+                 }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    // Scroll to first error
+                    const firstError = document.querySelector('.text-red-500:not(.hidden)');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return false;
                 }
                 
                 // Loading state
