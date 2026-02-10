@@ -1516,24 +1516,48 @@
             document.getElementById('document').addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 const fileNameDisplay = document.getElementById('file-name');
+                const uploadBox = this.closest('.border-dashed');
+                
+                // Remove previous error
+                const existingError = uploadBox.parentElement.querySelector('.file-validation-error');
+                if (existingError) existingError.remove();
+                uploadBox.classList.remove('border-red-400', 'bg-red-50');
                 
                 if (file) {
-                    // Check file size (2MB = 2097152 bytes)
-                    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+                    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                    const allowedType = 'application/pdf';
+                    const allowedExt = file.name.toLowerCase().endsWith('.pdf');
+                    let errorMsg = '';
                     
-                    if (file.size > maxSize) {
-                        alert('⚠️ File terlalu besar!\n\nUkuran file: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB\nMaksimal: 2 MB\n\nSilakan compress file PDF Anda terlebih dahulu.');
-                        this.value = ''; // Clear the file input
+                    if (file.type !== allowedType && !allowedExt) {
+                        errorMsg = '⚠️ Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
+                    } else if (file.size > maxSize) {
+                        errorMsg = '⚠️ Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                    }
+                    
+                    if (errorMsg) {
+                        // Show inline error
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'file-validation-error mt-2 bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm flex items-center';
+                        errorDiv.innerHTML = '<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' + errorMsg;
+                        uploadBox.parentElement.appendChild(errorDiv);
+                        uploadBox.classList.add('border-red-400', 'bg-red-50');
+                        
+                        this.value = '';
                         fileNameDisplay.textContent = '';
-                        validateStep4(); // Re-validate
+                        fileNameDisplay.classList.remove('text-green-600');
+                        validateStep4();
                         return;
                     }
                     
                     const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
                     fileNameDisplay.textContent = `✓ Terpilih: ${file.name} (${fileSizeMB} MB)`;
                     fileNameDisplay.classList.add('text-green-600');
+                    uploadBox.classList.add('border-green-400', 'bg-green-50');
                 } else {
                     fileNameDisplay.textContent = '';
+                    fileNameDisplay.classList.remove('text-green-600');
+                    uploadBox.classList.remove('border-green-400', 'bg-green-50');
                 }
                 validateStep4();
             });

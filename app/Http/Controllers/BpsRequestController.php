@@ -65,7 +65,7 @@ class BpsRequestController extends Controller
             'variables.*' => 'nullable|string|max:1000',
             'master_variables' => 'nullable|array',
             'master_variables.*' => 'nullable|string|max:1000',
-            'statement_letter' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'statement_letter' => 'required|file|mimes:pdf|max:5120',
             'agreement_accepted' => 'required|accepted',
         ];
 
@@ -73,7 +73,7 @@ class BpsRequestController extends Controller
         if ($request->input('applicant_type') === 'mahasiswa') {
             $rules['nim'] = ['required', 'string', 'regex:/^[0-9]{14}$/'];
             $rules['study_program'] = 'required|string|max:255';
-            $rules['ktm'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:5120';
+            $rules['ktm'] = 'required|file|mimes:pdf|max:5120';
             
             // Add study_program_other validation when "Lainnya" is selected
             if ($request->input('study_program') === 'Lainnya') {
@@ -103,10 +103,10 @@ class BpsRequestController extends Controller
             'selected_data.min' => 'Pilih minimal satu dataset',
             'variables.required' => 'Kode variabel wajib diisi',
             'ktm.required' => 'Upload KTM wajib untuk mahasiswa',
-            'ktm.mimes' => 'Format file KTM harus PDF, JPG, atau PNG',
+            'ktm.mimes' => 'Format file KTM harus PDF',
             'ktm.max' => 'Ukuran file KTM maksimal 5MB',
             'statement_letter.required' => 'Surat pernyataan kesanggupan wajib diupload',
-            'statement_letter.mimes' => 'Format surat pernyataan harus PDF, JPG, atau PNG',
+            'statement_letter.mimes' => 'Format surat pernyataan harus PDF',
             'statement_letter.max' => 'Ukuran surat pernyataan maksimal 5MB',
             'agreement_accepted.required' => 'Anda harus menyetujui peraturan penggunaan data',
             'agreement_accepted.accepted' => 'Anda harus menyetujui peraturan penggunaan data',

@@ -51,7 +51,7 @@ class RefinitivRequestController extends Controller
             ],
             'session' => 'required|in:sesi_1,sesi_2,sesi_3',
             'variables' => 'required|string|max:2000',
-            'statement_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'statement_file' => 'required|file|mimes:pdf|max:5120',
             'agreement' => 'required|accepted',
             'understood' => 'required|accepted',
         ];
@@ -62,7 +62,7 @@ class RefinitivRequestController extends Controller
         } else {
             $rules['nim'] = ['required', 'string', 'regex:/^[0-9]{14}$/'];
             $rules['study_program'] = 'required|string|max:255';
-            $rules['ktm_file'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:10240';
+            $rules['ktm_file'] = 'required|file|mimes:pdf|max:5120';
         }
 
         if ($request->input('purpose') === 'lainnya') {
@@ -98,11 +98,11 @@ class RefinitivRequestController extends Controller
             'session.required' => 'Sesi pemakaian wajib dipilih',
             'variables.required' => 'Variabel yang dibutuhkan wajib diisi',
             'ktm_file.required' => 'Upload KTM wajib bagi mahasiswa',
-            'ktm_file.mimes' => 'File KTM harus berupa PDF, JPG, atau PNG',
-            'ktm_file.max' => 'Ukuran file KTM maksimal 10MB',
+            'ktm_file.mimes' => 'File KTM harus berupa PDF',
+            'ktm_file.max' => 'Ukuran file KTM maksimal 5MB',
             'statement_file.required' => 'Surat Pernyataan Kesanggupan wajib diupload',
-            'statement_file.mimes' => 'File surat harus berupa PDF, JPG, atau PNG',
-            'statement_file.max' => 'Ukuran file surat maksimal 10MB',
+            'statement_file.mimes' => 'File surat harus berupa PDF',
+            'statement_file.max' => 'Ukuran file surat maksimal 5MB',
             'agreement.required' => 'Anda harus menyetujui pernyataan',
             'agreement.accepted' => 'Anda harus menyetujui pernyataan',
             'understood.required' => 'Anda harus memahami mekanisme',

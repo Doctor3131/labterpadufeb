@@ -404,10 +404,10 @@
                                 <div id="ktm_field">
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
                                         Upload KTM <span class="text-red-500" id="ktm_required">*</span>
-                                        <span class="text-gray-500 font-normal text-xs block">*wajib bagi mahasiswa. Maks 10 MB (PDF/JPG/PNG)</span>
+                                        <span class="text-gray-500 font-normal text-xs block">*wajib bagi mahasiswa. Maks 5 MB (PDF)</span>
                                     </label>
                                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
-                                        <input type="file" name="ktm_file" id="ktm_file" accept=".pdf,.jpg,.jpeg,.png"
+                                        <input type="file" name="ktm_file" id="ktm_file" accept=".pdf"
                                             class="w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                                     </div>
                                     @error('ktm_file')
@@ -420,10 +420,10 @@
                                 <div>
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
                                         Surat Pernyataan Kesanggupan <span class="text-red-500">*</span>
-                                        <span class="text-gray-500 font-normal text-xs block">*format surat dapat diunduh di atas. Maks 10 MB (PDF/JPG/PNG)</span>
+                                        <span class="text-gray-500 font-normal text-xs block">*format surat dapat diunduh di atas. Maks 5 MB (PDF)</span>
                                     </label>
                                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
-                                        <input type="file" name="statement_file" id="statement_file" accept=".pdf,.jpg,.jpeg,.png" required
+                                        <input type="file" name="statement_file" id="statement_file" accept=".pdf" required
                                             class="w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                                     </div>
                                     @error('statement_file')
@@ -638,6 +638,55 @@
                 }
             }
 
+            // Instant file validation function
+            function validateFileUpload(inputEl, fieldId) {
+                const file = inputEl.files[0];
+                const uploadBox = inputEl.closest('.border-dashed');
+                
+                // Remove previous validation error
+                const existingError = uploadBox.parentElement.querySelector('.file-validation-error');
+                if (existingError) existingError.remove();
+                uploadBox.classList.remove('border-red-400', 'bg-red-50', 'border-green-400', 'bg-green-50');
+                
+                if (file) {
+                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    const allowedExt = file.name.toLowerCase().endsWith('.pdf');
+                    const allowedType = file.type === 'application/pdf';
+                    let errorMsg = '';
+                    
+                    if (!allowedType && !allowedExt) {
+                        errorMsg = '⚠️ Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
+                    } else if (file.size > maxSize) {
+                        errorMsg = '⚠️ Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                    }
+                    
+                    if (errorMsg) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'file-validation-error mt-2 bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm flex items-center';
+                        errorDiv.innerHTML = '<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' + errorMsg;
+                        uploadBox.parentElement.appendChild(errorDiv);
+                        uploadBox.classList.add('border-red-400', 'bg-red-50');
+                        
+                        inputEl.value = '';
+                        return;
+                    }
+                    
+                    // Valid file
+                    uploadBox.classList.add('border-green-400', 'bg-green-50');
+                    clearFieldError(fieldId);
+                }
+            }
+
+            // Wire up instant file validation
+            const ktmFileEl = document.getElementById('ktm_file');
+            const statementFileEl = document.getElementById('statement_file');
+            if (ktmFileEl) {
+                ktmFileEl.addEventListener('change', function() { validateFileUpload(this, 'ktm_file'); });
+            }
+            if (statementFileEl) {
+                statementFileEl.addEventListener('change', function() { validateFileUpload(this, 'statement_file'); });
+            }
+
             // Clear errors on input/change
             const fieldsToWatch = [
                 { id: 'name', event: 'input' },
@@ -649,8 +698,6 @@
                 { id: 'lecturer_name', event: 'input' },
                 { id: 'variables', event: 'input' },
                 { id: 'usage_date', event: 'change' },
-                { id: 'ktm_file', event: 'change' },
-                { id: 'statement_file', event: 'change' },
                 { id: 'agreement', event: 'change' },
                 { id: 'understood', event: 'change' }
             ];

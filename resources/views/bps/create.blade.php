@@ -571,13 +571,13 @@
                             Upload KTM <span class="text-red-500">*</span>
                         </label>
                         <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                            <input type="file" id="ktm" name="ktm" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="updateFileLabel('ktm', this)">
+                            <input type="file" id="ktm" name="ktm" accept=".pdf" class="hidden" onchange="updateFileLabel('ktm', this)">
                             <label for="ktm" class="cursor-pointer">
                                 <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                                 </svg>
                                 <p class="text-gray-600 font-medium">Klik untuk upload KTM</p>
-                                <p class="text-sm text-gray-500 mt-1">PDF, JPG, PNG (Maks. 5MB)</p>
+                                <p class="text-sm text-gray-500 mt-1">PDF (Maks. 5MB)</p>
                             </label>
                             <p id="ktm-filename" class="text-sm text-blue-600 mt-2 font-medium hidden"></p>
                         </div>
@@ -593,13 +593,13 @@
                             Download format surat: <a href="https://bit.ly/SuratPernyataanKesanggupanMenjagaInformasi" target="_blank" class="text-blue-600 underline font-semibold hover:text-blue-800">Klik di sini</a>
                         </p>
                         <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                            <input type="file" id="statement_letter" name="statement_letter" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="updateFileLabel('statement_letter', this)" required>
+                            <input type="file" id="statement_letter" name="statement_letter" accept=".pdf" class="hidden" onchange="updateFileLabel('statement_letter', this)" required>
                             <label for="statement_letter" class="cursor-pointer">
                                 <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                                 </svg>
                                 <p class="text-gray-600 font-medium">Klik untuk upload Surat Pernyataan</p>
-                                <p class="text-sm text-gray-500 mt-1">PDF, JPG, PNG (Maks. 5MB)</p>
+                                <p class="text-sm text-gray-500 mt-1">PDF (Maks. 5MB)</p>
                             </label>
                             <p id="statement_letter-filename" class="text-sm text-blue-600 mt-2 font-medium hidden"></p>
                         </div>
@@ -1010,12 +1010,45 @@
             }
         }
 
-        // File upload label update
+        // File upload label update with instant validation
         function updateFileLabel(fieldId, input) {
             const filename = document.getElementById(fieldId + '-filename');
+            const uploadBox = input.closest('.border-dashed');
+            
+            // Remove previous validation error
+            const existingError = uploadBox.parentElement.querySelector('.file-validation-error');
+            if (existingError) existingError.remove();
+            uploadBox.classList.remove('border-red-400', 'bg-red-50', 'border-green-400', 'bg-green-50');
+            
             if (input.files && input.files[0]) {
-                filename.textContent = '✓ ' + input.files[0].name;
+                const file = input.files[0];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                const allowedExt = file.name.toLowerCase().endsWith('.pdf');
+                const allowedType = file.type === 'application/pdf';
+                let errorMsg = '';
+                
+                if (!allowedType && !allowedExt) {
+                    errorMsg = '⚠️ Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
+                } else if (file.size > maxSize) {
+                    errorMsg = '⚠️ Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                }
+                
+                if (errorMsg) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'file-validation-error mt-2 bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm flex items-center';
+                    errorDiv.innerHTML = '<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' + errorMsg;
+                    uploadBox.parentElement.appendChild(errorDiv);
+                    uploadBox.classList.add('border-red-400', 'bg-red-50');
+                    
+                    input.value = '';
+                    filename.classList.add('hidden');
+                    return;
+                }
+                
+                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                filename.textContent = '✓ ' + file.name + ' (' + fileSizeMB + ' MB)';
                 filename.classList.remove('hidden');
+                uploadBox.classList.add('border-green-400', 'bg-green-50');
                 clearFieldError(fieldId);
             } else {
                 filename.classList.add('hidden');
