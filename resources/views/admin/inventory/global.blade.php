@@ -34,21 +34,21 @@
                 <div class="text-sm text-gray-500 mb-1 font-medium">Total Jenis Aset</div>
                 <div class="text-3xl font-bold text-gray-800">{{ $globalTotals['total_items'] }}</div>
             </div>
-            <div class="bg-green-50 rounded-xl p-4 border border-green-100 hover:border-green-200 transition-colors">
-                <div class="text-sm text-green-600 mb-1 font-medium">Baik</div>
-                <div class="text-3xl font-bold text-green-700">{{ $globalTotals['BAIK'] }}</div>
+            <div class="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+                <div class="text-sm text-gray-600 mb-1 font-medium">Baik</div>
+                <div class="text-3xl font-bold text-gray-700">{{ $globalTotals['BAIK'] }}</div>
             </div>
-            <div class="bg-red-50 rounded-xl p-4 border border-red-100 hover:border-red-200 transition-colors">
-                <div class="text-sm text-red-600 mb-1 font-medium">Rusak</div>
-                <div class="text-3xl font-bold text-red-700">{{ $globalTotals['RUSAK'] }}</div>
+            <div class="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+                <div class="text-sm text-gray-600 mb-1 font-medium">Rusak</div>
+                <div class="text-3xl font-bold text-gray-700">{{ $globalTotals['RUSAK'] }}</div>
             </div>
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-colors">
                 <div class="text-sm text-gray-500 mb-1 font-medium">Hilang</div>
                 <div class="text-3xl font-bold text-gray-700">{{ $globalTotals['HILANG'] }}</div>
             </div>
-            <div class="bg-yellow-50 rounded-xl p-4 border border-yellow-100 hover:border-yellow-200 transition-colors">
-                <div class="text-sm text-yellow-600 mb-1 font-medium">Maintenance</div>
-                <div class="text-3xl font-bold text-yellow-700">{{ $globalTotals['MAINTENANCE'] }}</div>
+            <div class="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+                <div class="text-sm text-gray-600 mb-1 font-medium">Maintenance</div>
+                <div class="text-3xl font-bold text-gray-700">{{ $globalTotals['MAINTENANCE'] }}</div>
             </div>
         </div>
     </div>
