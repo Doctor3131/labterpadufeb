@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Schedule;
+use App\Models\ScheduleDocument;
 use App\Models\BpsRequest;
 use App\Models\RefinitivRequest;
+use App\Services\ScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -86,7 +88,7 @@ class AdminController extends Controller
             // Pribadi bookings skip conflict check - no lab, no schedule created
             if (!$isPribadi) {
                 $bookingDate = Carbon::parse($booking->booking_date);
-                $conflictCheck = $this->checkScheduleConflict(
+                $conflictCheck = ScheduleService::checkConflict(
                     $booking->lab_id,
                     $booking->day,
                     $booking->start_time,
@@ -118,48 +120,30 @@ class AdminController extends Controller
             if (!$isPribadi) {
                 $bookingDate = Carbon::parse($booking->booking_date);
                 
-                $scheduleData = [
-                    'lab_id' => $booking->lab_id,
-                    'day' => $booking->day,
-                    'start_time' => $booking->start_time,
-                    'end_time' => $booking->end_time,
-                    'booking_id' => $booking->id,
-                    'student_count' => $booking->participant_count,
-                ];
+                // Map booking data using Service (Optimization)
+                $scheduleData = ScheduleService::mapFromBooking($booking);
 
-                // Tentukan type dan data spesifik berdasarkan booking_type
-                if ($booking->is_recurring) {
-                    // Perkuliahan tetap - recurring schedule
-                    $scheduleData['type'] = 'perkuliahan_tetap';
-                    $scheduleData['start_date'] = $bookingDate->toDateString();
-                    $scheduleData['end_date'] = null; // Recurring tanpa batas
-                    $scheduleData['course'] = $booking->course_name;
-                    $scheduleData['lecturer'] = $booking->lecturer_name;
-                    $scheduleData['komting'] = $booking->pic_name;
-                } else {
-                    // One-time booking - use booking_type directly
-                    $scheduleData['type'] = $booking->booking_type;
-                    $scheduleData['start_date'] = $bookingDate->toDateString();
-                    $scheduleData['end_date'] = $bookingDate->toDateString();
-                    
-                    // Map data based on booking type
-                    if ($booking->booking_type === 'perkuliahan_tidak_tetap') {
-                        $scheduleData['course'] = $booking->course_name;
-                        $scheduleData['lecturer'] = $booking->lecturer_name;
-                        $scheduleData['komting'] = $booking->pic_name;
-                    } elseif ($booking->booking_type === 'non_perkuliahan') {
-                        $scheduleData['course'] = $booking->activity_name;
-                        $scheduleData['lecturer'] = null;
-                        $scheduleData['komting'] = null;
-                    } else {
-                        // Fallback for unknown booking type
-                        $scheduleData['course'] = $booking->course_name ?? $booking->activity_name ?? 'Peminjaman';
-                        $scheduleData['lecturer'] = null;
-                        $scheduleData['komting'] = null;
-                    }
+                // No need for manual mapping block here anymore
+
+                $schedule = Schedule::create($scheduleData);
+
+                // Sync booking document data to schedule document
+                try {
+                    ScheduleDocument::create([
+                        'schedule_id' => $schedule->id,
+                        'study_program' => $booking->study_program,
+                        'nim' => $booking->nim,
+                        'nip' => $booking->nip,
+                        'lecturer_nip' => $booking->lecturer_nip,
+                        // Only store phone in document for non_perkuliahan (perkuliahan uses schedules.komting_phone)
+                        'phone_number' => $booking->booking_type === 'non_perkuliahan' ? $booking->phone_number : null,
+                        'software_needs' => $booking->software_needs,
+                        'ktm_path' => $booking->document_path,
+                    ]);
+                } catch (\Exception $e) {
+                    // Log error but don't fail the approval transaction
+                    Log::error('Failed to sync schedule document: ' . $e->getMessage());
                 }
-
-                Schedule::create($scheduleData);
             }
             
             return redirect()->route('admin.dashboard')
@@ -210,70 +194,5 @@ class AdminController extends Controller
 
         return redirect()->route('admin.dashboard')
             ->with('success', 'Peminjaman berhasil ditolak.');
-    }
-
-    /**
-     * Check for schedule conflicts before approving a booking
-     * Returns error message if conflict exists, null otherwise
-     */
-    private function checkScheduleConflict($labId, $day, $startTime, $endTime, $startDate, $endDate = null)
-    {
-        // Check for conflicts with existing schedules
-        $conflictingSchedule = Schedule::where('lab_id', $labId)
-            ->where('day', $day)
-            ->where(function ($q) use ($startTime, $endTime) {
-                $q->whereTime('start_time', '<', $endTime)
-                  ->whereTime('end_time', '>', $startTime);
-            })
-            ->where(function ($q) use ($startDate, $endDate) {
-                // Date overlap check
-                $q->where(function ($q2) use ($startDate, $endDate) {
-                    // Permanent schedules (no end_date) that started before or on this date
-                    $q2->whereNull('end_date')
-                       ->where(function ($q3) use ($endDate, $startDate) {
-                           $q3->whereNull('start_date')
-                              ->orWhere('start_date', '<=', $endDate ?? $startDate);
-                       });
-                })->orWhere(function ($q2) use ($startDate, $endDate) {
-                    // Scheduled with specific date range
-                    $q2->whereNotNull('start_date')
-                       ->where('start_date', '<=', $endDate ?? $startDate)
-                       ->where(function ($q3) use ($startDate) {
-                           $q3->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $startDate);
-                       });
-                });
-            })
-            ->first();
-
-        if ($conflictingSchedule) {
-            $timeRange = Carbon::parse($conflictingSchedule->start_time)->format('H:i') . 
-                         ' - ' . 
-                         Carbon::parse($conflictingSchedule->end_time)->format('H:i');
-            $courseName = $conflictingSchedule->course ?? 'Jadwal';
-            return "Bentrok dengan jadwal yang sudah ada: {$courseName} ({$timeRange})";
-        }
-
-        // Check for conflicts with OTHER pending bookings (exclude current one being approved)
-        // This is handled by the unique constraint in the database, but we can add extra validation
-        $conflictingBooking = Booking::where('lab_id', $labId)
-            ->where('day', $day)
-            ->where('status', 'approved')
-            ->where('booking_date', $startDate)
-            ->where(function ($q) use ($startTime, $endTime) {
-                $q->whereTime('start_time', '<', $endTime)
-                  ->whereTime('end_time', '>', $startTime);
-            })
-            ->first();
-
-        if ($conflictingBooking) {
-            $timeRange = Carbon::parse($conflictingBooking->start_time)->format('H:i') . 
-                         ' - ' . 
-                         Carbon::parse($conflictingBooking->end_time)->format('H:i');
-            $bookingName = $conflictingBooking->course_name ?? $conflictingBooking->activity_name ?? 'Peminjaman';
-            return "Bentrok dengan peminjaman yang sudah disetujui: {$bookingName} ({$timeRange})";
-        }
-
-        return null;
     }
 }

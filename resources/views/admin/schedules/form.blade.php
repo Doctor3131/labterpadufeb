@@ -53,7 +53,7 @@
 
         <!-- Form -->
         <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6">
-            <form id="scheduleForm" action="{{ $isEdit ? route('admin.schedules.update', $schedule->id) : route('admin.schedules.store') }}" method="POST">
+            <form id="scheduleForm" action="{{ $isEdit ? route('admin.schedules.update', $schedule->id) : route('admin.schedules.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if($isEdit)
                     @method('PUT')
@@ -257,6 +257,100 @@
                     </div>
                 </div>
 
+                <!-- Document Fields (Collapsible) -->
+                <div class="mt-6 border border-gray-200 rounded-lg overflow-hidden">
+                    <button type="button" id="doc-toggle" onclick="toggleDocSection()" class="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-left transition-colors">
+                        <div>
+                            <span class="font-semibold text-gray-700">Data Dokumen (Opsional)</span>
+                            <span class="text-sm text-gray-500 ml-2">— untuk generate dokumen peminjaman</span>
+                        </div>
+                        <svg id="doc-chevron" class="w-5 h-5 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div id="doc-section" class="hidden px-4 py-4 space-y-4">
+                        @php
+                            $doc = ($isEdit && $schedule->document) ? $schedule->document : null;
+                        @endphp
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Study Program (all types) -->
+                            <div id="doc-study-program">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Strata/Jurusan</label>
+                                <select name="study_program" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                    <option value="">Pilih Program Studi</option>
+                                    @foreach(['S1- Ekonomi', 'S1- Manajemen', 'S1- Akuntansi', 'S1- Ekonomi Islam', 'S1- Bisnis Digital', 'S2- Ekonomi', 'S2- Manajemen', 'S2- Akuntansi', 'Sekolah Vokasi', 'S3- PDIE Ilmu Ekonomi', 'S3- PDIE Akuntansi', 'S3- PDIE Manajemen', 'Lainnya'] as $program)
+                                        <option value="{{ $program }}" {{ old('study_program', $doc->study_program ?? '') == $program ? 'selected' : '' }}>{{ $program }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Phone Number: only for non_perkuliahan (perkuliahan uses komting_phone) --}}
+                            <div id="doc-phone-number" class="hidden">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. Telp. Koordinator</label>
+                                <input type="text" name="doc_phone_number" 
+                                       value="{{ old('doc_phone_number', $doc->phone_number ?? '') }}"
+                                       placeholder="08xxxxxxxxxx"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+
+                            <!-- Lecturer NIP (perkuliahan only) -->
+                            <div id="doc-lecturer-nip">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">NIP Dosen Pengampu</label>
+                                <input type="text" name="lecturer_nip"
+                                       value="{{ old('lecturer_nip', $doc->lecturer_nip ?? '') }}"
+                                       placeholder="NIP Dosen"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+
+                            <!-- NIM (non-perkuliahan) -->
+                            <div id="doc-nim">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">NIM</label>
+                                <input type="text" name="nim"
+                                       value="{{ old('nim', $doc->nim ?? '') }}"
+                                       placeholder="NIM Koordinator"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+
+                            <!-- NIP (non-perkuliahan, alternative) -->
+                            <div id="doc-nip">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">NIP (jika dosen/pegawai)</label>
+                                <input type="text" name="nip"
+                                       value="{{ old('nip', $doc->nip ?? '') }}"
+                                       placeholder="NIP jika bukan mahasiswa"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <!-- Software Needs -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Software yang Digunakan</label>
+                            <textarea name="software_needs" rows="2"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                placeholder="Contoh: Microsoft Excel, SPSS, EViews">{{ old('software_needs', $doc->software_needs ?? '') }}</textarea>
+                        </div>
+
+                        <!-- KTM Upload -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Upload KTM (Opsional)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="file" name="ktm_file" id="ktm_file" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
+                                @if($doc && $doc->ktm_path)
+                                    <a href="{{ Storage::url($doc->ktm_path) }}" target="_blank" 
+                                       class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium whitespace-nowrap">
+                                        Lihat KTM
+                                    </a>
+                                    <button type="button" onclick="confirmDeleteKtm()" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
+                                        Hapus
+                                    </button>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, PDF. Maks 5MB</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Submit Button -->
                 <div class="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
                     <button type="submit" class="flex-1 py-3.5 md:py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all text-base">
@@ -268,7 +362,16 @@
                 </div>
             </form>
         </div>
+        </div>
     </div>
+
+    <!-- Hidden Form for Deleting KTM -->
+    @if($isEdit && $schedule->document && $schedule->document->ktm_path)
+        <form id="delete-ktm-form" action="{{ route('admin.schedules.delete-ktm', $schedule->id) }}" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endif
 
     <script>
         // Time Dropdown Logic
@@ -476,9 +579,16 @@
         const perkuliahanFields = document.getElementById('perkuliahan-fields');
         const nonPerkuliahanFields = document.getElementById('non-perkuliahan-fields');
 
+        // Track previous type for smart field transfer
+        let previousType = typeSelect.value;
+
         // Function to show/hide fields based on type
         function updateFieldsVisibility() {
             const selectedType = typeSelect.value;
+            
+            // Smart field transfer when switching types
+            transferFieldsBetweenTypes(previousType, selectedType);
+            previousType = selectedType;
             
             // Hide all conditional sections first
             perkuliahanFields.classList.add('hidden');
@@ -495,6 +605,55 @@
             } else if (selectedType === 'non_perkuliahan') {
                 nonPerkuliahanFields.classList.remove('hidden');
                 setFieldsRequired('non-perkuliahan-fields', true);
+            }
+
+            // Doc phone number: only for non_perkuliahan (perkuliahan uses komting_phone)
+            const docPhoneEl = document.getElementById('doc-phone-number');
+            if (docPhoneEl) {
+                if (selectedType === 'non_perkuliahan') {
+                    docPhoneEl.classList.remove('hidden');
+                } else {
+                    docPhoneEl.classList.add('hidden');
+                }
+            }
+        }
+
+        /**
+         * Transfer coordinator/phone data when switching between types
+         * Koordinator = Komting (same role, different label)
+         */
+        function transferFieldsBetweenTypes(fromType, toType) {
+            if (fromType === toType) return;
+
+            const isFromPerkuliahan = (fromType === 'perkuliahan_tetap' || fromType === 'perkuliahan_tidak_tetap');
+            const isToPerkuliahan = (toType === 'perkuliahan_tetap' || toType === 'perkuliahan_tidak_tetap');
+            const isFromNonPerkuliahan = (fromType === 'non_perkuliahan');
+            const isToNonPerkuliahan = (toType === 'non_perkuliahan');
+
+            // Get field references
+            const komtingInput = document.querySelector('input[name="komting"]');
+            const komtingPhoneInput = document.querySelector('input[name="komting_phone"]');
+            const picNameInput = document.querySelector('input[name="pic_name_non_perkuliahan"]');
+            const docPhoneInput = document.querySelector('input[name="doc_phone_number"]');
+
+            // Non-perkuliahan → Perkuliahan: PIC → Komting, Telp Koordinator → Telp Komting
+            if (isFromNonPerkuliahan && isToPerkuliahan) {
+                if (komtingInput && picNameInput && picNameInput.value) {
+                    komtingInput.value = picNameInput.value;
+                }
+                if (komtingPhoneInput && docPhoneInput && docPhoneInput.value) {
+                    komtingPhoneInput.value = docPhoneInput.value;
+                }
+            }
+
+            // Perkuliahan → Non-perkuliahan: Komting → PIC, Telp Komting → Telp Koordinator
+            if (isFromPerkuliahan && isToNonPerkuliahan) {
+                if (picNameInput && komtingInput && komtingInput.value) {
+                    picNameInput.value = komtingInput.value;
+                }
+                if (docPhoneInput && komtingPhoneInput && komtingPhoneInput.value) {
+                    docPhoneInput.value = komtingPhoneInput.value;
+                }
             }
         }
 
@@ -532,11 +691,57 @@
         }
 
         // Event listeners
-        typeSelect.addEventListener('change', updateFieldsVisibility);
+        typeSelect.addEventListener('change', function() {
+            updateFieldsVisibility();
+            updateDocFieldsVisibility();
+        });
+
+        // Document section toggle
+        function toggleDocSection() {
+            const section = document.getElementById('doc-section');
+            const chevron = document.getElementById('doc-chevron');
+            section.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        // Confirm Delete KTM
+        function confirmDeleteKtm() {
+            if (confirm('Hapus file KTM?')) {
+                document.getElementById('delete-ktm-form').submit();
+            }
+        }
+
+        // Document fields visibility based on type
+        function updateDocFieldsVisibility() {
+            const selectedType = typeSelect.value;
+            const lecturerNip = document.getElementById('doc-lecturer-nip');
+            const nim = document.getElementById('doc-nim');
+            const nip = document.getElementById('doc-nip');
+
+            if (!lecturerNip || !nim || !nip) return;
+
+            // Reset: hide all type-specific doc fields
+            lecturerNip.classList.add('hidden');
+            nim.classList.add('hidden');
+            nip.classList.add('hidden');
+
+            if (selectedType === 'perkuliahan_tetap' || selectedType === 'perkuliahan_tidak_tetap') {
+                lecturerNip.classList.remove('hidden');
+            } else if (selectedType === 'non_perkuliahan') {
+                nim.classList.remove('hidden');
+                nip.classList.remove('hidden');
+            }
+        }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             updateFieldsVisibility();
+            updateDocFieldsVisibility();
+
+            // Auto-expand doc section if editing and has document data
+            @if($isEdit && isset($schedule) && $schedule->document)
+                toggleDocSection();
+            @endif
         });
 
         // Real-time validation for day in date range

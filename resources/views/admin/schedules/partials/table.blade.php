@@ -63,6 +63,10 @@
                     </td>
                     <td class="px-4 py-3 text-center">
                         <div class="flex items-center justify-center gap-2">
+                            <a href="{{ route('admin.schedules.print', $schedule->id) }}" target="_blank"
+                               class="px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium">
+                                Cetak
+                            </a>
                             <a href="{{ route('admin.schedules.edit', $schedule->id) }}" 
                                class="px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium">
                                 Edit
@@ -129,6 +133,10 @@
             @endif
             
             <div class="flex gap-2 mt-3">
+                <a href="{{ route('admin.schedules.print', $schedule->id) }}" target="_blank"
+                   class="flex-1 px-4 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium text-center">
+                    Cetak
+                </a>
                 <a href="{{ route('admin.schedules.edit', $schedule->id) }}" 
                    class="flex-1 px-4 py-2.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium text-center">
                     Edit

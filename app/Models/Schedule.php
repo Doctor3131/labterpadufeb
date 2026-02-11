@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 
 class Schedule extends Model
 {
@@ -24,6 +25,26 @@ class Schedule extends Model
         'komting_phone',
         'student_count',
     ];
+
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::deleting(function ($schedule) {
+            // Delete associated document file if exists
+            if ($schedule->document && $schedule->document->ktm_path) {
+                Storage::disk('public')->delete($schedule->document->ktm_path);
+            }
+            
+            // Delete the document record itself (handled by database cascade usually, but good to be explicit/safe)
+            if ($schedule->document) {
+                $schedule->document->delete();
+            }
+        });
+    }
 
     /**
      * NOTE: Removed $with = ['booking'] for performance optimization.
@@ -51,6 +72,14 @@ class Schedule extends Model
     public function booking()
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    /**
+     * Get the document data for this schedule (optional, for print)
+     */
+    public function document()
+    {
+        return $this->hasOne(ScheduleDocument::class);
     }
 
     /**

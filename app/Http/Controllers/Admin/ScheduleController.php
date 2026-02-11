@@ -3,12 +3,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
+use App\Models\ScheduleDocument;
 use App\Models\Lab;
 use App\Models\Booking;
 use App\Helpers\DayHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use App\Services\ScheduleService;
 use Carbon\Carbon;
 
 class ScheduleController extends Controller
@@ -209,8 +212,8 @@ class ScheduleController extends Controller
         $rules = $this->getScheduleValidationRules($request);
         $validated = $request->validate($rules);
 
-        // Map data using helper method (DRY)
-        $scheduleData = $this->mapScheduleData($validated, $request->type);
+        // Map data using Service (DRY)
+        $scheduleData = ScheduleService::mapFromRequest($validated, $request->type);
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
@@ -226,7 +229,7 @@ class ScheduleController extends Controller
         }
 
         // Check for conflicts
-        $conflict = $this->checkConflict(
+        $conflict = ScheduleService::checkConflict(
             $validated['lab_id'],
             $validated['day'],
             $validated['start_time'],
@@ -258,7 +261,10 @@ class ScheduleController extends Controller
                 ->withInput();
         }
 
-        Schedule::create($scheduleData);
+        $schedule = Schedule::create($scheduleData);
+
+        // Save document fields if any provided
+        $this->saveDocumentData($schedule, $request);
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Jadwal berhasil ditambahkan!');
@@ -269,7 +275,7 @@ class ScheduleController extends Controller
      */
     public function edit($id)
     {
-        $schedule = Schedule::with('booking')->findOrFail($id);
+        $schedule = Schedule::with(['booking', 'document'])->findOrFail($id);
         $labs = Lab::orderBy('name')->get();
         $days = DayHelper::SCHEDULE_DAYS;
         $types = $this->types;
@@ -294,8 +300,8 @@ class ScheduleController extends Controller
         $rules = $this->getScheduleValidationRules($request);
         $validated = $request->validate($rules);
 
-        // Map data using helper method (DRY)
-        $scheduleData = $this->mapScheduleData($validated, $request->type);
+        // Map data using Service (DRY)
+        $scheduleData = ScheduleService::mapFromRequest($validated, $request->type);
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
@@ -311,7 +317,7 @@ class ScheduleController extends Controller
         }
 
         // Check for conflicts (excluding current schedule)
-        $conflict = $this->checkConflict(
+        $conflict = ScheduleService::checkConflict(
             $validated['lab_id'],
             $validated['day'],
             $validated['start_time'],
@@ -363,17 +369,7 @@ class ScheduleController extends Controller
                 if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
                     $bookingData['course_name'] = $validated['course_name'];
                     $bookingData['lecturer_name'] = $validated['lecturer_name'];
-                    // Booking model might put komting in pic_name or similar, check existing usage
-                    // Assuming pic_name usually holds the applicant name, but if admin puts komting here maybe it maps?
-                    // Let's stick to existing logic: $bookingData['pic_name'] = $validated['komting'] ?? ...
                     if (isset($validated['komting'])) {
-                         // Careful: pic_name is the applicant/account. We probably shouldn't override it with komting unless that was the intent.
-                         // But the original code did: $bookingData['pic_name'] = $validated['komting'] ?? ...
-                         // Let's check if komting is provided.
-                         // Actually, for perkuliahan, the applicant might be a rep.
-                         // Let's keep existing logic but be safer.
-                         // The original code: $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
-                         // We will replicate that logic but using the mapped variables.
                          $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
                     }
                     
@@ -381,13 +377,16 @@ class ScheduleController extends Controller
                     $bookingData['activity_name'] = $validated['activity_name'];
                     $bookingData['activity_type'] = $validated['activity_type'];
                     $bookingData['position'] = $validated['position'];
-                    $bookingData['equipment_needs'] = $request->equipment_needs; // optional field
-                } else {
-                    $bookingData['activity_name'] = $validated['course'];
+                    $bookingData['equipment_needs'] = $validated['equipment_needs'] ?? null;
+                    $bookingData['pic_name'] = $validated['pic_name_non_perkuliahan'] ?? $schedule->booking->pic_name;
                 }
+                // Note: no else branch needed - validation only accepts 3 valid types
 
                 $schedule->booking->update($bookingData);
             }
+
+            // Save document fields
+            $this->saveDocumentData($schedule, $request);
         });
 
         return redirect()->route('admin.schedules.index')
@@ -426,53 +425,7 @@ class ScheduleController extends Controller
             ->with('success', 'Jadwal "' . $info . '" berhasil dihapus!');
     }
 
-    /**
-     * Check for schedule conflicts
-     */
-    private function checkConflict($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeId = null)
-    {
-        $query = Schedule::where('lab_id', $labId)
-            ->where('day', $day)
-            ->where(function ($q) use ($startTime, $endTime) {
-                $q->whereTime('start_time', '<', $endTime)
-                  ->whereTime('end_time', '>', $startTime);
-            });
 
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
-        }
-
-        // Date overlap check for dated schedules
-        if ($startDate || $endDate) {
-            $query->where(function ($q) use ($startDate, $endDate) {
-                $q->where(function ($q2) use ($startDate, $endDate) {
-                    $q2->whereNull('end_date')
-                       ->where(function ($q3) use ($endDate, $startDate) {
-                           $q3->whereNull('start_date')
-                              ->orWhere('start_date', '<=', $endDate ?? $startDate);
-                       });
-                })->orWhere(function ($q2) use ($startDate, $endDate) {
-                    $q2->whereNotNull('start_date')
-                       ->where('start_date', '<=', $endDate ?? $startDate)
-                       ->where(function ($q3) use ($startDate) {
-                           $q3->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $startDate);
-                       });
-                });
-            });
-        }
-
-        $conflicting = $query->first();
-
-        if ($conflicting) {
-            $timeRange = Carbon::parse($conflicting->start_time)->format('H:i') . 
-                         ' - ' . 
-                         Carbon::parse($conflicting->end_time)->format('H:i');
-            return $conflicting->course . ' (' . $timeRange . ')';
-        }
-
-        return null;
-    }
 
     /**
      * Validate that the selected day exists within the date range
@@ -592,49 +545,25 @@ class ScheduleController extends Controller
             $rules['komting_phone'] = 'nullable|string|max:20';
         } elseif ($request->type === 'non_perkuliahan') {
             $rules['activity_name'] = 'required|string|max:255';
-            // Use constant from Booking model to avoid duplication with migration ENUM
             $rules['activity_type'] = 'required|in:' . implode(',', Booking::ACTIVITY_TYPES);
-            $rules['position'] = 'nullable|string|max:255'; // Made optional
+            $rules['position'] = 'nullable|string|max:255';
+            $rules['equipment_needs'] = 'nullable|string|max:1000';
+            $rules['pic_name_non_perkuliahan'] = 'required|string|max:255';
         }
-        // Note: No fallback for unknown types - validation will fail if type is invalid
+
+        // Document fields (optional, for all types)
+        $rules['study_program'] = 'nullable|string|max:255';
+        $rules['nim'] = 'nullable|string|max:50';
+        $rules['nip'] = 'nullable|string|max:50';
+        $rules['lecturer_nip'] = 'nullable|string|max:50';
+        $rules['doc_phone_number'] = 'nullable|string|max:20';
+        $rules['software_needs'] = 'nullable|string|max:1000';
+        $rules['ktm_file'] = 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'; // 5MB
 
         return $rules;
     }
 
-    /**
-     * Map validated data to schedule columns based on type
-     * Eliminates duplication between store() and update()
-     */
-    private function mapScheduleData(array $validated, string $type): array
-    {
-        // Base schedule data
-        $scheduleData = [
-            'lab_id' => $validated['lab_id'],
-            'day' => $validated['day'],
-            'start_time' => $validated['start_time'],
-            'end_time' => $validated['end_time'],
-            'type' => $validated['type'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
-            'student_count' => $validated['student_count'],
-        ];
 
-        // Map course/lecturer/komting based on type
-        if ($type === 'perkuliahan_tetap' || $type === 'perkuliahan_tidak_tetap') {
-            $scheduleData['course'] = $validated['course_name'];
-            $scheduleData['lecturer'] = $validated['lecturer_name'];
-            $scheduleData['komting'] = $validated['komting'] ?? null;
-            $scheduleData['komting_phone'] = $validated['komting_phone'] ?? null;
-        } elseif ($type === 'non_perkuliahan') {
-            $scheduleData['course'] = $validated['activity_name'];
-            $scheduleData['lecturer'] = null;
-            $scheduleData['komting'] = null;
-            $scheduleData['komting_phone'] = null;
-        }
-        // Note: No fallback for unknown types - should be caught by validation
-
-        return $scheduleData;
-    }
 
     /**
      * Apply filters to the schedule query
@@ -732,6 +661,71 @@ class ScheduleController extends Controller
                 });
             });
         }
+    }
+
+    /**
+     * Save or update document data for a schedule
+     */
+    private function saveDocumentData(Schedule $schedule, Request $request): void
+    {
+        $documentFields = [
+            'study_program', 'nim', 'nip', 'lecturer_nip',
+            'software_needs',
+        ];
+
+        // Only save phone to document for non_perkuliahan (perkuliahan uses schedules.komting_phone)
+        $docData = $request->only($documentFields);
+        if ($schedule->type === 'non_perkuliahan') {
+            $docData['phone_number'] = $request->input('doc_phone_number');
+        } else {
+            $docData['phone_number'] = null; // Clear for perkuliahan types
+        }
+
+        // Handle KTM file upload
+        if ($request->hasFile('ktm_file')) {
+            // Delete old KTM if exists
+            if ($schedule->document && $schedule->document->ktm_path) {
+                Storage::disk('public')->delete($schedule->document->ktm_path);
+            }
+            $docData['ktm_path'] = $request->file('ktm_file')->store('ktm', 'public');
+        }
+
+        // Only save if any document field has a value
+        $hasData = collect($docData)->filter()->isNotEmpty();
+        if ($hasData || ($schedule->document && $schedule->document->exists)) {
+            $schedule->document()
+                ->updateOrCreate(
+                    ['schedule_id' => $schedule->id],
+                    $docData
+                );
+        }
+    }
+
+    /**
+     * Print schedule document
+     */
+    public function print($id)
+    {
+        $schedule = Schedule::with(['lab', 'booking', 'document'])->findOrFail($id);
+
+        return view('admin.schedules.print', [
+            'schedule' => $schedule,
+        ]);
+    }
+
+    /**
+     * Delete KTM file for a schedule
+     */
+    public function deleteKtm($id)
+    {
+        $schedule = Schedule::with('document')->findOrFail($id);
+
+        if ($schedule->document && $schedule->document->ktm_path) {
+            Storage::disk('public')->delete($schedule->document->ktm_path);
+            $schedule->document->update(['ktm_path' => null]);
+        }
+
+        return back()->with('success', 'File KTM berhasil dihapus.');
     }
 }
 

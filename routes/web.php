@@ -93,6 +93,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Schedule CRUD
     Route::post('/admin/schedules/available-labs', [App\Http\Controllers\Admin\ScheduleController::class, 'getAvailableLabs'])
         ->name('admin.schedules.available-labs');
+    Route::get('/admin/schedules/{schedule}/print', [App\Http\Controllers\Admin\ScheduleController::class, 'print'])
+        ->name('admin.schedules.print');
+    Route::delete('/admin/schedules/{schedule}/ktm', [App\Http\Controllers\Admin\ScheduleController::class, 'deleteKtm'])
+        ->name('admin.schedules.delete-ktm');
     Route::resource('/admin/schedules', App\Http\Controllers\Admin\ScheduleController::class)
         ->names('admin.schedules')
         ->except(['show']);
