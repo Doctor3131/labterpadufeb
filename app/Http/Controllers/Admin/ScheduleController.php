@@ -381,7 +381,8 @@ class ScheduleController extends Controller
                     $bookingData['activity_name'] = $validated['activity_name'];
                     $bookingData['activity_type'] = $validated['activity_type'];
                     $bookingData['position'] = $validated['position'];
-                    $bookingData['equipment_needs'] = $request->equipment_needs; // optional field
+                    $bookingData['equipment_needs'] = $validated['equipment_needs'] ?? null;
+                    $bookingData['pic_name'] = $validated['pic_name_non_perkuliahan'] ?? $schedule->booking->pic_name;
                 } else {
                     $bookingData['activity_name'] = $validated['course'];
                 }
@@ -595,6 +596,8 @@ class ScheduleController extends Controller
             // Use constant from Booking model to avoid duplication with migration ENUM
             $rules['activity_type'] = 'required|in:' . implode(',', Booking::ACTIVITY_TYPES);
             $rules['position'] = 'nullable|string|max:255'; // Made optional
+            $rules['equipment_needs'] = 'nullable|string|max:1000';
+            $rules['pic_name_non_perkuliahan'] = 'required|string|max:255';
         }
         // Note: No fallback for unknown types - validation will fail if type is invalid
 
@@ -625,13 +628,20 @@ class ScheduleController extends Controller
             $scheduleData['lecturer'] = $validated['lecturer_name'];
             $scheduleData['komting'] = $validated['komting'] ?? null;
             $scheduleData['komting_phone'] = $validated['komting_phone'] ?? null;
+            // Clear non-perkuliahan fields
+            $scheduleData['activity_type'] = null;
+            $scheduleData['position'] = null;
+            $scheduleData['equipment_needs'] = null;
         } elseif ($type === 'non_perkuliahan') {
             $scheduleData['course'] = $validated['activity_name'];
-            $scheduleData['lecturer'] = null;
+            $scheduleData['lecturer'] = $validated['pic_name_non_perkuliahan'] ?? null;
             $scheduleData['komting'] = null;
             $scheduleData['komting_phone'] = null;
+            // Save non-perkuliahan specific fields
+            $scheduleData['activity_type'] = $validated['activity_type'] ?? null;
+            $scheduleData['position'] = $validated['position'] ?? null;
+            $scheduleData['equipment_needs'] = $validated['equipment_needs'] ?? null;
         }
-        // Note: No fallback for unknown types - should be caught by validation
 
         return $scheduleData;
     }

@@ -26,14 +26,19 @@ class ScheduleController extends Controller
     public function getWeekSchedules(Request $request)
     {
         try {
-            // Get week offset
-            $weekOffset = (int) $request->input('week_offset', 0);
-            
             // Get lab filter (comma-separated lab IDs)
             $labIds = $request->input('labs') ? explode(',', $request->input('labs')) : [];
             
-            // Get week range from service
-            [$startOfWeek, $endOfWeek] = $this->scheduleService->getWeekRange($weekOffset);
+            // If a specific date is provided, calculate week from that date
+            // Otherwise use week_offset
+            if ($request->has('date')) {
+                $targetDate = Carbon::parse($request->input('date'))->startOfDay();
+                $startOfWeek = $targetDate->copy()->startOfWeek(Carbon::MONDAY);
+                $endOfWeek = $startOfWeek->copy()->endOfWeek(Carbon::SUNDAY);
+            } else {
+                $weekOffset = (int) $request->input('week_offset', 0);
+                [$startOfWeek, $endOfWeek] = $this->scheduleService->getWeekRange($weekOffset);
+            }
             
             // Get all schedules (regular + bookings)
             $weekSchedules = $this->scheduleService->getWeekSchedules($startOfWeek, $endOfWeek, $labIds);
