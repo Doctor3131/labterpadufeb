@@ -416,9 +416,9 @@ class InventoryService
             ->where('asset_units.lab_id', $labId)
             ->join('batches', 'asset_units.batch_id', '=', 'batches.id')
             ->join('items', 'batches.item_id', '=', 'items.id')
-            ->select('items.id as item_id', 'items.name as item_name', 'items.tracking_mode', 'asset_units.condition as condition')
+            ->select('items.id as item_id', 'items.name as item_name', 'items.category', 'items.tracking_mode', 'asset_units.condition as condition')
             ->selectRaw('COUNT(*) as count')
-            ->groupBy('items.id', 'items.name', 'items.tracking_mode', 'asset_units.condition')
+            ->groupBy('items.id', 'items.name', 'items.category', 'items.tracking_mode', 'asset_units.condition')
             ->get();
         
         // Get aggregate balances (for AGGREGATE mode)
@@ -426,9 +426,9 @@ class InventoryService
             ->where('inventory_balances.lab_id', $labId)
             ->join('batches', 'inventory_balances.batch_id', '=', 'batches.id')
             ->join('items', 'batches.item_id', '=', 'items.id')
-            ->select('items.id as item_id', 'items.name as item_name', 'items.tracking_mode', 'inventory_balances.condition as condition')
+            ->select('items.id as item_id', 'items.name as item_name', 'items.category', 'items.tracking_mode', 'inventory_balances.condition as condition')
             ->selectRaw('SUM(inventory_balances.quantity) as count')
-            ->groupBy('items.id', 'items.name', 'items.tracking_mode', 'inventory_balances.condition')
+            ->groupBy('items.id', 'items.name', 'items.category', 'items.tracking_mode', 'inventory_balances.condition')
             ->get();
         
         // Merge and organize by item
@@ -441,6 +441,7 @@ class InventoryService
                 $summary[$itemId] = [
                     'id' => $itemId,
                     'name' => $row->item_name,
+                    'category' => $row->category,
                     'tracking_mode' => $row->tracking_mode,
                     'conditions' => [
                         'BAIK' => 0,

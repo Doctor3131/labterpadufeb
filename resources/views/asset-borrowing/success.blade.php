@@ -27,10 +27,6 @@
                     <span class="font-semibold text-gray-800">{{ $borrowing->borrower_name }}</span>
                 </div>
                 <div class="flex justify-between py-2 border-b border-gray-100">
-                    <span class="text-gray-600">Lab Asal</span>
-                    <span class="font-semibold text-gray-800">{{ $borrowing->lab->name }}</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-gray-100">
                     <span class="text-gray-600">Tanggal Pinjam</span>
                     <span class="font-semibold text-gray-800">{{ $borrowing->borrow_date->format('d M Y') }}</span>
                 </div>
@@ -50,7 +46,7 @@
                 <div class="space-y-2">
                     @foreach($borrowing->borrowedItems as $item)
                         <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
-                            <span class="text-gray-800">{{ $item->item->name }}</span>
+                            <span class="text-gray-800 font-medium block">{{ $item->item->name }}</span>
                             @if($item->assetUnit)
                                 <span class="text-sm text-gray-600 font-mono bg-white px-3 py-1 rounded border">{{ $item->assetUnit->asset_tag }}</span>
                             @else

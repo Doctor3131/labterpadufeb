@@ -67,19 +67,21 @@ class LabInventoryController extends Controller
             $globalTotals['total_items'] += $totals['total_items'];
         }
         
-        // Get items grouped by Tracking Mode
+        // Get items grouped by Category
         $items = Item::with(['batches.assetUnits', 'batches.inventoryBalances', 'assetTypeCode'])
             ->orderBy('name')
             ->get();
             
-        $groupedItems = $items->groupBy(fn($item) => $item->tracking_mode->value);
+        $groupedItems = $items->groupBy(function($item) {
+            return $item->category ?: 'Lainnya';
+        })->sortKeys();
 
         return view('admin.inventory.global', [
             'labSummaries' => $labSummaries,
             'globalTotals' => $globalTotals,
             'conditions' => ConditionEnum::cases(),
             'groupedItems' => $groupedItems,
-            'trackingModes' => TrackingModeEnum::cases(),
+            'trackingModes' => TrackingModeEnum::cases(), // Still needed for create form or other logic if any? Not used in global index loop anymore.
         ]);
     }
 
@@ -107,6 +109,7 @@ class LabInventoryController extends Controller
         $assetTypeCodes = AssetTypeCode::orderBy('name')->get();
         $trackingModes = TrackingModeEnum::cases();
         $conditions = ConditionEnum::cases();
+        $customCategories = \App\Models\Category::orderBy('name')->get();
 
         return view('admin.labs.inventory.create', [
             'lab' => $lab,
@@ -114,6 +117,7 @@ class LabInventoryController extends Controller
             'assetTypeCodes' => $assetTypeCodes,
             'trackingModes' => $trackingModes,
             'conditions' => $conditions,
+            'customCategories' => $customCategories,
         ]);
     }
 
@@ -127,8 +131,9 @@ class LabInventoryController extends Controller
         $condition = ConditionEnum::from($validated['condition']);
 
         // Handle Asset Type Code (Find or Create on fly) for Structured Tag
+        // Handle Asset Type Code (Find or Create on fly)
         $assetTypeCodeId = null;
-        if ($mode === TrackingModeEnum::STRUCTURED_TAG && !empty($validated['asset_type_code'])) {
+        if (!empty($validated['asset_type_code'])) {
             $codeStr = $validated['asset_type_code'];
             
             // Map code to name (hardcoded map to match view)
@@ -140,6 +145,14 @@ class LabInventoryController extends Controller
                 'O1' => 'Laptop',
                 'L1' => 'Printer',
                 'P' => 'Samsung Tab',
+                'MN' => 'Monitor',
+                'KY' => 'Keyboard',
+                'MS' => 'Mouse',
+                'RT' => 'Router',
+                'SW' => 'Switch / Hub',
+                'K' => 'Kursi',
+                'M' => 'Meja',
+                'LAIN' => 'Lainnya',
             ];
             $name = $names[$codeStr] ?? $codeStr;
 
@@ -147,7 +160,7 @@ class LabInventoryController extends Controller
                 ['code' => $codeStr],
                 [
                     'name' => $name,
-                    'default_tracking_mode' => TrackingModeEnum::STRUCTURED_TAG,
+                    'default_tracking_mode' => $mode,
                     'is_borrowable' => true
                 ]
             );
@@ -156,9 +169,35 @@ class LabInventoryController extends Controller
 
         // Get or create item
         if (!empty($validated['new_item_name'])) {
+            // Auto-set category untuk STRUCTURED_TAG berdasarkan asset type code
+            $category = null;
+            if ($mode === TrackingModeEnum::STRUCTURED_TAG && $assetTypeCodeId) {
+                $assetTypeCode = AssetTypeCode::find($assetTypeCodeId);
+                // Map asset type code ke kategori
+                $categoryMap = [
+                    'H3' => 'PC',
+                    'I2' => 'TV',
+                    'BRK' => 'Bracket TV',
+                    'J1' => 'Speaker',
+                    'O1' => 'Laptop',
+                    'L1' => 'Printer',
+                    'P' => 'Tablet',
+                ];
+                $category = $categoryMap[$assetTypeCode->code] ?? null;
+            } else {
+                // Untuk non-STRUCTURED_TAG, gunakan kategori dari user
+                $category = $validated['category'] ?? null;
+                
+                // Simpan kategori baru jika belum ada (dan bukan dari hardcoded list)
+                if ($category && !in_array($category, \App\Enums\CategoryEnum::values())) {
+                    \App\Models\Category::firstOrCreate(['name' => $category]);
+                }
+            }
+            
             $item = Item::firstOrCreate(
                 ['name' => $validated['new_item_name']],
                 [
+                    'category' => $category,
                     'asset_type_code_id' => $assetTypeCodeId,
                     'tracking_mode' => $mode,
                     'description' => $validated['item_description'] ?? null,

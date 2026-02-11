@@ -22,7 +22,7 @@
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-4">
                     <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-base">Beranda</a>
-                    @auth
+                    @if(auth()->check())
                         <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-base">Dashboard</a>
                         <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-base">
                             Ajukan
@@ -34,7 +34,7 @@
                         <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 hover:scale-105 hover:shadow-md text-base">
                             Login
                         </a>
-                    @endauth
+                    @endif
                 </div>
 
                 <!-- Mobile Hamburger Button -->
@@ -51,7 +51,7 @@
                     <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">
                         Beranda
                     </a>
-                    @auth
+                    @if(auth()->check())
                         <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">
                             Dashboard
                         </a>
@@ -65,7 +65,7 @@
                         <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-3 rounded-lg hover:bg-yellow-50 text-center transition-all text-base">
                             Login
                         </a>
-                    @endauth
+                    @endif
                 </div>
             </div>
         </div>

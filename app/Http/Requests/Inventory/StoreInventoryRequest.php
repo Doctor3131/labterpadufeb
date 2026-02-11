@@ -36,6 +36,7 @@ class StoreInventoryRequest extends FormRequest
             'tracking_mode' => ['required', Rule::enum(TrackingModeEnum::class)],
             'item_id' => ['required_without:new_item_name', 'nullable', 'exists:items,id'],
             'new_item_name' => ['required_without:item_id', 'nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'string', 'max:100'],
             'batch_id' => ['required'], // 'new' or valid ID
             'condition' => ['required', Rule::enum(ConditionEnum::class)],
         ];

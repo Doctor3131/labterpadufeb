@@ -611,9 +611,7 @@
                             <span class="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg">
                                 📦 ASET #{{ $borrowing->id }}
                             </span>
-                            <span class="px-3 py-1.5 bg-purple-500 text-white text-xs font-bold rounded-lg">
-                                {{ $borrowing->lab->name }}
-                            </span>
+
                             <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                                 {{ $borrowing->created_at->diffForHumans() }}
                             </span>
@@ -717,9 +715,7 @@
                             <span class="px-3 py-1.5 {{ $borrowing->status === 'approved' ? 'bg-green-500' : 'bg-blue-600' }} text-white text-xs font-bold rounded-lg">
                                 {{ $borrowing->status === 'approved' ? 'Disetujui' : 'Dipinjam' }}
                             </span>
-                            <span class="px-3 py-1.5 bg-blue-500 text-white text-xs font-bold rounded-lg">
-                                {{ $borrowing->lab->name }}
-                            </span>
+
                         </div>
                         <div class="flex flex-col items-end text-right flex-shrink-0">
                             <span class="text-xs font-bold text-gray-800">

@@ -86,7 +86,14 @@
                 @foreach($summary as $item)
                     <div class="bg-white border rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
                         <div class="flex justify-between items-start mb-3">
-                            <h3 class="font-bold text-gray-800 text-lg">{{ $item['name'] }}</h3>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg">{{ $item['name'] }}</h3>
+                                @if($item['category'])
+                                    <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                        {{ $item['category'] }}
+                                    </span>
+                                @endif
+                            </div>
                             <span class="text-xs font-medium px-2 py-1 rounded-full 
                                 {{ $item['tracking_mode'] === 'STRUCTURED_TAG' ? 'bg-purple-100 text-purple-800' : 
                                    ($item['tracking_mode'] === 'SEAT_NUMBER' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800') }}">
@@ -147,6 +154,7 @@
                     <thead>
                         <tr class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider border-b border-gray-200">
                             <th class="px-6 py-4 font-semibold">Nama Aset</th>
+                            <th class="px-6 py-4 font-semibold text-center">Kategori</th>
                             <th class="px-6 py-4 font-semibold text-center">Mode</th>
                             <th class="px-6 py-4 font-semibold text-center">
                                 <span class="text-gray-600">Baik</span>
@@ -168,6 +176,15 @@
                         @foreach($summary as $item)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 font-medium text-gray-900">{{ $item['name'] }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    @if($item['category'])
+                                        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-800">
+                                            {{ $item['category'] }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-gray-400">-</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="text-xs font-medium px-2.5 py-1 rounded-full 
                                         {{ $item['tracking_mode'] === 'STRUCTURED_TAG' ? 'bg-purple-100 text-purple-800' : 

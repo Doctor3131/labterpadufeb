@@ -16,6 +16,11 @@ class AssetBorrowingItem extends Model
         'asset_unit_id',
         'inventory_balance_id',
         'quantity',
+        'brand_type',
+        'condition_good',
+        'condition_adequate',
+        'condition_complete',
+        'remarks',
         'notes',
     ];
 

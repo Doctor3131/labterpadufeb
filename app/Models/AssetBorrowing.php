@@ -12,6 +12,7 @@ class AssetBorrowing extends Model
     use HasFactory;
 
     protected $fillable = [
+        'document_number',
         'borrower_name',
         'borrower_type',
         'borrower_id_number',
@@ -20,6 +21,12 @@ class AssetBorrowing extends Model
         'position',
         'phone_number',
         'email',
+        'borrower_address',
+        'first_party_name',
+        'first_party_position',
+        'first_party_address',
+        'first_party_phone',
+        'document_date',
         'lab_id',
         'purpose',
         'borrow_date',
@@ -42,11 +49,13 @@ class AssetBorrowing extends Model
         'is_damaged_on_return',
         'damage_description',
         'document_path',
+        'generated_document_path',
     ];
 
     protected $casts = [
         'borrow_date' => 'date',
         'return_date' => 'date',
+        'document_date' => 'date',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'handed_out_at' => 'datetime',

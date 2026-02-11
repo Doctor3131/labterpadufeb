@@ -14,6 +14,7 @@ class Item extends Model
 
     protected $fillable = [
         'name',
+        'category',
         'asset_type_code_id',
         'tracking_mode',
         'description',

@@ -134,7 +134,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap *</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nama *</label>
                             <input type="text" name="borrower_name" value="{{ old('borrower_name') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                                 placeholder="Nama lengkap peminjam">
@@ -144,58 +144,28 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Status Peminjam *</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jabatan / Status *</label>
                             <select name="borrower_type" id="borrower_type" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
                                 <option value="">Pilih Status</option>
                                 <option value="Mahasiswa" {{ old('borrower_type') == 'Mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                                 <option value="Dosen" {{ old('borrower_type') == 'Dosen' ? 'selected' : '' }}>Dosen</option>
-                                <option value="Staff" {{ old('borrower_type') == 'Staff' ? 'selected' : '' }}>Staff</option>
+                                <option value="Tendik" {{ old('borrower_type') == 'Tendik' ? 'selected' : '' }}>Tendik</option>
                                 <option value="Lainnya" {{ old('borrower_type') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Conditional Fields -->
-                    <div id="mahasiswa-fields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">NIM</label>
-                            <input type="text" name="borrower_id_number" value="{{ old('borrower_id_number') }}"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                placeholder="Nomor Induk Mahasiswa">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Program Studi</label>
-                            <input type="text" name="study_program" value="{{ old('study_program') }}"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                placeholder="Contoh: Akuntansi">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Angkatan</label>
-                            <input type="text" name="class_year" value="{{ old('class_year') }}"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                placeholder="Contoh: 2023" maxlength="4">
-                        </div>
-                    </div>
-
-                    <div id="staff-fields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">NIP</label>
-                            <input type="text" name="borrower_id_number" value="{{ old('borrower_id_number') }}"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                placeholder="Nomor Induk Pegawai">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jabatan</label>
-                            <input type="text" name="position" value="{{ old('position') }}"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                placeholder="Contoh: Dosen/Staf Administrasi">
-                        </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat *</label>
+                        <textarea name="borrower_address" rows="2" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            placeholder="Alamat lengkap peminjam">{{ old('borrower_address') }}</textarea>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor HP *</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Telp. kantor / HP *</label>
                             <input type="tel" name="phone_number" value="{{ old('phone_number') }}" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                                 placeholder="08xxxxxxxxxx">
@@ -209,7 +179,7 @@
                     </div>
 
                     <div class="flex justify-end">
-                        <button type="button" onclick="nextStep(1)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-md hover:shadow-lg">
+                        <button type="button" @click="nextStep(1)" onclick="nextStep(1)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-lg font-bold transition-all shadow-md hover:shadow-lg">
                             Selanjutnya →
                         </button>
                     </div>
@@ -222,19 +192,7 @@
                         Pilih Aset yang Dipinjam
                     </h3>
 
-                    <div class="mb-6">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Lab Asal *</label>
-                        <select name="lab_id" id="lab_id" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
-                            <option value="">Pilih Lab</option>
-                            @foreach($labs as $lab)
-                                <option value="{{ $lab->id }}" {{ old('lab_id') == $lab->id ? 'selected' : '' }}>{{ $lab->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('lab_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <!-- Lab Selection Removed -->
 
                     <div id="items-container">
                         <!-- Items will be added here dynamically -->
@@ -348,74 +306,27 @@
         let itemCounter = 0;
         const borrowableItems = @json($borrowableItems);
 
-        // Handle borrower type change
-        document.getElementById('borrower_type').addEventListener('change', function() {
-            const mahasiswaFields = document.getElementById('mahasiswa-fields');
-            const staffFields = document.getElementById('staff-fields');
-            
-            // Store original name attributes and clear all hidden fields
-            mahasiswaFields.querySelectorAll('input').forEach(input => {
-                if (!input.dataset.originalName) {
-                    input.dataset.originalName = input.getAttribute('name');
-                }
-                input.removeAttribute('name');
-                input.value = '';
-            });
-            staffFields.querySelectorAll('input').forEach(input => {
-                if (!input.dataset.originalName) {
-                    input.dataset.originalName = input.getAttribute('name');
-                }
-                input.removeAttribute('name');
-                input.value = '';
-            });
-            
-            mahasiswaFields.classList.add('hidden');
-            staffFields.classList.add('hidden');
-            
-            if (this.value === 'Mahasiswa') {
-                mahasiswaFields.classList.remove('hidden');
-                // Restore name attributes for visible inputs
-                mahasiswaFields.querySelectorAll('input').forEach(input => {
-                    if (input.dataset.originalName) {
-                        input.setAttribute('name', input.dataset.originalName);
-                    }
-                });
-            } else if (this.value === 'Dosen' || this.value === 'Staff') {
-                staffFields.classList.remove('hidden');
-                // Restore name attributes for visible inputs
-                staffFields.querySelectorAll('input').forEach(input => {
-                    if (input.dataset.originalName) {
-                        input.setAttribute('name', input.dataset.originalName);
-                    }
-                });
-            }
-        });
+        // Borrower type select (no conditional fields needed anymore)
 
         // Add item row
         document.getElementById('add-item-btn').addEventListener('click', function() {
-            const labId = document.getElementById('lab_id').value;
-            if (!labId) {
-                alert('Pilih lab terlebih dahulu!');
-                return;
-            }
-            
             addItemRow();
         });
 
         function addItemRow() {
             const container = document.getElementById('items-container');
-            const labId = document.getElementById('lab_id').value;
             const currentIndex = container.children.length; // Use 0-based index for Laravel
-            itemCounter++; // For display purposes only
             
             const itemRow = document.createElement('div');
             itemRow.className = 'item-row';
-            itemRow.id = `item-row-${itemCounter}`;
+            itemRow.id = `item-row-${currentIndex}`; // Use index for ID to be consistent initially
             itemRow.dataset.index = currentIndex; // Store the actual array index
-            itemRow.innerHTML = `
+            
+            // Generate HTML content - note: id will be updated by reindexItems
+             itemRow.innerHTML = `
                 <div class="flex justify-between items-start mb-4">
-                    <h4 class="font-semibold text-gray-800">Barang #${itemCounter}</h4>
-                    <button type="button" onclick="removeItemRow(${itemCounter})" class="text-red-500 hover:text-red-700">
+                    <h4 class="font-semibold text-gray-800 item-header">Barang #${currentIndex + 1}</h4>
+                    <button type="button" onclick="removeItemRow(this)" class="text-red-500 hover:text-red-700">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -424,22 +335,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Barang</label>
-                        <select name="items[${currentIndex}][item_id]" class="item-select w-full px-4 py-3 border border-gray-300 rounded-lg" required onchange="handleItemSelect(${itemCounter}, ${currentIndex}, this.value)">
+                        <select name="items[${currentIndex}][item_id]" class="item-select w-full px-4 py-3 border border-gray-300 rounded-lg" required onchange="handleItemSelect(this, ${currentIndex}, this.value)">
                             <option value="">Pilih Barang</option>
                             ${borrowableItems.map(item => `<option value="${item.id}" data-tracking="${item.tracking_mode}">${item.name}</option>`).join('')}
                         </select>
                     </div>
-                    <div id="unit-selector-${itemCounter}" class="md:col-span-2 hidden">
+                    <div class="unit-selector md:col-span-2 hidden">
                         <!-- Will be filled dynamically -->
                     </div>
                 </div>
             `;
             
             container.appendChild(itemRow);
+            reindexItems(); // Ensure consistent numbering
         }
 
-        function removeItemRow(id) {
-            const row = document.getElementById(`item-row-${id}`);
+        function removeItemRow(button) {
+            const row = button.closest('.item-row');
             if (row) {
                 row.remove();
                 // Re-index remaining items
@@ -452,28 +364,42 @@
             const rows = container.querySelectorAll('.item-row');
             
             rows.forEach((row, index) => {
+                // Update header
+                const header = row.querySelector('.item-header');
+                if (header) {
+                    header.textContent = `Barang #${index + 1}`;
+                }
+
+                // Update row ID
+                row.id = `item-row-${index}`;
+                
                 // Update the data-index
                 row.dataset.index = index;
                 
-                // Update item_id field name
+                // Update item_id field name and onchange
                 const itemIdSelect = row.querySelector('select[name^="items"]');
                 if (itemIdSelect) {
-                    const currentName = itemIdSelect.name;
-                    itemIdSelect.name = currentName.replace(/items\[\d+\]/, `items[${index}]`);
+                    itemIdSelect.name = `items[${index}][item_id]`;
+                    // Update onchange attribute to pass the new index and 'this' reference
+                    itemIdSelect.setAttribute('onchange', `handleItemSelect(this, ${index}, this.value)`);
                 }
                 
-                // Update quantity or asset_unit_id field name if exists
+                // Update dynamic fields
                 const dynamicFields = row.querySelectorAll('input[name^="items"], select[name^="items"]:not(.item-select)');
                 dynamicFields.forEach(field => {
-                    const currentName = field.name;
-                    field.name = currentName.replace(/items\[\d+\]/, `items[${index}]`);
+                    // Extract the field name part after the index (e.g., [quantity])
+                    const nameMatch = field.name.match(/items\[\d+\](.+)/);
+                    if (nameMatch && nameMatch[1]) {
+                        field.name = `items[${index}]${nameMatch[1]}`;
+                    }
                 });
             });
         }
 
-        async function handleItemSelect(displayId, arrayIndex, itemId) {
-            const labId = document.getElementById('lab_id').value;
-            const unitSelector = document.getElementById(`unit-selector-${displayId}`);
+        async function handleItemSelect(selectElement, arrayIndex, itemId) {
+            // Find the unit-selector within the same row
+            const row = selectElement.closest('.item-row');
+            const unitSelector = row.querySelector('.unit-selector');
             
             if (!itemId) {
                 unitSelector.classList.add('hidden');
@@ -481,30 +407,73 @@
             }
 
             try {
-                const response = await fetch(`/asset-borrowing/available-assets?lab_id=${labId}&item_id=${itemId}`);
+                const response = await fetch(`/asset-borrowing/available-assets?item_id=${itemId}`);
                 const data = await response.json();
                 
                 unitSelector.classList.remove('hidden');
                 
                 if (data.type === 'aggregate') {
-                    unitSelector.innerHTML = `
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
-                        <input type="number" name="items[${arrayIndex}][quantity]" min="1" max="${data.available_quantity}" value="1" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg">
-                        <p class="text-xs text-gray-500 mt-1">Tersedia: ${data.available_quantity} unit</p>
-                    `;
+                    // For aggregate items, removing lab selection as requested
+                    // Just show quantity input
+                    const totalAvailable = data.labs ? data.labs.reduce((sum, lab) => sum + lab.available_quantity, 0) : 0;
+                    
+                    if (totalAvailable > 0) {
+                        unitSelector.innerHTML = `
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
+                                    <input type="number" name="items[${arrayIndex}][quantity]" min="1" max="${totalAvailable}" value="1" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                        oninput="validateQuantity(this, ${totalAvailable})">
+                                    <p class="text-xs text-gray-500 mt-1">Total Tersedia: ${totalAvailable} unit</p>
+                                    <p class="text-xs text-red-500 mt-1 hidden quantity-warning">Jumlah melebihi stok tersedia!</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        unitSelector.innerHTML = `<p class="text-red-500 text-sm">Maaf, barang ini stoknya habis.</p>`;
+                    }
                 } else {
-                    unitSelector.innerHTML = `
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Unit</label>
-                        <select name="items[${arrayIndex}][asset_unit_id]" required class="w-full px-4 py-3 border border-gray-300 rounded-lg">
-                            <option value="">Pilih Unit</option>
-                            ${data.units.map(unit => `<option value="${unit.id}">${unit.asset_tag}${unit.subtype ? ' (' + unit.subtype + ')' : ''}</option>`).join('')}
-                        </select>
-                    `;
+                    // Structured items - hanya input jumlah tanpa pilih unit spesifik
+                    const totalAvailableUnits = data.units ? data.units.length : 0;
+                    
+                    if (totalAvailableUnits > 0) {
+                        unitSelector.innerHTML = `
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
+                                    <input type="number" name="items[${arrayIndex}][quantity]" min="1" max="${totalAvailableUnits}" value="1" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                        oninput="validateQuantity(this, ${totalAvailableUnits})">
+                                    <p class="text-xs text-gray-500 mt-1">Total Tersedia: ${totalAvailableUnits} unit</p>
+                                    <p class="text-xs text-red-500 mt-1 hidden quantity-warning">Jumlah melebihi stok tersedia!</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                         unitSelector.innerHTML = `<p class="text-red-500 text-sm">Maaf, tidak ada unit tersedia untuk barang ini.</p>`;
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching available assets:', error);
                 alert('Gagal memuat data aset');
+            }
+        }
+
+        function validateQuantity(input, max) {
+            const val = parseInt(input.value);
+            const warningEl = input.parentElement.querySelector('.quantity-warning');
+            
+            if (val > max) {
+                input.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                input.classList.remove('border-gray-300', 'focus:border-yellow-500', 'focus:ring-yellow-500');
+                warningEl.classList.remove('hidden');
+                // Optional: Reset value to max? Or just warn? Warn is usually better UX than forcing.
+                // But preventing submit is important.
+            } else {
+                input.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                input.classList.add('border-gray-300', 'focus:border-yellow-500', 'focus:ring-yellow-500');
+                warningEl.classList.add('hidden');
             }
         }
 
@@ -525,11 +494,22 @@
                 } else {
                     input.classList.remove('border-red-500');
                 }
+                
+                // Specific checks for quantity inputs
+                if (input.type === 'number' && input.hasAttribute('max')) {
+                    const max = parseInt(input.getAttribute('max'));
+                    const val = parseInt(input.value);
+                    if (val > max) {
+                        valid = false;
+                        invalidFields.push(`${input.name} (exceeds max)`);
+                        input.classList.add('border-red-500');
+                    }
+                }
             });
 
             if (!valid) {
                 console.log('Validation failed. Invalid fields:', invalidFields);
-                alert('Mohon lengkapi semua field yang wajib diisi!');
+                alert('Mohon periksa kembali input Anda. Pastikan semua field terisi dan jumlah barang tidak melebihi stok.');
                 return;
             }
 
@@ -573,6 +553,7 @@
             const summary = document.getElementById('confirmation-summary');
             const borrowerName = document.querySelector('input[name="borrower_name"]').value;
             const borrowerType = document.querySelector('select[name="borrower_type"]').value;
+            const borrowerAddress = document.querySelector('textarea[name="borrower_address"]').value;
             const phone = document.querySelector('input[name="phone_number"]').value;
             const borrowDate = document.querySelector('input[name="borrow_date"]').value;
             const returnDate = document.querySelector('input[name="return_date"]').value;
@@ -583,8 +564,10 @@
             
             summary.innerHTML = `
                 <p><strong>Nama:</strong> ${borrowerName}</p>
-                <p><strong>Status:</strong> ${borrowerType}</p>
-                <p><strong>No. HP:</strong> ${phone}</p>
+                <p><strong>Status/Jabatan:</strong> ${borrowerType}</p>
+                <p><strong>Alamat:</strong> ${borrowerAddress}</p>
+                <p><strong>Telp. Kantor / HP:</strong> ${phone}</p>
+                <div style="margin: 0.5rem 0; border-top: 1px dashed #ccc;"></div>
                 <p><strong>Tanggal Pinjam:</strong> ${borrowDate}</p>
                 <p><strong>Tanggal Kembali:</strong> ${returnDate}</p>
                 <p><strong>Jumlah Barang:</strong> ${itemCount} item</p>
@@ -592,31 +575,16 @@
             `;
         }
 
-        // Initialize with one item row if form is fresh
+        // Initialize (removed labSelect listener)
         window.addEventListener('DOMContentLoaded', function() {
-            const labSelect = document.getElementById('lab_id');
-            labSelect.addEventListener('change', function() {
-                document.getElementById('items-container').innerHTML = '';
-                itemCounter = 0;
-            });
+             // Use 1 initial row
+             addItemRow();
 
             // Form submission logging
             const form = document.getElementById('borrowingForm');
             form.addEventListener('submit', function(e) {
                 console.log('Form is being submitted...');
-                console.log('Form action:', this.action);
-                console.log('Form method:', this.method);
-                
-                // Check if items exist
-                const itemsContainer = document.getElementById('items-container');
-                console.log('Number of items:', itemsContainer.children.length);
-                
-                // Log form data
-                const formData = new FormData(this);
-                console.log('Form data:');
-                for (let [key, value] of formData.entries()) {
-                    console.log(key, ':', value);
-                }
+                // ... logging ...
             });
         });
     </script>

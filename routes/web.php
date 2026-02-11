@@ -137,18 +137,20 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/feedbacks/{id}', [FeedbackController::class, 'update'])->name('admin.feedbacks.update');
     
     // Admin Asset Borrowing Management Actions
-    Route::get('/admin/asset-borrowings/{id}', [AdminController::class, 'showAssetBorrowing'])
+    Route::get('/admin/asset-borrowings', [AssetBorrowingController::class, 'index'])
+        ->name('admin.asset-borrowings.index');
+    Route::get('/admin/asset-borrowings/{id}', [AssetBorrowingController::class, 'show'])
         ->name('admin.asset-borrowings.show');
-    Route::get('/admin/asset-borrowings/{id}/data', [AdminController::class, 'getAssetBorrowingData'])
-        ->name('admin.asset-borrowings.data');
-    Route::post('/admin/asset-borrowings/{id}/approve', [AdminController::class, 'approveAssetBorrowing'])
+    Route::post('/admin/asset-borrowings/{id}/first-party', [AssetBorrowingController::class, 'updateFirstParty'])
+        ->name('admin.asset-borrowings.update-first-party');
+    Route::get('/admin/asset-borrowings/{id}/download', [AssetBorrowingController::class, 'downloadDocument'])
+        ->name('admin.asset-borrowings.download');
+    Route::get('/admin/asset-borrowings/{id}/preview', [AssetBorrowingController::class, 'previewDocument'])
+        ->name('admin.asset-borrowings.preview');
+    Route::post('/admin/asset-borrowings/{id}/approve', [AssetBorrowingController::class, 'approve'])
         ->name('admin.asset-borrowings.approve');
-    Route::post('/admin/asset-borrowings/{id}/reject', [AdminController::class, 'rejectAssetBorrowing'])
+    Route::post('/admin/asset-borrowings/{id}/reject', [AssetBorrowingController::class, 'reject'])
         ->name('admin.asset-borrowings.reject');
-    Route::post('/admin/asset-borrowings/{id}/handout', [AdminController::class, 'handoutAssetBorrowing'])
-        ->name('admin.asset-borrowings.handout');
-    Route::post('/admin/asset-borrowings/{id}/receive', [AdminController::class, 'receiveAssetBorrowing'])
-        ->name('admin.asset-borrowings.receive');
 });
 
 // Super Admin Only Routes

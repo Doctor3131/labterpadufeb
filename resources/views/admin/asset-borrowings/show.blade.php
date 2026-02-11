@@ -1,551 +1,285 @@
 @extends('layouts.admin')
 
-@section('title', 'Detail Peminjaman Aset - Lab Digital FEB UNDIP')
+@section('title', 'Detail Peminjaman Aset')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-6xl">
-    <!-- Header with Back Button -->
-    <div class="mb-6">
-        <a href="{{ route('admin.dashboard') }}" 
-           class="inline-flex items-center text-gray-600 hover:text-gray-900 font-medium mb-4 transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Kembali ke Dashboard
-        </a>
-        
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Detail Peminjaman Aset #{{ $borrowing->id }}</h1>
-                <p class="text-gray-600 mt-1">Informasi lengkap peminjaman aset laboratorium</p>
-            </div>
-            
-            @if($borrowing->status === 'pending')
-                <span class="px-4 py-2 bg-yellow-500 text-white text-sm font-bold rounded-lg shadow">
-                    ⏳ Menunggu Persetujuan
-                </span>
-            @elseif($borrowing->status === 'approved')
-                <span class="px-4 py-2 bg-green-500 text-white text-sm font-bold rounded-lg shadow">
-                    ✅ Disetujui
-                </span>
-            @elseif($borrowing->status === 'borrowed')
-                <span class="px-4 py-2 bg-blue-500 text-white text-sm font-bold rounded-lg shadow">
-                    📦 Sedang Dipinjam
-                </span>
-            @elseif($borrowing->status === 'returned')
-                <span class="px-4 py-2 bg-gray-500 text-white text-sm font-bold rounded-lg shadow">
-                    ✔️ Dikembalikan
-                </span>
-            @elseif($borrowing->status === 'rejected')
-                <span class="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg shadow">
-                    ❌ Ditolak
-                </span>
-            @endif
+<div class="py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Back Button -->
+        <div class="mb-3">
+            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-indigo-600 hover:text-indigo-900 font-medium text-sm">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Kembali ke Dashboard
+            </a>
         </div>
-    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Content -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Borrower Information -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                    </svg>
-                    Informasi Peminjam
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-600">Nama Lengkap</label>
-                        <p class="font-semibold text-gray-800">{{ $borrowing->borrower_name }}</p>
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded text-sm mb-3" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm mb-3" role="alert">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- Status & Actions -->
+        <div class="bg-white shadow-sm rounded-lg mb-3">
+            <div class="px-4 py-3 border-b border-gray-200">
+                <div class="flex justify-between items-start gap-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <h2 class="text-lg font-bold text-gray-800">Peminjaman #{{ $borrowing->id }}</h2>
+                            @php
+                                $statusColors = [
+                                    'pending' => 'bg-yellow-100 text-yellow-800',
+                                    'approved' => 'bg-green-100 text-green-800',
+                                    'rejected' => 'bg-red-100 text-red-800',
+                                    'borrowed' => 'bg-blue-100 text-blue-800',
+                                    'returned' => 'bg-gray-100 text-gray-800',
+                                ];
+                            @endphp
+                            <span class="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full {{ $statusColors[$borrowing->status] ?? 'bg-gray-100 text-gray-800' }}">
+                                {{ ucfirst($borrowing->status) }}
+                            </span>
+                            @if($borrowing->document_number)
+                                <span class="text-xs text-gray-600">No: {{ $borrowing->document_number }}</span>
+                            @endif
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Tipe</label>
-                        <p class="font-semibold text-gray-800">{{ ucfirst($borrowing->borrower_type) }}</p>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">NIM/NIP/NIK</label>
-                        <p class="font-semibold text-gray-800">{{ $borrowing->borrower_id_number }}</p>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">No Telepon</label>
-                        <p class="font-semibold text-gray-800">{{ $borrowing->phone_number }}</p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="text-sm text-gray-600">Email</label>
-                        <p class="font-semibold text-gray-800">{{ $borrowing->email }}</p>
+
+                    <div class="flex gap-2 flex-wrap flex-shrink-0">
+                        @if($borrowing->status === 'pending')
+                            <form action="{{ route('admin.asset-borrowings.approve', $borrowing->id) }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow transition-all duration-200" onclick="return confirm('Setujui peminjaman ini?')">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Setujui
+                                    </span>
+                                </button>
+                            </form>
+                            <button onclick="openRejectModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow transition-all duration-200">
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Tolak
+                                </span>
+                            </button>
+                        @endif
+
+                        @if($borrowing->generated_document_path)
+                            <a href="{{ route('admin.asset-borrowings.preview', $borrowing->id) }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow transition-all duration-200 inline-flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Download PDF
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Borrowing Details -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    Detail Peminjaman
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-600">Laboratorium</label>
-                        <p class="font-semibold text-gray-800">{{ $borrowing->lab->name }}</p>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Tanggal Pinjam</label>
-                        <p class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($borrowing->borrow_date)->locale('id')->isoFormat('D MMMM YYYY') }}</p>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Tanggal Kembali</label>
-                        <p class="font-semibold text-gray-800">{{ \Carbon\Carbon::parse($borrowing->return_date)->locale('id')->isoFormat('D MMMM YYYY') }}</p>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Durasi Peminjaman</label>
-                        <p class="font-semibold text-gray-800">
-                            {{ \Carbon\Carbon::parse($borrowing->borrow_date)->diffInDays(\Carbon\Carbon::parse($borrowing->return_date)) + 1 }} hari
-                        </p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="text-sm text-gray-600">Tujuan Peminjaman</label>
-                        <p class="font-semibold text-gray-800">{{ $borrowing->purpose }}</p>
-                    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
+            <!-- Form Data PIHAK PERTAMA (Admin) -->
+            <div class="bg-white shadow-sm rounded-lg">
+                <div class="px-4 py-3">
+                    <h3 class="text-base font-bold text-gray-800 mb-2.5 pb-2 border-b">Data Penanggung Jawab (PIHAK PERTAMA)</h3>
+                    
+                    <form action="{{ route('admin.asset-borrowings.update-first-party', $borrowing->id) }}" method="POST" class="space-y-2.5">
+                        @csrf
+                        
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Nama *</label>
+                            <input type="text" name="first_party_name" value="{{ old('first_party_name', $borrowing->first_party_name) }}" required
+                                class="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Jabatan *</label>
+                            <input type="text" name="first_party_position" value="{{ old('first_party_position', $borrowing->first_party_position) }}" required
+                                class="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Contoh: Asisten UPK">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Alamat *</label>
+                            <input type="text" name="first_party_address" value="{{ old('first_party_address', $borrowing->first_party_address) }}" required
+                                class="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Contoh: Semarang">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Telepon Kantor *</label>
+                            <input type="text" name="first_party_phone" value="{{ old('first_party_phone', $borrowing->first_party_phone) }}" required
+                                class="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Contoh: +62 877-4119-1305">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Tanggal Surat</label>
+                            <input type="date" name="document_date" value="{{ old('document_date', $borrowing->document_date ? $borrowing->document_date->format('Y-m-d') : '') }}"
+                                class="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-0.5">Kosongkan untuk menggunakan tanggal hari ini</p>
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded font-semibold text-sm mt-3">
+                            {{ $borrowing->generated_document_path ? 'Update & Generate Ulang Surat' : 'Simpan & Generate Surat' }}
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            <!-- Borrowed Items -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                    </svg>
-                    Aset yang Dipinjam
-                </h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
+            <!-- Data Peminjam (PIHAK KEDUA) -->
+            <div class="bg-white shadow-sm rounded-lg">
+                <div class="px-4 py-3">
+                    <h3 class="text-base font-bold text-gray-800 mb-2.5 pb-2 border-b">Data Peminjam (PIHAK KEDUA)</h3>
+                    
+                    <div class="space-y-1.5 text-sm">
+                        <div class="grid grid-cols-3 gap-2">
+                            <span class="font-semibold text-gray-600">Nama:</span>
+                            <span class="col-span-2 text-gray-900">{{ $borrowing->borrower_name }}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <span class="font-semibold text-gray-600">Jabatan/Status:</span>
+                            <span class="col-span-2 text-gray-900">{{ $borrowing->borrower_type }}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <span class="font-semibold text-gray-600">Alamat:</span>
+                            <span class="col-span-2 text-gray-900">{{ $borrowing->borrower_address ?? '-' }}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <span class="font-semibold text-gray-600">Telepon:</span>
+                            <span class="col-span-2 text-gray-900">{{ $borrowing->phone_number }}</span>
+                        </div>
+                        @if($borrowing->email)
+                        <div class="grid grid-cols-3 gap-2">
+                            <span class="font-semibold text-gray-600">Email:</span>
+                            <span class="col-span-2 text-gray-900">{{ $borrowing->email }}</span>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Peminjaman -->
+        <div class="bg-white shadow-sm rounded-lg">
+            <div class="px-4 py-3">
+                <h3 class="text-base font-bold text-gray-800 mb-2.5 pb-2 border-b">Detail Peminjaman</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-3 text-sm">
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-semibold text-gray-600 text-xs">No. Surat:</span>
+                        <span class="text-gray-900">{{ $borrowing->document_number ?? 'Belum dibuat' }}</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-semibold text-gray-600 text-xs">Tgl Pinjam:</span>
+                        <span class="text-gray-900">{{ $borrowing->borrow_date->format('d M Y') }}</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-semibold text-gray-600 text-xs">Tgl Kembali:</span>
+                        <span class="text-gray-900">{{ $borrowing->return_date->format('d M Y') }}</span>
+                    </div>
+                    <div class="sm:col-span-2 lg:col-span-4 flex items-baseline gap-2">
+                        <span class="font-semibold text-gray-600 text-xs flex-shrink-0">Tujuan:</span>
+                        <span class="text-gray-900 text-sm">{{ $borrowing->purpose }}</span>
+                    </div>
+                </div>
+
+                <h4 class="text-sm font-semibold text-gray-800 mb-2 mt-3">Barang yang Dipinjam</h4>
+                <div class="overflow-x-auto -mx-4 sm:mx-0">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nama Aset</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Jumlah</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Catatan</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">No</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Nama Barang</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Merk/Tipe</th>
+                                <th class="px-3 py-2 text-center text-xs font-semibold text-gray-700">Jumlah</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Kondisi</th>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Keterangan</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @foreach($borrowing->borrowedItems as $item)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 text-sm text-gray-800">{{ $item->item->name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-800 text-center font-semibold">{{ $item->quantity }}x</td>
-                                <td class="px-4 py-3 text-sm text-gray-600">{{ $item->notes ?: '-' }}</td>
-                            </tr>
+                        <tbody class="bg-white divide-y divide-gray-100">
+                            @foreach($borrowing->borrowedItems as $index => $item)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-2 text-gray-900">{{ $index + 1 }}</td>
+                                    <td class="px-3 py-2 text-gray-900">{{ $item->item->name ?? '-' }}</td>
+                                    <td class="px-3 py-2 text-gray-900">{{ $item->brand_type ?? '-' }}</td>
+                                    <td class="px-3 py-2 text-center">
+                                        <span class="inline-flex items-center justify-center px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                                            {{ $item->quantity }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex gap-1 flex-wrap">
+                                            @if($item->condition_good)
+                                                <span class="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded">Baik</span>
+                                            @endif
+                                            @if($item->condition_complete)
+                                                <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Lengkap</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-2 text-gray-900">{{ $item->remarks ?? '-' }}</td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            @if($borrowing->admin_notes)
-            <div class="bg-blue-50 rounded-xl border border-blue-200 p-6">
-                <h3 class="font-bold text-blue-900 mb-2 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                    Catatan Admin
-                </h3>
-                <p class="text-blue-800">{{ $borrowing->admin_notes }}</p>
-            </div>
-            @endif
-
-            @if($borrowing->rejection_reason)
-            <div class="bg-red-50 rounded-xl border border-red-200 p-6">
-                <h3 class="font-bold text-red-900 mb-2 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                    </svg>
-                    Alasan Ditolak
-                </h3>
-                <p class="text-red-800">{{ $borrowing->rejection_reason }}</p>
-            </div>
-            @endif
-        </div>
-
-        <!-- Actions Sidebar -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl shadow-lg p-6 sticky top-6">
-                <h2 class="text-lg font-bold text-gray-800 mb-4">Aksi</h2>
-                
-                @if($borrowing->status === 'pending')
-                    <div class="space-y-3">
-                        <button onclick="approveAssetBorrowing({{ $borrowing->id }})"
-                                class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            Setujui
-                        </button>
-                        <button onclick="rejectAssetBorrowing({{ $borrowing->id }})"
-                                class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            Tolak
-                        </button>
-                    </div>
-                @elseif($borrowing->status === 'approved')
-                    <button onclick="handoutAssetBorrowing({{ $borrowing->id }})"
-                            class="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center justify-center">
-                        📤 Serahkan Aset
-                    </button>
-                @elseif($borrowing->status === 'borrowed')
-                    <button onclick="receiveAssetBorrowing({{ $borrowing->id }})"
-                            class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-lg transition-all flex items-center justify-center">
-                        📥 Terima Kembali
-                    </button>
-                @else
-                    <p class="text-gray-500 text-center text-sm">Tidak ada aksi yang tersedia</p>
-                @endif
-
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <h3 class="text-sm font-semibold text-gray-600 mb-3">Timeline</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-start">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full mt-1.5 mr-3"></div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">Diajukan</p>
-                                <p class="text-xs text-gray-600">{{ $borrowing->created_at->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}</p>
-                            </div>
-                        </div>
-                        
-                        @if($borrowing->approved_at)
-                        <div class="flex items-start">
-                            <div class="w-2 h-2 bg-green-500 rounded-full mt-1.5 mr-3"></div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">Disetujui</p>
-                                <p class="text-xs text-gray-600">{{ \Carbon\Carbon::parse($borrowing->approved_at)->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}</p>
-                            </div>
-                        </div>
-                        @endif
-                        
-                        @if($borrowing->rejected_at)
-                        <div class="flex items-start">
-                            <div class="w-2 h-2 bg-red-500 rounded-full mt-1.5 mr-3"></div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">Ditolak</p>
-                                <p class="text-xs text-gray-600">{{ \Carbon\Carbon::parse($borrowing->rejected_at)->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}</p>
-                            </div>
-                        </div>
-                        @endif
-                        
-                        @if($borrowing->handed_out_at)
-                        <div class="flex items-start">
-                            <div class="w-2 h-2 bg-purple-500 rounded-full mt-1.5 mr-3"></div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">Diserahkan</p>
-                                <p class="text-xs text-gray-600">{{ \Carbon\Carbon::parse($borrowing->handed_out_at)->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}</p>
-                            </div>
-                        </div>
-                        @endif
-                        
-                        @if($borrowing->returned_at)
-                        <div class="flex items-start">
-                            <div class="w-2 h-2 bg-gray-500 rounded-full mt-1.5 mr-3"></div>
-                            <div>
-                                <p class="text-sm font-semibold text-gray-800">Dikembalikan</p>
-                                <p class="text-xs text-gray-600">{{ \Carbon\Carbon::parse($borrowing->returned_at)->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}</p>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
-<!-- Handout Asset Modal -->
-<div id="handoutAssetModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeHandoutModal()">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900">
-                    📤 Serahkan Aset
-                </h3>
-                <button type="button" onclick="closeHandoutModal()" class="text-gray-400 hover:text-gray-500">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <form id="handoutAssetForm" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label for="borrowConditionNotes" class="block text-sm font-medium text-gray-700 mb-2">
-                        Catatan Kondisi Barang (Opsional)
-                    </label>
-                    <textarea 
-                        id="borrowConditionNotes" 
-                        name="borrow_condition_notes" 
-                        rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Misal: Semua barang dalam kondisi baik dan lengkap"
-                    ></textarea>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button
-                        type="button"
-                        onclick="closeHandoutModal()"
-                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="submit"
-                        class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-md hover:from-purple-700 hover:to-indigo-700"
-                    >
-                        Konfirmasi Serahkan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Receive Asset Modal -->
-<div id="receiveAssetModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeReceiveModal()">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900">
-                    📥 Terima Kembali Aset
-                </h3>
-                <button type="button" onclick="closeReceiveModal()" class="text-gray-400 hover:text-gray-500">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <form id="receiveAssetForm" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label for="returnConditionNotes" class="block text-sm font-medium text-gray-700 mb-2">
-                        Catatan Kondisi Pengembalian (Opsional)
-                    </label>
-                    <textarea 
-                        id="returnConditionNotes" 
-                        name="return_condition_notes" 
-                        rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Misal: Semua barang dikembalikan dengan baik"
-                    ></textarea>
-                </div>
-                
-                <div class="mb-4">
-                    <label class="flex items-center">
-                        <input 
-                            type="checkbox" 
-                            id="isDamagedCheck"
-                            name="is_damaged"
-                            value="1"
-                            onchange="toggleDamageDescription()"
-                            class="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50"
-                        >
-                        <span class="ml-2 text-sm text-gray-700">Ada barang yang rusak/hilang</span>
-                    </label>
-                </div>
-
-                <div id="damageDescriptionField" class="mb-4 hidden">
-                    <label for="damageDescription" class="block text-sm font-medium text-red-700 mb-2">
-                        Deskripsi Kerusakan/Kehilangan <span class="text-red-500">*</span>
-                    </label>
-                    <textarea 
-                        id="damageDescription" 
-                        name="damage_description" 
-                        rows="3"
-                        class="w-full px-3 py-2 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                        placeholder="Jelaskan kondisi barang yang rusak/hilang secara detail"
-                    ></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-3">
-                    <button
-                        type="button"
-                        onclick="closeReceiveModal()"
-                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="submit"
-                        class="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md hover:from-green-700 hover:to-emerald-700"
-                    >
-                        Konfirmasi Terima
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Reject Asset Borrowing Modal -->
-<div id="rejectAssetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
-        <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold">Tolak Peminjaman</h3>
-                    <p class="text-sm text-red-100">Berikan alasan penolakan</p>
-                </div>
-            </div>
-            <button onclick="closeRejectModal()" class="text-white/80 hover:text-white transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
+<!-- Reject Modal -->
+<div id="rejectModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
         
-        <form id="rejectAssetForm" method="POST">
-            @csrf
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-3">
-                        Alasan Penolakan <span class="text-red-500">*</span>
-                    </label>
-                    <textarea 
-                        name="rejection_reason" 
-                        id="rejectionReasonInput"
-                        rows="4" 
-                        required
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all" 
-                        placeholder="Jelaskan alasan penolakan peminjaman ini..."
-                    ></textarea>
-                    <p class="mt-2 text-xs text-gray-500">
-                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                        </svg>
-                        Alasan akan dikirimkan kepada peminjam
-                    </p>
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full">
+            <form action="{{ route('admin.asset-borrowings.reject', $borrowing->id) }}" method="POST">
+                @csrf
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Tolak Peminjaman</h3>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Penolakan *</label>
+                        <textarea name="rejection_reason" rows="4" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            placeholder="Masukkan alasan penolakan..."></textarea>
+                    </div>
                 </div>
-                
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button 
-                        type="button" 
-                        onclick="closeRejectModal()" 
-                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-all"
-                    >
-                        Batal
-                    </button>
-                    <button 
-                        type="submit" 
-                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full sm:w-auto sm:ml-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
                         Tolak Peminjaman
                     </button>
+                    <button type="button" onclick="closeRejectModal()" class="mt-3 w-full sm:mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300">
+                        Batal
+                    </button>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
-@push('scripts')
 <script>
-    // Reuse same functions from dashboard
-    window.approveAssetBorrowing = function(id) {
-        if (!confirm('✅ Setujui peminjaman aset ini?')) {
-            return;
-        }
-        
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/asset-borrowings/${id}/approve`;
-        
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = '{{ csrf_token() }}';
-        form.appendChild(csrfInput);
-        
-        document.body.appendChild(form);
-        form.submit();
-    };
+function openRejectModal() {
+    document.getElementById('rejectModal').classList.remove('hidden');
+}
 
-    window.rejectAssetBorrowing = function(id) {
-        // Open reject modal
-        document.getElementById('rejectAssetModal').classList.remove('hidden');
-        document.getElementById('rejectAssetModal').classList.add('flex');
-        document.getElementById('rejectAssetForm').action = `/admin/asset-borrowings/${id}/reject`;
-        document.getElementById('rejectionReasonInput').value = '';
-        document.getElementById('rejectionReasonInput').focus();
-    };
-
-    // Close reject modal
-    function closeRejectModal() {
-        document.getElementById('rejectAssetModal').classList.add('hidden');
-        document.getElementById('rejectAssetModal').classList.remove('flex');
-        document.getElementById('rejectAssetForm').reset();
-    }
-
-    window.handoutAssetBorrowing = function(id) {
-        // Open handout modal
-        document.getElementById('handoutAssetModal').classList.remove('hidden');
-        document.getElementById('handoutAssetModal').classList.add('flex');
-        document.getElementById('handoutAssetForm').action = `/admin/asset-borrowings/${id}/handout`;
-    };
-
-    window.receiveAssetBorrowing = function(id) {
-        // Open receive modal
-        document.getElementById('receiveAssetModal').classList.remove('hidden');
-        document.getElementById('receiveAssetModal').classList.add('flex');
-        document.getElementById('receiveAssetForm').action = `/admin/asset-borrowings/${id}/receive`;
-    };
-    
-    // Close modals
-    function closeHandoutModal() {
-        document.getElementById('handoutAssetModal').classList.add('hidden');
-        document.getElementById('handoutAssetModal').classList.remove('flex');
-        document.getElementById('handoutAssetForm').reset();
-    }
-
-    function closeReceiveModal() {
-        document.getElementById('receiveAssetModal').classList.add('hidden');
-        document.getElementById('receiveAssetModal').classList.remove('flex');
-        document.getElementById('receiveAssetForm').reset();
-        document.getElementById('isDamagedCheck').checked = false;
-        toggleDamageDescription();
-    }
-
-    function toggleDamageDescription() {
-        const checkbox = document.getElementById('isDamagedCheck');
-        const field = document.getElementById('damageDescriptionField');
-        const textarea = document.getElementById('damageDescription');
-        
-        if (checkbox.checked) {
-            field.classList.remove('hidden');
-            textarea.required = true;
-        } else {
-            field.classList.add('hidden');
-            textarea.required = false;
-            textarea.value = '';
-        }
-    }
-
-    // Validate receive form
-    document.getElementById('receiveAssetForm')?.addEventListener('submit', function(e) {
-        const isDamaged = document.getElementById('isDamagedCheck').checked;
-        const damageDesc = document.getElementById('damageDescription').value.trim();
-        
-        if (isDamaged && !damageDesc) {
-            e.preventDefault();
-            alert('Deskripsi kerusakan/kehilangan harus diisi!');
-            document.getElementById('damageDescription').focus();
-        }
-    });
+function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+}
 </script>
-@endpush
 @endsection

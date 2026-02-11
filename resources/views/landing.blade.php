@@ -37,7 +37,7 @@
                     </a>
 
                     <!-- Login/Dashboard Button -->
-                    @auth
+                    @if(auth()->check())
                         <a href="{{ route('dashboard') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
                             Dashboard
                         </a>
@@ -45,7 +45,7 @@
                         <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
                             Login
                         </a>
-                    @endauth
+                    @endif
                 </div>
             </div>
         </div>
