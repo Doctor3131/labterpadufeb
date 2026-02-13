@@ -11,16 +11,31 @@
         .scroll-container::-webkit-scrollbar { display: none; }
         .scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Current time highlight */
-        .current-row {
-            background: linear-gradient(90deg, rgba(234, 179, 8, 0.3), rgba(234, 179, 8, 0.1));
-            border-left: 4px solid #eab308;
+        /* Current time indicator line */
+        .time-indicator {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ef4444;
+            z-index: 30;
+            pointer-events: none;
+        }
+        .time-indicator::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: -4px;
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
         }
     </style>
 </head>
 <body class="bg-white text-slate-800 min-h-screen overflow-hidden">
     
-    <!-- Header Bar - Yellow like landing page -->
+    <!-- Header Bar -->
     <header class="bg-yellow-500 py-4 px-6 shadow-lg">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
@@ -38,7 +53,7 @@
         </div>
     </header>
 
-    <!-- Schedule Display - Today Only -->
+    <!-- Timetable Grid -->
     <main id="scroll-container" class="scroll-container overflow-y-auto" style="height: calc(100vh - 130px);">
         <div id="scroll-content">
             @php
@@ -46,77 +61,129 @@
                 $dayNames = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
                 $todayName = $dayNames[$today->format('l')];
                 $todaySchedules = $schedules[$todayName]['items'] ?? collect([]);
+                
+                // Grid config
+                $timeStart = 5;  // 05:00
+                $timeEnd = 23;   // 23:00
+                $slotMinutes = 10;
+                $totalSlots = (($timeEnd - $timeStart) * 60) / $slotMinutes;
+                $rowHeight = 10; // px per 10-min slot
+                $totalHeight = $totalSlots * $rowHeight;
+                
+                // Color mapping
+                $typeColors = [
+                    'perkuliahan_tetap' => ['bg' => 'bg-yellow-300', 'accent' => 'bg-yellow-600', 'text' => 'text-yellow-900'],
+                    'perkuliahan_tidak_tetap' => ['bg' => 'bg-indigo-400', 'accent' => 'bg-indigo-700', 'text' => 'text-indigo-900'],
+                    'non_perkuliahan' => ['bg' => 'bg-emerald-400', 'accent' => 'bg-emerald-700', 'text' => 'text-emerald-900'],
+                    'pribadi' => ['bg' => 'bg-orange-400', 'accent' => 'bg-orange-700', 'text' => 'text-orange-900'],
+                ];
             @endphp
             
             @if(count($todaySchedules) > 0)
-            <div class="p-6">
-                <!-- Schedule Table -->
-                <table class="w-full border-collapse table-fixed">
-                    <thead class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider sticky top-0 z-10">
-                        <tr>
-                            <th class="px-4 py-4 pr-10 text-center font-semibold border-b-2 border-slate-200" style="width: 150px;">Waktu</th>
-                            <th class="px-4 py-4 pl-8 text-center font-semibold border-b-2 border-slate-200" style="width: 80px;">Ruang</th>
-                            <th class="px-4 py-4 pl-6 text-left font-semibold border-b-2 border-slate-200">Kegiatan / Mata Kuliah</th>
-                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 320px;">Dosen / PIC</th>
-                            <th class="px-4 py-4 text-center font-semibold border-b-2 border-slate-200" style="width: 100px;">Peserta</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <div class="p-4">
+                <div class="flex" style="min-width: 800px;">
+                    <!-- Time Labels Column -->
+                    <div class="flex-shrink-0 relative bg-slate-50 border-r border-slate-300" style="width: 70px; height: {{ $totalHeight }}px;">
+                        @for($h = $timeStart; $h < $timeEnd; $h++)
+                            @php
+                                $topHour = (($h - $timeStart) * 60 / $slotMinutes) * $rowHeight;
+                                $topHalf = $topHour + (30 / $slotMinutes) * $rowHeight;
+                            @endphp
+                            <div class="absolute text-xs font-semibold text-slate-500 pr-2 text-right w-full" style="top: {{ $topHour }}px; line-height: {{ $rowHeight }}px;">
+                                {{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00
+                            </div>
+                            <div class="absolute text-[10px] text-slate-400 pr-2 text-right w-full" style="top: {{ $topHalf }}px; line-height: {{ $rowHeight }}px;">
+                                {{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:30
+                            </div>
+                        @endfor
+                    </div>
+
+                    <!-- Lab Columns -->
+                    @foreach($labs as $lab)
+                    <div class="flex-1 relative border-l border-slate-200" style="height: {{ $totalHeight }}px;">
+                        <!-- Lab Header (sticky) -->
+                        <div class="sticky top-0 z-20 bg-slate-800 text-white text-center py-3 px-2 font-bold text-sm border-l border-slate-600">
+                            {{ $lab->name }}
+                        </div>
+
+                        <!-- Gridlines -->
+                        @for($slot = 0; $slot <= $totalSlots; $slot++)
+                            @php
+                                $mins = $slot * $slotMinutes;
+                                $topPx = $slot * $rowHeight;
+                            @endphp
+                            @if($mins % 60 === 0)
+                                <div class="absolute w-full border-t border-slate-200" style="top: {{ $topPx }}px;"></div>
+                            @elseif($mins % 30 === 0)
+                                <div class="absolute w-full border-t border-dashed border-slate-100" style="top: {{ $topPx }}px;"></div>
+                            @endif
+                        @endfor
+
+                        <!-- Schedule Blocks -->
                         @foreach($todaySchedules as $item)
-                        @php
-                            $now = now()->timezone('Asia/Jakarta');
-                            $startTime = \Carbon\Carbon::parse($item['start_time']);
-                            $endTime = \Carbon\Carbon::parse($item['end_time']);
-                            $scheduleStart = $today->copy()->setTimeFrom($startTime);
-                            $scheduleEnd = $today->copy()->setTimeFrom($endTime);
-                            $isCurrent = $now->between($scheduleStart, $scheduleEnd);
-                            
-                            $typeColors = [
-                                'perkuliahan_tetap' => 'bg-yellow-500',
-                                'perkuliahan_tidak_tetap' => 'bg-indigo-500',
-                                'non_perkuliahan' => 'bg-emerald-500',
-                                'pribadi' => 'bg-orange-500',
-                            ];
-                            $bgColor = $typeColors[$item['booking_type']] ?? 'bg-slate-500';
-                        @endphp
-                        <tr class="border-b border-slate-200 {{ $isCurrent ? 'current-row' : 'hover:bg-slate-50' }} transition">
-                            <td class="px-4 py-4 pr-10 align-middle whitespace-nowrap">
-                                <span class="text-lg font-mono font-bold text-slate-800">{{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }}</span>
-                                <span class="text-slate-400 mx-1">-</span>
-                                <span class="text-lg font-mono text-slate-600">{{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}</span>
-                            </td>
-                            <td class="px-4 py-4 pl-8 align-middle text-center whitespace-nowrap">
-                                <span class="{{ $bgColor }} text-white px-2 py-1 rounded text-xs font-semibold">{{ $item['lab'] }}</span>
-                            </td>
-                            <td class="px-4 py-4 pl-6 align-middle">
-                                <div class="text-base font-semibold text-slate-800">{{ $item['course'] }}</div>
-                                @if($item['komting'])
-                                    <div class="text-sm text-slate-500 mt-0.5">
-                                        {{ in_array($item['booking_type'], ['pribadi', 'non_perkuliahan']) ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}
+                            @if(($item['lab_id'] ?? null) == $lab->id)
+                                @php
+                                    $startMin = \Carbon\Carbon::parse($item['start_time'])->hour * 60 + \Carbon\Carbon::parse($item['start_time'])->minute;
+                                    $endMin = \Carbon\Carbon::parse($item['end_time'])->hour * 60 + \Carbon\Carbon::parse($item['end_time'])->minute;
+                                    $startOffset = $startMin - ($timeStart * 60);
+                                    $duration = $endMin - $startMin;
+                                    
+                                    if ($startOffset < 0 || $duration <= 0) continue;
+                                    
+                                    $topPx = ($startOffset / $slotMinutes) * $rowHeight;
+                                    $heightPx = ($duration / $slotMinutes) * $rowHeight;
+                                    $bookingType = $item['booking_type'] ?? $item['type'] ?? 'perkuliahan_tetap';
+                                    $colors = $typeColors[$bookingType] ?? $typeColors['perkuliahan_tetap'];
+                                    $isKuliah = in_array($bookingType, ['perkuliahan_tetap', 'perkuliahan_tidak_tetap']);
+                                    
+                                    $startTimeStr = \Carbon\Carbon::parse($item['start_time'])->format('H:i');
+                                    $endTimeStr = \Carbon\Carbon::parse($item['end_time'])->format('H:i');
+                                    $courseName = $item['course'] ?? '-';
+                                    $lecturerName = ($isKuliah && !empty($item['lecturer'])) ? $item['lecturer'] : '';
+                                @endphp
+                                <div class="absolute left-1 right-1 {{ $colors['bg'] }} rounded-lg shadow-sm border border-slate-200/50 overflow-hidden group"
+                                     style="top: {{ $topPx }}px; height: {{ $heightPx }}px; z-index: 5;"
+                                     title="{{ $courseName }}{{ $lecturerName ? "\n" . $lecturerName : '' }}{{ "\n" . $startTimeStr . ' - ' . $endTimeStr }}">
+                                    
+                                    <!-- Accent Band -->
+                                    <div class="absolute top-0 bottom-0 left-0 w-2 {{ $colors['accent'] }}"></div>
+
+                                    <!-- Content -->
+                                    <div class="pl-3 pr-2 py-1.5 h-full flex flex-col justify-start">
+                                        <!-- Title -->
+                                        <div class="text-xs font-bold {{ $colors['text'] }} leading-tight truncate mb-0.5">{{ $courseName }}</div>
+                                        
+                                        <!-- Time -->
+                                        @if($heightPx > 35)
+                                        <div class="flex items-center gap-1.5 text-[10px] font-medium {{ $colors['text'] }} leading-none mb-0.5 opacity-90">
+                                            <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span class="truncate">{{ $startTimeStr }} - {{ $endTimeStr }}</span>
+                                        </div>
+                                        @endif
+
+                                        <!-- Lecturer -->
+                                        @if($heightPx > 50 && $lecturerName)
+                                        <div class="flex items-center gap-1.5 text-[10px] {{ $colors['text'] }} leading-none opacity-80">
+                                            <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            <span class="truncate">{{ $lecturerName }}</span>
+                                        </div>
+                                        @endif
                                     </div>
-                                @endif
-                            </td>
-                            <td class="px-4 py-4 align-middle text-center text-slate-600 text-sm">{{ $item['lecturer'] ?? '-' }}</td>
-                            <td class="px-4 py-4 align-middle text-center whitespace-nowrap">
-                                @if($item['student_count'])
-                                    <span class="text-slate-700 text-sm font-medium">{{ $item['student_count'] }} orang</span>
-                                @else
-                                    <span class="text-slate-400">-</span>
-                                @endif
-                            </td>
-                        </tr>
+                                </div>
+                            @endif
                         @endforeach
-                    </tbody>
-                </table>
+                    </div>
+                    @endforeach
+                </div>
             </div>
             @else
-            <!-- No Schedule Today -->
-            <div class="flex flex-col items-center justify-center h-full text-center py-20">
+            <!-- Empty state - centered, no scroll needed -->
+            <div class="flex flex-col items-center justify-center text-center" style="height: calc(100vh - 180px);">
                 <svg class="w-24 h-24 text-slate-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <h2 class="text-3xl font-bold text-slate-400 mb-2">Tidak Ada Jadwal Hari Ini</h2>
-                <p class="text-slate-400">{{ $todayName }}, {{ $today->isoFormat('D MMMM Y') }}</p>
+                <p class="text-slate-400 text-lg">{{ $todayName }}, {{ $today->isoFormat('D MMMM Y') }}</p>
             </div>
             @endif
         </div>
@@ -133,9 +200,6 @@
             </span>
             <span class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded bg-emerald-500"></span> Non-Perkuliahan
-            </span>
-            <span class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded bg-orange-500"></span> Pribadi
             </span>
         </div>
         <div class="text-slate-400 flex items-center gap-2">
@@ -162,6 +226,33 @@
             if (refreshCountdown < 0) refreshCountdown = 300;
         }
         
+        // Current time indicator
+        function updateTimeIndicator() {
+            // Remove existing indicator
+            document.querySelectorAll('.time-indicator').forEach(el => el.remove());
+            
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const timeStart = 5 * 60;  // 05:00
+            const timeEnd = 23 * 60;   // 23:00
+            
+            if (currentMinutes < timeStart || currentMinutes > timeEnd) return;
+            
+            const slotMinutes = 10;
+            const rowHeight = 10;
+            const offset = currentMinutes - timeStart;
+            const topPx = (offset / slotMinutes) * rowHeight;
+            
+            // Add indicator to each lab column
+            const labCols = document.querySelectorAll('[class*="flex-1 relative border-l"]');
+            labCols.forEach(col => {
+                const indicator = document.createElement('div');
+                indicator.className = 'time-indicator';
+                indicator.style.top = topPx + 'px';
+                col.appendChild(indicator);
+            });
+        }
+        
         // Smart auto-scroll: only if content exceeds viewport
         function initAutoScroll() {
             const container = document.getElementById('scroll-container');
@@ -180,7 +271,7 @@
             const maxScroll = contentHeight - containerHeight;
             let scrollDirection = 1; // 1 = down, -1 = up
             let currentScroll = 0;
-            const scrollSpeed = 1; // pixels per frame
+            const scrollSpeed = 2; // pixels per frame
             const pauseAtEnds = 3000; // ms to pause at top/bottom
             let isPaused = false;
             
@@ -219,8 +310,10 @@
         // Initialize
         updateClock();
         updateRefreshCountdown();
+        updateTimeIndicator();
         setInterval(updateClock, 1000);
         setInterval(updateRefreshCountdown, 1000);
+        setInterval(updateTimeIndicator, 60000); // Update indicator every minute
         
         // Start auto-scroll after page loads
         window.addEventListener('load', () => {

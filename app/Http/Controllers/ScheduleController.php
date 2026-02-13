@@ -95,10 +95,14 @@ class ScheduleController extends Controller
         // Fix Senin date (it's the start of week)
         $schedules['Senin']['date'] = $startOfWeek->format('Y-m-d');
         
+        // Get all labs for grid columns
+        $labs = \App\Models\Lab::orderBy('name')->get(['id', 'name']);
+        
         return view('schedules.display', [
             'schedules' => $schedules,
             'startOfWeek' => $startOfWeek,
             'endOfWeek' => $endOfWeek,
+            'labs' => $labs,
         ]);
     }
 }

@@ -65,7 +65,6 @@
 
     <!-- Hero Section -->
     <section class="relative bg-yellow-500 text-white overflow-hidden">
-        {{-- <div class="absolute inset-0 bg-grid-white/10"></div> --}}
         <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md animate-fade-in-up animation-delay-100">
@@ -101,7 +100,7 @@
     <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">
             <!-- Week Info -->
-            <div class="text-center mb-6 animate-fade-in-up animation-delay-400 relative z-50">
+            <div class="text-center mb-6 animate-fade-in-up animation-delay-400 relative z-10">
                 <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Jadwal Laboratorium</h2>
                 <p id="calWeekLabel" class="text-slate-600">Memuat...</p>
                 <div class="relative inline-block">
@@ -134,17 +133,17 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in-up animation-delay-500">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 animate-fade-in-up animation-delay-500">
                 
                 <!-- Day Tabs -->
-                <div class="border-b border-slate-200 overflow-x-auto">
+                <div class="border-b border-slate-200 overflow-x-auto sticky top-16 lg:top-20 z-40 bg-white shadow-sm">
                     <div id="dayTabsContainer" class="flex min-w-max lg:min-w-0 lg:justify-center">
                         <!-- Tabs rendered by JS -->
                     </div>
                 </div>
 
                 <!-- Desktop: Calendar Grid View -->
-                <div id="calendarGridContainer" class="hidden lg:block overflow-x-auto">
+                <div id="calendarGridContainer" class="hidden lg:block">
                     <div id="calendarGrid" class="relative" style="min-width: 800px;">
                         <!-- Grid rendered by JS -->
                         <div class="text-center py-12">
@@ -232,7 +231,6 @@
                             </button>
                         </div>
                     </form>
-
 
                 </div>
             </div>
@@ -352,11 +350,11 @@
     <script>
     (function() {
         // ==================== CONFIG ====================
-        const TIME_START = 7;  // 07:00
-        const TIME_END = 19;   // 19:00
+        const TIME_START = 5;  // 05:00
+        const TIME_END = 23;   // 23:00
         const SLOT_MINUTES = 10;
-        const TOTAL_SLOTS = ((TIME_END - TIME_START) * 60) / SLOT_MINUTES; // 72 slots
-        const ROW_HEIGHT = 14; // px per 10-min slot
+        const TOTAL_SLOTS = ((TIME_END - TIME_START) * 60) / SLOT_MINUTES; // 108 slots
+        const ROW_HEIGHT = 10; // px per 10-min slot
         const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
         const DAYS_ID = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
@@ -369,9 +367,10 @@
 
         // ==================== COLOR MAPPING ====================
         const TYPE_COLORS = {
-            'perkuliahan_tetap':       { bg: 'bg-yellow-300', border: 'border-yellow-400', text: 'text-yellow-900', bgHex: '#FDE047' },
-            'perkuliahan_tidak_tetap': { bg: 'bg-indigo-400', border: 'border-indigo-500', text: 'text-indigo-900', bgHex: '#818CF8' },
-            'non_perkuliahan':         { bg: 'bg-emerald-400', border: 'border-emerald-500', text: 'text-emerald-900', bgHex: '#34D399' },
+            'perkuliahan_tetap':       { bg: 'bg-yellow-300', accent: 'bg-yellow-600', border: 'border-yellow-500', shadow: 'shadow-yellow-100', text: 'text-yellow-900' },
+            'perkuliahan_tidak_tetap': { bg: 'bg-indigo-400', accent: 'bg-indigo-700', border: 'border-indigo-500', shadow: 'shadow-indigo-100', text: 'text-indigo-900' },
+            'non_perkuliahan':         { bg: 'bg-emerald-400', accent: 'bg-emerald-700', border: 'border-emerald-500', shadow: 'shadow-emerald-100', text: 'text-emerald-900' },
+            'pribadi':                 { bg: 'bg-orange-400', accent: 'bg-orange-700', border: 'border-orange-500', shadow: 'shadow-orange-100', text: 'text-orange-900' }
         };
 
         // ==================== HELPERS ====================
@@ -541,7 +540,11 @@
             let html = '';
 
             // ---- Header row: Time col + Lab cols ----
-            html += '<div class="flex border-b-2 border-slate-300 bg-slate-800 text-white sticky top-0 z-10">';
+            // Calculate sticky offset dynamically from actual element heights
+            const navEl = document.querySelector('nav.sticky');
+            const tabsEl = document.querySelector('#dayTabsContainer')?.closest('.sticky');
+            const stickyTop = (navEl ? navEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0);
+            html += `<div class="flex border-b-2 border-slate-300 bg-slate-800 text-white sticky z-30" style="top:${stickyTop}px">`;
             html += '<div class="flex-shrink-0" style="width:70px;"></div>';
             allLabs.forEach(lab => {
                 html += `<div class="flex-1 text-center py-3 px-2 font-bold text-sm border-l border-slate-600">${lab.name}</div>`;
@@ -595,15 +598,46 @@
                     const colors = TYPE_COLORS[s.booking_type] || TYPE_COLORS['perkuliahan_tetap'];
                     const startTimeStr = formatTime(s.start_time);
                     const endTimeStr = formatTime(s.end_time);
+                    const isKuliah = s.booking_type === 'perkuliahan_tetap' || s.booking_type === 'perkuliahan_tidak_tetap';
+                    const lecturerDisplay = (isKuliah && s.lecturer) ? s.lecturer : '';
 
-                    html += `
-                        <div class="absolute left-1 right-1 ${colors.bg} ${colors.border} ${colors.text} border-l-4 rounded-r-md px-2 py-1 overflow-hidden cursor-pointer hover:shadow-lg hover:z-20 transition-shadow group"
-                             style="top:${topPx}px; height:${heightPx}px; z-index:5;"
-                             title="${s.course || ''}\n${s.lecturer || ''}\n${startTimeStr} - ${endTimeStr}">
-                            <div class="text-xs font-bold leading-tight truncate">${s.course || '-'}</div>
-                            ${heightPx > 30 ? `<div class="text-[10px] opacity-80 truncate">${s.lecturer || ''}</div>` : ''}
-                            ${heightPx > 45 ? `<div class="text-[10px] opacity-70 truncate">${startTimeStr}-${endTimeStr}</div>` : ''}
-                        </div>`;
+                 // Icons
+                const iconClock = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                const iconUser = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
+
+                // Build tooltip
+                const tooltipParts = [s.course || '-'];
+                if (lecturerDisplay) tooltipParts.push(lecturerDisplay);
+                tooltipParts.push(startTimeStr + ' - ' + endTimeStr);
+
+                html += `
+                    <div class="absolute left-1 right-1 ${colors.bg} rounded-lg shadow-sm border border-slate-200/50 overflow-hidden cursor-pointer hover:shadow-md hover:z-20 transition-all duration-200 group"
+                            style="top:${topPx}px; height:${heightPx}px; z-index:5;"
+                            title="${tooltipParts.join('\n')}">
+                        
+                        <!-- Accent Band -->
+                        <div class="absolute top-0 bottom-0 left-0 w-2 ${colors.accent}"></div>
+                        
+                        <!-- Content -->
+                        <div class="pl-3 pr-2 py-1.5 h-full flex flex-col justify-start">
+                            <!-- Title (Primary) -->
+                            <div class="text-xs font-bold ${colors.text} leading-tight truncate mb-0.5">${s.course || '-'}</div>
+                            
+                            <!-- Time (Secondary) -->
+                            ${heightPx > 35 ? `
+                            <div class="flex items-center gap-1.5 text-[10px] font-medium ${colors.text} leading-none mb-0.5 opacity-90">
+                                ${iconClock}
+                                <span class="truncate">${startTimeStr} - ${endTimeStr}</span>
+                            </div>` : ''}
+
+                            <!-- Lecturer (Tertiary) -->
+                            ${heightPx > 50 && lecturerDisplay ? `
+                            <div class="flex items-center gap-1.5 text-[10px] ${colors.text} leading-none opacity-80">
+                                ${iconUser}
+                                <span class="truncate">${lecturerDisplay}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
                 });
 
                 html += '</div>';
@@ -650,23 +684,25 @@
                 const colors = TYPE_COLORS[s.booking_type] || TYPE_COLORS['perkuliahan_tetap'];
                 const startTime = formatTime(s.start_time);
                 const endTime = formatTime(s.end_time);
+                const isKuliah = s.booking_type === 'perkuliahan_tetap' || s.booking_type === 'perkuliahan_tidak_tetap';
+
                 html += `
-                    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center text-slate-800 font-bold text-sm bg-slate-100 px-2.5 py-1 rounded-lg">
-                                <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-all border-l-4 ${colors.border} ${colors.shadow || 'shadow-slate-100'}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 text-xs font-semibold rounded ${colors.bg} ${colors.text}">${s.lab}</span>
+                            </div>
+                            <div class="flex items-center text-slate-700 font-bold text-sm">
+                                <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 ${startTime} - ${endTime}
                             </div>
-                            <span class="px-2 py-1 text-xs font-semibold rounded ${colors.bg} ${colors.text}">${s.lab}</span>
                         </div>
                         <h4 class="font-bold text-slate-900 text-base mb-1">${s.course || '-'}</h4>
-                        <div class="border-t border-slate-100 pt-2 mt-2">
-                            <div class="text-xs text-slate-600 font-medium">${s.lecturer || '-'}</div>
-                            ${s.komting ? `<div class="text-xs text-slate-500 mt-1">PIC: ${s.komting}</div>` : ''}
-                            ${s.student_count ? `<div class="text-xs text-slate-500 mt-1">${s.student_count} peserta</div>` : ''}
-                        </div>
+                        ${isKuliah && s.lecturer ? `<div class="text-xs text-slate-600 font-medium">Dosen: ${s.lecturer}</div>` : ''}
+                        ${s.komting ? `<div class="text-xs text-slate-500 mt-1">${isKuliah ? 'Komting' : 'PIC'}: ${s.komting}</div>` : ''}
+                        ${s.student_count ? `<div class="text-xs text-slate-500 mt-0.5">${s.student_count} peserta</div>` : ''}
                     </div>`;
             });
             container.innerHTML = html;
