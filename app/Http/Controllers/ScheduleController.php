@@ -41,7 +41,8 @@ class ScheduleController extends Controller
             }
             
             // Get all schedules (regular + bookings)
-            $weekSchedules = $this->scheduleService->getWeekSchedules($startOfWeek, $endOfWeek, $labIds);
+            $includePribadi = $request->boolean('include_pribadi', false);
+            $weekSchedules = $this->scheduleService->getWeekSchedules($startOfWeek, $endOfWeek, $labIds, $includePribadi);
             
             // Format week label
             $weekLabel = $this->scheduleService->getWeekLabel($startOfWeek, $endOfWeek);
