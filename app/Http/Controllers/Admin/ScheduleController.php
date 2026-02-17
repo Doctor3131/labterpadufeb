@@ -566,6 +566,7 @@ class ScheduleController extends Controller
 
 
 
+
     /**
      * Apply filters to the schedule query
      */

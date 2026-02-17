@@ -256,6 +256,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Kebutuhan Peralatan</label>
                             <textarea name="equipment_needs" id="equipment_needs" rows="3"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs', $isEdit ? ($schedule->equipment_needs ?? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->equipment_needs : '')) : '') }}</textarea>
+<<<<<<< HEAD
                         </div>
                     </div>
                 </div>
@@ -350,6 +351,8 @@
                                 @endif
                             </div>
                             <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, PDF. Maks 5MB</p>
+=======
+>>>>>>> 6166212588940359435f21c372b2f836dc119f7b
                         </div>
                     </div>
                 </div>
