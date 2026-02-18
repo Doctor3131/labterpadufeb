@@ -174,9 +174,9 @@
                                         pattern="[0-9]{14}"
                                         maxlength="14"
                                         inputmode="numeric"
-                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 30)"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nim') border-red-500 @enderror">
-                                    <p class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
+                                    <p id="nim-hint" class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
                                     <p id="nim-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                     @error('nim')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -714,8 +714,31 @@
                 radio.addEventListener('change', () => clearFieldError('applicant_type'));
             });
             document.querySelectorAll('input[name="affiliation"]').forEach(radio => {
-                radio.addEventListener('change', () => clearFieldError('affiliation'));
+                radio.addEventListener('change', () => {
+                    clearFieldError('affiliation');
+                    updateNimConstraints();
+                });
             });
+
+            // Dynamic NIM constraints based on affiliation
+            function updateNimConstraints() {
+                const affiliation = document.querySelector('input[name="affiliation"]:checked');
+                const isEksternal = affiliation && affiliation.value === 'eksternal';
+                const nimHint = document.getElementById('nim-hint');
+
+                if (isEksternal) {
+                    nimInput.setAttribute('maxlength', '30');
+                    nimInput.setAttribute('pattern', '[0-9]+');
+                    nimInput.setAttribute('placeholder', 'Masukkan NIM/Nomor Identitas');
+                    if (nimHint) nimHint.textContent = 'Nomor identitas (angka saja)';
+                } else {
+                    nimInput.setAttribute('maxlength', '14');
+                    nimInput.setAttribute('pattern', '[0-9]{14}');
+                    nimInput.setAttribute('placeholder', 'Masukkan NIM (14 digit)');
+                    if (nimHint) nimHint.textContent = 'NIM harus 14 digit angka';
+                }
+            }
+            updateNimConstraints(); // Initialize on load
             if (studyProgramSelect) {
                 studyProgramSelect.addEventListener('change', () => clearFieldError('study_program'));
             }
@@ -790,10 +813,20 @@
                     }
                 } else {
                     const nim = nimInput.value.trim();
+                    const affiliationChecked = document.querySelector('input[name="affiliation"]:checked');
+                    const isEksternal = affiliationChecked && affiliationChecked.value === 'eksternal';
+
                     if (validateField('nim', !nim, 'NIM wajib diisi')) {
-                         if (!/^[0-9]{14}$/.test(nim)) {
-                             showFieldError('nim', 'NIM harus 14 digit angka');
-                             isValid = false;
+                         if (isEksternal) {
+                             if (!/^[0-9]+$/.test(nim)) {
+                                 showFieldError('nim', 'NIM/Nomor identitas harus berupa angka');
+                                 isValid = false;
+                             }
+                         } else {
+                             if (!/^[0-9]{14}$/.test(nim)) {
+                                 showFieldError('nim', 'NIM harus 14 digit angka');
+                                 isValid = false;
+                             }
                          }
                     }
                     
