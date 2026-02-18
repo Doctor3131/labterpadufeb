@@ -100,11 +100,7 @@
     <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">
             <!-- Week Info -->
-<<<<<<< HEAD
             <div class="text-center mb-6 animate-fade-in-up animation-delay-400 relative z-10">
-=======
-            <div class="text-center mb-6 animate-fade-in-up animation-delay-400 relative z-50">
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
                 <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Jadwal Laboratorium</h2>
                 <p id="calWeekLabel" class="text-slate-600">Memuat...</p>
                 <div class="relative inline-block">
@@ -140,22 +136,14 @@
             <div class="bg-white rounded-2xl shadow-xl border border-slate-200 animate-fade-in-up animation-delay-500">
                 
                 <!-- Day Tabs -->
-<<<<<<< HEAD
                 <div class="border-b border-slate-200 overflow-x-auto sticky top-16 lg:top-20 z-40 bg-white shadow-sm">
-=======
-                <div class="border-b border-slate-200 overflow-x-auto">
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
                     <div id="dayTabsContainer" class="flex min-w-max lg:min-w-0 lg:justify-center">
                         <!-- Tabs rendered by JS -->
                     </div>
                 </div>
 
                 <!-- Desktop: Calendar Grid View -->
-<<<<<<< HEAD
                 <div id="calendarGridContainer" class="hidden lg:block">
-=======
-                <div id="calendarGridContainer" class="hidden lg:block overflow-x-auto">
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
                     <div id="calendarGrid" class="relative" style="min-width: 800px;">
                         <!-- Grid rendered by JS -->
                         <div class="text-center py-12">
@@ -362,19 +350,11 @@
     <script>
     (function() {
         // ==================== CONFIG ====================
-<<<<<<< HEAD
         const TIME_START = 5;  // 05:00
         const TIME_END = 23;   // 23:00
         const SLOT_MINUTES = 10;
         const TOTAL_SLOTS = ((TIME_END - TIME_START) * 60) / SLOT_MINUTES; // 108 slots
         const ROW_HEIGHT = 10; // px per 10-min slot
-=======
-        const TIME_START = 7;  // 07:00
-        const TIME_END = 19;   // 19:00
-        const SLOT_MINUTES = 10;
-        const TOTAL_SLOTS = ((TIME_END - TIME_START) * 60) / SLOT_MINUTES; // 72 slots
-        const ROW_HEIGHT = 14; // px per 10-min slot
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
         const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
         const DAYS_ID = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
@@ -387,16 +367,9 @@
 
         // ==================== COLOR MAPPING ====================
         const TYPE_COLORS = {
-<<<<<<< HEAD
             'perkuliahan_tetap':       { bg: 'bg-yellow-300', accent: 'bg-yellow-600', border: 'border-yellow-500', shadow: 'shadow-yellow-100', text: 'text-yellow-900' },
             'perkuliahan_tidak_tetap': { bg: 'bg-indigo-400', accent: 'bg-indigo-700', border: 'border-indigo-500', shadow: 'shadow-indigo-100', text: 'text-indigo-900' },
-            'non_perkuliahan':         { bg: 'bg-emerald-400', accent: 'bg-emerald-700', border: 'border-emerald-500', shadow: 'shadow-emerald-100', text: 'text-emerald-900' },
-            'pribadi':                 { bg: 'bg-orange-400', accent: 'bg-orange-700', border: 'border-orange-500', shadow: 'shadow-orange-100', text: 'text-orange-900' }
-=======
-            'perkuliahan_tetap':       { bg: 'bg-yellow-300', border: 'border-yellow-400', text: 'text-yellow-900', bgHex: '#FDE047' },
-            'perkuliahan_tidak_tetap': { bg: 'bg-indigo-400', border: 'border-indigo-500', text: 'text-indigo-900', bgHex: '#818CF8' },
-            'non_perkuliahan':         { bg: 'bg-emerald-400', border: 'border-emerald-500', text: 'text-emerald-900', bgHex: '#34D399' },
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
+            'non_perkuliahan':         { bg: 'bg-emerald-400', accent: 'bg-emerald-700', border: 'border-emerald-500', shadow: 'shadow-emerald-100', text: 'text-emerald-900' }
         };
 
         // ==================== HELPERS ====================
@@ -566,15 +539,11 @@
             let html = '';
 
             // ---- Header row: Time col + Lab cols ----
-<<<<<<< HEAD
             // Calculate sticky offset dynamically from actual element heights
             const navEl = document.querySelector('nav.sticky');
             const tabsEl = document.querySelector('#dayTabsContainer')?.closest('.sticky');
             const stickyTop = (navEl ? navEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0);
             html += `<div class="flex border-b-2 border-slate-300 bg-slate-800 text-white sticky z-30" style="top:${stickyTop}px">`;
-=======
-            html += '<div class="flex border-b-2 border-slate-300 bg-slate-800 text-white sticky top-0 z-10">';
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
             html += '<div class="flex-shrink-0" style="width:70px;"></div>';
             allLabs.forEach(lab => {
                 html += `<div class="flex-1 text-center py-3 px-2 font-bold text-sm border-l border-slate-600">${lab.name}</div>`;
@@ -628,7 +597,6 @@
                     const colors = TYPE_COLORS[s.booking_type] || TYPE_COLORS['perkuliahan_tetap'];
                     const startTimeStr = formatTime(s.start_time);
                     const endTimeStr = formatTime(s.end_time);
-<<<<<<< HEAD
                     const isKuliah = s.booking_type === 'perkuliahan_tetap' || s.booking_type === 'perkuliahan_tidak_tetap';
                     const lecturerDisplay = (isKuliah && s.lecturer) ? s.lecturer : '';
 
@@ -669,17 +637,6 @@
                             </div>` : ''}
                         </div>
                     </div>`;
-=======
-
-                    html += `
-                        <div class="absolute left-1 right-1 ${colors.bg} ${colors.border} ${colors.text} border-l-4 rounded-r-md px-2 py-1 overflow-hidden cursor-pointer hover:shadow-lg hover:z-20 transition-shadow group"
-                             style="top:${topPx}px; height:${heightPx}px; z-index:5;"
-                             title="${s.course || ''}\n${s.lecturer || ''}\n${startTimeStr} - ${endTimeStr}">
-                            <div class="text-xs font-bold leading-tight truncate">${s.course || '-'}</div>
-                            ${heightPx > 30 ? `<div class="text-[10px] opacity-80 truncate">${s.lecturer || ''}</div>` : ''}
-                            ${heightPx > 45 ? `<div class="text-[10px] opacity-70 truncate">${startTimeStr}-${endTimeStr}</div>` : ''}
-                        </div>`;
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
                 });
 
                 html += '</div>';
@@ -726,7 +683,6 @@
                 const colors = TYPE_COLORS[s.booking_type] || TYPE_COLORS['perkuliahan_tetap'];
                 const startTime = formatTime(s.start_time);
                 const endTime = formatTime(s.end_time);
-<<<<<<< HEAD
                 const isKuliah = s.booking_type === 'perkuliahan_tetap' || s.booking_type === 'perkuliahan_tidak_tetap';
 
                 html += `
@@ -737,33 +693,15 @@
                             </div>
                             <div class="flex items-center text-slate-700 font-bold text-sm">
                                 <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-=======
-                html += `
-                    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex items-center text-slate-800 font-bold text-sm bg-slate-100 px-2.5 py-1 rounded-lg">
-                                <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 ${startTime} - ${endTime}
                             </div>
-<<<<<<< HEAD
                         </div>
                         <h4 class="font-bold text-slate-900 text-base mb-1">${s.course || '-'}</h4>
                         ${isKuliah && s.lecturer ? `<div class="text-xs text-slate-600 font-medium">Dosen: ${s.lecturer}</div>` : ''}
                         ${s.komting ? `<div class="text-xs text-slate-500 mt-1">${isKuliah ? 'Komting' : 'PIC'}: ${s.komting}</div>` : ''}
                         ${s.student_count ? `<div class="text-xs text-slate-500 mt-0.5">${s.student_count} peserta</div>` : ''}
-=======
-                            <span class="px-2 py-1 text-xs font-semibold rounded ${colors.bg} ${colors.text}">${s.lab}</span>
-                        </div>
-                        <h4 class="font-bold text-slate-900 text-base mb-1">${s.course || '-'}</h4>
-                        <div class="border-t border-slate-100 pt-2 mt-2">
-                            <div class="text-xs text-slate-600 font-medium">${s.lecturer || '-'}</div>
-                            ${s.komting ? `<div class="text-xs text-slate-500 mt-1">PIC: ${s.komting}</div>` : ''}
-                            ${s.student_count ? `<div class="text-xs text-slate-500 mt-1">${s.student_count} peserta</div>` : ''}
-                        </div>
->>>>>>> 6166212588940359435f21c372b2f836dc119f7b
                     </div>`;
             });
             container.innerHTML = html;

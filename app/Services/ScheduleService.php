@@ -37,7 +37,7 @@ class ScheduleService
      * @param Carbon $endOfWeek
      * @param array $labIds Filter by lab IDs (empty array = all labs)
      */
-    public function getWeekSchedules(Carbon $startOfWeek, Carbon $endOfWeek, array $labIds = [], bool $includePribadi = false): Collection
+    public function getWeekSchedules(Carbon $startOfWeek, Carbon $endOfWeek, array $labIds = []): Collection
     {
         $schedules = collect();
 
@@ -67,8 +67,8 @@ class ScheduleService
                         continue;
                     }
 
-                    // SKIP PRIBADI BOOKINGS - don't show in public schedule (unless admin requests)
-                    if (!$includePribadi && $schedule->booking && $schedule->booking->booking_type === 'pribadi') {
+                    // SKIP PRIBADI BOOKINGS - don't show in public schedule
+                    if ($schedule->booking && $schedule->booking->booking_type === 'pribadi') {
                         continue;
                     }
 

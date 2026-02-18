@@ -142,7 +142,7 @@
                     <div class="flex items-center gap-3">
                         <h3 id="tt-week-label" class="text-sm md:text-base font-semibold text-gray-800">Memuat...</h3>
                         <input type="date" id="tt-date-picker" max="9999-12-31" class="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
-                        <button type="button" id="tt-today-btn" class="px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-xs font-medium transition-colors">Hari Ini</button>
+                        <button type="button" id="tt-today-btn" class="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-xs font-semibold shadow-sm hover:shadow transition-all border border-yellow-600">Hari Ini</button>
                     </div>
                     <button type="button" id="tt-next-week" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -162,9 +162,6 @@
                 </div>
                 <div class="flex items-center gap-1.5 text-xs text-gray-600">
                     <div class="w-3 h-3 rounded bg-emerald-400 border border-emerald-500"></div> Non Perkuliahan
-                </div>
-                <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                    <div class="w-3 h-3 rounded bg-orange-400 border border-orange-500"></div> Pribadi
                 </div>
             </div>
 
@@ -270,7 +267,7 @@
             toggleDropdown() {
                 const isHidden = this.optionsContainer.classList.contains('hidden');
                 // Close others
-                document.querySelectorAll('.custom-select-wrapper .options-container').forEach(el => {
+                document.querySelectorAll('.custom-select-wrapper .option-container-anim').forEach(el => {
                     if (!el.classList.contains('hidden') && el !== this.optionsContainer) {
                         el.classList.add('hidden');
                          const otherChevron = el.parentElement.querySelector('svg');
@@ -561,17 +558,23 @@
         const TT_TYPE_COLORS = {
             'perkuliahan_tetap':       { bg: 'bg-yellow-300', accent: 'bg-yellow-600', border: 'border-yellow-500', shadow: 'shadow-yellow-100', text: 'text-yellow-900' },
             'perkuliahan_tidak_tetap': { bg: 'bg-indigo-400', accent: 'bg-indigo-700', border: 'border-indigo-500', shadow: 'shadow-indigo-100', text: 'text-indigo-900' },
-            'non_perkuliahan':         { bg: 'bg-emerald-400', accent: 'bg-emerald-700', border: 'border-emerald-500', shadow: 'shadow-emerald-100', text: 'text-emerald-900' },
-            'pribadi':                 { bg: 'bg-orange-400', accent: 'bg-orange-700', border: 'border-orange-500', shadow: 'shadow-orange-100', text: 'text-orange-900' }
+            'non_perkuliahan':         { bg: 'bg-emerald-400', accent: 'bg-emerald-700', border: 'border-emerald-500', shadow: 'shadow-emerald-100', text: 'text-emerald-900' }
         };
+        const TT_BASE_URL = `{{ url('/admin/schedules') }}`;
 
         let ttWeekData = null;
         let ttSelectedDay = null;
         let ttSelectedDate = null;
         let ttAllLabs = [];
         let ttWeekOffset = 0;
+        let ttDeleteInProgress = false;
 
         // Helpers
+        function ttEscHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
         function ttFormatTime(t) {
             if (!t || typeof t !== 'string') return '';
             const match = t.match(/(\d{1,2}):(\d{2})/);
@@ -640,11 +643,11 @@
 
         // ==================== TIMETABLE API ====================
         function ttLoadWeek(targetDate) {
-            let url = `{{ route('schedules.week') }}?include_pribadi=1`;
+            let url = `{{ route('schedules.week') }}`;
             if (targetDate) {
-                url += `&date=${targetDate}`;
+                url += `?date=${targetDate}`;
             } else if (ttWeekOffset !== 0) {
-                url += `&week_offset=${ttWeekOffset}`;
+                url += `?week_offset=${ttWeekOffset}`;
             }
 
             // Show loading
@@ -660,8 +663,9 @@
                     ttWeekData = data;
                     ttAllLabs = data.labs || [];
 
-                    // Update week label
+                    // Update week label & date picker
                     document.getElementById('tt-week-label').textContent = data.week_label || '';
+                    document.getElementById('tt-date-picker').value = data.week_start || '';
 
                     // Build day tabs
                     ttRenderDayTabs(data);
@@ -825,15 +829,16 @@
                     const iconClock = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
                     const iconUser = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
 
-                    // Tooltip
+                    // Tooltip (escaped for HTML attribute safety)
                     const tooltipParts = [s.course || '-'];
                     if (lecturerDisplay) tooltipParts.push(lecturerDisplay);
                     tooltipParts.push(startTimeStr + ' - ' + endTimeStr);
+                    const safeTooltip = ttEscHtml(tooltipParts.join('\n'));
 
                     html += `
                         <div class="absolute left-1 right-1 ${colors.bg} rounded-lg shadow-sm border border-gray-200/50 overflow-hidden cursor-pointer hover:shadow-md hover:z-20 transition-all duration-200 group"
                                 style="top:${topPx}px; height:${heightPx}px; z-index:5;"
-                                title="${tooltipParts.join('\n')}">
+                                title="${safeTooltip}">
                             
                             <!-- Accent Band -->
                             <div class="absolute top-0 bottom-0 left-0 w-2 ${colors.accent}"></div>
@@ -841,7 +846,7 @@
                             <!-- Content -->
                             <div class="pl-3 pr-2 py-1.5 h-full flex flex-col justify-start">
                                 <!-- Title -->
-                                <div class="text-xs font-bold ${colors.text} leading-tight truncate mb-0.5">${s.course || '-'}</div>
+                                <div class="text-xs font-bold ${colors.text} leading-tight truncate mb-0.5">${ttEscHtml(s.course || '-')}</div>
                                 
                                 <!-- Time -->
                                 ${heightPx > 35 ? `
@@ -854,19 +859,19 @@
                                 ${heightPx > 50 && lecturerDisplay ? `
                                 <div class="flex items-center gap-1.5 text-[10px] ${colors.text} leading-none opacity-80">
                                     ${iconUser}
-                                    <span class="truncate">${lecturerDisplay}</span>
+                                    <span class="truncate">${ttEscHtml(lecturerDisplay)}</span>
                                 </div>` : ''}
                             </div>
 
                             <!-- Admin Action Overlay -->
                             <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-1 rounded-lg z-10">
-                                <a href="/admin/schedules/${scheduleId}/edit" class="p-1.5 bg-yellow-400 hover:bg-yellow-500 rounded-md transition-colors" title="Edit">
+                                <a href="${TT_BASE_URL}/${scheduleId}/edit" class="p-1.5 bg-yellow-400 hover:bg-yellow-500 rounded-md transition-colors" title="Edit">
                                     <svg class="w-3.5 h-3.5 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
-                                <a href="/admin/schedules/${scheduleId}/print" target="_blank" class="p-1.5 bg-blue-400 hover:bg-blue-500 rounded-md transition-colors" title="Cetak">
+                                <a href="${TT_BASE_URL}/${scheduleId}/print" target="_blank" class="p-1.5 bg-blue-400 hover:bg-blue-500 rounded-md transition-colors" title="Cetak">
                                     <svg class="w-3.5 h-3.5 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                 </a>
-                                <button type="button" onclick="ttDeleteSchedule(${scheduleId}, '${(s.course || '').replace(/'/g, "\\'")}', event)" class="p-1.5 bg-red-400 hover:bg-red-500 rounded-md transition-colors" title="Hapus">
+                                <button type="button" onclick="ttDeleteSchedule(${scheduleId}, this, event)" class="p-1.5 bg-red-400 hover:bg-red-500 rounded-md transition-colors" title="Hapus">
                                     <svg class="w-3.5 h-3.5 text-red-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -878,30 +883,38 @@
 
             html += '</div>';
 
-            // Empty state
-            if (schedules.length === 0) {
-                html += `
-                    <div class="absolute inset-0 flex items-center justify-center" style="top:50px; pointer-events:none;">
-                        <div class="text-center pointer-events-auto">
-                            <svg class="w-16 h-16 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <p class="text-gray-400 font-semibold text-lg">Tidak ada jadwal hari ini</p>
-                        </div>
-                    </div>`;
-            }
-
             container.innerHTML = html;
+
+            // Empty state overlay (appended after innerHTML to ensure proper positioning)
+            if (schedules.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'flex items-center justify-center py-16';
+                emptyDiv.innerHTML = `
+                    <div class="text-center">
+                        <svg class="w-16 h-16 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-gray-400 font-semibold text-lg">Tidak ada jadwal hari ini</p>
+                    </div>`;
+                container.appendChild(emptyDiv);
+            }
         }
 
         // ==================== DELETE HANDLER ====================
-        function ttDeleteSchedule(scheduleId, courseName, event) {
+        function ttDeleteSchedule(scheduleId, btnEl, event) {
             event.stopPropagation();
+            if (ttDeleteInProgress) return;
+
+            // Get course name from the block's title content (safe, no injection)
+            const block = btnEl.closest('.group');
+            const courseName = block ? block.querySelector('.text-xs.font-bold')?.textContent || '-' : '-';
+
             if (!confirm(`Yakin ingin menghapus jadwal "${courseName}"?`)) return;
 
+            ttDeleteInProgress = true;
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-            fetch(`/admin/schedules/${scheduleId}`, {
+            fetch(`${TT_BASE_URL}/${scheduleId}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
@@ -911,7 +924,6 @@
             })
             .then(response => {
                 if (response.redirected || response.ok) {
-                    // Reload the timetable data
                     ttLoadWeek(ttSelectedDate);
                 } else {
                     throw new Error('Gagal menghapus jadwal');
@@ -920,6 +932,9 @@
             .catch(err => {
                 console.error('Delete error:', err);
                 alert('Gagal menghapus jadwal. Silakan coba lagi.');
+            })
+            .finally(() => {
+                ttDeleteInProgress = false;
             });
         }
 

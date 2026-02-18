@@ -57,7 +57,7 @@
                         <div>
                             <strong>MEKANISME:</strong>
                             <ol class="list-decimal ml-5 mt-1 space-y-1">
-                                <li>Mengisi formulir permohonan <strong>paling lambat sehari sebelum</strong> jadwal penggunaan</li>
+                                <li>Mengisi formulir permohonan</li>
                                 <li>Menuliskan jadwal penggunaan dan mengisi seluruh formulir</li>
                                 <li>Menggunakan lab Refinitiv sesuai tanggal dan sesi yang diajukan</li>
                                 <li>Menuju <strong>Ruangan Digilib</strong> di Gedung Laboratorium FEB-UNDIP lt.3</li>
@@ -341,7 +341,7 @@
                                         Tanggal Pemakaian <span class="text-red-500">*</span>
                                     </label>
                                     <input type="date" name="usage_date" id="usage_date_input" value="{{ old('usage_date') }}" required
-                                        min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                        min="{{ date('Y-m-d') }}"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white @error('usage_date') border-red-500 @enderror">
                                     <p class="text-xs text-gray-500 mt-1">⚠️ Pemakaian tidak tersedia pada hari Minggu</p>
                                     <!-- Sunday Warning -->
