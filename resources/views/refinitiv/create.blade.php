@@ -164,6 +164,27 @@
                                     <p id="name-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
+                                <!-- Keterangan -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                                        Keterangan <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="space-y-2">
+                                        @foreach($affiliations as $value => $label)
+                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors">
+                                                <input type="radio" name="affiliation" value="{{ $value }}" 
+                                                    {{ old('affiliation') == $value ? 'checked' : '' }}
+                                                    class="w-4 h-4 text-blue-600 focus:ring-blue-500" required>
+                                                <span class="ml-3 text-gray-700">{{ $label }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    @error('affiliation')
+                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                    <p id="affiliation-error" class="text-xs text-red-500 mt-1 hidden"></p>
+                                </div>
+
                                 <!-- NIM (for Mahasiswa) -->
                                 <div id="nim_field">
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
@@ -220,27 +241,6 @@
                                     @error('whatsapp')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
-                                </div>
-
-                                <!-- Keterangan -->
-                                <div class="md:col-span-2">
-                                    <label class="block text-gray-700 text-sm font-semibold mb-2">
-                                        Keterangan <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="space-y-2">
-                                        @foreach($affiliations as $value => $label)
-                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors">
-                                                <input type="radio" name="affiliation" value="{{ $value }}" 
-                                                    {{ old('affiliation') == $value ? 'checked' : '' }}
-                                                    class="w-4 h-4 text-blue-600 focus:ring-blue-500" required>
-                                                <span class="ml-3 text-gray-700">{{ $label }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                    @error('affiliation')
-                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                    @enderror
-                                    <p id="affiliation-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Program Studi (for Mahasiswa only) -->
