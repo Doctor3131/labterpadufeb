@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengajuan Berhasil - Peminjaman Aset</title>
+    <title>Pengajuan Berhasil - Peminjaman Barang</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50">
@@ -17,7 +17,7 @@
                     </svg>
                 </div>
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Pengajuan Berhasil!</h1>
-                <p class="text-gray-600">Permohonan peminjaman aset Anda telah diterima</p>
+                <p class="text-gray-600">Permohonan peminjaman barang Anda telah diterima</p>
             </div>
 
             <!-- Details -->
@@ -44,14 +44,21 @@
             <div class="mb-6">
                 <h3 class="font-bold text-gray-800 mb-3">Barang yang Dipinjam:</h3>
                 <div class="space-y-2">
-                    @foreach($borrowing->borrowedItems as $item)
+                    @php
+                        $groupedItems = $borrowing->borrowedItems->groupBy(function($item) {
+                            return $item->item->category ?? $item->item->name;
+                        })->map(function($items) {
+                            $first = $items->first();
+                            return [
+                                'name' => $first->item->category ?? $first->item->name,
+                                'quantity' => $items->sum('quantity'),
+                            ];
+                        });
+                    @endphp
+                    @foreach($groupedItems as $item)
                         <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
-                            <span class="text-gray-800 font-medium block">{{ $item->item->name }}</span>
-                            @if($item->assetUnit)
-                                <span class="text-sm text-gray-600 font-mono bg-white px-3 py-1 rounded border">{{ $item->assetUnit->asset_tag }}</span>
-                            @else
-                                <span class="text-sm text-gray-600">{{ $item->quantity }} unit</span>
-                            @endif
+                            <span class="text-gray-800 font-medium block">{{ $item['name'] }}</span>
+                            <span class="text-sm text-gray-600">{{ $item['quantity'] }} unit</span>
                         </div>
                     @endforeach
                 </div>

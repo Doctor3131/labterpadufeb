@@ -151,6 +151,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.asset-borrowings.approve');
     Route::post('/admin/asset-borrowings/{id}/reject', [AssetBorrowingController::class, 'reject'])
         ->name('admin.asset-borrowings.reject');
+    Route::post('/admin/asset-borrowings/{id}/handout', [AssetBorrowingController::class, 'handout'])
+        ->name('admin.asset-borrowings.handout');
+    Route::post('/admin/asset-borrowings/{id}/receive', [AssetBorrowingController::class, 'receive'])
+        ->name('admin.asset-borrowings.receive');
 });
 
 // Super Admin Only Routes

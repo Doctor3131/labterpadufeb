@@ -64,25 +64,27 @@
             <!-- Step 2: Item Selection -->
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Barang</label>
-                <select name="item_id" x-model="itemId" @change="loadBatches()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                    <option value="">-- Buat Barang Baru --</option>
+                <select x-model="selectedItemForReference" @change="fillItemNameAndLoadBatches()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                    <option value="">-- Pilih dari Daftar (Opsional) --</option>
                     @foreach($items as $item)
-                        <option value="{{ $item->id }}" {{ old('item_id') == $item->id ? 'selected' : '' }}>
-                            {{ $item->name }} ({{ $item->tracking_mode->label() }})
+                        <option value="{{ $item->id }}" data-name="{{ $item->name }}">
+                            {{ $item->name }}
                         </option>
                     @endforeach
                 </select>
+                <p class="text-xs text-gray-500 mt-1">Pilih dari daftar untuk mengisi nama otomatis dan melihat batch sebelumnya</p>
+                <input type="hidden" name="item_id" value="">
             </div>
 
             <!-- New Item Fields -->
-            <div x-show="!itemId" class="mb-6 p-4 bg-gray-50 rounded-lg space-y-4" x-data="{ 
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg space-y-4" x-data="{ 
                 showCustomCategory: false,
                 selectedCategory: '{{ old('category') }}',
                 customCategory: ''
             }">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama Aset Baru *</label>
-                    <input type="text" name="new_item_name" value="{{ old('new_item_name') }}" 
+                    <input type="text" name="new_item_name" x-model="itemName" value="{{ old('new_item_name') }}" 
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Contoh: Mouse Ajazz, Keyboard Asus, Router Cisco">
                 </div>
@@ -219,6 +221,14 @@
 
                 <!-- Specification Field -->
                 <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Merk (Opsional)</label>
+                     <input type="text" name="brand" value="{{ old('brand') }}" 
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                         placeholder="Contoh: Dell, HP, Asus, Logitech">
+                     <p class="text-xs text-gray-500 mt-1">Merk/brand dari barang</p>
+                </div>
+                
+                <div>
                      <label class="block text-sm font-medium text-gray-700 mb-2">Spesifikasi (Opsional)</label>
                      <input type="text" name="item_description" value="{{ old('item_description') }}" 
                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -330,26 +340,45 @@
         function inventoryForm() {
             return {
                 trackingMode: '{{ old('tracking_mode', 'STRUCTURED_TAG') }}',
-                itemId: '{{ old('item_id', '') }}',
+                selectedItemForReference: '',
+                itemName: '{{ old('new_item_name', '') }}',
                 batchId: '{{ old('batch_id', 'new') }}',
                 batches: [],
                 
                 init() {
-                    if (this.itemId) {
+                    // No auto-loading needed
+                },
+                
+                fillItemNameAndLoadBatches() {
+                    if (this.selectedItemForReference) {
+                        // Get selected option's data-name
+                        const select = document.querySelector('select[x-model="selectedItemForReference"]');
+                        const selectedOption = select.options[select.selectedIndex];
+                        const itemName = selectedOption.getAttribute('data-name');
+                        
+                        if (itemName) {
+                            this.itemName = itemName;
+                        }
+                        
+                        // Load batches for selected item
                         this.loadBatches();
+                    } else {
+                        this.batches = [];
+                        this.batchId = 'new';
                     }
                 },
                 
                 async loadBatches() {
-                    if (!this.itemId) {
+                    if (!this.selectedItemForReference) {
                         this.batches = [];
                         this.batchId = 'new';
                         return;
                     }
                     
                     try {
-                        const response = await fetch(`/admin/items/${this.itemId}/batches`);
-                        this.batches = await response.json();
+                        const response = await fetch(`/admin/items/${this.selectedItemForReference}/batches`);
+                        const data = await response.json();
+                        this.batches = data;
                         this.batchId = 'new';
                     } catch (error) {
                         console.error('Error loading batches:', error);

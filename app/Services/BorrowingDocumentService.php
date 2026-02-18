@@ -42,7 +42,12 @@ class BorrowingDocumentService
     public function generatePDF(AssetBorrowing $borrowing): string
     {
         // Load borrowed items with relationships
-        $borrowing->load(['borrowedItems.item', 'borrowedItems.assetUnit', 'lab']);
+        $borrowing->load([
+            'borrowedItems.item', 
+            'borrowedItems.assetUnit.batch', 
+            'borrowedItems.inventoryBalance.batch',
+            'lab'
+        ]);
         
         // Generate nomor surat jika belum ada
         if (!$borrowing->document_number) {
@@ -61,6 +66,7 @@ class BorrowingDocumentService
             'borrowing' => $borrowing,
             'items' => $borrowing->borrowedItems,
             'documentDate' => $this->formatIndonesianDate($borrowing->document_date),
+            'documentFullDate' => $this->formatFullIndonesianDate($borrowing->document_date),
         ];
         
         // Generate PDF
@@ -97,6 +103,32 @@ class BorrowingDocumentService
         $year = $carbonDate->year;
         
         return "{$day} {$month} {$year}";
+    }
+    
+    /**
+     * Format tanggal lengkap dengan hari dalam bahasa Indonesia
+     * Format: "Rabu tanggal 12 bulan Februari tahun 2026"
+     */
+    public function formatFullIndonesianDate($date): string
+    {
+        $days = [
+            0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu',
+            4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'
+        ];
+        
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        
+        $carbonDate = Carbon::parse($date);
+        $dayName = $days[$carbonDate->dayOfWeek];
+        $day = $carbonDate->day;
+        $month = $months[$carbonDate->month];
+        $year = $carbonDate->year;
+        
+        return "{$dayName} tanggal {$day} bulan {$month} tahun {$year}";
     }
     
     /**

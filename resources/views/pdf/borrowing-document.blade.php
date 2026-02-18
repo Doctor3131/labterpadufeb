@@ -126,6 +126,11 @@
             font-size: 10pt;
         }
         
+        .condition-col {
+            text-align: center;
+            width: 50px;
+        }
+        
         .signature-section {
             margin-top: 40px;
             width: 100%;
@@ -178,7 +183,7 @@
             </div>
 
     <div class="content">
-        <p style="margin: 0 0 5px 0; text-align: justify; line-height: 1.4;">Pada hari ini, Jumat tanggal 12 bulan September tahun 2025, kami yang bertanda tangan di bawah ini:</p>
+        <p style="margin: 0 0 5px 0; text-align: justify; line-height: 1.4;">Pada hari ini, {{ $documentFullDate }}, kami yang bertanda tangan di bawah ini:</p>
 
         <div class="party-info">
             <table>
@@ -255,27 +260,44 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($items as $index => $item)
+                @php
+                    // Kelompokkan items berdasarkan item_id untuk memisahkan varian/merk
+                    $groupedItems = collect($items)->groupBy('item_id')->map(function($group) {
+                        $first = $group->first();
+                        return [
+                            // Nama Barang diisi Kategori (jika ada), jika tidak gunakan Nama Item
+                            'name' => $first->item->category ?? $first->item->name,
+                            // Merk/Tipe diambil dari Item
+                            'brand_type' => $first->item->brand ?? '-',
+                            'quantity' => $group->sum('quantity'),
+                            'condition_good' => $first->condition_good,
+                            'condition_adequate' => $first->condition_adequate,
+                            'condition_complete' => $first->condition_complete,
+                            'remarks' => $first->remarks ?? '',
+                        ];
+                    })->values();
+                @endphp
+                @foreach($groupedItems as $index => $item)
                 <tr>
                     <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td>{{ $item->item->name ?? '-' }}</td>
-                    <td>{{ $item->brand_type ?? '-' }}</td>
-                    <td style="text-align: center;">{{ $item->quantity }}</td>
-                    <td class="condition-col">{{ $item->condition_good ? 'x' : '' }}</td>
-                    <td class="condition-col">{{ $item->condition_adequate ? 'x' : '' }}</td>
-                    <td class="condition-col">{{ $item->condition_complete ? 'x' : '' }}</td>
-                    <td>{{ $item->remarks ?? '' }}</td>
+                    <td>{{ $item['name'] }}</td>
+                    <td style="text-align: center;">{{ $item['brand_type'] }}</td>
+                    <td style="text-align: center;">{{ $item['quantity'] }}</td>
+                    <td class="condition-col">{{ $item['condition_good'] ? 'x' : '' }}</td>
+                    <td class="condition-col">{{ $item['condition_adequate'] ? 'x' : '' }}</td>
+                    <td class="condition-col">{{ $item['condition_complete'] ? 'x' : '' }}</td>
+                    <td>{{ $item['remarks'] }}</td>
                 </tr>
                 @endforeach
                 @php
-                    $emptyRows = max(0, 5 - count($items));
+                    $emptyRows = max(0, 5 - $groupedItems->count());
                 @endphp
                 @for($i = 0; $i < $emptyRows; $i++)
                 <tr>
-                    <td style="text-align: center;">{{ count($items) + $i + 1 }}</td>
+                    <td style="text-align: center;">{{ $groupedItems->count() + $i + 1 }}</td>
                     <td style="height: 20px;">&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
+                    <td style="text-align: center;">&nbsp;</td>
+                    <td style="text-align: center;">&nbsp;</td>
                     <td class="condition-col">&nbsp;</td>
                     <td class="condition-col">&nbsp;</td>
                     <td class="condition-col">&nbsp;</td>

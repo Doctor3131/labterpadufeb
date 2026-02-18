@@ -33,7 +33,7 @@
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Manajemen Peminjaman</h1>
-                    <p class="text-xs md:text-sm text-yellow-50">Kelola permintaan peminjaman lab dan aset</p>
+                    <p class="text-xs md:text-sm text-yellow-50">Kelola permintaan peminjaman lab dan barang</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-sm p-2 md:p-3 rounded-xl">
                     <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,8 +56,8 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                     </svg>
-                    <span class="hidden sm:inline">Peminjaman Aset</span>
-                    <span class="sm:hidden">Aset</span>
+                    <span class="hidden sm:inline">Peminjaman Barang</span>
+                    <span class="sm:hidden">Barang</span>
                     <span class="px-2 py-0.5 bg-yellow-500 text-white rounded-full text-xs font-bold">{{ $pendingAssetBorrowings->total() }}</span>
                 </button>
             </div>
@@ -562,7 +562,7 @@
         <div class="border-b-2 border-gray-100 overflow-x-auto">
             <!-- Tab Title -->
             <div class="bg-yellow-50 px-4 py-2 border-b border-yellow-200">
-                <h3 class="text-sm font-bold text-yellow-800">📦 Peminjaman Aset</h3>
+                <h3 class="text-sm font-bold text-yellow-800">📦 Peminjaman Barang</h3>
             </div>
             <nav class="flex px-2 min-w-max" aria-label="Tabs">
                 <button onclick="showTab('asset-pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-purple-500 text-purple-700" data-tab="asset-pending">
@@ -609,7 +609,7 @@
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex flex-wrap items-center gap-2 flex-1">
                             <span class="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg">
-                                📦 ASET #{{ $borrowing->id }}
+                                📦 BARANG #{{ $borrowing->id }}
                             </span>
 
                             <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
@@ -647,13 +647,24 @@
                             <span><strong>Tujuan:</strong> {{ $borrowing->purpose }}</span>
                         </div>
                         <div class="bg-purple-50 rounded-lg p-2 mt-2">
-                            <strong class="text-xs text-purple-700">Aset yang Dipinjam:</strong>
+                            <strong class="text-xs text-purple-700">Barang yang Dipinjam:</strong>
                             <div class="mt-1 space-y-1">
-                                @foreach($borrowing->borrowedItems->take(3) as $item)
-                                    <div class="text-xs text-gray-700">• {{ $item->item->name }} ({{ $item->quantity }}x)</div>
+                                @php
+                                    $groupedItems = $borrowing->borrowedItems->groupBy(function($item) {
+                                        return $item->item->category ?? $item->item->name;
+                                    })->map(function($items) {
+                                        $first = $items->first();
+                                        return [
+                                            'name' => $first->item->category ?? $first->item->name,
+                                            'quantity' => $items->sum('quantity')
+                                        ];
+                                    });
+                                @endphp
+                                @foreach($groupedItems->take(3) as $item)
+                                    <div class="text-xs text-gray-700">• {{ $item['name'] }} ({{ $item['quantity'] }}x)</div>
                                 @endforeach
-                                @if($borrowing->borrowedItems->count() > 3)
-                                    <div class="text-xs text-purple-600 font-medium">+{{ $borrowing->borrowedItems->count() - 3 }} item lainnya</div>
+                                @if($groupedItems->count() > 3)
+                                    <div class="text-xs text-purple-600 font-medium">+{{ $groupedItems->count() - 3 }} item lainnya</div>
                                 @endif
                             </div>
                         </div>
@@ -662,27 +673,13 @@
                     <!-- Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-2">
                         <a href="{{ route('admin.asset-borrowings.show', $borrowing->id) }}" 
-                                class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center">
+                                class="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                             </svg>
-                            Detail
+                            Detail & Proses
                         </a>
-                        <button onclick="approveAssetBorrowing({{ $borrowing->id }})" 
-                                class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            Setujui
-                        </button>
-                        <button onclick="rejectAssetBorrowing({{ $borrowing->id }})" 
-                                class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            Tolak
-                        </button>
                     </div>
                 </div>
             @empty
@@ -690,7 +687,7 @@
                     <svg class="w-16 h-16 mx-auto text-purple-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                     </svg>
-                    <p class="text-gray-500 text-lg font-medium">Tidak ada peminjaman aset pending</p>
+                    <p class="text-gray-500 text-lg font-medium">Tidak ada peminjaman barang pending</p>
                 </div>
             @endforelse
 
@@ -710,7 +707,7 @@
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex flex-wrap items-center gap-2 flex-1">
                             <span class="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg">
-                                📦 ASET #{{ $borrowing->id }}
+                                📦 BARANG #{{ $borrowing->id }}
                             </span>
                             <span class="px-3 py-1.5 {{ $borrowing->status === 'approved' ? 'bg-green-500' : 'bg-blue-600' }} text-white text-xs font-bold rounded-lg">
                                 {{ $borrowing->status === 'approved' ? 'Disetujui' : 'Dipinjam' }}
@@ -732,13 +729,24 @@
                             <span><strong>Peminjam:</strong> {{ $borrowing->borrower_name }}</span>
                         </div>
                         <div class="bg-blue-50 rounded-lg p-2">
-                            <strong class="text-xs text-blue-700">Aset:</strong>
+                            <strong class="text-xs text-blue-700">Barang:</strong>
                             <div class="mt-1 space-y-1">
-                                @foreach($borrowing->borrowedItems->take(2) as $item)
-                                    <div class="text-xs text-gray-700">• {{ $item->item->name }} ({{ $item->quantity }}x)</div>
+                                @php
+                                    $groupedItems = $borrowing->borrowedItems->groupBy(function($item) {
+                                        return $item->item->category ?? $item->item->name;
+                                    })->map(function($items) {
+                                        $first = $items->first();
+                                        return [
+                                            'name' => $first->item->category ?? $first->item->name,
+                                            'quantity' => $items->sum('quantity')
+                                        ];
+                                    });
+                                @endphp
+                                @foreach($groupedItems->take(2) as $item)
+                                    <div class="text-xs text-gray-700">• {{ $item['name'] }} ({{ $item['quantity'] }}x)</div>
                                 @endforeach
-                                @if($borrowing->borrowedItems->count() > 2)
-                                    <div class="text-xs text-blue-600 font-medium">+{{ $borrowing->borrowedItems->count() - 2 }} item lainnya</div>
+                                @if($groupedItems->count() > 2)
+                                    <div class="text-xs text-blue-600 font-medium">+{{ $groupedItems->count() - 2 }} item lainnya</div>
                                 @endif
                             </div>
                         </div>
@@ -767,7 +775,7 @@
                     <svg class="w-16 h-16 mx-auto text-blue-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                     </svg>
-                    <p class="text-gray-500 text-lg font-medium">Tidak ada peminjaman aset yang diproses</p>
+                    <p class="text-gray-500 text-lg font-medium">Tidak ada peminjaman barang yang diproses</p>
                 </div>
             @endforelse
 
@@ -785,7 +793,7 @@
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex flex-wrap items-center gap-2 flex-1">
                             <span class="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg">
-                                📦 ASET #{{ $borrowing->id }}
+                                📦 BARANG #{{ $borrowing->id }}
                             </span>
                             <span class="px-3 py-1.5 {{ $borrowing->getStatusBadgeColor() }} text-xs font-bold rounded-lg">
                                 {{ $borrowing->getStatusLabel() }}
@@ -815,7 +823,7 @@
                     <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <p class="text-gray-500 text-lg font-medium">Tidak ada peminjaman aset yang selesai</p>
+                    <p class="text-gray-500 text-lg font-medium">Tidak ada peminjaman barang yang selesai</p>
                 </div>
             @endforelse
 
@@ -839,8 +847,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold">Serahkan Aset</h3>
-                    <p class="text-sm text-purple-100">Konfirmasi penyerahan aset</p>
+                    <h3 class="text-xl font-bold">Serahkan Barang</h3>
+                    <p class="text-sm text-purple-100">Konfirmasi penyerahan barang</p>
                 </div>
             </div>
             <button onclick="closeHandoutModal()" class="text-white/80 hover:text-white transition">
@@ -905,8 +913,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold">Terima Kembali Aset</h3>
-                    <p class="text-sm text-green-100">Konfirmasi pengembalian aset</p>
+                    <h3 class="text-xl font-bold">Terima Kembali Barang</h3>
+                    <p class="text-sm text-green-100">Konfirmasi pengembalian barang</p>
                 </div>
             </div>
             <button onclick="closeReceiveModal()" class="text-white/80 hover:text-white transition">
@@ -1305,7 +1313,7 @@
     window.approveAssetBorrowing = function(id) {
         console.log('Approve clicked for ID:', id);
         
-        if (!confirm('✅ Setujui peminjaman aset ini?')) {
+        if (!confirm('✅ Setujui peminjaman barang ini?')) {
             return;
         }
         

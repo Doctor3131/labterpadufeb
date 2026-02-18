@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Peminjaman Aset Lab - FEB UNDIP</title>
+    <title>Peminjaman Barang Lab - FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .step-indicator {
@@ -74,9 +74,23 @@
                         <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 md:h-16 w-auto object-contain">
                     </a>
                 </div>
-                <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-bold transition-all shadow-sm hover:shadow-md text-sm md:text-base">
-                    Login
-                </a>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('landing') }}" class="px-3 md:px-4 py-2 text-gray-600 hover:text-yellow-600 font-semibold rounded-lg hover:bg-yellow-50 transition-all text-sm md:text-base flex items-center">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        <span class="hidden sm:inline">Kembali</span>
+                    </a>
+                    @if(auth()->check())
+                        <a href="{{ route('dashboard') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-bold transition-all shadow-sm hover:shadow-md text-sm md:text-base whitespace-nowrap">
+                            Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-6 py-2 rounded-lg font-bold transition-all shadow-sm hover:shadow-md text-sm md:text-base">
+                            Login
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
     </nav>
@@ -84,8 +98,8 @@
     <div class="container mx-auto px-4 md:px-6 py-4 md:py-12 max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-6 md:mb-10">
-            <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Peminjaman Aset Laboratorium</h1>
-            <p class="text-sm md:text-base text-gray-600 px-4">Ajukan peminjaman peralatan dan aset laboratorium</p>
+            <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Peminjaman Barang Laboratorium</h1>
+            <p class="text-sm md:text-base text-gray-600 px-4">Ajukan peminjaman peralatan dan barang laboratorium</p>
         </div>
 
         <!-- Form Card -->
@@ -98,7 +112,7 @@
                 </div>
                 <div class="step-item" id="step-indicator-2">
                     <div class="step-number">2</div>
-                    <div class="text-xs md:text-sm font-medium hidden md:block">Pilih Aset</div>
+                    <div class="text-xs md:text-sm font-medium hidden md:block">Pilih Barang</div>
                 </div>
                 <div class="step-item" id="step-indicator-3">
                     <div class="step-number">3</div>
@@ -185,11 +199,11 @@
                     </div>
                 </div>
 
-                <!-- STEP 2: Pilih Aset -->
+                <!-- STEP 2: Pilih Barang -->
                 <div id="step-2" class="step-section hidden">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">2</span>
-                        Pilih Aset yang Dipinjam
+                        Pilih Barang yang Dipinjam
                     </h3>
 
                     <!-- Lab Selection Removed -->
@@ -251,11 +265,11 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tujuan Peminjaman *</label>
                         <textarea name="purpose" rows="4" required
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                            placeholder="Jelaskan tujuan peminjaman aset">{{ old('purpose') }}</textarea>
+                            placeholder="Jelaskan tujuan peminjaman barang">{{ old('purpose') }}</textarea>
                     </div>
 
                     <div class="mb-6">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Upload Dokumen (KTM/KTP/Surat)</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Upload Dokumen (KTM/KTP)</label>
                         <input type="file" name="document" accept=".pdf,.jpg,.jpeg,.png"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
                         <p class="text-xs text-gray-500 mt-1">Format: PDF, JPG, PNG (Maks 5MB)</p>
@@ -337,7 +351,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Barang</label>
                         <select name="items[${currentIndex}][item_id]" class="item-select w-full px-4 py-3 border border-gray-300 rounded-lg" required onchange="handleItemSelect(this, ${currentIndex}, this.value)">
                             <option value="">Pilih Barang</option>
-                            ${borrowableItems.map(item => `<option value="${item.id}" data-tracking="${item.tracking_mode}">${item.name}</option>`).join('')}
+                            ${borrowableItems.map(item => `<option value="${item.id}" data-tracking="${item.tracking_mode}">${item.display_name} (Total: ${item.total_available_quantity} unit)</option>`).join('')}
                         </select>
                     </div>
                     <div class="unit-selector md:col-span-2 hidden">
@@ -419,15 +433,13 @@
                     
                     if (totalAvailable > 0) {
                         unitSelector.innerHTML = `
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
-                                    <input type="number" name="items[${arrayIndex}][quantity]" min="1" max="${totalAvailable}" value="1" required
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                        oninput="validateQuantity(this, ${totalAvailable})">
-                                    <p class="text-xs text-gray-500 mt-1">Total Tersedia: ${totalAvailable} unit</p>
-                                    <p class="text-xs text-red-500 mt-1 hidden quantity-warning">Jumlah melebihi stok tersedia!</p>
-                                </div>
+                             <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
+                                <input type="number" name="items[${arrayIndex}][quantity]" min="1" max="${totalAvailable}" value="1" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    oninput="validateQuantity(this, ${totalAvailable})">
+                                <p class="text-xs text-gray-500 mt-1">Total Tersedia: ${totalAvailable} unit</p>
+                                <p class="text-xs text-red-500 mt-1 hidden quantity-warning">Jumlah melebihi stok tersedia!</p>
                             </div>
                         `;
                     } else {
@@ -439,15 +451,13 @@
                     
                     if (totalAvailableUnits > 0) {
                         unitSelector.innerHTML = `
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
-                                    <input type="number" name="items[${arrayIndex}][quantity]" min="1" max="${totalAvailableUnits}" value="1" required
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                        oninput="validateQuantity(this, ${totalAvailableUnits})">
-                                    <p class="text-xs text-gray-500 mt-1">Total Tersedia: ${totalAvailableUnits} unit</p>
-                                    <p class="text-xs text-red-500 mt-1 hidden quantity-warning">Jumlah melebihi stok tersedia!</p>
-                                </div>
+                             <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
+                                <input type="number" name="items[${arrayIndex}][quantity]" min="1" max="${totalAvailableUnits}" value="1" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                    oninput="validateQuantity(this, ${totalAvailableUnits})">
+                                <p class="text-xs text-gray-500 mt-1">Total Tersedia: ${totalAvailableUnits} unit</p>
+                                <p class="text-xs text-red-500 mt-1 hidden quantity-warning">Jumlah melebihi stok tersedia!</p>
                             </div>
                         `;
                     } else {
@@ -456,7 +466,7 @@
                 }
             } catch (error) {
                 console.error('Error fetching available assets:', error);
-                alert('Gagal memuat data aset');
+                alert('Gagal memuat data barang');
             }
         }
 

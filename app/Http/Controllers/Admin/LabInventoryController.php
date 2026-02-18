@@ -29,9 +29,10 @@ class LabInventoryController extends Controller
     /**
      * Display global inventory overview (all labs)
      */
-    public function globalIndex()
+    public function globalIndex(Request $request)
     {
         $labs = Lab::orderBy('name')->get();
+        $selectedLabId = $request->query('lab_id');
         
         // Get summary for each lab
         $labSummaries = [];
@@ -67,10 +68,41 @@ class LabInventoryController extends Controller
             $globalTotals['total_items'] += $totals['total_items'];
         }
         
-        // Get items grouped by Category
-        $items = Item::with(['batches.assetUnits', 'batches.inventoryBalances', 'assetTypeCode'])
-            ->orderBy('name')
-            ->get();
+        // Get items grouped by Category with optional lab filter
+        $itemsQuery = Item::with(['batches.assetUnits', 'batches.inventoryBalances', 'assetTypeCode'])
+            ->orderBy('name');
+        
+        // Apply lab filter if selected
+        if ($selectedLabId) {
+            $itemsQuery->where(function($query) use ($selectedLabId) {
+                // Filter items that have units or balances in the selected lab
+                $query->whereHas('batches.assetUnits', function($q) use ($selectedLabId) {
+                    $q->where('lab_id', $selectedLabId);
+                })->orWhereHas('batches.inventoryBalances', function($q) use ($selectedLabId) {
+                    $q->where('lab_id', $selectedLabId);
+                });
+            });
+        }
+        
+        $items = $itemsQuery->get();
+        
+        // If lab filter is active, filter the batches/units/balances to only show those in the selected lab
+        if ($selectedLabId) {
+            $items = $items->map(function($item) use ($selectedLabId) {
+                // Filter batches to only include those with units/balances in selected lab
+                $item->setRelation('batches', $item->batches->filter(function($batch) use ($selectedLabId) {
+                    $hasUnitsInLab = $batch->assetUnits->where('lab_id', $selectedLabId)->isNotEmpty();
+                    $hasBalancesInLab = $batch->inventoryBalances->where('lab_id', $selectedLabId)->isNotEmpty();
+                    return $hasUnitsInLab || $hasBalancesInLab;
+                })->map(function($batch) use ($selectedLabId) {
+                    // Filter units and balances within each batch
+                    $batch->setRelation('assetUnits', $batch->assetUnits->where('lab_id', $selectedLabId));
+                    $batch->setRelation('inventoryBalances', $batch->inventoryBalances->where('lab_id', $selectedLabId));
+                    return $batch;
+                }));
+                return $item;
+            });
+        }
             
         $groupedItems = $items->groupBy(function($item) {
             return $item->category ?: 'Lainnya';
@@ -81,7 +113,9 @@ class LabInventoryController extends Controller
             'globalTotals' => $globalTotals,
             'conditions' => ConditionEnum::cases(),
             'groupedItems' => $groupedItems,
-            'trackingModes' => TrackingModeEnum::cases(), // Still needed for create form or other logic if any? Not used in global index loop anymore.
+            'trackingModes' => TrackingModeEnum::cases(),
+            'labs' => $labs,
+            'selectedLabId' => $selectedLabId,
         ]);
     }
 
@@ -195,11 +229,14 @@ class LabInventoryController extends Controller
             }
             
             $item = Item::firstOrCreate(
-                ['name' => $validated['new_item_name']],
                 [
+                    'name' => $validated['new_item_name'],
+                    'tracking_mode' => $mode,
+                ],
+                [
+                    'brand' => $validated['brand'] ?? null,
                     'category' => $category,
                     'asset_type_code_id' => $assetTypeCodeId,
-                    'tracking_mode' => $mode,
                     'description' => $validated['item_description'] ?? null,
                 ]
             );

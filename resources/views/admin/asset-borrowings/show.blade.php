@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Detail Peminjaman Aset')
+@section('title', 'Detail Peminjaman Barang')
 
 @section('content')
 <div class="py-4">
@@ -57,7 +57,7 @@
                     </div>
 
                     <div class="flex gap-2 flex-wrap flex-shrink-0">
-                        @if($borrowing->status === 'pending')
+                        @if($borrowing->status === 'pending' && $borrowing->generated_document_path)
                             <form action="{{ route('admin.asset-borrowings.approve', $borrowing->id) }}" method="POST" class="inline">
                                 @csrf
                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow transition-all duration-200" onclick="return confirm('Setujui peminjaman ini?')">
@@ -202,6 +202,7 @@
                 <h4 class="text-sm font-semibold text-gray-800 mb-2 mt-3">Barang yang Dipinjam</h4>
                 <div class="overflow-x-auto -mx-4 sm:mx-0">
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">No</th>
                                 <th class="px-3 py-2 text-left text-xs font-semibold text-gray-700">Nama Barang</th>
@@ -212,59 +213,183 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
-                            @foreach($borrowing->borrowedItems as $index => $item)
+                            @php
+                            // Kelompokkan items yang sama berdasarkan Kategori
+                            $groupedItems = $borrowing->borrowedItems->groupBy(function($item) {
+                                return $item->item->category ?? $item->item->name;
+                            })->map(function($items) {
+                                $first = $items->first();
+                                return [
+                                    'name' => $first->item->category ?? $first->item->name,
+                                    'brand_type' => '-', 
+                                    'quantity' => $items->sum('quantity'),
+                                    'condition_good' => $first->condition_good,
+                                    'condition_adequate' => $first->condition_adequate,
+                                    'condition_complete' => $first->condition_complete,
+                                    'remarks' => $first->remarks ?? '-',
+                                ];
+                            });
+                            @endphp
+                            @foreach($groupedItems as $index => $item)
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-3 py-2 text-gray-900">{{ $index + 1 }}</td>
-                                    <td class="px-3 py-2 text-gray-900">{{ $item->item->name ?? '-' }}</td>
-                                    <td class="px-3 py-2 text-gray-900">{{ $item->brand_type ?? '-' }}</td>
+                                    <td class="px-3 py-2 text-gray-900">{{ $loop->iteration }}</td>
+                                    <td class="px-3 py-2 text-gray-900">
+                                        {{ $item['name'] }}
+                                    </td>
+                                    <td class="px-3 py-2 text-gray-900">{{ $item['brand_type'] }}</td>
                                     <td class="px-3 py-2 text-center">
                                         <span class="inline-flex items-center justify-center px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
-                                            {{ $item->quantity }}
+                                            {{ $item['quantity'] }}
                                         </span>
                                     </td>
                                     <td class="px-3 py-2">
                                         <div class="flex gap-1 flex-wrap">
-                                            @if($item->condition_good)
+                                            @if($item['condition_good'])
                                                 <span class="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded">Baik</span>
                                             @endif
-                                            @if($item->condition_complete)
+                                            @if($item['condition_complete'])
                                                 <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Lengkap</span>
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-3 py-2 text-gray-900">{{ $item->remarks ?? '-' }}</td>
+                                    <td class="px-3 py-2 text-gray-900">{{ $item['remarks'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Handover & Return Details -->
+                @if($borrowing->handed_out_at || $borrowing->received_back_at)
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-3">Riwayat Transaksi Barang</h4>
+                        <div class="space-y-3 text-sm">
+                            @if($borrowing->handed_out_at)
+                                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <div class="flex flex-col sm:flex-row sm:justify-between gap-1 mb-1">
+                                        <span class="font-semibold text-blue-800 flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                            </svg>
+                                            Penyerahan Barang
+                                        </span>
+                                        <span class="text-xs text-blue-600">
+                                            {{ $borrowing->handed_out_at->format('d M Y H:i') }} oleh {{ $borrowing->handedOutBy->name ?? 'Admin' }}
+                                        </span>
+                                    </div>
+                                    @if($borrowing->borrow_condition_notes)
+                                        <div class="text-gray-700 mt-1 pl-5.5 text-xs">
+                                            <span class="font-medium">Catatan:</span> {{ $borrowing->borrow_condition_notes }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            @if($borrowing->received_back_at)
+                                <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                                    <div class="flex flex-col sm:flex-row sm:justify-between gap-1 mb-1">
+                                        <span class="font-semibold text-green-800 flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                            </svg>
+                                            Pengembalian Barang
+                                        </span>
+                                        <span class="text-xs text-green-600">
+                                            {{ $borrowing->received_back_at->format('d M Y H:i') }} oleh {{ $borrowing->receivedBackBy->name ?? 'Admin' }}
+                                        </span>
+                                    </div>
+                                    @if($borrowing->return_condition_notes)
+                                        <div class="text-gray-700 mt-1 pl-5.5 text-xs">
+                                            <span class="font-medium">Catatan:</span> {{ $borrowing->return_condition_notes }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
+
+            <!-- Action Buttons Footer -->
+            @if(in_array($borrowing->status, ['approved', 'borrowed']))
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 rounded-b-lg border-t border-gray-200 flex flex-row-reverse gap-2">
+                    @if($borrowing->status === 'approved')
+                        <button onclick="openHandoutModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow transition-all">
+                            <span class="inline-flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                Serahkan Barang
+                            </span>
+                        </button>
+                    @elseif($borrowing->status === 'borrowed')
+                        <button onclick="openReceiveModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow transition-all">
+                            <span class="inline-flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                </svg>
+                                Terima Kembali
+                            </span>
+                        </button>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 </div>
 
-<!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+<!-- Modal Penyerahan Barang -->
+<div id="handoutModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-        
-        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full">
-            <form action="{{ route('admin.asset-borrowings.reject', $borrowing->id) }}" method="POST">
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full z-20">
+            <form action="{{ route('admin.asset-borrowings.handout', $borrowing->id) }}" method="POST">
                 @csrf
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Tolak Peminjaman</h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Penyerahan Barang</h3>
+                    <p class="text-sm text-gray-500 mb-4">Pastikan barang yang diserahkan sesuai dengan daftar peminjaman. Barang akan ditandai sebagai "Sedang Dipinjam".</p>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Penolakan *</label>
-                        <textarea name="rejection_reason" rows="4" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                            placeholder="Masukkan alasan penolakan..."></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penyerahan (Opsional)</label>
+                        <textarea name="borrow_condition_notes" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            placeholder="Contoh: Kondisi barang baik, lengkap dengan kabel..."></textarea>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full sm:w-auto sm:ml-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
-                        Tolak Peminjaman
+                    <button type="submit" class="w-full sm:w-auto sm:ml-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                        Serahkan Barang
                     </button>
-                    <button type="button" onclick="closeRejectModal()" class="mt-3 w-full sm:mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300">
+                    <button type="button" onclick="closeHandoutModal()" class="mt-3 w-full sm:mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pengembalian Barang -->
+<div id="receiveModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full z-20">
+            <form action="{{ route('admin.asset-borrowings.receive', $borrowing->id) }}" method="POST">
+                @csrf
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Pengembalian Barang</h3>
+                    <p class="text-sm text-gray-500 mb-4">Pastikan barang yang dikembalikan dalam kondisi baik dan lengkap. Barang akan ditandai sebagai "Tersedia" kembali.</p>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Pengembalian (Opsional)</label>
+                        <textarea name="return_condition_notes" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Contoh: Barang dikembalikan lengkap, tidak ada kerusakan..."></textarea>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full sm:w-auto sm:ml-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                        Terima Kembali
+                    </button>
+                    <button type="button" onclick="closeReceiveModal()" class="mt-3 w-full sm:mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300">
                         Batal
                     </button>
                 </div>
@@ -280,6 +405,22 @@ function openRejectModal() {
 
 function closeRejectModal() {
     document.getElementById('rejectModal').classList.add('hidden');
+}
+
+function openHandoutModal() {
+    document.getElementById('handoutModal').classList.remove('hidden');
+}
+
+function closeHandoutModal() {
+    document.getElementById('handoutModal').classList.add('hidden');
+}
+
+function openReceiveModal() {
+    document.getElementById('receiveModal').classList.remove('hidden');
+}
+
+function closeReceiveModal() {
+    document.getElementById('receiveModal').classList.add('hidden');
 }
 </script>
 @endsection

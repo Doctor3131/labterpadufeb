@@ -19,6 +19,35 @@
         <p class="text-gray-600">Data Inventaris Seluruh Laboratorium</p>
     </div>
 
+    <!-- Filter Section -->
+    <div class="bg-white rounded-xl p-6 mb-6 border border-gray-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <label for="labFilter" class="text-sm font-semibold text-gray-700 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Filter Ruangan:
+            </label>
+            <select id="labFilter" 
+                    class="flex-1 md:flex-none md:w-64 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all bg-white text-gray-700 font-medium">
+                <option value="">Semua Ruangan</option>
+                @foreach($labs as $lab)
+                    <option value="{{ $lab->id }}" {{ $selectedLabId == $lab->id ? 'selected' : '' }}>
+                        {{ $lab->name }}
+                    </option>
+                @endforeach
+            </select>
+            @if($selectedLabId)
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Filter Aktif: {{ $labs->firstWhere('id', $selectedLabId)->name ?? 'Unknown' }}
+                </span>
+            @endif
+        </div>
+    </div>
+
     <!-- Global Summary Stats -->
     <div class="bg-white rounded-xl p-6 mb-8 border border-gray-200 shadow-sm">
         <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -27,11 +56,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
             </div>
-            Data Aset Keseluruhan
+            Data Barang Keseluruhan
         </h2>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-purple-200 transition-colors">
-                <div class="text-sm text-gray-500 mb-1 font-medium">Total Jenis Aset</div>
+                <div class="text-sm text-gray-500 mb-1 font-medium">Total Jenis Barang</div>
                 <div class="text-3xl font-bold text-gray-800">{{ $globalTotals['total_items'] }}</div>
             </div>
             <div class="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-colors">
@@ -153,4 +182,21 @@
             </div>
         @endif
     </div>
+
+    @push('scripts')
+    <script>
+        document.getElementById('labFilter').addEventListener('change', function() {
+            const labId = this.value;
+            const url = new URL(window.location.href);
+            
+            if (labId) {
+                url.searchParams.set('lab_id', labId);
+            } else {
+                url.searchParams.delete('lab_id');
+            }
+            
+            window.location.href = url.toString();
+        });
+    </script>
+    @endpush
 @endsection
