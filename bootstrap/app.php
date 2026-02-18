@@ -20,12 +20,29 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->renderable(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, $request) {
+            $errorMessage = 'File yang Anda upload terlalu besar. Maksimal ukuran file adalah 5MB. Silakan compress file PDF Anda terlebih dahulu.';
+
             if ($request->is('booking*')) {
                 return back()->withErrors([
-                    'document' => 'File yang Anda upload terlalu besar. Maksimal ukuran file adalah 2MB. Silakan compress file PDF Anda terlebih dahulu.'
+                    'document' => $errorMessage
                 ])->withInput();
             }
-            
-            return response()->view('errors.post-too-large', [], 413);
+
+            if ($request->is('refinitiv*')) {
+                return back()->withErrors([
+                    'statement_file' => $errorMessage,
+                    'ktm_file' => $errorMessage,
+                ])->withInput();
+            }
+
+            if ($request->is('bps*')) {
+                return back()->withErrors([
+                    'document' => $errorMessage
+                ])->withInput();
+            }
+
+            return back()->withErrors([
+                'file' => $errorMessage
+            ])->withInput();
         });
     })->create();
