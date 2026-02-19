@@ -247,7 +247,7 @@
                                                 <span class="text-gray-600 font-medium">${startTime} - ${endTime}</span>
                                             </div>
                                             <h4 class="text-lg font-semibold text-gray-800">${schedule.course}</h4>
-                                            <p class="text-gray-600 text-sm mt-1">Dosen: ${schedule.lecturer}</p>
+                                            ${(schedule.booking_type === 'perkuliahan_tetap' || schedule.booking_type === 'perkuliahan_tidak_tetap') && schedule.lecturer ? `<p class="text-gray-600 text-sm mt-1">Dosen: ${schedule.lecturer}</p>` : ''}
                                             ${schedule.komting ? `<p class="text-gray-500 text-sm">${(schedule.booking_type === 'non_perkuliahan') ? 'Peminjam' : 'Komting'}: ${schedule.komting}</p>` : ''}
                                             ${schedule.student_count ? `<p class="text-gray-500 text-sm">Jumlah Mahasiswa: ${schedule.student_count} orang</p>` : ''}
                                         </div>

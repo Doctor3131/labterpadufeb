@@ -172,11 +172,7 @@
     <div class="flex justify-between px-4 text-[11pt]">
         <div class="text-center w-[250px]">
             <div class="border-b border-black font-bold pb-1">
-                @if($schedule->type === 'non_perkuliahan')
-                    {{ $schedule->lecturer ?: '____________________' }}
-                @else
-                    {{ $schedule->lecturer ?: '____________________' }}
-                @endif
+                {{ $schedule->lecturer ?: '____________________' }}
             </div>
             <div class="mt-1 flex justify-between">
                 @if($schedule->type === 'non_perkuliahan')

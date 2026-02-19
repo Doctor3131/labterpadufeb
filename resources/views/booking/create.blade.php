@@ -1513,7 +1513,11 @@
 
         // File Upload
         function setupFileUpload() {
-            document.getElementById('document').addEventListener('change', function(e) {
+            const docInput = document.getElementById('document');
+            if (!docInput || docInput._fileUploadBound) return; // Guard against double-binding
+            docInput._fileUploadBound = true;
+
+            docInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 const fileNameDisplay = document.getElementById('file-name');
                 const uploadBox = this.closest('.border-dashed');
@@ -1536,6 +1540,9 @@
                     }
                     
                     if (errorMsg) {
+                        // Show custom error modal
+                        showFileErrorModal(errorMsg);
+
                         // Show inline error
                         const errorDiv = document.createElement('div');
                         errorDiv.className = 'file-validation-error mt-2 bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm flex items-center';
@@ -1909,5 +1916,7 @@
             });
         });
     </script>
+
+@include('components.file-error-modal')
 </body>
 </html>

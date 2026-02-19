@@ -218,7 +218,7 @@
                         <div class="md:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Kegiatan *</label>
                             <input type="text" name="activity_name" id="activity_name"
-                                   value="{{ old('activity_name', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_name : '') }}"
+                                   value="{{ old('activity_name', $isEdit ? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_name : ($schedule->type === 'non_perkuliahan' ? $schedule->course : '')) : '') }}"
                                    placeholder="Contoh: Workshop Data Analytics"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
@@ -226,19 +226,22 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan *</label>
                             <select name="activity_type" id="activity_type"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                @php
+                                    $currentActivityType = old('activity_type', $isEdit ? ($schedule->activity_type ?? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '')) : '');
+                                @endphp
                                 <option value="">-- Pilih Jenis Kegiatan --</option>
-                                <option value="Seminar" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Seminar' ? 'selected' : '' }}>Seminar</option>
-                                <option value="Workshop" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Workshop' ? 'selected' : '' }}>Workshop</option>
-                                <option value="Pelatihan" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Pelatihan' ? 'selected' : '' }}>Pelatihan</option>
-                                <option value="Rapat" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Rapat' ? 'selected' : '' }}>Rapat</option>
-                                <option value="Ujian" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Ujian' ? 'selected' : '' }}>Ujian</option>
-                                <option value="Lainnya" {{ old('activity_type', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_type : '') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                <option value="Seminar" {{ $currentActivityType == 'Seminar' ? 'selected' : '' }}>Seminar</option>
+                                <option value="Workshop" {{ $currentActivityType == 'Workshop' ? 'selected' : '' }}>Workshop</option>
+                                <option value="Pelatihan" {{ $currentActivityType == 'Pelatihan' ? 'selected' : '' }}>Pelatihan</option>
+                                <option value="Rapat" {{ $currentActivityType == 'Rapat' ? 'selected' : '' }}>Rapat</option>
+                                <option value="Ujian" {{ $currentActivityType == 'Ujian' ? 'selected' : '' }}>Ujian</option>
+                                <option value="Lainnya" {{ $currentActivityType == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Posisi Peminjam</label>
                             <input type="text" name="position" id="position"
-                                   value="{{ old('position', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->position : '') }}"
+                                   value="{{ old('position', $isEdit ? ($schedule->position ?? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->position : '')) : '') }}"
                                    placeholder="Contoh: Ketua Panitia"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
@@ -252,7 +255,7 @@
                         <div class="md:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Kebutuhan Peralatan</label>
                             <textarea name="equipment_needs" id="equipment_needs" rows="3"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs', ($isEdit && $schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->equipment_needs : '') }}</textarea>
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs', $isEdit ? ($schedule->equipment_needs ?? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->equipment_needs : '')) : '') }}</textarea>
                         </div>
                     </div>
                 </div>

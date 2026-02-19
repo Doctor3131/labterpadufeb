@@ -57,7 +57,7 @@
                         <div>
                             <strong>MEKANISME:</strong>
                             <ol class="list-decimal ml-5 mt-1 space-y-1">
-                                <li>Mengisi formulir permohonan <strong>paling lambat sehari sebelum</strong> jadwal penggunaan</li>
+                                <li>Mengisi formulir permohonan</li>
                                 <li>Menuliskan jadwal penggunaan dan mengisi seluruh formulir</li>
                                 <li>Menggunakan lab Refinitiv sesuai tanggal dan sesi yang diajukan</li>
                                 <li>Menuju <strong>Ruangan Digilib</strong> di Gedung Laboratorium FEB-UNDIP lt.3</li>
@@ -164,6 +164,27 @@
                                     <p id="name-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
+                                <!-- Keterangan -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                                        Keterangan <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="space-y-2">
+                                        @foreach($affiliations as $value => $label)
+                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors">
+                                                <input type="radio" name="affiliation" value="{{ $value }}" 
+                                                    {{ old('affiliation') == $value ? 'checked' : '' }}
+                                                    class="w-4 h-4 text-blue-600 focus:ring-blue-500" required>
+                                                <span class="ml-3 text-gray-700">{{ $label }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    @error('affiliation')
+                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                    <p id="affiliation-error" class="text-xs text-red-500 mt-1 hidden"></p>
+                                </div>
+
                                 <!-- NIM (for Mahasiswa) -->
                                 <div id="nim_field">
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
@@ -174,9 +195,9 @@
                                         pattern="[0-9]{14}"
                                         maxlength="14"
                                         inputmode="numeric"
-                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 30)"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('nim') border-red-500 @enderror">
-                                    <p class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
+                                    <p id="nim-hint" class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
                                     <p id="nim-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                     @error('nim')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -220,27 +241,6 @@
                                     @error('whatsapp')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
-                                </div>
-
-                                <!-- Keterangan -->
-                                <div class="md:col-span-2">
-                                    <label class="block text-gray-700 text-sm font-semibold mb-2">
-                                        Keterangan <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="space-y-2">
-                                        @foreach($affiliations as $value => $label)
-                                            <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors">
-                                                <input type="radio" name="affiliation" value="{{ $value }}" 
-                                                    {{ old('affiliation') == $value ? 'checked' : '' }}
-                                                    class="w-4 h-4 text-blue-600 focus:ring-blue-500" required>
-                                                <span class="ml-3 text-gray-700">{{ $label }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                    @error('affiliation')
-                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                    @enderror
-                                    <p id="affiliation-error" class="text-xs text-red-500 mt-1 hidden"></p>
                                 </div>
 
                                 <!-- Program Studi (for Mahasiswa only) -->
@@ -341,7 +341,7 @@
                                         Tanggal Pemakaian <span class="text-red-500">*</span>
                                     </label>
                                     <input type="date" name="usage_date" id="usage_date_input" value="{{ old('usage_date') }}" required
-                                        min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                        min="{{ date('Y-m-d') }}"
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white @error('usage_date') border-red-500 @enderror">
                                     <p class="text-xs text-gray-500 mt-1">⚠️ Pemakaian tidak tersedia pada hari Minggu</p>
                                     <!-- Sunday Warning -->
@@ -661,6 +661,9 @@
                     }
                     
                     if (errorMsg) {
+                        // Show custom error modal
+                        showFileErrorModal(errorMsg);
+
                         const errorDiv = document.createElement('div');
                         errorDiv.className = 'file-validation-error mt-2 bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm flex items-center';
                         errorDiv.innerHTML = '<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' + errorMsg;
@@ -714,8 +717,31 @@
                 radio.addEventListener('change', () => clearFieldError('applicant_type'));
             });
             document.querySelectorAll('input[name="affiliation"]').forEach(radio => {
-                radio.addEventListener('change', () => clearFieldError('affiliation'));
+                radio.addEventListener('change', () => {
+                    clearFieldError('affiliation');
+                    updateNimConstraints();
+                });
             });
+
+            // Dynamic NIM constraints based on affiliation
+            function updateNimConstraints() {
+                const affiliation = document.querySelector('input[name="affiliation"]:checked');
+                const isEksternal = affiliation && affiliation.value === 'eksternal';
+                const nimHint = document.getElementById('nim-hint');
+
+                if (isEksternal) {
+                    nimInput.setAttribute('maxlength', '30');
+                    nimInput.setAttribute('pattern', '[0-9]+');
+                    nimInput.setAttribute('placeholder', 'Masukkan NIM/Nomor Identitas');
+                    if (nimHint) nimHint.textContent = 'Nomor identitas (angka saja)';
+                } else {
+                    nimInput.setAttribute('maxlength', '14');
+                    nimInput.setAttribute('pattern', '[0-9]{14}');
+                    nimInput.setAttribute('placeholder', 'Masukkan NIM (14 digit)');
+                    if (nimHint) nimHint.textContent = 'NIM harus 14 digit angka';
+                }
+            }
+            updateNimConstraints(); // Initialize on load
             if (studyProgramSelect) {
                 studyProgramSelect.addEventListener('change', () => clearFieldError('study_program'));
             }
@@ -790,10 +816,20 @@
                     }
                 } else {
                     const nim = nimInput.value.trim();
+                    const affiliationChecked = document.querySelector('input[name="affiliation"]:checked');
+                    const isEksternal = affiliationChecked && affiliationChecked.value === 'eksternal';
+
                     if (validateField('nim', !nim, 'NIM wajib diisi')) {
-                         if (!/^[0-9]{14}$/.test(nim)) {
-                             showFieldError('nim', 'NIM harus 14 digit angka');
-                             isValid = false;
+                         if (isEksternal) {
+                             if (!/^[0-9]+$/.test(nim)) {
+                                 showFieldError('nim', 'NIM/Nomor identitas harus berupa angka');
+                                 isValid = false;
+                             }
+                         } else {
+                             if (!/^[0-9]{14}$/.test(nim)) {
+                                 showFieldError('nim', 'NIM harus 14 digit angka');
+                                 isValid = false;
+                             }
                          }
                     }
                     
@@ -902,5 +938,7 @@
             });
         });
     </script>
+
+@include('components.file-error-modal')
 </body>
 </html>

@@ -60,7 +60,10 @@ class RefinitivRequestController extends Controller
         if ($isDosen) {
             $rules['nip'] = ['required', 'string', 'regex:/^[0-9]{18}$/'];
         } else {
-            $rules['nim'] = ['required', 'string', 'regex:/^[0-9]{14}$/'];
+            $isEksternal = $request->input('affiliation') === 'eksternal';
+            $rules['nim'] = $isEksternal
+                ? ['required', 'string', 'regex:/^[0-9]+$/', 'max:30']
+                : ['required', 'string', 'regex:/^[0-9]{14}$/'];
             $rules['study_program'] = 'required|string|max:255';
             $rules['ktm_file'] = 'required|file|mimes:pdf|max:5120';
         }
@@ -81,7 +84,7 @@ class RefinitivRequestController extends Controller
             'name.required' => 'Nama wajib diisi',
             'name.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, dan apostrof',
             'nim.required' => 'NIM wajib diisi',
-            'nim.regex' => 'NIM harus 14 digit angka',
+            'nim.regex' => 'NIM/Nomor identitas harus berupa angka',
             'nip.required' => 'NIP wajib diisi',
             'nip.regex' => 'NIP harus 18 digit angka',
             'whatsapp.required' => 'Nomor WhatsApp wajib diisi',

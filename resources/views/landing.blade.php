@@ -65,7 +65,6 @@
 
     <!-- Hero Section -->
     <section class="relative bg-yellow-500 text-white overflow-hidden">
-        {{-- <div class="absolute inset-0 bg-grid-white/10"></div> --}}
         <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md animate-fade-in-up animation-delay-100">
@@ -101,203 +100,73 @@
     <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">
             <!-- Week Info -->
-            <div class="text-center mb-6 animate-fade-in-up animation-delay-400">
-                <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Jadwal Minggu Ini</h2>
-                <p class="text-slate-600">
-                    {{ $startOfWeek->isoFormat('D MMMM') }} - {{ $startOfWeek->copy()->endOfWeek()->isoFormat('D MMMM Y') }}
-                    <span class="text-xs text-slate-400 ml-2">(WIB)</span>
-                </p>
-                <a href="{{ route('schedules.index') }}" class="inline-flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-semibold mt-2">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Lihat jadwal minggu lain
-                </a>
+            <div class="text-center mb-6 animate-fade-in-up animation-delay-400 relative z-10">
+                <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Jadwal Laboratorium</h2>
+                <p id="calWeekLabel" class="text-slate-600">Memuat...</p>
+                <div class="relative inline-block">
+                    <button id="btnOpenCalendar" class="inline-flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-semibold mt-2">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Lihat tanggal lain
+                    </button>
+                    <!-- Mini Calendar Popup -->
+                    <div id="miniCalendarPopup" class="hidden absolute z-[100] mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 w-[300px]" style="left:50%; transform:translateX(-50%);">
+                        <div class="flex items-center justify-between mb-3">
+                            <button id="calPrevMonth" class="p-1 hover:bg-slate-100 rounded-lg transition">
+                                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                            <span id="calMonthLabel" class="font-bold text-slate-800"></span>
+                            <button id="calNextMonth" class="p-1 hover:bg-slate-100 rounded-lg transition">
+                                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-500 mb-1">
+                            <div>SN</div><div>SL</div><div>RB</div><div>KM</div><div>JM</div><div>SB</div><div>MG</div>
+                        </div>
+                        <div id="calDaysGrid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+                        <div class="mt-3 pt-3 border-t border-slate-200 flex justify-between">
+                            <button id="calToday" class="text-xs text-yellow-600 hover:text-yellow-700 font-semibold">Hari Ini</button>
+                            <button id="calClose" class="text-xs text-slate-500 hover:text-slate-700 font-semibold">Tutup</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in-up animation-delay-500">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 animate-fade-in-up animation-delay-500">
                 
-                <!-- Tabs -->
-                <div class="border-b border-slate-200 overflow-x-auto">
-                    <div class="flex min-w-max lg:min-w-0 lg:justify-center">
-                        @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $day)
-                        <button 
-                            onclick="showSchedule('{{ $day }}')" 
-                            id="tab-{{ $day }}"
-                            class="schedule-tab px-6 lg:px-8 py-4 font-semibold text-sm lg:text-base transition border-b-2 {{ $day === 'Senin' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-slate-600 hover:text-yellow-600 hover:bg-yellow-50' }}">
-                            <div class="flex flex-col items-center">
-                                <span>{{ $day }}</span>
-                                <span class="text-xs font-normal text-slate-400 mt-1">
-                                    {{ isset($schedules[$day]['date']) ? \Carbon\Carbon::parse($schedules[$day]['date'])->format('d/m') : '-' }}
-                                </span>
-                            </div>
-                        </button>
-                        @endforeach
+                <!-- Day Tabs -->
+                <div class="border-b border-slate-200 overflow-x-auto sticky top-16 lg:top-20 z-40 bg-white shadow-sm">
+                    <div id="dayTabsContainer" class="flex min-w-max lg:min-w-0 lg:justify-center">
+                        <!-- Tabs rendered by JS -->
                     </div>
                 </div>
 
-                <!-- Table Container -->
-                <div class="overflow-x-auto">
-                    @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $day)
-                    <div id="schedule-{{ $day }}" class="schedule-content {{ $day !== 'Senin' ? 'hidden' : '' }}">
-                        <!-- Filter Ruangan -->
-                        <div class="bg-gradient-to-r from-yellow-50 to-white px-4 lg:px-6 py-3 border-b">
-                            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                                <label for="labFilter-{{ $day }}" class="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">Filter Ruangan:</label>
-                                <div class="flex-1 flex gap-2">
-                                    <select id="labFilter-{{ $day }}" class="labFilter flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs lg:text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white">
-                                        <option value="">Semua Ruangan</option>
-                                        @if(isset($labs) && $labs->count() > 0)
-                                            @foreach($labs as $lab)
-                                                <option value="{{ $lab->name }}">{{ $lab->name }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                    <button class="clearLabFilter px-3 py-2 text-xs lg:text-sm text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors hidden whitespace-nowrap">
-                                        Reset
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Desktop Table View -->
-                        <div class="hidden lg:block">
-                            <table class="w-full min-w-[800px]">
-                                <thead class="bg-slate-100 text-slate-700 text-sm">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left font-semibold">Waktu</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Ruang</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Kegiatan / Mata Kuliah</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Dosen / PIC</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Info</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm lg:text-base">
-                                    @forelse(($schedules[$day]['items'] ?? []) as $item)
-                                    <tr class="schedule-row border-t border-slate-200 hover:bg-slate-50 transition" data-lab="{{ $item['lab'] }}">
-                                        <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
-                                            {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-sm" />
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-slate-700 font-medium">{{ $item['course'] }}</div>
-                                            @if($item['type'] === 'booking' || isset($item['booking_type']))
-                                                <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="mt-1" />
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-slate-600">{{ $item['lecturer'] }}</div>
-                                            @if($item['komting'])
-                                                <div class="text-xs text-slate-400 mt-1">{{ in_array($item['booking_type'], ['pribadi', 'non_perkuliahan']) ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}</div>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-slate-500 text-xs">
-                                            @if($item['student_count'])
-                                                <div class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                    </svg>
-                                                    {{ $item['student_count'] }} peserta
-                                                </div>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr class="default-empty-state">
-                                        <td colspan="5" class="px-6 py-12 text-center text-slate-500">
-                                            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                            </svg>
-                                            <p class="text-lg font-medium">Tidak ada jadwal untuk hari {{ $day }}</p>
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Mobile Card View -->
-                        <div class="lg:hidden p-4 space-y-3 bg-slate-50">
-                            @forelse(($schedules[$day]['items'] ?? []) as $item)
-                            <div class="schedule-row bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all" data-lab="{{ $item['lab'] }}">
-                                <!-- Header: Time & Room -->
-                                <div class="flex justify-between items-start mb-3">
-                                    <div class="flex items-center text-slate-800 font-bold text-sm bg-slate-100 px-2.5 py-1 rounded-lg">
-                                        <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
-                                    </div>
-                                    <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-xs shadow-sm" />
-                                </div>
-
-                                <!-- Body: Course Name -->
-                                <div class="mb-3">
-                                    <h4 class="font-bold text-slate-900 text-base leading-snug mb-1.5">{{ $item['course'] }}</h4>
-                                    @if($item['type'] === 'booking' || isset($item['booking_type']))
-                                        <div class="inline-block">
-                                            <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-[10px] px-2 py-0.5" />
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <!-- Footer: Lecturer & Info -->
-                                <div class="border-t border-slate-100 pt-3 flex flex-col gap-3">
-                                    <!-- Lecturer -->
-                                    <div class="flex items-start text-xs text-slate-600">
-                                        <svg class="w-4 h-4 mr-2 text-slate-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        <span class="font-medium leading-relaxed">{{ $item['lecturer'] }}</span>
-                                    </div>
-                                    
-                                    <!-- Meta Info (Student Count & PIC) -->
-                                    @if($item['student_count'] || $item['komting'])
-                                    <div class="flex items-center justify-between gap-3 text-xs text-slate-500">
-                                        @if($item['student_count'])
-                                            <div class="flex-shrink-0 flex items-center bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                                <span class="font-medium text-slate-600">{{ $item['student_count'] }} Peserta</span>
-                                            </div>
-                                        @endif
-
-                                        @if($item['komting'])
-                                            <div class="flex-1 min-w-0 text-right">
-                                                <span class="text-slate-400 mr-1">PIC:</span>
-                                                <span class="font-medium text-slate-700 break-words leading-tight" title="{{ $item['komting'] }}">
-                                                    {{ $item['komting'] }}
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                            @empty
-                            <div class="default-empty-state text-center py-12 px-4">
-                                <div class="bg-white rounded-full p-4 inline-flex mb-4 shadow-sm">
-                                    <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-slate-500 font-medium">Tidak ada jadwal</p>
-                            </div>
-                            @endforelse
+                <!-- Desktop: Calendar Grid View -->
+                <div id="calendarGridContainer" class="hidden lg:block">
+                    <div id="calendarGrid" class="relative" style="min-width: 800px;">
+                        <!-- Grid rendered by JS -->
+                        <div class="text-center py-12">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
+                            <p class="text-slate-500 mt-4">Memuat jadwal...</p>
                         </div>
                     </div>
-                    @endforeach
                 </div>
 
-                <!-- Legend / Notice -->
+                <!-- Mobile: Card View Fallback -->
+                <div id="mobileScheduleContainer" class="lg:hidden p-4 space-y-3 bg-slate-50">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-500 mx-auto"></div>
+                        <p class="text-slate-500 mt-3 text-sm">Memuat jadwal...</p>
+                    </div>
+                </div>
+
+                <!-- Legend -->
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-600">
                     <div class="font-semibold mb-2">Keterangan Warna:</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-yellow-500"></span>
+                            <span class="w-4 h-4 rounded bg-yellow-300"></span>
                             <span><strong>Kuning:</strong> Perkuliahan Tetap</span>
                         </div>
                         <div class="flex items-center gap-2">
@@ -310,7 +179,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
@@ -363,7 +231,6 @@
                             </button>
                         </div>
                     </form>
-
 
                 </div>
             </div>
@@ -479,197 +346,497 @@
         </div>
     </footer>
 
-    <!-- JavaScript for Tabs -->
+    <!-- JavaScript -->
     <script>
-        function showSchedule(day) {
-            // Hide all schedules with fade out
-            document.querySelectorAll('.schedule-content').forEach(el => {
-                el.style.opacity = '0';
-                setTimeout(() => {
-                    el.classList.add('hidden');
-                }, 200);
-            });
-            
-            // Remove active state from all tabs
-            document.querySelectorAll('.schedule-tab').forEach(tab => {
-                tab.classList.remove('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
-                tab.classList.add('border-transparent', 'text-slate-600');
-            });
-            
-            // Show selected schedule with fade in
-            setTimeout(() => {
-                const selectedSchedule = document.getElementById('schedule-' + day);
-                selectedSchedule.classList.remove('hidden');
-                setTimeout(() => {
-                    selectedSchedule.style.opacity = '1';
-                }, 50);
-            }, 200);
-            
-            // Activate selected tab with smooth transition
-            const activeTab = document.getElementById('tab-' + day);
-            activeTab.classList.add('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
-            activeTab.classList.remove('border-transparent', 'text-slate-600');
+    (function() {
+        // ==================== CONFIG ====================
+        const TIME_START = 5;  // 05:00
+        const TIME_END = 23;   // 23:00
+        const SLOT_MINUTES = 10;
+        const TOTAL_SLOTS = ((TIME_END - TIME_START) * 60) / SLOT_MINUTES; // 108 slots
+        const ROW_HEIGHT = 10; // px per 10-min slot
+        const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        const DAYS_ID = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+        // ==================== STATE ====================
+        let weekData = null;      // Full week schedule data from API
+        let selectedDay = null;   // Currently selected day name
+        let selectedDate = null;  // Currently selected date string
+        let calViewMonth = null;  // Mini-calendar current month (Date)
+        let allLabs = [];         // Labs list
+
+        // ==================== COLOR MAPPING ====================
+        const TYPE_COLORS = {
+            'perkuliahan_tetap':       { bg: 'bg-yellow-300', accent: 'bg-yellow-600', border: 'border-yellow-500', shadow: 'shadow-yellow-100', text: 'text-yellow-900' },
+            'perkuliahan_tidak_tetap': { bg: 'bg-indigo-400', accent: 'bg-indigo-700', border: 'border-indigo-500', shadow: 'shadow-indigo-100', text: 'text-indigo-900' },
+            'non_perkuliahan':         { bg: 'bg-emerald-400', accent: 'bg-emerald-700', border: 'border-emerald-500', shadow: 'shadow-emerald-100', text: 'text-emerald-900' }
+        };
+
+        // ==================== HELPERS ====================
+        function formatTime(t) {
+            if (!t) return '';
+            // API now returns 'HH:mm' strings directly
+            if (typeof t === 'string') {
+                const match = t.match(/(\d{1,2}):(\d{2})/);
+                if (match) return match[1].padStart(2,'0') + ':' + match[2];
+            }
+            return '';
         }
 
-        // Add smooth opacity transition to schedule contents
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.schedule-content').forEach(el => {
-                el.style.transition = 'opacity 0.3s ease-in-out';
-                el.style.opacity = el.classList.contains('hidden') ? '0' : '1';
-            });
-        });
+        function timeToMinutes(t) {
+            const str = formatTime(t);
+            if (!str) return 0;
+            const [h, m] = str.split(':').map(Number);
+            return h * 60 + m;
+        }
 
-        // Lab Filter Functionality
-        function applyLabFilter(scheduleContainer, selectedLab, clearButton) {
-            // Get all rows within this specific schedule container
-            const allRows = scheduleContainer.querySelectorAll('.schedule-row');
-            const defaultEmptyStates = scheduleContainer.querySelectorAll('.default-empty-state');
-            
-            // Remove any existing filter empty state messages
-            scheduleContainer.querySelectorAll('.filter-empty-state').forEach(el => el.remove());
+        function dateStr(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${dd}`;
+        }
 
-            // Show/hide clear button
-            if (selectedLab !== '') {
-                clearButton.classList.remove('hidden');
-            } else {
-                clearButton.classList.add('hidden');
+        // ==================== API ====================
+        function loadSchedules(targetDate) {
+            let url = `{{ route('schedules.week') }}`;
+            if (targetDate) {
+                url += `?date=${targetDate}`;
             }
 
-            // If no filter selected, show all rows and default empty states
-            if (selectedLab === '') {
-                allRows.forEach(row => {
-                    row.style.display = '';
+            // Show loading
+            document.getElementById('calendarGrid').innerHTML = `
+                <div class="text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
+                    <p class="text-slate-500 mt-4">Memuat jadwal...</p>
+                </div>`;
+            document.getElementById('mobileScheduleContainer').innerHTML = `
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-500 mx-auto"></div>
+                    <p class="text-slate-500 mt-3 text-sm">Memuat jadwal...</p>
+                </div>`;
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    weekData = data;
+                    allLabs = data.labs || [];
+
+                    // Update week label
+                    document.getElementById('calWeekLabel').innerHTML = 
+                        data.week_label + ' <span class="text-xs text-slate-400 ml-1">(WIB)</span>';
+
+                    // Build day tabs
+                    renderDayTabs(data);
+
+                    // Select the target day
+                    if (targetDate) {
+                        const target = new Date(targetDate + 'T00:00:00');
+                        const dayOfWeek = target.getDay(); // 0=Sun, 1=Mon, ...
+                        const idx = dayOfWeek === 0 ? 5 : dayOfWeek - 1; // Map to DAYS_ID index
+                        if (idx >= 0 && idx < 6) {
+                            selectDay(DAYS_ID[idx], targetDate);
+                        } else {
+                            selectDay(DAYS_ID[0], data.week_start);
+                        }
+                    } else {
+                        // Default: select today if within week, else Monday
+                        const today = new Date();
+                        const todayStr = dateStr(today);
+                        if (todayStr >= data.week_start && todayStr <= data.week_end) {
+                            const dow = today.getDay();
+                            const idx = dow === 0 ? -1 : dow - 1;
+                            if (idx >= 0 && idx < 6) {
+                                selectDay(DAYS_ID[idx], todayStr);
+                            } else {
+                                selectDay(DAYS_ID[0], data.week_start);
+                            }
+                        } else {
+                            selectDay(DAYS_ID[0], data.week_start);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading schedules:', err);
+                    document.getElementById('calendarGrid').innerHTML = `
+                        <div class="text-center py-12">
+                            <svg class="w-16 h-16 text-orange-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <p class="text-orange-600 font-semibold">Gagal memuat jadwal</p>
+                        </div>`;
                 });
-                defaultEmptyStates.forEach(el => {
-                    el.style.display = '';
+        }
+
+        // ==================== DAY TABS ====================
+        function renderDayTabs(data) {
+            const container = document.getElementById('dayTabsContainer');
+            const ws = new Date(data.week_start + 'T00:00:00');
+            let html = '';
+            DAYS_ID.forEach((day, idx) => {
+                const d = new Date(ws);
+                d.setDate(d.getDate() + idx);
+                const dayDate = dateStr(d);
+                const dd = d.getDate();
+                const mm = d.getMonth() + 1;
+                html += `
+                    <button data-day="${day}" data-date="${dayDate}"
+                        class="day-tab px-6 lg:px-8 py-4 font-semibold text-sm lg:text-base transition border-b-2 border-transparent text-slate-600 hover:text-yellow-600 hover:bg-yellow-50">
+                        <div class="flex flex-col items-center">
+                            <span>${day}</span>
+                            <span class="text-xs font-normal text-slate-400 mt-1">${String(dd).padStart(2,'0')}/${String(mm).padStart(2,'0')}</span>
+                        </div>
+                    </button>`;
+            });
+            container.innerHTML = html;
+
+            // Bind click events
+            container.querySelectorAll('.day-tab').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    selectDay(this.dataset.day, this.dataset.date);
                 });
+            });
+        }
+
+        function selectDay(day, date) {
+            selectedDay = day;
+            selectedDate = date;
+
+            // Update tab styles
+            document.querySelectorAll('.day-tab').forEach(tab => {
+                if (tab.dataset.day === day) {
+                    tab.classList.add('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
+                    tab.classList.remove('border-transparent', 'text-slate-600');
+                } else {
+                    tab.classList.remove('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
+                    tab.classList.add('border-transparent', 'text-slate-600');
+                }
+            });
+
+            // Filter schedules for selected day (exclude pribadi)
+            const daySchedules = (weekData.schedules || []).filter(s => {
+                if (s.date !== date) return false;
+                if (s.booking_type === 'pribadi') return false;
+                return true;
+            });
+
+            renderGrid(daySchedules);
+            renderMobileCards(daySchedules);
+        }
+
+        // ==================== GRID RENDERING ====================
+        function renderGrid(schedules) {
+            const container = document.getElementById('calendarGrid');
+            if (allLabs.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-slate-500">Tidak ada lab tersedia</div>';
                 return;
             }
 
-            // Hide default empty states when filter is active
-            defaultEmptyStates.forEach(el => {
-                el.style.display = 'none';
-            });
+            const totalHeight = TOTAL_SLOTS * ROW_HEIGHT;
+            const labCount = allLabs.length;
 
-            // Filter rows based on selected lab
-            let visibleCount = 0;
-            allRows.forEach(row => {
-                const labName = row.getAttribute('data-lab');
-                if (labName === selectedLab) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
+            // Build HTML
+            let html = '';
+
+            // ---- Header row: Time col + Lab cols ----
+            // Calculate sticky offset dynamically from actual element heights
+            const navEl = document.querySelector('nav.sticky');
+            const tabsEl = document.querySelector('#dayTabsContainer')?.closest('.sticky');
+            const stickyTop = (navEl ? navEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0);
+            html += `<div class="flex border-b-2 border-slate-300 bg-slate-800 text-white sticky z-30" style="top:${stickyTop}px">`;
+            html += '<div class="flex-shrink-0" style="width:70px;"></div>';
+            allLabs.forEach(lab => {
+                html += `<div class="flex-1 text-center py-3 px-2 font-bold text-sm border-l border-slate-600">${lab.name}</div>`;
+            });
+            html += '</div>';
+
+            // ---- Grid body ----
+            html += `<div class="flex relative" style="height:${totalHeight}px;">`;
+
+            // Time labels column
+            html += '<div class="flex-shrink-0 relative bg-slate-50 border-r border-slate-300" style="width:70px;">';
+            for (let h = TIME_START; h < TIME_END; h++) {
+                // HH:00 label
+                const topHour = ((h - TIME_START) * 60 / SLOT_MINUTES) * ROW_HEIGHT;
+                html += `<div class="absolute text-xs font-semibold text-slate-500 pr-2 text-right w-full" style="top:${topHour}px; line-height:${ROW_HEIGHT}px;">${String(h).padStart(2,'0')}:00</div>`;
+                // HH:30 label
+                const topHalf = topHour + (30 / SLOT_MINUTES) * ROW_HEIGHT;
+                html += `<div class="absolute text-[10px] text-slate-400 pr-2 text-right w-full" style="top:${topHalf}px; line-height:${ROW_HEIGHT}px;">${String(h).padStart(2,'0')}:30</div>`;
+            }
+            html += '</div>';
+
+            // Lab columns
+            allLabs.forEach((lab, labIdx) => {
+                html += `<div class="flex-1 relative border-l border-slate-200" data-lab-id="${lab.id}">`;
+
+                // Horizontal gridlines: 60min=solid, 30min=dashed, 10min=dotted
+                for (let slot = 0; slot <= TOTAL_SLOTS; slot++) {
+                    const mins = slot * SLOT_MINUTES;
+                    const topPx = slot * ROW_HEIGHT;
+                    if (mins % 60 === 0) {
+                        html += `<div class="absolute w-full border-t border-slate-200" style="top:${topPx}px;"></div>`;
+                    } else if (mins % 30 === 0) {
+                        html += `<div class="absolute w-full border-t border-dashed border-slate-100" style="top:${topPx}px;"></div>`;
+                    } else {
+                        html += `<div class="absolute w-full" style="top:${topPx}px; border-top: 1px dotted #e2e8f0;"></div>`;
+                    }
                 }
+
+                // Schedule blocks for this lab
+                const labSchedules = schedules.filter(s => s.lab_id === lab.id);
+                labSchedules.forEach(s => {
+                    const startMin = timeToMinutes(s.start_time);
+                    const endMin = timeToMinutes(s.end_time);
+                    const startOffset = startMin - (TIME_START * 60);
+                    const duration = endMin - startMin;
+
+                    if (startOffset < 0 || duration <= 0) return;
+
+                    const topPx = (startOffset / SLOT_MINUTES) * ROW_HEIGHT;
+                    const heightPx = (duration / SLOT_MINUTES) * ROW_HEIGHT;
+                    const colors = TYPE_COLORS[s.booking_type] || TYPE_COLORS['perkuliahan_tetap'];
+                    const startTimeStr = formatTime(s.start_time);
+                    const endTimeStr = formatTime(s.end_time);
+                    const isKuliah = s.booking_type === 'perkuliahan_tetap' || s.booking_type === 'perkuliahan_tidak_tetap';
+                    const lecturerDisplay = (isKuliah && s.lecturer) ? s.lecturer : '';
+
+                 // Icons
+                const iconClock = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                const iconUser = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
+
+                // Build tooltip
+                const tooltipParts = [s.course || '-'];
+                if (lecturerDisplay) tooltipParts.push(lecturerDisplay);
+                tooltipParts.push(startTimeStr + ' - ' + endTimeStr);
+
+                html += `
+                    <div class="absolute left-1 right-1 ${colors.bg} rounded-lg shadow-sm border border-slate-200/50 overflow-hidden cursor-pointer hover:shadow-md hover:z-20 transition-all duration-200 group"
+                            style="top:${topPx}px; height:${heightPx}px; z-index:5;"
+                            title="${tooltipParts.join('\n')}">
+                        
+                        <!-- Accent Band -->
+                        <div class="absolute top-0 bottom-0 left-0 w-2 ${colors.accent}"></div>
+                        
+                        <!-- Content -->
+                        <div class="pl-3 pr-2 py-1.5 h-full flex flex-col justify-start">
+                            <!-- Title (Primary) -->
+                            <div class="text-xs font-bold ${colors.text} leading-tight truncate mb-0.5">${s.course || '-'}</div>
+                            
+                            <!-- Time (Secondary) -->
+                            ${heightPx > 35 ? `
+                            <div class="flex items-center gap-1.5 text-[10px] font-medium ${colors.text} leading-none mb-0.5 opacity-90">
+                                ${iconClock}
+                                <span class="truncate">${startTimeStr} - ${endTimeStr}</span>
+                            </div>` : ''}
+
+                            <!-- Lecturer (Tertiary) -->
+                            ${heightPx > 50 && lecturerDisplay ? `
+                            <div class="flex items-center gap-1.5 text-[10px] ${colors.text} leading-none opacity-80">
+                                ${iconUser}
+                                <span class="truncate">${lecturerDisplay}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
+                });
+
+                html += '</div>';
             });
 
-            // If no rows are visible after filtering, show empty state message
-            if (visibleCount === 0) {
-                // Desktop table
-                const desktopTable = scheduleContainer.querySelector('.hidden.lg\\:block table tbody');
-                if (desktopTable) {
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.className = 'filter-empty-state';
-                    emptyRow.innerHTML = `
-                        <td colspan="5" class="px-6 py-12 text-center text-slate-500">
-                            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            html += '</div>';
+
+            // Empty state
+            if (schedules.length === 0) {
+                html += `
+                    <div class="absolute inset-0 flex items-center justify-center" style="top:50px; pointer-events:none;">
+                        <div class="text-center pointer-events-auto">
+                            <svg class="w-16 h-16 mx-auto mb-3 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            <p class="text-lg font-bold text-slate-700">Ruangan ${selectedLab} Kosong</p>
-                            <p class="text-sm text-slate-400 mt-2">Tidak ada peminjaman pada hari ini</p>
-                        </td>
-                    `;
-                    desktopTable.appendChild(emptyRow);
-                }
+                            <p class="text-slate-400 font-semibold text-lg">Tidak ada jadwal hari ini</p>
+                        </div>
+                    </div>`;
+            }
 
-                // Mobile view
-                const mobileView = scheduleContainer.querySelector('.lg\\:hidden');
-                if (mobileView) {
-                    const emptyCard = document.createElement('div');
-                    emptyCard.className = 'filter-empty-state text-center py-12 px-4';
-                    emptyCard.innerHTML = `
+            container.innerHTML = html;
+        }
+
+        // ==================== MOBILE CARDS ====================
+        function renderMobileCards(schedules) {
+            const container = document.getElementById('mobileScheduleContainer');
+
+            if (schedules.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 px-4">
                         <div class="bg-white rounded-full p-4 inline-flex mb-4 shadow-sm">
                             <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                         </div>
-                        <p class="text-slate-700 font-bold mb-1">Ruangan ${selectedLab} Kosong</p>
-                        <p class="text-slate-500 text-sm">Tidak ada peminjaman pada hari ini</p>
-                    `;
-                    mobileView.appendChild(emptyCard);
-                }
+                        <p class="text-slate-500 font-medium">Tidak ada jadwal hari ini</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            schedules.sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+            schedules.forEach(s => {
+                const colors = TYPE_COLORS[s.booking_type] || TYPE_COLORS['perkuliahan_tetap'];
+                const startTime = formatTime(s.start_time);
+                const endTime = formatTime(s.end_time);
+                const isKuliah = s.booking_type === 'perkuliahan_tetap' || s.booking_type === 'perkuliahan_tidak_tetap';
+
+                html += `
+                    <div class="bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-all border-l-4 ${colors.border} ${colors.shadow || 'shadow-slate-100'}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 text-xs font-semibold rounded ${colors.bg} ${colors.text}">${s.lab}</span>
+                            </div>
+                            <div class="flex items-center text-slate-700 font-bold text-sm">
+                                <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                ${startTime} - ${endTime}
+                            </div>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-base mb-1">${s.course || '-'}</h4>
+                        ${isKuliah && s.lecturer ? `<div class="text-xs text-slate-600 font-medium">Dosen: ${s.lecturer}</div>` : ''}
+                        ${s.komting ? `<div class="text-xs text-slate-500 mt-1">${isKuliah ? 'Komting' : 'PIC'}: ${s.komting}</div>` : ''}
+                        ${s.student_count ? `<div class="text-xs text-slate-500 mt-0.5">${s.student_count} peserta</div>` : ''}
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // ==================== MINI CALENDAR ====================
+        function openCalendar() {
+            const popup = document.getElementById('miniCalendarPopup');
+            popup.classList.toggle('hidden');
+            if (!popup.classList.contains('hidden')) {
+                // Set current month based on selected date
+                calViewMonth = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
+                calViewMonth.setDate(1);
+                renderCalendar();
             }
         }
 
-        // Initialize filter dropdowns
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup filter for each day
-            document.querySelectorAll('.labFilter').forEach(function(filterSelect) {
-                const scheduleContainer = filterSelect.closest('.schedule-content');
-                const clearButton = scheduleContainer.querySelector('.clearLabFilter');
-                
-                // Filter change event
-                filterSelect.addEventListener('change', function() {
-                    applyLabFilter(scheduleContainer, this.value, clearButton);
-                });
+        function renderCalendar() {
+            const year = calViewMonth.getFullYear();
+            const month = calViewMonth.getMonth();
+            document.getElementById('calMonthLabel').textContent = MONTHS_ID[month] + ' ' + year;
 
-                // Clear filter button
-                if (clearButton) {
-                    clearButton.addEventListener('click', function() {
-                        filterSelect.value = '';
-                        applyLabFilter(scheduleContainer, '', clearButton);
-                    });
+            const firstDay = new Date(year, month, 1);
+            let startDow = firstDay.getDay(); // 0=Sun
+            startDow = startDow === 0 ? 6 : startDow - 1; // Convert to Mon=0
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const today = new Date();
+            const todayStr = dateStr(today);
+            const grid = document.getElementById('calDaysGrid');
+            let html = '';
+
+            // Empty cells before first day
+            for (let i = 0; i < startDow; i++) {
+                html += '<div></div>';
+            }
+
+            // Day cells
+            for (let d = 1; d <= daysInMonth; d++) {
+                const cellDate = new Date(year, month, d);
+                const cellStr = dateStr(cellDate);
+                const isToday = cellStr === todayStr;
+                const isSelected = cellStr === selectedDate;
+                const isSunday = cellDate.getDay() === 0;
+
+                let classes = 'py-1.5 rounded-lg cursor-pointer transition text-sm ';
+                if (isSelected) {
+                    classes += 'bg-yellow-500 text-white font-bold shadow-md ';
+                } else if (isToday) {
+                    classes += 'bg-yellow-100 text-yellow-800 font-bold ring-2 ring-yellow-400 ';
+                } else if (isSunday) {
+                    classes += 'text-slate-300 cursor-default ';
+                } else {
+                    classes += 'hover:bg-slate-100 text-slate-700 ';
+                }
+
+                html += `<div class="${classes}" data-date="${cellStr}" ${isSunday ? '' : `onclick="pickDate('${cellStr}')"`}>${d}</div>`;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // Global function for onclick
+        window.pickDate = function(d) {
+            document.getElementById('miniCalendarPopup').classList.add('hidden');
+            loadSchedules(d);
+        };
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load current week
+            loadSchedules(null);
+
+            // Mini calendar toggle
+            document.getElementById('btnOpenCalendar').addEventListener('click', function(e) {
+                e.stopPropagation();
+                openCalendar();
+            });
+            document.getElementById('calClose').addEventListener('click', () => {
+                document.getElementById('miniCalendarPopup').classList.add('hidden');
+            });
+            document.getElementById('calToday').addEventListener('click', () => {
+                document.getElementById('miniCalendarPopup').classList.add('hidden');
+                loadSchedules(dateStr(new Date()));
+            });
+            document.getElementById('calPrevMonth').addEventListener('click', () => {
+                calViewMonth.setMonth(calViewMonth.getMonth() - 1);
+                renderCalendar();
+            });
+            document.getElementById('calNextMonth').addEventListener('click', () => {
+                calViewMonth.setMonth(calViewMonth.getMonth() + 1);
+                renderCalendar();
+            });
+
+            // Close calendar when clicking outside
+            document.addEventListener('click', function(e) {
+                const popup = document.getElementById('miniCalendarPopup');
+                const btn = document.getElementById('btnOpenCalendar');
+                if (!popup.contains(e.target) && !btn.contains(e.target)) {
+                    popup.classList.add('hidden');
                 }
             });
         });
 
-        // Handle download form submit
-        function handleDownloadSubmit(event) {
+        // ==================== DOWNLOAD PDF ====================
+        window.handleDownloadSubmit = function(event) {
             event.preventDefault();
             const token = document.getElementById('booking_token').value.trim();
-            
-            if (!token) {
-                alert('❌ Masukkan kode booking!');
-                return false;
-            }
-            
-            // Redirect to print page with token
+            if (!token) { alert('❌ Masukkan kode booking!'); return false; }
             window.open(`/booking/print/${token}`, '_blank');
             return false;
-        }
+        };
 
-        // Feedback Modal Functions
-        function openFeedbackModal() {
+        // ==================== FEEDBACK MODAL ====================
+        window.openFeedbackModal = function() {
             const modal = document.getElementById('feedbackModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.style.overflow = 'hidden';
-        }
-
-        function closeFeedbackModal() {
+        };
+        window.closeFeedbackModal = function() {
             const modal = document.getElementById('feedbackModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
             document.body.style.overflow = 'auto';
-            // Reset form
             document.getElementById('feedback_title').value = '';
             document.getElementById('feedback_detail').value = '';
-        }
-
-        // Close modal when clicking outside
+        };
         document.getElementById('feedbackModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeFeedbackModal();
-            }
+            if (e.target === this) closeFeedbackModal();
         });
-
-        // Close modal with ESC key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeFeedbackModal();
-            }
+            if (e.key === 'Escape') closeFeedbackModal();
         });
-
+    })();
     </script>
 
 </body>

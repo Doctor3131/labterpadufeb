@@ -20,10 +20,13 @@ class Schedule extends Model
         'course',
         'lecturer',
         'type',
+        'activity_type',
         'booking_id',
         'komting',
         'komting_phone',
         'student_count',
+        'position',
+        'equipment_needs',
     ];
 
     /**

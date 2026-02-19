@@ -91,8 +91,8 @@ class ScheduleService
                         'day' => $schedule->day,
                         'date' => $concreteDate->format('Y-m-d'),
                         'date_formatted' => $this->formatDateForDisplay($concreteDate),
-                        'start_time' => Carbon::parse($schedule->start_time),
-                        'end_time' => Carbon::parse($schedule->end_time),
+                        'start_time' => Carbon::parse($schedule->start_time)->format('H:i'),
+                        'end_time' => Carbon::parse($schedule->end_time)->format('H:i'),
                         'course' => $courseName,
                         'lecturer' => $lecturerName,
                         'komting' => $komtingName,
@@ -111,9 +111,7 @@ class ScheduleService
         // Sort by Date then Start Time
         return $schedules->sort(function ($a, $b) {
             if ($a['date'] === $b['date']) {
-                $timeA = $a['start_time']->format('H:i');
-                $timeB = $b['start_time']->format('H:i');
-                return strcmp($timeA, $timeB);
+                return strcmp($a['start_time'], $b['start_time']);
             }
             return strcmp($a['date'], $b['date']);
         });
