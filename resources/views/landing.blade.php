@@ -96,6 +96,66 @@
         </div>
     </section>
 
+    <!-- Announcements Section (only if active announcements exist) -->
+    @if($announcements->count() > 0)
+    <section class="py-6 lg:py-10">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="max-w-4xl mx-auto">
+                <!-- Header -->
+                <div class="flex items-center gap-3 mb-4 animate-fade-in-up animation-delay-300">
+                    <div class="bg-amber-100 p-2 rounded-lg">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl lg:text-2xl font-bold text-slate-800">Pengumuman</h2>
+                </div>
+
+                <!-- Announcement Cards -->
+                <div class="space-y-3 animate-fade-in-up animation-delay-400">
+                    @foreach($announcements as $announcement)
+                        @php
+                            $typeConfig = [
+                                'penting' => ['border' => 'border-l-red-500', 'badge_bg' => 'bg-red-100', 'badge_text' => 'text-red-700', 'icon_color' => 'text-red-500', 'label' => 'Penting'],
+                                'info' => ['border' => 'border-l-blue-500', 'badge_bg' => 'bg-blue-100', 'badge_text' => 'text-blue-700', 'icon_color' => 'text-blue-500', 'label' => 'Info'],
+                                'peringatan' => ['border' => 'border-l-amber-500', 'badge_bg' => 'bg-amber-100', 'badge_text' => 'text-amber-700', 'icon_color' => 'text-amber-500', 'label' => 'Peringatan'],
+                            ];
+                            $config = $typeConfig[$announcement->type] ?? $typeConfig['info'];
+                        @endphp
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 border-l-4 {{ $config['border'] }} p-4 lg:p-5 hover:shadow-md transition-shadow">
+                            <div class="flex items-start gap-3">
+                                <!-- Icon -->
+                                <div class="flex-shrink-0 mt-0.5">
+                                    @if($announcement->type === 'penting')
+                                        <svg class="w-5 h-5 {{ $config['icon_color'] }}" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-5 h-5 {{ $config['icon_color'] }}" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                        </svg>
+                                    @endif
+                                </div>
+                                <!-- Content -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full {{ $config['badge_bg'] }} {{ $config['badge_text'] }}">
+                                            {{ $config['label'] }}
+                                        </span>
+                                        <span class="text-xs text-slate-400">{{ $announcement->created_at->format('d M Y') }}</span>
+                                    </div>
+                                    <h3 class="font-bold text-slate-800 text-sm lg:text-base">{{ $announcement->title }}</h3>
+                                    <p class="text-slate-600 text-sm mt-0.5 line-clamp-2">{{ $announcement->content }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+    @endif
+
     <!-- Schedule Section -->
     <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">

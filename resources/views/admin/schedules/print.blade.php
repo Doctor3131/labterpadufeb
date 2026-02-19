@@ -156,10 +156,10 @@
 
     <!-- Signatures Header -->
     <div class="flex justify-between mt-8 px-4 text-[11pt]">
-        <div class="text-center w-[250px]">
+        <div class="text-center w-[280px]">
             <div>Mengetahui</div>
         </div>
-        <div class="text-center w-[300px]">
+        <div class="text-center w-[220px]">
             <div>Asisten Unit Pengembangan Komputer</div>
             <div>FEB Undip</div>
         </div>
@@ -170,11 +170,11 @@
 
     <!-- Signatures Names -->
     <div class="flex justify-between px-4 text-[11pt]">
-        <div class="text-center w-[250px]">
+        <div class="text-center w-[280px]">
             <div class="border-b border-black font-bold pb-1">
                 {{ $schedule->lecturer ?: '____________________' }}
             </div>
-            <div class="mt-1 flex justify-between">
+            <div class="mt-1 flex gap-1">
                 @if($schedule->type === 'non_perkuliahan')
                     @if($doc && $doc->nip)
                         <span>NIP.</span>
@@ -192,9 +192,9 @@
                 @endif
             </div>
         </div>
-        <div class="text-center w-[300px]">
+        <div class="text-center w-[220px]">
              <div class="border-b border-black font-bold pb-1 text-transparent">SpaceForName</div>
-             <div class="mt-1 flex justify-between">
+             <div class="mt-1 flex gap-1">
                  <span>NIM.</span>
              </div>
         </div>

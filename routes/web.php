@@ -152,6 +152,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/refinitiv/{request}/hadir', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'markHadir'])->name('admin.refinitiv.hadir');
     Route::put('/admin/refinitiv/{request}/tidak-hadir', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'markTidakHadir'])->name('admin.refinitiv.tidak-hadir');
     Route::put('/admin/refinitiv/{request}/reset', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'resetStatus'])->name('admin.refinitiv.reset');
+
+    // Admin Announcements
+    Route::resource('/admin/announcements', App\Http\Controllers\Admin\AnnouncementController::class)
+        ->names('admin.announcements')
+        ->except(['show', 'create', 'edit']);
+    Route::post('/admin/announcements/{announcement}/toggle-active', [App\Http\Controllers\Admin\AnnouncementController::class, 'toggleActive'])
+        ->name('admin.announcements.toggle-active');
 });
 
 // Super Admin Only Routes
