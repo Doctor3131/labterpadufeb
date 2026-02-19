@@ -1,0 +1,22 @@
+{
+  "apps": [
+    {
+      "name": "labterpadu-serve",
+      "script": "artisan",
+      "args": ["serve", "--host=0.0.0.0", "--port=3333"],
+      "instances": 1,
+      "wait_ready": true,
+      "autorestart": false,
+      "max_restarts": 1,
+      "interpreter": "php",
+    },
+    {
+      "name": "labterpadu-dev",
+      "script": "npm",
+      "args": "run dev",
+      "interpreter": "none",
+      "cwd": "./",
+      "autorestart": true,
+    }
+  ]
+}   
