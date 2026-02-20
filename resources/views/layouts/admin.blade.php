@@ -10,7 +10,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
     <link rel="shortcut icon" href="/favicon.ico">
-    <title>@yield('title', 'Dashboard Admin - Lab Digital FEB UNDIP')</title>
+    <title>@yield('title', 'Dashboard Admin - Laboratorium dan Fasilitas Digital FEB UNDIP')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Custom scrollbar */

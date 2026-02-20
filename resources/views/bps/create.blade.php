@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Permohonan Data BPS - Lab Digital FEB UNDIP</title>
+    <title>Permohonan Data BPS - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .step-indicator {

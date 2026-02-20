@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Alat - Lab Digital FEB UNDIP')
+@section('title', 'Edit Alat - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <div class="max-w-4xl mx-auto">

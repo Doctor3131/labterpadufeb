@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Jadwal & Manajemen Lab FEB</title>
+    <title>Jadwal & Manajemen Laboratorium dan Fasilitas Digital FEB</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
@@ -68,7 +68,7 @@
         <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md animate-fade-in-up animation-delay-100">
-                    Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium Digital
+                    Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium dan Fasilitas Digital
                 </h2>
                 <p class="text-base lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-6 lg:mb-10 animate-fade-in-up animation-delay-200">
                     Pantau jadwal praktikum dan ajukan penggunaan fasilitas laboratorium secara terintegrasi
@@ -402,7 +402,7 @@
                 </a>
             </div>
             <!-- Copyright -->
-            <p class="text-sm lg:text-base">&copy; {{ date('Y') }} Laboratorium Digital FEB UNDIP. All rights reserved.</p>
+            <p class="text-sm lg:text-base">&copy; {{ date('Y') }} Laboratorium dan Fasilitas Digital FEB UNDIP. All rights reserved.</p>
         </div>
     </footer>
 

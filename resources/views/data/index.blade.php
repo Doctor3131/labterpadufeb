@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Peminjaman Data - Lab Digital FEB UNDIP</title>
+    <title>Peminjaman Data - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes fadeInUp {
@@ -135,7 +135,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 py-6">
         <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
-            &copy; {{ date('Y') }} Lab Digital FEB UNDIP. All rights reserved.
+            &copy; {{ date('Y') }} Laboratorium dan Fasilitas Digital FEB UNDIP. All rights reserved.
         </div>
     </footer>
 

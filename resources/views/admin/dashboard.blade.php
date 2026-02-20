@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Admin - Lab Digital FEB UNDIP')
+@section('title', 'Dashboard Admin - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @push('styles')
     <style>
@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">Dashboard Admin</h1>
-                    <p class="text-yellow-100">Kelola permintaan layanan Lab Digital FEB UNDIP</p>
+                    <p class="text-yellow-100">Kelola permintaan layanan Laboratorium dan Fasilitas Digital FEB UNDIP</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
                     <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

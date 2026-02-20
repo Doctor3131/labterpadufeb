@@ -57,7 +57,7 @@
     <!-- Main Header -->
     <div class="text-center font-bold mb-6">
         <div class="text-[11pt]">FORM PEMINJAMAN RUANG LABORATORIUM</div>
-        <div class="text-[11pt]">UNIT PENGEMBANGAN KOMPUTER FAKULTAS EKONOMIKA DAN BISNIS</div>
+        <div class="text-[11pt]">LABORATORIUM DAN FASILITAS DIGITAL FAKULTAS EKONOMIKA DAN BISNIS</div>
         <div class="text-[11pt]">UNIVERSITAS DIPONEGORO</div>
     </div>
 
@@ -160,7 +160,7 @@
             <div>Mengetahui</div>
         </div>
         <div class="text-center w-[220px]">
-            <div>Asisten Unit Pengembangan Komputer</div>
+            <div>Asisten Laboratorium dan Fasilitas Digital</div>
             <div>FEB Undip</div>
         </div>
     </div>

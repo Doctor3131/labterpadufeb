@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Kelola Peminjaman Lab - Lab Digital FEB UNDIP')
+@section('title', 'Kelola Peminjaman Lab - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @push('styles')
     <style>

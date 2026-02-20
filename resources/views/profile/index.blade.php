@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Pengaturan Akun - Lab Digital FEB UNDIP')
+@section('title', 'Pengaturan Akun - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <!-- Header Section -->

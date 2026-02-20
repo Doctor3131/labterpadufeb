@@ -107,7 +107,7 @@
 
         <!-- Footer -->
         <p class="text-center text-gray-500 text-sm mt-6">
-            &copy; {{ date('Y') }} Lab Digital FEB UNDIP
+            &copy; {{ date('Y') }} Laboratorium dan Fasilitas Digital FEB UNDIP
         </p>
     </div>
 

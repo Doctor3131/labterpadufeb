@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Sub Data: ' . $master->name . ' - Lab Digital FEB UNDIP')
+@section('title', 'Sub Data: ' . $master->name . ' - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <!-- Back Button -->

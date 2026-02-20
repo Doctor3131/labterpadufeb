@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Master Data BPS - Lab Digital FEB UNDIP')
+@section('title', 'Master Data BPS - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <!-- Header Section -->

@@ -43,7 +43,7 @@
                     <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo" class="h-12">
                 </a>
                 <div>
-                    <h1 class="text-2xl font-bold text-white">Jadwal Laboratorium Digital FEB</h1>
+                    <h1 class="text-2xl font-bold text-white">Jadwal Laboratorium dan Fasilitas Digital FEB</h1>
                     <p class="text-yellow-100 text-sm">Hari Ini - {{ now()->timezone('Asia/Jakarta')->isoFormat('dddd, D MMMM Y') }}</p>
                 </div>
             </div>

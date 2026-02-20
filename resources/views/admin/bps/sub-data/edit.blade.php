@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Sub Data - Lab Digital FEB UNDIP')
+@section('title', 'Edit Sub Data - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <!-- Back Button -->

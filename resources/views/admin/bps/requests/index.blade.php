@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Permintaan Data BPS - Lab Digital FEB UNDIP')
+@section('title', 'Permintaan Data BPS - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <!-- Back Button -->
