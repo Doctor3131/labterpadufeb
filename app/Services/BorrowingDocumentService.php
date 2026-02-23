@@ -136,12 +136,19 @@ class BorrowingDocumentService
      */
     public function updateFirstPartyData(AssetBorrowing $borrowing, array $data): void
     {
-        $borrowing->update([
+        $updateData = [
             'first_party_name' => $data['first_party_name'],
             'first_party_position' => $data['first_party_position'],
             'first_party_address' => $data['first_party_address'],
             'first_party_phone' => $data['first_party_phone'],
             'document_date' => $data['document_date'] ?? Carbon::now(),
-        ]);
+        ];
+
+        // Jika admin mengisi nomor surat manual, gunakan itu
+        if (!empty($data['document_number'])) {
+            $updateData['document_number'] = $data['document_number'];
+        }
+
+        $borrowing->update($updateData);
     }
 }

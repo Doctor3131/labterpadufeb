@@ -62,12 +62,15 @@ class StoreInventoryRequest extends FormRequest
             $rules['quantity'] = ['required', 'integer', 'min:1', 'max:999'];
             $rules['start_seq'] = ['nullable', 'integer', 'min:1'];
             $rules['subtype'] = ['nullable', 'string', 'max:50'];
-            $rules['asset_type_code_id'] = ['required', 'exists:asset_type_codes,id'];
+            $rules['asset_type_code'] = ['required', 'string', 'min:1', 'max:5'];
+            $rules['university_asset_code_prefix'] = ['required', 'string', 'max:100'];
         } elseif ($mode === TrackingModeEnum::SEAT_NUMBER->value) {
             $rules['quantity'] = ['required', 'integer', 'min:1', 'max:999'];
             $rules['start_seat'] = ['nullable', 'integer', 'min:1'];
+            $rules['university_asset_code_prefix'] = ['required', 'string', 'max:100'];
         } elseif ($mode === TrackingModeEnum::AGGREGATE->value) {
             $rules['quantity'] = ['required', 'integer', 'min:1'];
+            $rules['university_asset_code_prefix'] = ['required', 'string', 'max:100'];
         }
 
         return $rules;
@@ -84,7 +87,8 @@ class StoreInventoryRequest extends FormRequest
             'arrival_mmyy.size' => 'Format bulan/tahun harus 4 digit (MMYY).',
             'quantity.required' => 'Jumlah wajib diisi.',
             'seat_numbers.required' => 'Nomor kursi wajib diisi.',
-            'asset_type_code_id.required' => 'Kode tipe aset wajib dipilih untuk mode Structured Tag.',
+            'asset_type_code.required' => 'Kode tipe aset wajib dipilih untuk mode Structured Tag.',
+            'university_asset_code_prefix.required' => 'Kode aset universitas wajib diisi.',
         ];
     }
 }

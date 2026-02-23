@@ -135,6 +135,14 @@
                             <p class="text-xs text-gray-500 mt-0.5">Kosongkan untuk menggunakan tanggal hari ini</p>
                         </div>
 
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Nomor Surat</label>
+                            <input type="text" name="document_number" value="{{ old('document_number', $borrowing->document_number) }}"
+                                class="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Contoh: 001/SPB/UPKFEB/II/2026">
+                            <p class="text-xs text-gray-500 mt-0.5">Kosongkan untuk generate nomor otomatis</p>
+                        </div>
+
                         <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded font-semibold text-sm mt-3">
                             {{ $borrowing->generated_document_path ? 'Update & Generate Ulang Surat' : 'Simpan & Generate Surat' }}
                         </button>
@@ -342,12 +350,27 @@
 <div id="handoutModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full z-20">
+        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-2xl w-full z-20">
             <form action="{{ route('admin.asset-borrowings.handout', $borrowing->id) }}" method="POST">
                 @csrf
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Penyerahan Barang</h3>
-                    <p class="text-sm text-gray-500 mb-4">Pastikan barang yang diserahkan sesuai dengan daftar peminjaman. Barang akan ditandai sebagai "Sedang Dipinjam".</p>
+                    <p class="text-sm text-gray-500 mb-4">Pilih unit spesifik untuk setiap barang yang akan diserahkan.</p>
+                    
+                    <!-- Loading State -->
+                    <div id="loadingUnits" class="text-center py-4">
+                        <svg class="animate-spin h-8 w-8 mx-auto text-indigo-600" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-sm text-gray-600 mt-2">Memuat data unit...</p>
+                    </div>
+
+                    <!-- Unit Selection -->
+                    <div id="unitSelectionContainer" class="hidden space-y-4 mb-4">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Penyerahan (Opsional)</label>
                         <textarea name="borrow_condition_notes" rows="3"
@@ -356,7 +379,7 @@
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full sm:w-auto sm:ml-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+                    <button type="submit" id="submitHandoutBtn" class="w-full sm:w-auto sm:ml-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                         Serahkan Barang
                     </button>
                     <button type="button" onclick="closeHandoutModal()" class="mt-3 w-full sm:mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300">
@@ -372,26 +395,44 @@
 <div id="receiveModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
-        <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full z-20">
-            <form action="{{ route('admin.asset-borrowings.receive', $borrowing->id) }}" method="POST">
-                @csrf
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Konfirmasi Pengembalian Barang</h3>
-                    <p class="text-sm text-gray-500 mb-4">Pastikan barang yang dikembalikan dalam kondisi baik dan lengkap. Barang akan ditandai sebagai "Tersedia" kembali.</p>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Pengembalian (Opsional)</label>
-                        <textarea name="return_condition_notes" rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            placeholder="Contoh: Barang dikembalikan lengkap, tidak ada kerusakan..."></textarea>
-                    </div>
+        <div class="bg-white rounded-2xl overflow-hidden shadow-xl transform transition-all max-w-2xl w-full z-20 max-h-[90vh] flex flex-col">
+            <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-5 flex items-center justify-between flex-shrink-0">
+                <div>
+                    <h3 class="text-lg font-bold">Terima Kembali Barang</h3>
+                    <p class="text-sm text-green-100">Catat kondisi setiap unit yang dikembalikan</p>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full sm:w-auto sm:ml-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
-                        Terima Kembali
-                    </button>
-                    <button type="button" onclick="closeReceiveModal()" class="mt-3 w-full sm:mt-0 sm:w-auto bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg border border-gray-300">
-                        Batal
-                    </button>
+                <button type="button" onclick="closeReceiveModal()" class="text-white/80 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form action="{{ route('admin.asset-borrowings.receive', $borrowing->id) }}" method="POST" id="receiveFormShow" class="flex-1 overflow-y-auto">
+                @csrf
+                <div class="p-6">
+                    <!-- Loading -->
+                    <div id="loadingReturnUnitsShow" class="text-center py-8">
+                        <svg class="animate-spin h-8 w-8 mx-auto text-green-600" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="text-sm text-gray-600 mt-3">Memuat data unit...</p>
+                    </div>
+
+                    <!-- Unit Cards -->
+                    <div id="returnUnitContainerShow" class="hidden space-y-4 mb-6"></div>
+                    
+                    <div id="returnNotesSectionShow" class="hidden mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Umum (Opsional)</label>
+                        <textarea name="return_condition_notes" rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                            placeholder="Catatan umum tentang pengembalian..."></textarea>
+                    </div>
+                    
+                    <div id="returnSubmitSectionShow" class="hidden flex justify-end space-x-3">
+                        <button type="button" onclick="closeReceiveModal()" class="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg border border-gray-300 text-sm font-medium">Batal</button>
+                        <button type="submit" id="submitReceiveBtnShow" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold shadow-sm disabled:opacity-50">
+                            ✓ Konfirmasi Terima
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -407,20 +448,210 @@ function closeRejectModal() {
     document.getElementById('rejectModal').classList.add('hidden');
 }
 
-function openHandoutModal() {
-    document.getElementById('handoutModal').classList.remove('hidden');
+async function openHandoutModal() {
+    const modal = document.getElementById('handoutModal');
+    const loadingDiv = document.getElementById('loadingUnits');
+    const containerDiv = document.getElementById('unitSelectionContainer');
+    const submitBtn = document.getElementById('submitHandoutBtn');
+    
+    modal.classList.remove('hidden');
+    loadingDiv.classList.remove('hidden');
+    containerDiv.classList.add('hidden');
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('{{ route('admin.asset-borrowings.available-units', $borrowing->id) }}');
+        const data = await response.json();
+        
+        if (data.length === 0) {
+            containerDiv.innerHTML = '<p class="text-sm text-gray-600">Tidak ada barang yang memerlukan pemilihan unit spesifik.</p>';
+        } else {
+            let html = '';
+            data.forEach((item) => {
+                html += `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 text-lg">${item.item_name}</h4>
+                                <p class="text-xs text-gray-500 mt-1">Total dipinjam: <span class="font-semibold text-indigo-600">${item.total_quantity} unit</span> · Tersedia: <span class="font-semibold ${item.units.length >= item.total_quantity ? 'text-green-600' : 'text-red-600'}">${item.units.length} unit</span></p>
+                            </div>
+                        </div>
+                        ${generateUnitSelects(item)}
+                    </div>
+                `;
+            });
+            containerDiv.innerHTML = html;
+            initUnitSelectListenersShow();
+        submitBtn.disabled = false;
+        
+    } catch (error) {
+        console.error('Error:', error);
+        containerDiv.innerHTML = '<p class="text-sm text-red-600">Terjadi kesalahan saat memuat data unit.</p>';
+        loadingDiv.classList.add('hidden');
+        containerDiv.classList.remove('hidden');
+    }
+}
+
+function generateUnitSelects(item) {
+    let selectsHtml = '';
+    const unitOptions = item.units.map(unit => `<option value="${unit.id}">${unit.display}</option>`).join('');
+    
+    item.borrowing_items.forEach((bi, idx) => {
+        for (let q = 0; q < bi.quantity; q++) {
+            const label = item.total_quantity === 1 ? 'Pilih Unit' : `Unit ${idx + q + 1}`;
+            selectsHtml += `
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-semibold text-gray-500 w-14 shrink-0">${label}</span>
+                    <select name="unit_assignments[${bi.borrowing_item_id}][]" 
+                        required
+                        data-unit-group="${item.item_name}"
+                        class="unit-select-show flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm font-mono">
+                        <option value="">-- Pilih Unit --</option>
+                        ${unitOptions}
+                    </select>
+                </div>
+            `;
+        }
+    });
+    
+    return `
+        <div class="space-y-3">
+            ${selectsHtml}
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Format: Kode UPK | Kode Universitas</p>
+    `;
+}
+
+function initUnitSelectListenersShow() {
+    document.querySelectorAll('.unit-select-show').forEach(select => {
+        select.addEventListener('change', function() {
+            const group = this.dataset.unitGroup;
+            const selects = document.querySelectorAll(`.unit-select-show[data-unit-group="${group}"]`);
+            const selectedValues = [];
+            selects.forEach(s => { if (s.value) selectedValues.push(s.value); });
+            
+            selects.forEach(s => {
+                Array.from(s.options).forEach(opt => {
+                    if (opt.value && opt.value !== s.value) {
+                        opt.disabled = selectedValues.includes(opt.value);
+                    }
+                });
+            });
+        });
+    });
 }
 
 function closeHandoutModal() {
     document.getElementById('handoutModal').classList.add('hidden');
+    document.getElementById('unitSelectionContainer').innerHTML = '';
 }
 
-function openReceiveModal() {
-    document.getElementById('receiveModal').classList.remove('hidden');
+async function openReceiveModal() {
+    const modal = document.getElementById('receiveModal');
+    const loadingDiv = document.getElementById('loadingReturnUnitsShow');
+    const containerDiv = document.getElementById('returnUnitContainerShow');  
+    const notesSection = document.getElementById('returnNotesSectionShow');
+    const submitSection = document.getElementById('returnSubmitSectionShow');
+    const submitBtn = document.getElementById('submitReceiveBtnShow');
+    
+    modal.classList.remove('hidden');
+    loadingDiv.classList.remove('hidden');
+    containerDiv.classList.add('hidden');
+    notesSection.classList.add('hidden');
+    submitSection.classList.add('hidden');
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('{{ route('admin.asset-borrowings.borrowed-units', $borrowing->id) }}');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        
+        if (data.length === 0) {
+            containerDiv.innerHTML = '<p class="text-sm text-gray-600">Tidak ada unit spesifik yang perlu dicatat kondisinya.</p>';
+        } else {
+            let html = '';
+            data.forEach((group) => {
+                html += `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 text-lg mb-3">${group.item_name}</h4>
+                        <div class="space-y-3">
+                            ${group.units.map((unit, idx) => generateReturnUnitCardShow(unit, idx, group.units.length)).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            containerDiv.innerHTML = html;
+        }
+        
+        loadingDiv.classList.add('hidden');
+        containerDiv.classList.remove('hidden');
+        notesSection.classList.remove('hidden');
+        submitSection.classList.remove('hidden');
+        submitBtn.disabled = false;
+    } catch (error) {
+        console.error('Error:', error);
+        containerDiv.innerHTML = `<p class="text-sm text-red-600">Gagal memuat data: ${error.message}</p>`;
+        loadingDiv.classList.add('hidden');
+        containerDiv.classList.remove('hidden');
+        notesSection.classList.remove('hidden');
+        submitSection.classList.remove('hidden');
+    }
+}
+
+function generateReturnUnitCardShow(unit, idx, total) {
+    const unitLabel = unit.display || `Unit #${idx + 1}`;
+    const condName = `item_conditions[${unit.borrowing_item_id}][condition]`;
+    const notesName = `item_conditions[${unit.borrowing_item_id}][notes]`;
+    const notesId = `return_notes_show_${unit.borrowing_item_id}`;
+    
+    return `
+        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">${total > 1 ? 'Unit ' + (idx + 1) : 'Unit'}</span>
+                <span class="text-sm font-mono font-semibold text-gray-800">${unitLabel}</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                <label class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 cursor-pointer transition-all hover:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:bg-green-50">
+                    <input type="radio" name="${condName}" value="BAIK" checked class="text-green-600 focus:ring-green-500" onchange="toggleReturnNotesShow('${notesId}', this.value)">
+                    <span class="text-xs font-semibold">✅ Baik</span>
+                </label>
+                <label class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 cursor-pointer transition-all hover:bg-yellow-50 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                    <input type="radio" name="${condName}" value="RUSAK_RINGAN" class="text-yellow-600 focus:ring-yellow-500" onchange="toggleReturnNotesShow('${notesId}', this.value)">
+                    <span class="text-xs font-semibold">⚠️ Rusak Ringan</span>
+                </label>
+                <label class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 cursor-pointer transition-all hover:bg-red-50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
+                    <input type="radio" name="${condName}" value="RUSAK_BERAT" class="text-red-600 focus:ring-red-500" onchange="toggleReturnNotesShow('${notesId}', this.value)">
+                    <span class="text-xs font-semibold">🔴 Rusak Berat</span>
+                </label>
+                <label class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 cursor-pointer transition-all hover:bg-gray-100 has-[:checked]:border-gray-600 has-[:checked]:bg-gray-100">
+                    <input type="radio" name="${condName}" value="HILANG" class="text-gray-600 focus:ring-gray-500" onchange="toggleReturnNotesShow('${notesId}', this.value)">
+                    <span class="text-xs font-semibold">❌ Hilang</span>
+                </label>
+            </div>
+            <div id="${notesId}" class="hidden mt-2">
+                <textarea name="${notesName}" rows="2" 
+                    class="w-full px-3 py-2 border-2 border-red-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="Jelaskan detail kerusakan/kehilangan..."></textarea>
+            </div>
+        </div>
+    `;
+}
+
+function toggleReturnNotesShow(notesId, value) {
+    const el = document.getElementById(notesId);
+    if (value !== 'BAIK') {
+        el.classList.remove('hidden');
+        el.querySelector('textarea').required = true;
+    } else {
+        el.classList.add('hidden');
+        el.querySelector('textarea').required = false;
+        el.querySelector('textarea').value = '';
+    }
 }
 
 function closeReceiveModal() {
     document.getElementById('receiveModal').classList.add('hidden');
+    document.getElementById('returnUnitContainerShow').innerHTML = '';
 }
 </script>
 @endsection

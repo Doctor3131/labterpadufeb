@@ -21,6 +21,7 @@ class AssetUnit extends Model
         'lab_code_snapshot',
         'seq_number',
         'asset_tag',
+        'university_asset_code',
         'subtype',
         'condition',
         'is_available',

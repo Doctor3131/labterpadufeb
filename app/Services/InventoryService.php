@@ -172,15 +172,17 @@ class InventoryService
      * @param int $batchId
      * @param int $qty Quantity to add
      * @param ConditionEnum $condition Condition of the items
+     * @param string|null $universityAssetCodePrefix University asset code prefix for documentation
      * @return InventoryBalance Updated or created balance
      */
     public function addAggregateInventory(
         int $labId,
         int $batchId,
         int $qty,
-        ConditionEnum $condition = ConditionEnum::BAIK
+        ConditionEnum $condition = ConditionEnum::BAIK,
+        ?string $universityAssetCodePrefix = null
     ): InventoryBalance {
-        return DB::transaction(function () use ($labId, $batchId, $qty, $condition) {
+        return DB::transaction(function () use ($labId, $batchId, $qty, $condition, $universityAssetCodePrefix) {
             // Find or create balance record with lock to prevent race condition
             $balance = InventoryBalance::lockForUpdate()->firstOrCreate(
                 [
@@ -190,6 +192,12 @@ class InventoryService
                 ],
                 ['quantity' => 0]
             );
+            
+            // Simpan kode universitas jika ada (untuk dokumentasi aggregate)
+            if ($universityAssetCodePrefix) {
+                $balance->university_asset_code_prefix = $universityAssetCodePrefix;
+                $balance->save();
+            }
             
             $balance->increment('quantity', $qty);
             

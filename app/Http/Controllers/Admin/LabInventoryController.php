@@ -275,6 +275,27 @@ class LabInventoryController extends Controller
                         $condition,
                         $validated['subtype'] ?? null
                     );
+                    
+                    // Handle university asset code if provided
+                    if (!empty($validated['university_asset_code_prefix'])) {
+                        $prefix = $validated['university_asset_code_prefix'];
+                        foreach ($units as $index => $unit) {
+                            // If prefix already has number at the end (e.g., .X71), increment for multiple units
+                            // Otherwise just use prefix + sequence
+                            if (preg_match('/^(.+\.)([A-Z])(\d+)$/', $prefix, $matches)) {
+                                // Extract parts: base.Letter+Number
+                                $base = $matches[1]; // "132100102001."
+                                $letter = $matches[2]; // "X"
+                                $startNum = (int)$matches[3]; // 71
+                                $unit->university_asset_code = $base . $letter . ($startNum + $index);
+                            } else {
+                                // No number pattern, just append index
+                                $unit->university_asset_code = $prefix . ($index + 1);
+                            }
+                            $unit->save();
+                        }
+                    }
+                    
                     $message = count($units) . " unit berhasil ditambahkan dengan asset tag.";
                     break;
 
@@ -313,6 +334,23 @@ class LabInventoryController extends Controller
                         $seatNumbers,
                         $condition
                     );
+                    
+                    // Handle university asset code
+                    if (!empty($validated['university_asset_code_prefix'])) {
+                        $prefix = $validated['university_asset_code_prefix'];
+                        foreach ($units as $index => $unit) {
+                            if (preg_match('/^(.+\.)([A-Z])(\d+)$/', $prefix, $matches)) {
+                                $base = $matches[1];
+                                $letter = $matches[2];
+                                $startNum = (int)$matches[3];
+                                $unit->university_asset_code = $base . $letter . ($startNum + $index);
+                            } else {
+                                $unit->university_asset_code = $prefix . ($index + 1);
+                            }
+                            $unit->save();
+                        }
+                    }
+                    
                     $message = count($units) . " unit berhasil ditambahkan";
                     break;
 
@@ -321,8 +359,10 @@ class LabInventoryController extends Controller
                         $lab->id,
                         $batch->id,
                         $validated['quantity'],
-                        $condition
+                        $condition,
+                        $validated['university_asset_code_prefix'] ?? null
                     );
+                    
                     $message = $validated['quantity'] . " unit berhasil ditambahkan (agregat).";
                     break;
             }
@@ -554,6 +594,25 @@ class LabInventoryController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus unit: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Update university asset code for a specific unit
+     */
+    public function updateUniversityCode(Request $request, AssetUnit $unit)
+    {
+        $request->validate([
+            'university_asset_code' => 'nullable|string|max:255',
+        ]);
+
+        $unit->university_asset_code = $request->university_asset_code;
+        $unit->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kode aset universitas berhasil diperbarui',
+            'university_asset_code' => $unit->university_asset_code,
+        ]);
     }
 
     /**

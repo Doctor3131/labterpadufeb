@@ -422,6 +422,7 @@ class AssetBorrowingController extends Controller
             'first_party_address' => 'required|string|max:500',
             'first_party_phone' => 'required|string|max:20',
             'document_date' => 'nullable|date',
+            'document_number' => 'nullable|string|max:100',
         ]);
 
         try {
@@ -522,11 +523,79 @@ class AssetBorrowingController extends Controller
     }
 
     /**
+     * Get available units for borrowing items
+     */
+    public function getAvailableUnits($id)
+    {
+        try {
+            $borrowing = AssetBorrowing::with('borrowedItems.item')->findOrFail($id);
+            
+            // Group borrowing items by item_id
+            $grouped = [];
+            foreach ($borrowing->borrowedItems as $borrowingItem) {
+                $item = $borrowingItem->item;
+                $itemId = $item->id;
+                
+                if (!isset($grouped[$itemId])) {
+                    $grouped[$itemId] = [
+                        'item_name' => $item->name,
+                        'tracking_mode' => $item->tracking_mode->value,
+                        'borrowing_items' => [],
+                        'total_quantity' => 0,
+                    ];
+                }
+                
+                $grouped[$itemId]['borrowing_items'][] = [
+                    'borrowing_item_id' => $borrowingItem->id,
+                    'quantity' => $borrowingItem->quantity,
+                ];
+                $grouped[$itemId]['total_quantity'] += $borrowingItem->quantity;
+            }
+            
+            $result = [];
+            foreach ($grouped as $itemId => $group) {
+                // Only get units for items with individual tracking
+                if ($group['tracking_mode'] === 'STRUCTURED_TAG' || $group['tracking_mode'] === 'SEAT_NUMBER') {
+                    $units = AssetUnit::whereHas('batch', function($q) use ($itemId) {
+                            $q->where('item_id', $itemId);
+                        })
+                        ->where('is_available', true)
+                        ->where('condition', 'BAIK')
+                        ->with('batch')
+                        ->get()
+                        ->map(function($unit) {
+                            return [
+                                'id' => $unit->id,
+                                'asset_tag' => $unit->asset_tag,
+                                'university_code' => $unit->university_asset_code,
+                                'display' => $unit->asset_tag . ($unit->university_asset_code ? ' | ' . $unit->university_asset_code : ''),
+                            ];
+                        })
+                        ->values();
+                    
+                    $result[] = [
+                        'item_name' => $group['item_name'],
+                        'tracking_mode' => $group['tracking_mode'],
+                        'total_quantity' => $group['total_quantity'],
+                        'borrowing_items' => $group['borrowing_items'],
+                        'units' => $units,
+                    ];
+                }
+            }
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            \Log::error('Error in getAvailableUnits: ' . $e->getMessage());
+            return response()->json(['error' => 'Terjadi kesalahan saat mengambil data unit: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Admin: Hand out assets to borrower
      */
     public function handout(Request $request, $id)
     {
-        $borrowing = AssetBorrowing::findOrFail($id);
+        $borrowing = AssetBorrowing::with('borrowedItems.item')->findOrFail($id);
 
         if ($borrowing->status !== 'approved') {
             return back()->with('error', 'Hanya peminjaman yang sudah disetujui yang dapat diserahkan.');
@@ -534,7 +603,26 @@ class AssetBorrowingController extends Controller
 
         $validated = $request->validate([
             'borrow_condition_notes' => 'nullable|string',
+            'unit_assignments' => 'nullable|array',
+            'unit_assignments.*' => 'array',
+            'unit_assignments.*.*' => 'exists:asset_units,id',
         ]);
+
+        // Flatten and validate unit assignments
+        $flatAssignments = []; // borrowing_item_id => [unit_id, unit_id, ...]
+        if (isset($validated['unit_assignments'])) {
+            foreach ($validated['unit_assignments'] as $borrowingItemId => $unitIds) {
+                $unitIds = is_array($unitIds) ? $unitIds : [$unitIds];
+                foreach ($unitIds as $unitId) {
+                    if (empty($unitId)) continue;
+                    $unit = AssetUnit::find($unitId);
+                    if (!$unit || !$unit->is_available) {
+                        return back()->with('error', 'Unit ' . ($unit ? $unit->asset_tag : 'tidak ditemukan') . ' tidak tersedia.');
+                    }
+                }
+                $flatAssignments[$borrowingItemId] = array_filter($unitIds);
+            }
+        }
 
         $borrowing->update([
             'status' => 'borrowed',
@@ -543,9 +631,14 @@ class AssetBorrowingController extends Controller
             'borrow_condition_notes' => $validated['borrow_condition_notes'] ?? null,
         ]);
 
-        // Mark asset units as unavailable
+        // Assign units and mark as unavailable
         foreach ($borrowing->borrowedItems as $item) {
-            if ($item->asset_unit_id) {
+            if (isset($flatAssignments[$item->id]) && count($flatAssignments[$item->id]) > 0) {
+                // Take the first unit for this borrowing item
+                $unitId = array_shift($flatAssignments[$item->id]);
+                $item->update(['asset_unit_id' => $unitId]);
+                AssetUnit::where('id', $unitId)->update(['is_available' => false]);
+            } elseif ($item->asset_unit_id) {
                 AssetUnit::where('id', $item->asset_unit_id)->update(['is_available' => false]);
             }
         }
@@ -554,11 +647,54 @@ class AssetBorrowingController extends Controller
     }
 
     /**
+     * API: Get borrowed units for return modal
+     */
+    public function getBorrowedUnits($id)
+    {
+        try {
+            $borrowing = AssetBorrowing::with(['borrowedItems.item', 'borrowedItems.assetUnit'])->findOrFail($id);
+            
+            // Group by item
+            $grouped = [];
+            foreach ($borrowing->borrowedItems as $borrowingItem) {
+                $item = $borrowingItem->item;
+                $itemId = $item->id;
+                
+                if (!isset($grouped[$itemId])) {
+                    $grouped[$itemId] = [
+                        'item_name' => $item->name,
+                        'tracking_mode' => $item->tracking_mode->value,
+                        'units' => [],
+                    ];
+                }
+                
+                $unitInfo = [
+                    'borrowing_item_id' => $borrowingItem->id,
+                    'quantity' => $borrowingItem->quantity,
+                    'asset_unit_id' => $borrowingItem->asset_unit_id,
+                    'asset_tag' => $borrowingItem->assetUnit?->asset_tag,
+                    'university_code' => $borrowingItem->assetUnit?->university_asset_code,
+                    'display' => $borrowingItem->assetUnit 
+                        ? $borrowingItem->assetUnit->asset_tag . ($borrowingItem->assetUnit->university_asset_code ? ' | ' . $borrowingItem->assetUnit->university_asset_code : '')
+                        : 'Unit #' . $borrowingItem->id,
+                ];
+                
+                $grouped[$itemId]['units'][] = $unitInfo;
+            }
+
+            return response()->json(array_values($grouped));
+        } catch (\Exception $e) {
+            \Log::error('Error in getBorrowedUnits: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Admin: Receive returned assets from borrower
      */
     public function receive(Request $request, $id)
     {
-        $borrowing = AssetBorrowing::findOrFail($id);
+        $borrowing = AssetBorrowing::with('borrowedItems')->findOrFail($id);
 
         if ($borrowing->status !== 'borrowed') {
             return back()->with('error', 'Hanya peminjaman yang sudah diserahkan yang dapat dikembalikan.');
@@ -566,22 +702,116 @@ class AssetBorrowingController extends Controller
 
         $validated = $request->validate([
             'return_condition_notes' => 'nullable|string',
+            'item_conditions' => 'nullable|array',
+            'item_conditions.*.condition' => 'required|in:BAIK,RUSAK_RINGAN,RUSAK_BERAT,HILANG',
+            'item_conditions.*.notes' => 'nullable|string',
         ]);
+
+        // Check if any item has damage
+        $isDamaged = false;
+        $damageDescriptions = [];
+        
+        if (isset($validated['item_conditions'])) {
+            foreach ($validated['item_conditions'] as $borrowingItemId => $conditionData) {
+                $condition = $conditionData['condition'];
+                $notes = $conditionData['notes'] ?? null;
+                
+                // Update per-item return condition
+                $borrowingItem = $borrowing->borrowedItems->find($borrowingItemId);
+                if ($borrowingItem) {
+                    $borrowingItem->update([
+                        'return_condition' => $condition,
+                        'return_notes' => $notes,
+                    ]);
+                    
+                    if (in_array($condition, ['RUSAK_RINGAN', 'RUSAK_BERAT', 'HILANG'])) {
+                        $isDamaged = true;
+                        $itemName = $borrowingItem->item?->name ?? 'Barang';
+                        $unitTag = $borrowingItem->assetUnit?->asset_tag ?? '';
+                        $condLabel = match($condition) {
+                            'RUSAK_RINGAN' => 'Rusak Ringan',
+                            'RUSAK_BERAT' => 'Rusak Berat',
+                            'HILANG' => 'Hilang',
+                            default => $condition,
+                        };
+                        $damageDescriptions[] = "{$itemName}" . ($unitTag ? " ({$unitTag})" : '') . ": {$condLabel}" . ($notes ? " - {$notes}" : '');
+                    }
+                    
+                    // Update unit condition based on return
+                    if ($borrowingItem->asset_unit_id) {
+                        $unitCondition = match($condition) {
+                            'BAIK' => 'BAIK',
+                            'RUSAK_RINGAN' => 'KURANG_BAIK',
+                            'RUSAK_BERAT' => 'RUSAK',
+                            'HILANG' => 'RUSAK',
+                            default => 'BAIK',
+                        };
+                        AssetUnit::where('id', $borrowingItem->asset_unit_id)->update([
+                            'is_available' => $condition !== 'HILANG',
+                            'condition' => $unitCondition,
+                        ]);
+                    }
+                }
+            }
+        } else {
+            // Fallback: mark all units as available if no per-item conditions
+            foreach ($borrowing->borrowedItems as $item) {
+                $item->update(['return_condition' => 'BAIK']);
+                if ($item->asset_unit_id) {
+                    AssetUnit::where('id', $item->asset_unit_id)->update(['is_available' => true]);
+                }
+            }
+        }
+
+        $replacementDeadline = null;
+        if ($isDamaged) {
+            $replacementDeadline = now()->addDays(7)->toDateString();
+        }
 
         $borrowing->update([
             'status' => 'returned',
             'received_back_by' => auth()->id(),
             'received_back_at' => now(),
             'return_condition_notes' => $validated['return_condition_notes'] ?? null,
+            'is_damaged_on_return' => $isDamaged,
+            'damage_description' => $isDamaged ? implode("\n", $damageDescriptions) : null,
+            'replacement_deadline' => $replacementDeadline,
         ]);
 
-        // Mark asset units as available again
-        foreach ($borrowing->borrowedItems as $item) {
-            if ($item->asset_unit_id) {
-                AssetUnit::where('id', $item->asset_unit_id)->update(['is_available' => true]);
-            }
+        $message = $isDamaged 
+            ? 'Barang berhasil diterima kembali! Ada kerusakan/kehilangan terdeteksi. Durasi penggantian: 7 hari (sampai ' . \Carbon\Carbon::parse($replacementDeadline)->format('d M Y') . ').'
+            : 'Barang berhasil diterima kembali! Semua dalam kondisi baik.';
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Admin: Confirm replacement of damaged items
+     */
+    public function confirmReplacement(Request $request, $id)
+    {
+        $borrowing = AssetBorrowing::findOrFail($id);
+
+        if (!$borrowing->is_damaged_on_return) {
+            return back()->with('error', 'Peminjaman ini tidak memiliki barang yang rusak.');
         }
 
-        return back()->with('success', 'Barang berhasil diterima kembali!');
+        if ($borrowing->is_replaced) {
+            return back()->with('error', 'Penggantian sudah dikonfirmasi sebelumnya.');
+        }
+
+        $validated = $request->validate([
+            'replacement_notes' => 'nullable|string',
+        ]);
+
+        $borrowing->update([
+            'is_replaced' => true,
+            'replaced_by' => auth()->id(),
+            'replaced_at' => now(),
+            'replacement_notes' => $validated['replacement_notes'] ?? null,
+        ]);
+
+        return back()->with('success', 'Penggantian barang rusak telah dikonfirmasi!');
     }
 }
+

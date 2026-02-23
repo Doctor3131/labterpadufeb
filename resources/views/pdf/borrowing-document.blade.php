@@ -132,7 +132,7 @@
         }
         
         .signature-section {
-            margin-top: 40px;
+            margin-top: 15px;
             width: 100%;
         }
         
@@ -147,7 +147,7 @@
         }
         
         .signature-space {
-            height: 70px;
+            height: 50px;
         }
 
         .signature-name-container {
@@ -307,40 +307,67 @@
             </tbody>
         </table>
 
-        <p style="margin: 10px 0 5px 0; text-align: justify; line-height: 1.4;">
+        <p style="margin: 5px 0 3px 0; text-align: justify; line-height: 1.4;">
             Ruang/peralatan/barang-barang inventaris tersebut diterima dalam keadaan baik, dan apabila peralatan/barang-barang 
             inventaris milik Fakultas Ekonomika dan Bisnis Undip tersebut terjadi kerusakan/hilang selama dalam peminjaman 
             kami bersedia memperbaiki/mengganti sesuai keadaan semula, serta kebersihan ruangan setelah acara menjadi tanggung 
             jawab kami selaku peminjam.Demikian berita acara peminjaman barang ini dibuat dengan sebenarnya untuk dapat dipergunakan seperlunya.
-
         </p>
     </div>
 
-    <div class="signature-section">
-        <table class="signature-table">
-            <tr>
-                <td class="signature-box">
-                    <p style="text-align: center; margin-bottom: 5px; font-size: 10pt; visibility: hidden;">Semarang, {{ $documentDate }}</p>
-                    <p style="margin: 0; font-weight: bold;">PIHAK KEDUA</p>
-                    <div class="signature-space"></div>
-                    <div class="signature-name-container">
-                        <span style="display: block;">{{ $borrowing->borrower_name }}</span>
-                        <span class="signature-underline"></span>
-                    </div>
-                </td>
-                <td class="signature-box">
-                    <p style="text-align: center; margin-bottom: 5px; font-size: 10pt;">Semarang, {{ $documentDate }}</p>
-                    <p style="margin: 0; font-weight: bold;">PIHAK PERTAMA</p>
-                    <div class="signature-space"></div>
-                    <div class="signature-name-container">
-                        <span style="display: block;">{{ $borrowing->first_party_name ?? 'Zola Gio Amri sakhi' }}</span>
-                        <span class="signature-underline"></span>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
+        </div> {{-- end content-wrapper page 1 --}}
+    </div> {{-- end page-wrapper page 1 --}}
+
+    {{-- Page 2: Tanda Tangan --}}
+    <div class="page-wrapper" style="page-break-before: always;">
+        {{-- Header Page 2 --}}
+        <div class="header">
+            <img src="{{ public_path('images/header1.jpeg') }}" alt="Header">
         </div>
-    </div>
+
+        {{-- Footer Page 2 --}}
+        <div class="footer">
+            <img src="{{ public_path('images/footer.jpeg') }}" alt="Footer">
+        </div>
+
+        <div class="content-wrapper">
+            {{-- Tanggal di kanan atas --}}
+            <p style="text-align: right; margin: 60px 0 60px 0; font-size: 10pt;">Semarang, {{ $documentDate }}</p>
+
+            {{-- PIHAK KEDUA dan PIHAK PERTAMA sejajar --}}
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 50%; text-align: center; vertical-align: top;">
+                        <p style="margin: 0; font-weight: bold;">PIHAK KEDUA</p>
+                        <div style="height: 100px;"></div>
+                        <div class="signature-name-container">
+                            <span style="display: block;">{{ $borrowing->borrower_name }}</span>
+                            <span class="signature-underline"></span>
+                        </div>
+                    </td>
+                    <td style="width: 50%; text-align: center; vertical-align: top;">
+                        <p style="margin: 0; font-weight: bold;">PIHAK PERTAMA</p>
+                        <div style="height: 100px;"></div>
+                        <div class="signature-name-container">
+                            <span style="display: block;">{{ $borrowing->first_party_name ?? 'Zola Gio Amri sakhi' }}</span>
+                            <span class="signature-underline"></span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            {{-- Tanda Tangan Mengetahui --}}
+            <div style="margin-top: 100px; text-align: center;">
+                <p style="margin: 0;">Mengetahui,</p>
+                <p style="margin: 5px 0 0 0;">Koordinator Laboratorium</p>
+                <div style="height: 100px;"></div>
+                <div style="display: inline-block; text-align: center;">
+                    <span style="display: block;">(Nugraha Wicaksana, S.E., S.Kom.)</span>
+                    <span style="display: block;">NIP. H.7. 198106042021101001</span>
+                </div>
+            </div>
+        </div> {{-- end content-wrapper page 2 --}}
+    </div> {{-- end page-wrapper page 2 --}}
+
 </body>
 </html>

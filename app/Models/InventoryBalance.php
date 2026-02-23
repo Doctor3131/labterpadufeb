@@ -17,6 +17,7 @@ class InventoryBalance extends Model
         'lab_id',
         'condition',
         'quantity',
+        'university_asset_code_prefix',
     ];
 
     protected $casts = [

@@ -48,6 +48,11 @@ class AssetBorrowing extends Model
         'return_condition_notes',
         'is_damaged_on_return',
         'damage_description',
+        'replacement_deadline',
+        'is_replaced',
+        'replaced_at',
+        'replaced_by',
+        'replacement_notes',
         'document_path',
         'generated_document_path',
     ];
@@ -56,11 +61,14 @@ class AssetBorrowing extends Model
         'borrow_date' => 'date',
         'return_date' => 'date',
         'document_date' => 'date',
+        'replacement_deadline' => 'date',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'handed_out_at' => 'datetime',
         'received_back_at' => 'datetime',
+        'replaced_at' => 'datetime',
         'is_damaged_on_return' => 'boolean',
+        'is_replaced' => 'boolean',
     ];
 
     /**
@@ -104,6 +112,14 @@ class AssetBorrowing extends Model
     }
 
     /**
+     * Get the admin who confirmed replacement
+     */
+    public function replacedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'replaced_by');
+    }
+
+    /**
      * Get all borrowed items
      */
     public function borrowedItems(): HasMany
@@ -120,6 +136,25 @@ class AssetBorrowing extends Model
             return $this->return_date->isPast();
         }
         return false;
+    }
+
+    /**
+     * Check if replacement is overdue
+     */
+    public function isReplacementOverdue(): bool
+    {
+        if ($this->is_damaged_on_return && !$this->is_replaced && $this->replacement_deadline) {
+            return $this->replacement_deadline->isPast();
+        }
+        return false;
+    }
+
+    /**
+     * Check if replacement is pending
+     */
+    public function isReplacementPending(): bool
+    {
+        return $this->is_damaged_on_return && !$this->is_replaced && $this->replacement_deadline !== null;
     }
 
     /**

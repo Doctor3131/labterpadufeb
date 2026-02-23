@@ -798,6 +798,21 @@
                             <span class="px-3 py-1.5 {{ $borrowing->getStatusBadgeColor() }} text-xs font-bold rounded-lg">
                                 {{ $borrowing->getStatusLabel() }}
                             </span>
+
+                            @if($borrowing->is_damaged_on_return && !$borrowing->is_replaced)
+                                <span class="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-bold rounded-lg">
+                                    ⚠️ PERLU PENGGANTIAN
+                                </span>
+                                @if($borrowing->isReplacementOverdue())
+                                    <span class="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg animate-pulse">
+                                        ⏰ TERLAMBAT
+                                    </span>
+                                @endif
+                            @elseif($borrowing->is_replaced)
+                                <span class="px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-lg">
+                                    ✓ SUDAH DIGANTI
+                                </span>
+                            @endif
                         </div>
                         <div class="text-xs text-gray-500">
                             {{ $borrowing->updated_at->diffForHumans() }}
@@ -806,6 +821,53 @@
 
                     <div class="space-y-2 text-sm text-gray-600 mb-4">
                         <div><strong>Peminjam:</strong> {{ $borrowing->borrower_name }}</div>
+                        
+                        @if($borrowing->is_damaged_on_return && !$borrowing->is_replaced)
+                            <div class="bg-red-50 border-2 border-red-200 rounded-lg p-3 mt-2">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <strong class="text-sm text-red-800">Barang Rusak - Menunggu Penggantian</strong>
+                                </div>
+                                <div class="text-xs text-red-700 mb-2">
+                                    <strong>Deskripsi:</strong> {{ $borrowing->damage_description }}
+                                </div>
+                                @if($borrowing->replacement_deadline)
+                                    @php
+                                        $daysRemaining = now()->startOfDay()->diffInDays($borrowing->replacement_deadline->startOfDay(), false);
+                                        $daysOverdue = abs($daysRemaining);
+                                    @endphp
+                                    <div class="text-xs {{ $borrowing->isReplacementOverdue() ? 'text-red-800 font-bold' : 'text-red-700' }}">
+                                        <strong>Batas Penggantian:</strong> 
+                                        {{ $borrowing->replacement_deadline->locale('id')->isoFormat('D MMMM YYYY') }}
+                                        @if($borrowing->isReplacementOverdue())
+                                            <span class="ml-2 px-2 py-0.5 bg-red-600 text-white rounded">TERLAMBAT {{ $daysOverdue }} hari</span>
+                                        @else
+                                            <span class="ml-2 px-2 py-0.5 bg-yellow-500 text-white rounded">{{ $daysRemaining }} hari lagi</span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @elseif($borrowing->is_replaced)
+                            <div class="bg-green-50 border-2 border-green-200 rounded-lg p-3 mt-2">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <strong class="text-sm text-green-800">Penggantian Telah Dikonfirmasi</strong>
+                                </div>
+                                <div class="text-xs text-green-700">
+                                    <strong>Tanggal:</strong> {{ $borrowing->replaced_at ? $borrowing->replaced_at->locale('id')->isoFormat('D MMMM YYYY HH:mm') : '-' }}
+                                </div>
+                                @if($borrowing->replacement_notes)
+                                    <div class="text-xs text-green-700 mt-1">
+                                        <strong>Catatan:</strong> {{ $borrowing->replacement_notes }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
                         @if($borrowing->rejection_reason)
                             <div class="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700">
                                 <strong>Alasan Ditolak:</strong> {{ $borrowing->rejection_reason }}
@@ -813,10 +875,18 @@
                         @endif
                     </div>
 
-                    <a href="{{ route('admin.asset-borrowings.show', $borrowing->id) }}" 
-                       class="block px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-center transition-all">
-                        Lihat Detail
-                    </a>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <a href="{{ route('admin.asset-borrowings.show', $borrowing->id) }}" 
+                            class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-center transition-all">
+                            Lihat Detail
+                        </a>
+                        @if($borrowing->is_damaged_on_return && !$borrowing->is_replaced)
+                            <button onclick="confirmReplacement({{ $borrowing->id }})" 
+                                    class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center">
+                                ✓ Konfirmasi Penggantian
+                            </button>
+                        @endif
+                    </div>
                 </div>
             @empty
                 <div class="text-center py-12">
@@ -838,8 +908,8 @@
 
 <!-- Handout Asset Modal -->
 <div id="handoutAssetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
-        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full transform transition-all max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-2xl flex items-center justify-between flex-shrink-0">
             <div class="flex items-center space-x-3">
                 <div class="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -848,7 +918,7 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-bold">Serahkan Barang</h3>
-                    <p class="text-sm text-purple-100">Konfirmasi penyerahan barang</p>
+                    <p class="text-sm text-purple-100">Pilih unit spesifik untuk diserahkan</p>
                 </div>
             </div>
             <button onclick="closeHandoutModal()" class="text-white/80 hover:text-white transition">
@@ -858,28 +928,36 @@
             </button>
         </div>
         
-        <form id="handoutAssetForm" method="POST">
+        <form id="handoutAssetForm" method="POST" class="flex-1 overflow-y-auto">
             @csrf
             <div class="p-6">
-                <div class="mb-6">
+                <!-- Loading State -->
+                <div id="loadingUnitsModal" class="text-center py-8">
+                    <svg class="animate-spin h-10 w-10 mx-auto text-purple-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-sm text-gray-600 mt-3">Memuat data unit...</p>
+                </div>
+
+                <!-- Unit Selection -->
+                <div id="unitSelectionContainerModal" class="hidden space-y-4 mb-6">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div id="notesSection" class="hidden mb-6">
                     <label class="block text-gray-700 text-sm font-bold mb-3">
                         📦 Catatan Kondisi Barang <span class="text-gray-400 font-normal">(Opsional)</span>
                     </label>
                     <textarea 
                         name="borrow_condition_notes" 
-                        rows="4" 
+                        rows="3" 
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all" 
                         placeholder="Contoh: Semua barang dalam kondisi baik, tidak ada kerusakan..."
                     ></textarea>
-                    <p class="mt-2 text-xs text-gray-500">
-                        <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                        </svg>
-                        Catat kondisi barang saat diserahkan untuk dokumentasi
-                    </p>
                 </div>
                 
-                <div class="flex justify-end space-x-3">
+                <div id="submitSection" class="hidden flex justify-end space-x-3">
                     <button 
                         type="button" 
                         onclick="closeHandoutModal()" 
@@ -889,7 +967,8 @@
                     </button>
                     <button 
                         type="submit" 
-                        class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
+                        id="submitHandoutBtnModal"
+                        class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -904,8 +983,8 @@
 
 <!-- Receive Asset Modal -->
 <div id="receiveAssetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
-        <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full transform transition-all max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 rounded-t-2xl flex items-center justify-between flex-shrink-0">
             <div class="flex items-center space-x-3">
                 <div class="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -914,7 +993,7 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-bold">Terima Kembali Barang</h3>
-                    <p class="text-sm text-green-100">Konfirmasi pengembalian barang</p>
+                    <p class="text-sm text-green-100">Catat kondisi setiap unit yang dikembalikan</p>
                 </div>
             </div>
             <button onclick="closeReceiveModal()" class="text-white/80 hover:text-white transition">
@@ -924,54 +1003,36 @@
             </button>
         </div>
         
-        <form id="receiveAssetForm" method="POST">
+        <form id="receiveAssetForm" method="POST" class="flex-1 overflow-y-auto">
             @csrf
-            <div class="p-6 space-y-4">
-                <div>
+            <div class="p-6">
+                <!-- Loading State -->
+                <div id="loadingReturnUnits" class="text-center py-8">
+                    <svg class="animate-spin h-10 w-10 mx-auto text-green-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-sm text-gray-600 mt-3">Memuat data unit yang dipinjam...</p>
+                </div>
+
+                <!-- Unit Condition Cards -->
+                <div id="returnUnitContainer" class="hidden space-y-4 mb-6">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <div id="returnNotesSection" class="hidden mb-6">
                     <label class="block text-gray-700 text-sm font-bold mb-3">
-                        📥 Catatan Kondisi Barang <span class="text-gray-400 font-normal">(Opsional)</span>
+                        📝 Catatan Umum Pengembalian <span class="text-gray-400 font-normal">(Opsional)</span>
                     </label>
                     <textarea 
                         name="return_condition_notes" 
-                        rows="3" 
+                        rows="2" 
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" 
-                        placeholder="Contoh: Semua barang dikembalikan dalam kondisi baik..."
+                        placeholder="Catatan umum tentang pengembalian..."
                     ></textarea>
-                </div>
-
-                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                    <label class="flex items-center space-x-3 cursor-pointer">
-                        <input 
-                            type="checkbox" 
-                            id="isDamagedCheck"
-                            name="is_damaged"
-                            value="1"
-                            onchange="toggleDamageDescription()"
-                            class="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
-                        >
-                        <span class="text-sm font-semibold text-gray-700">
-                            ⚠️ Ada barang yang rusak/hilang?
-                        </span>
-                    </label>
-                </div>
-
-                <div id="damageDescriptionField" class="hidden">
-                    <label class="block text-gray-700 text-sm font-bold mb-3">
-                        🔧 Deskripsi Kerusakan/Kehilangan <span class="text-red-500">*</span>
-                    </label>
-                    <textarea 
-                        name="damage_description" 
-                        id="damageDescription"
-                        rows="3" 
-                        class="w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all" 
-                        placeholder="Jelaskan detail kerusakan atau barang yang hilang..."
-                    ></textarea>
-                    <p class="mt-2 text-xs text-red-600">
-                        Wajib diisi jika ada kerusakan/kehilangan
-                    </p>
                 </div>
                 
-                <div class="flex justify-end space-x-3 pt-2">
+                <div id="returnSubmitSection" class="hidden flex justify-end space-x-3">
                     <button 
                         type="button" 
                         onclick="closeReceiveModal()" 
@@ -981,7 +1042,8 @@
                     </button>
                     <button 
                         type="submit" 
-                        class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
+                        id="submitReceiveBtn"
+                        class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -1055,6 +1117,66 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                         Tolak Peminjaman
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm Replacement Modal -->
+<div id="confirmReplacementModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/20 backdrop-blur-sm p-2 rounded-xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold">Konfirmasi Penggantian</h3>
+                    <p class="text-sm text-green-100">Tandai barang sudah diganti</p>
+                </div>
+            </div>
+            <button onclick="closeReplacementModal()" class="text-white/80 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="confirmReplacementForm" method="POST">
+            @csrf
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-3">
+                        📝 Catatan Penggantian <span class="text-gray-400 font-normal">(Opsional)</span>
+                    </label>
+                    <textarea 
+                        name="replacement_notes" 
+                        rows="3" 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" 
+                        placeholder="e.g. Barang sudah diganti dengan yang baru, sesuai spesifikasi..."
+                    ></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button 
+                        type="button" 
+                        onclick="closeReplacementModal()" 
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-all"
+                    >
+                        Batal
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Konfirmasi
                     </button>
                 </div>
             </div>
@@ -1351,18 +1473,242 @@
         document.getElementById('rejectAssetForm').reset();
     }
 
-    window.handoutAssetBorrowing = function(id) {
-        // Open handout modal
-        document.getElementById('handoutAssetModal').classList.remove('hidden');
-        document.getElementById('handoutAssetModal').classList.add('flex');
+    window.handoutAssetBorrowing = async function(id) {
+        const modal = document.getElementById('handoutAssetModal');
+        const loadingDiv = document.getElementById('loadingUnitsModal');
+        const containerDiv = document.getElementById('unitSelectionContainerModal');
+        const notesSection = document.getElementById('notesSection');
+        const submitSection = document.getElementById('submitSection');
+        const submitBtn = document.getElementById('submitHandoutBtnModal');
+        
+        // Open modal
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
         document.getElementById('handoutAssetForm').action = `/admin/asset-borrowings/${id}/handout`;
+        
+        // Show loading
+        loadingDiv.classList.remove('hidden');
+        containerDiv.classList.add('hidden');
+        notesSection.classList.add('hidden');
+        submitSection.classList.add('hidden');
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(`/admin/asset-borrowings/${id}/available-units`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.length === 0) {
+                containerDiv.innerHTML = '<p class="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-4">ℹ️ Tidak ada barang yang memerlukan pemilihan unit spesifik (barang tipe aggregate).</p>';
+            } else {
+                let html = '';
+                data.forEach((item) => {
+                    html += `
+                        <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h4 class="font-bold text-gray-900 text-lg">${item.item_name}</h4>
+                                    <p class="text-xs text-gray-500 mt-1">📦 Total dipinjam: <span class="font-semibold text-purple-600">${item.total_quantity} unit</span> · Tersedia: <span class="font-semibold ${item.units.length >= item.total_quantity ? 'text-green-600' : 'text-red-600'}">${item.units.length} unit</span></p>
+                                </div>
+                            </div>
+                            ${generateUnitSelectsModal(item)}
+                        </div>
+                    `;
+                });
+                containerDiv.innerHTML = html;
+                initUnitSelectListeners();
+            }
+            
+            loadingDiv.classList.add('hidden');
+            containerDiv.classList.remove('hidden');
+            notesSection.classList.remove('hidden');
+            submitSection.classList.remove('hidden');
+            submitBtn.disabled = false;
+            
+        } catch (error) {
+            console.error('Error details:', error);
+            containerDiv.innerHTML = `<p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">❌ Terjadi kesalahan: ${error.message}</p>`;
+            loadingDiv.classList.add('hidden');
+            containerDiv.classList.remove('hidden');
+            notesSection.classList.remove('hidden');
+            submitSection.classList.remove('hidden');
+        }
+    };
+    
+    function generateUnitSelectsModal(item) {
+        let selectsHtml = '';
+        const unitOptions = item.units.map(unit => `<option value="${unit.id}">${unit.display}</option>`).join('');
+        
+        item.borrowing_items.forEach((bi, idx) => {
+            for (let q = 0; q < bi.quantity; q++) {
+                const label = item.total_quantity === 1 ? 'Pilih Unit' : `Unit ${idx + q + 1}`;
+                selectsHtml += `
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-semibold text-gray-500 w-14 shrink-0">${label}</span>
+                        <select name="unit_assignments[${bi.borrowing_item_id}][]" 
+                            required
+                            data-unit-group="${item.item_name}"
+                            class="unit-select flex-1 px-3 py-2.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-sm font-mono">
+                            <option value="">-- Pilih Unit --</option>
+                            ${unitOptions}
+                        </select>
+                    </div>
+                `;
+            }
+        });
+        
+        return `
+            <div class="space-y-3">
+                ${selectsHtml}
+            </div>
+            <p class="text-xs text-gray-400 mt-3 flex items-center gap-1">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                Format: Kode UPK | Kode Universitas
+            </p>
+        `;
+    }
+
+    function initUnitSelectListeners() {
+        document.querySelectorAll('.unit-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const group = this.dataset.unitGroup;
+                const selects = document.querySelectorAll(`.unit-select[data-unit-group="${group}"]`);
+                const selectedValues = [];
+                selects.forEach(s => { if (s.value) selectedValues.push(s.value); });
+                
+                selects.forEach(s => {
+                    Array.from(s.options).forEach(opt => {
+                        if (opt.value && opt.value !== s.value) {
+                            opt.disabled = selectedValues.includes(opt.value);
+                        }
+                    });
+                });
+            });
+        });
+    }
+
+    window.receiveAssetBorrowing = async function(id) {
+        const modal = document.getElementById('receiveAssetModal');
+        const loadingDiv = document.getElementById('loadingReturnUnits');
+        const containerDiv = document.getElementById('returnUnitContainer');
+        const notesSection = document.getElementById('returnNotesSection');
+        const submitSection = document.getElementById('returnSubmitSection');
+        const submitBtn = document.getElementById('submitReceiveBtn');
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('receiveAssetForm').action = `/admin/asset-borrowings/${id}/receive`;
+        
+        loadingDiv.classList.remove('hidden');
+        containerDiv.classList.add('hidden');
+        notesSection.classList.add('hidden');
+        submitSection.classList.add('hidden');
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(`/admin/asset-borrowings/${id}/borrowed-units`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            
+            if (data.length === 0) {
+                containerDiv.innerHTML = '<p class="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-4">ℹ️ Tidak ada unit spesifik yang perlu dicatat kondisinya.</p>';
+            } else {
+                let html = '';
+                data.forEach((group) => {
+                    html += `
+                        <div class="border-2 border-gray-200 rounded-xl p-4">
+                            <h4 class="font-bold text-gray-900 text-lg mb-4">${group.item_name}</h4>
+                            <div class="space-y-4">
+                                ${group.units.map((unit, idx) => generateReturnUnitCard(unit, idx, group.units.length)).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                containerDiv.innerHTML = html;
+            }
+            
+            loadingDiv.classList.add('hidden');
+            containerDiv.classList.remove('hidden');
+            notesSection.classList.remove('hidden');
+            submitSection.classList.remove('hidden');
+            submitBtn.disabled = false;
+            
+        } catch (error) {
+            console.error('Error:', error);
+            containerDiv.innerHTML = `<p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-4">❌ Gagal memuat data: ${error.message}</p>`;
+            loadingDiv.classList.add('hidden');
+            containerDiv.classList.remove('hidden');
+            notesSection.classList.remove('hidden');
+            submitSection.classList.remove('hidden');
+        }
     };
 
-    window.receiveAssetBorrowing = function(id) {
-        // Open receive modal
-        document.getElementById('receiveAssetModal').classList.remove('hidden');
-        document.getElementById('receiveAssetModal').classList.add('flex');
-        document.getElementById('receiveAssetForm').action = `/admin/asset-borrowings/${id}/receive`;
+    function generateReturnUnitCard(unit, idx, total) {
+        const unitLabel = unit.display || `Unit #${idx + 1}`;
+        const conditionName = `item_conditions[${unit.borrowing_item_id}][condition]`;
+        const notesName = `item_conditions[${unit.borrowing_item_id}][notes]`;
+        const notesId = `return_notes_${unit.borrowing_item_id}`;
+        
+        return `
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-lg">${total > 1 ? 'Unit ' + (idx + 1) : 'Unit'}</span>
+                        <span class="text-sm font-mono font-semibold text-gray-800">${unitLabel}</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:bg-green-50">
+                        <input type="radio" name="${conditionName}" value="BAIK" checked 
+                            class="text-green-600 focus:ring-green-500" onchange="toggleReturnNotes('${notesId}', this.value)">
+                        <span class="text-xs font-semibold text-gray-700">✅ Baik</span>
+                    </label>
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-yellow-50 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                        <input type="radio" name="${conditionName}" value="RUSAK_RINGAN"
+                            class="text-yellow-600 focus:ring-yellow-500" onchange="toggleReturnNotes('${notesId}', this.value)">
+                        <span class="text-xs font-semibold text-gray-700">⚠️ Rusak Ringan</span>
+                    </label>
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-red-50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
+                        <input type="radio" name="${conditionName}" value="RUSAK_BERAT"
+                            class="text-red-600 focus:ring-red-500" onchange="toggleReturnNotes('${notesId}', this.value)">
+                        <span class="text-xs font-semibold text-gray-700">🔴 Rusak Berat</span>
+                    </label>
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-gray-100 has-[:checked]:border-gray-600 has-[:checked]:bg-gray-100">
+                        <input type="radio" name="${conditionName}" value="HILANG"
+                            class="text-gray-600 focus:ring-gray-500" onchange="toggleReturnNotes('${notesId}', this.value)">
+                        <span class="text-xs font-semibold text-gray-700">❌ Hilang</span>
+                    </label>
+                </div>
+                <div id="${notesId}" class="hidden">
+                    <textarea name="${notesName}" rows="2" 
+                        class="w-full px-3 py-2 border-2 border-red-300 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        placeholder="Jelaskan detail kerusakan/kehilangan unit ini..."></textarea>
+                </div>
+            </div>
+        `;
+    }
+
+    function toggleReturnNotes(notesId, value) {
+        const el = document.getElementById(notesId);
+        if (value !== 'BAIK') {
+            el.classList.remove('hidden');
+            el.querySelector('textarea').required = true;
+        } else {
+            el.classList.add('hidden');
+            el.querySelector('textarea').required = false;
+            el.querySelector('textarea').value = '';
+        }
+    }
+
+    window.confirmReplacement = function(id) {
+        // Open confirm replacement modal
+        document.getElementById('confirmReplacementModal').classList.remove('hidden');
+        document.getElementById('confirmReplacementModal').classList.add('flex');
+        document.getElementById('confirmReplacementForm').action = `/admin/asset-borrowings/${id}/confirm-replacement`;
     };
 
     // Close handout modal
@@ -1377,35 +1723,26 @@
         document.getElementById('receiveAssetModal').classList.add('hidden');
         document.getElementById('receiveAssetModal').classList.remove('flex');
         document.getElementById('receiveAssetForm').reset();
-        document.getElementById('isDamagedCheck').checked = false;
-        toggleDamageDescription();
+        document.getElementById('returnUnitContainer').innerHTML = '';
     }
 
-    // Toggle damage description field
-    function toggleDamageDescription() {
-        const checkbox = document.getElementById('isDamagedCheck');
-        const field = document.getElementById('damageDescriptionField');
-        const textarea = document.getElementById('damageDescription');
-        
-        if (checkbox.checked) {
-            field.classList.remove('hidden');
-            textarea.required = true;
-        } else {
-            field.classList.add('hidden');
-            textarea.required = false;
-            textarea.value = '';
-        }
+    // Close replacement modal
+    function closeReplacementModal() {
+        document.getElementById('confirmReplacementModal').classList.add('hidden');
+        document.getElementById('confirmReplacementModal').classList.remove('flex');
+        document.getElementById('confirmReplacementForm').reset();
     }
 
     // Validate receive form before submit
     document.getElementById('receiveAssetForm')?.addEventListener('submit', function(e) {
-        const isDamaged = document.getElementById('isDamagedCheck').checked;
-        const damageDesc = document.getElementById('damageDescription').value.trim();
-        
-        if (isDamaged && !damageDesc) {
-            e.preventDefault();
-            alert('Deskripsi kerusakan/kehilangan harus diisi!');
-            document.getElementById('damageDescription').focus();
+        const damageNotes = document.querySelectorAll('#returnUnitContainer textarea[required]');
+        for (const textarea of damageNotes) {
+            if (!textarea.value.trim()) {
+                e.preventDefault();
+                alert('Deskripsi kerusakan/kehilangan wajib diisi untuk unit yang rusak/hilang!');
+                textarea.focus();
+                return;
+            }
         }
     });
 </script>

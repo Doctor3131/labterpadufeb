@@ -116,6 +116,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.inventory.units.destroy');
     Route::post('/admin/inventory/bulk-delete-units', [App\Http\Controllers\Admin\LabInventoryController::class, 'bulkDestroyUnits'])
         ->name('admin.inventory.bulk-delete');
+    Route::patch('/admin/inventory/units/{unit}/university-code', [App\Http\Controllers\Admin\LabInventoryController::class, 'updateUniversityCode'])
+        ->name('admin.inventory.units.update-university-code');
 
     // Admin Reports
     Route::get('/admin/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])
@@ -153,8 +155,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.asset-borrowings.reject');
     Route::post('/admin/asset-borrowings/{id}/handout', [AssetBorrowingController::class, 'handout'])
         ->name('admin.asset-borrowings.handout');
+    Route::get('/admin/asset-borrowings/{id}/available-units', [AssetBorrowingController::class, 'getAvailableUnits'])
+        ->name('admin.asset-borrowings.available-units');
+    Route::get('/admin/asset-borrowings/{id}/borrowed-units', [AssetBorrowingController::class, 'getBorrowedUnits'])
+        ->name('admin.asset-borrowings.borrowed-units');
     Route::post('/admin/asset-borrowings/{id}/receive', [AssetBorrowingController::class, 'receive'])
         ->name('admin.asset-borrowings.receive');
+    Route::post('/admin/asset-borrowings/{id}/confirm-replacement', [AssetBorrowingController::class, 'confirmReplacement'])
+        ->name('admin.asset-borrowings.confirm-replacement');
 });
 
 // Super Admin Only Routes

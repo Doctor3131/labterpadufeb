@@ -22,6 +22,8 @@ class AssetBorrowingItem extends Model
         'condition_complete',
         'remarks',
         'notes',
+        'return_condition',
+        'return_notes',
     ];
 
     /**

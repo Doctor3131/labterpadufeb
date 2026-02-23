@@ -204,8 +204,13 @@
                         <input type="checkbox" :value="{{ $unit->id }}" @change="toggleSelection({{ $unit->id }})" class="mt-1 w-4 h-4 text-blue-600 rounded">
                         <div class="flex-1">
                             <div class="font-mono text-sm font-bold text-gray-800">{{ $unit->asset_tag }}</div>
+                            @if($unit->university_asset_code)
+                                <div class="font-mono text-xs font-medium text-blue-900 bg-blue-50 px-2 py-1 rounded mt-1 inline-block">
+                                    Kode Univ: {{ $unit->university_asset_code }}
+                                </div>
+                            @endif
                             @if($unit->subtype)
-                                <span class="text-xs font-medium px-2 py-0.5 rounded bg-purple-100 text-purple-800">{{ $unit->subtype }}</span>
+                                <span class="text-xs font-medium px-2 py-0.5 rounded bg-purple-100 text-purple-800 ml-2">{{ $unit->subtype }}</span>
                             @endif
                             <div class="mt-2">
                                 <span class="{{ $unit->condition->colorClass() }} text-xs font-bold px-2.5 py-1 rounded-full">
@@ -241,7 +246,8 @@
                         <th class="px-6 py-3 w-10">
                             <input type="checkbox" @change="toggleAll($event)" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                         </th>
-                        <th class="px-6 py-3 font-semibold">Asset Tag</th>
+                        <th class="px-6 py-3 font-semibold">Asset Tag UPK</th>
+                        <th class="px-6 py-3 font-semibold">Kode Aset Universitas</th>
                         <th class="px-6 py-3 font-semibold">Subtype</th>
                         <th class="px-6 py-3 font-semibold">Batch</th>
                         <th class="px-6 py-3 font-semibold">Kondisi</th>
@@ -257,6 +263,22 @@
                             </td>
                             <td class="px-6 py-3">
                                 <span class="font-mono text-sm font-medium text-gray-900">{{ $unit->asset_tag }}</span>
+                            </td>
+                            <td class="px-6 py-3">
+                                <div class="flex items-center gap-2 group">
+                                    @if($unit->university_asset_code)
+                                        <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-1 rounded">{{ $unit->university_asset_code }}</span>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
+                                    <button onclick="openEditUniversityCodeModal({{ $unit->id }}, '{{ $unit->university_asset_code ?? '' }}')" 
+                                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                                        title="Edit Kode Universitas">
+                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </td>
                             <td class="px-6 py-3">
                                 @if($unit->subtype)
@@ -359,6 +381,45 @@
         </div>
     </div>
 
+    <!-- Edit University Code Modal -->
+    <div id="editUniversityCodeModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="relative mx-auto w-full max-w-md px-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6">
+                <!-- Icon -->
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 mb-4">
+                    <svg class="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+
+                <!-- Title -->
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Edit Kode Aset Universitas</h3>
+                
+                <!-- Form -->
+                <form id="editUniversityCodeForm" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Kode Aset Universitas</label>
+                        <input type="text" id="universityCodeInput" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Contoh: 132100102001.X71">
+                        <p class="text-xs text-gray-500 mt-1">Format: 132100102001.X71</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeEditUniversityCodeModal()" class="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
         function bulkActions() {
@@ -416,6 +477,77 @@
         document.getElementById('bulkDeleteModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeBulkDeleteModal();
+            }
+        });
+
+        // Edit University Code Modal Functions
+        let currentEditUnitId = null;
+
+        function openEditUniversityCodeModal(unitId, currentCode) {
+            currentEditUnitId = unitId;
+            document.getElementById('universityCodeInput').value = currentCode || '';
+            document.getElementById('editUniversityCodeModal').classList.remove('hidden');
+        }
+
+        function closeEditUniversityCodeModal() {
+            document.getElementById('editUniversityCodeModal').classList.add('hidden');
+            currentEditUnitId = null;
+        }
+
+        // Handle form submission
+        document.getElementById('editUniversityCodeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const universityCode = document.getElementById('universityCodeInput').value;
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            // Disable button and show loading
+            submitButton.disabled = true;
+            submitButton.textContent = 'Menyimpan...';
+            
+            try {
+                const response = await fetch(`/admin/inventory/units/${currentEditUnitId}/university-code`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        university_asset_code: universityCode
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload page to show updated data
+                    window.location.reload();
+                } else {
+                    alert('Gagal memperbarui kode: ' + (data.message || 'Unknown error'));
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat memperbarui kode: ' + error.message);
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        });
+
+        // Close edit modal when clicking outside
+        document.getElementById('editUniversityCodeModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditUniversityCodeModal();
             }
         });
     </script>
