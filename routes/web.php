@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\BpsRequestController;
 use App\Http\Controllers\RefinitivRequestController;
+use App\Http\Controllers\PersonalBorrowingController;
 
 // Public Routes
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -38,6 +39,11 @@ Route::post('/booking/available-labs', [BookingController::class, 'getAvailableL
 Route::get('/api/labs/available', [App\Http\Controllers\LabController::class, 'checkAvailability'])
     ->middleware('throttle:60,1')
     ->name('api.labs.available');
+
+// Personal Borrowing NIM Validation (AJAX)
+Route::post('/personal-borrowing/validate-nim', [PersonalBorrowingController::class, 'validateNim'])
+    ->middleware('throttle:60,1')
+    ->name('personal-borrowing.validate-nim');
 
 // PDF Print (for re-download)
 Route::get('/booking/print/{token}', [BookingController::class, 'print'])->name('booking.print');
@@ -159,6 +165,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->except(['show', 'create', 'edit']);
     Route::post('/admin/announcements/{announcement}/toggle-active', [App\Http\Controllers\Admin\AnnouncementController::class, 'toggleActive'])
         ->name('admin.announcements.toggle-active');
+
+    // Admin Personal Borrowings Report (read-only view, filtered from bookings)
+    Route::get('/admin/personal-borrowings', [App\Http\Controllers\Admin\PersonalBorrowingController::class, 'index'])
+        ->name('admin.personal-borrowings.index');
 });
 
 // Super Admin Only Routes

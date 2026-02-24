@@ -131,8 +131,6 @@
                 <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
                     @if($booking->booking_type === 'non_perkuliahan')
                         {{ $booking->activity_name }}
-                    @elseif($booking->booking_type === 'pribadi')
-                        {{ $booking->purpose ?? 'Peminjaman Pribadi' }}
                     @else
                         {{ $booking->course_name }}
                     @endif
@@ -154,7 +152,7 @@
                         <span><strong>Prodi:</strong> {{ $booking->study_program }}</span>
                     </div>
                     @endif
-                    @if($booking->booking_type !== 'non_perkuliahan' && $booking->booking_type !== 'pribadi')
+                    @if($booking->booking_type !== 'non_perkuliahan')
                         <div class="flex items-start">
                             <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
@@ -175,31 +173,6 @@
                             </svg>
                             <span><strong>Jenis Kegiatan:</strong> {{ $booking->activity_type }}</span>
                         </div>
-                    @endif
-                    @if($booking->booking_type === 'pribadi')
-                        <div class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                            </svg>
-                            <span><strong>Status:</strong> 
-                                @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
-                                    {{ $booking->custom_status }}
-                                @else
-                                    {{ $booking->applicant_status }}
-                                @endif
-                                @if($booking->applicant_status === 'Mahasiswa' && $booking->class_year)
-                                    • Angkatan {{ $booking->class_year }}
-                                @endif
-                            </span>
-                        </div>
-                        @if($booking->purpose)
-                        <div class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                            </svg>
-                            <span><strong>Keperluan:</strong> {{ $booking->purpose }}</span>
-                        </div>
-                        @endif
                     @endif
                 </div>
 
@@ -277,8 +250,6 @@
                 <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
                     @if($booking->booking_type === 'non_perkuliahan')
                         {{ $booking->activity_name }}
-                    @elseif($booking->booking_type === 'pribadi')
-                        {{ $booking->purpose ?? 'Peminjaman Pribadi' }}
                     @else
                         {{ $booking->course_name }}
                     @endif
@@ -293,18 +264,6 @@
                     @elseif($booking->booking_type === 'non_perkuliahan')
                         <p class="text-sm text-gray-600">
                             <strong>{{ $booking->position }}</strong> • {{ $booking->activity_type }}
-                        </p>
-                    @elseif($booking->booking_type === 'pribadi')
-                        <p class="text-sm text-gray-600">
-                            <strong>Status:</strong> 
-                            @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
-                                {{ $booking->custom_status }}
-                            @else
-                                {{ $booking->applicant_status }}
-                            @endif
-                            @if($booking->applicant_status === 'Mahasiswa' && $booking->class_year)
-                                • Angkatan {{ $booking->class_year }}
-                            @endif
                         </p>
                     @endif
                     <p class="text-sm text-gray-600">
@@ -333,14 +292,12 @@
                                 Dokumen Pendukung
                             </a>
                         @endif
-                        @if($booking->booking_type !== 'pribadi')
                             <a href="{{ route('booking.print', $booking->tracking_token) }}" target="_blank" class="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Download PDF
                             </a>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -395,8 +352,6 @@
                 <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
                     @if($booking->booking_type === 'non_perkuliahan')
                         {{ $booking->activity_name }}
-                    @elseif($booking->booking_type === 'pribadi')
-                        {{ $booking->purpose ?? 'Peminjaman Pribadi' }}
                     @else
                         {{ $booking->course_name }}
                     @endif
@@ -411,18 +366,6 @@
                     @elseif($booking->booking_type === 'non_perkuliahan')
                         <p class="text-sm text-gray-600">
                             <strong>{{ $booking->position }}</strong> • {{ $booking->activity_type }}
-                        </p>
-                    @elseif($booking->booking_type === 'pribadi')
-                        <p class="text-sm text-gray-600">
-                            <strong>Status:</strong> 
-                            @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
-                                {{ $booking->custom_status }}
-                            @else
-                                {{ $booking->applicant_status }}
-                            @endif
-                            @if($booking->applicant_status === 'Mahasiswa' && $booking->class_year)
-                                • Angkatan {{ $booking->class_year }}
-                            @endif
                         </p>
                     @endif
                     <p class="text-sm text-gray-600">

@@ -33,8 +33,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                 </div>
+                @if($booking->booking_type === 'pribadi')
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Peminjaman Pribadi Tercatat!</h1>
+                <p class="text-sm text-gray-500">Peminjaman pribadi Anda telah berhasil dicatat secara otomatis.</p>
+                @else
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Peminjaman Berhasil Diajukan!</h1>
                 <p class="text-sm text-gray-500">Silakan datang ke UPK untuk melihat status peminjaman Anda.</p>
+                @endif
             </div>
 
             <!-- Download PDF Button - Prominent -->
@@ -103,52 +108,75 @@
                         <span class="font-semibold text-gray-800 text-right">{{ $booking->pic_name }}</span>
                     </div>
 
-                    <div class="flex justify-between items-start border-b pb-2 gap-4">
-                        <span class="text-gray-600 shrink-0">Laboratorium:</span>
-                        <span class="font-semibold text-gray-800 text-right">
-                            @if($booking->lab)
-                                {{ $booking->lab->name }}
-                            @else
-                                <span class="text-orange-600">Ditentukan di tempat</span>
-                            @endif
-                        </span>
-                    </div>
-
-                    <div class="flex justify-between items-start border-b pb-2 gap-4">
-                        <span class="text-gray-600 shrink-0">Tanggal:</span>
-                        <span class="font-semibold text-gray-800 text-right">{{ $booking->booking_date->translatedFormat('d F Y') }} ({{ $booking->day }})</span>
-                    </div>
-
-                    <div class="flex justify-between items-start border-b pb-2 gap-4">
-                        <span class="text-gray-600 shrink-0">Waktu:</span>
-                        <span class="font-semibold text-gray-800 text-right">{{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}</span>
-                    </div>
-
-                    <div class="flex justify-between items-start border-b pb-2 gap-4">
-                        <span class="text-gray-600 shrink-0">Jumlah Peserta:</span>
-                        <span class="font-semibold text-gray-800 text-right">{{ $booking->participant_count }} orang</span>
-                    </div>
-
-                    @if($booking->isPerkuliahan())
-                        <div class="flex flex-col sm:flex-row justify-between items-start border-b pb-2 gap-1 sm:gap-4">
-                            <span class="text-gray-600 shrink-0 text-xs sm:text-sm">Mata Kuliah:</span>
-                            <span class="font-semibold text-gray-800 text-left sm:text-right text-sm sm:text-base">{{ $booking->course_name }}</span>
-                        </div>
+                    @if($booking->booking_type === 'pribadi')
+                        {{-- Pribadi-specific details --}}
                         <div class="flex justify-between items-start border-b pb-2 gap-4">
-                            <span class="text-gray-600 shrink-0">Dosen:</span>
-                            <span class="font-semibold text-gray-800 text-right">{{ $booking->lecturer_name }}</span>
+                            <span class="text-gray-600 shrink-0">Kategori:</span>
+                            <span class="font-semibold text-gray-800 text-right">
+                                {{ $booking->pribadi_sub_type === 'mahasiswa' ? 'Mahasiswa' : 'Non-Mahasiswa' }}
+                            </span>
                         </div>
-                    @endif
-
-                    @if($booking->isNonPerkuliahan())
+                        @if($booking->nim)
                         <div class="flex justify-between items-start border-b pb-2 gap-4">
-                            <span class="text-gray-600 shrink-0">Jenis Kegiatan:</span>
-                            <span class="font-semibold text-gray-800 text-right">{{ $booking->activity_type }}</span>
+                            <span class="text-gray-600 shrink-0">NIM:</span>
+                            <span class="font-semibold text-gray-800 text-right">{{ $booking->nim }}</span>
                         </div>
-                        <div class="flex flex-col sm:flex-row justify-between items-start border-b pb-2 gap-1 sm:gap-4">
-                            <span class="text-gray-600 shrink-0 text-xs sm:text-sm">Nama Kegiatan:</span>
-                            <span class="font-semibold text-gray-800 text-left sm:text-right text-sm sm:text-base">{{ $booking->activity_name }}</span>
+                        @endif
+                        @if($booking->study_program)
+                        <div class="flex justify-between items-start border-b pb-2 gap-4">
+                            <span class="text-gray-600 shrink-0">Program Studi:</span>
+                            <span class="font-semibold text-gray-800 text-right">{{ $booking->study_program }}</span>
                         </div>
+                        @endif
+                    @else
+                        {{-- Non-pribadi: show lab, date, time, participant --}}
+                        <div class="flex justify-between items-start border-b pb-2 gap-4">
+                            <span class="text-gray-600 shrink-0">Laboratorium:</span>
+                            <span class="font-semibold text-gray-800 text-right">
+                                @if($booking->lab)
+                                    {{ $booking->lab->name }}
+                                @else
+                                    <span class="text-orange-600">Ditentukan di tempat</span>
+                                @endif
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between items-start border-b pb-2 gap-4">
+                            <span class="text-gray-600 shrink-0">Tanggal:</span>
+                            <span class="font-semibold text-gray-800 text-right">{{ $booking->booking_date->translatedFormat('d F Y') }} ({{ $booking->day }})</span>
+                        </div>
+
+                        <div class="flex justify-between items-start border-b pb-2 gap-4">
+                            <span class="text-gray-600 shrink-0">Waktu:</span>
+                            <span class="font-semibold text-gray-800 text-right">{{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}</span>
+                        </div>
+
+                        <div class="flex justify-between items-start border-b pb-2 gap-4">
+                            <span class="text-gray-600 shrink-0">Jumlah Peserta:</span>
+                            <span class="font-semibold text-gray-800 text-right">{{ $booking->participant_count }} orang</span>
+                        </div>
+
+                        @if($booking->isPerkuliahan())
+                            <div class="flex flex-col sm:flex-row justify-between items-start border-b pb-2 gap-1 sm:gap-4">
+                                <span class="text-gray-600 shrink-0 text-xs sm:text-sm">Mata Kuliah:</span>
+                                <span class="font-semibold text-gray-800 text-left sm:text-right text-sm sm:text-base">{{ $booking->course_name }}</span>
+                            </div>
+                            <div class="flex justify-between items-start border-b pb-2 gap-4">
+                                <span class="text-gray-600 shrink-0">Dosen:</span>
+                                <span class="font-semibold text-gray-800 text-right">{{ $booking->lecturer_name }}</span>
+                            </div>
+                        @endif
+
+                        @if($booking->isNonPerkuliahan())
+                            <div class="flex justify-between items-start border-b pb-2 gap-4">
+                                <span class="text-gray-600 shrink-0">Jenis Kegiatan:</span>
+                                <span class="font-semibold text-gray-800 text-right">{{ $booking->activity_type }}</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row justify-between items-start border-b pb-2 gap-1 sm:gap-4">
+                                <span class="text-gray-600 shrink-0 text-xs sm:text-sm">Nama Kegiatan:</span>
+                                <span class="font-semibold text-gray-800 text-left sm:text-right text-sm sm:text-base">{{ $booking->activity_name }}</span>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>

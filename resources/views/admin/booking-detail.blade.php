@@ -108,6 +108,7 @@
                         </h3>
                     </div>
                     <div class="p-4 md:p-6 space-y-4">
+                        @if($booking->booking_type !== 'pribadi')
                         <div>
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Tanggal</label>
                             <p class="text-base md:text-lg">{{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
@@ -119,9 +120,6 @@
                         <div>
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Laboratorium</label>
                             <p class="text-base md:text-lg font-medium text-gray-900">{{ $booking->lab?->name ?? '-' }}</p>
-                            @if(!$booking->lab && $booking->booking_type === 'pribadi')
-                                <p class="text-xs text-gray-500 mt-1">Ditentukan di tempat oleh asisten lab</p>
-                            @endif
                         </div>
                          <div class="border-t border-gray-100 pt-4">
                             <div class="flex items-center justify-between">
@@ -129,6 +127,24 @@
                                 <span class="text-base font-bold text-gray-900">{{ $booking->participant_count }} Orang</span>
                             </div>
                         </div>
+                        @else
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-600 mb-1">Jenis Peminjaman</label>
+                            <p class="text-base md:text-lg font-medium text-gray-900">Pribadi</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-600 mb-1">Kategori</label>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ ($booking->pribadi_sub_type === 'mahasiswa') ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                                {{ ($booking->pribadi_sub_type === 'mahasiswa') ? 'Mahasiswa' : 'Non-Mahasiswa' }}
+                            </span>
+                        </div>
+                        <div class="border-t border-gray-100 pt-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Waktu Pengajuan</span>
+                                <span class="text-base font-medium text-gray-900">{{ $booking->created_at->format('d M Y, H:i') }}</span>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -206,28 +222,27 @@
                             </dl>
                         @elseif($booking->booking_type === 'pribadi')
                             <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
-                                <div class="col-span-2 {{ ($booking->applicant_status === 'Mahasiswa') ? 'md:col-span-1' : 'md:col-span-1' }}">
-                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Status Peminjam</dt>
-                                    <dd class="text-lg font-medium text-gray-900">
-                                        @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
-                                            {{ $booking->custom_status }}
-                                        @else
-                                            {{ $booking->applicant_status }}
-                                        @endif
-                                    </dd>
-                                </div>
-                                
-                                @if($booking->applicant_status === 'Mahasiswa')
+                                @if($booking->pribadi_sub_type === 'mahasiswa')
                                 <div class="col-span-2 md:col-span-1">
-                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Angkatan</dt>
-                                    <dd class="text-base text-gray-800">{{ $booking->class_year ?: '-' }}</dd>
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">NIM</dt>
+                                    <dd class="text-lg font-medium text-gray-900">{{ $booking->nim }}</dd>
+                                </div>
+                                @if($booking->study_program)
+                                <div class="col-span-2 md:col-span-1">
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Program Studi</dt>
+                                    <dd class="text-base text-gray-800">{{ $booking->study_program }}</dd>
                                 </div>
                                 @endif
-
-                                <div class="col-span-2 {{ ($booking->applicant_status !== 'Mahasiswa') ? 'md:col-span-1' : '' }}">
-                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Keperluan</dt>
-                                    <dd class="text-base text-gray-800 bg-gray-50 p-3 rounded-lg">{{ $booking->purpose }}</dd>
+                                @else
+                                <div class="col-span-2 md:col-span-1">
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">NIP</dt>
+                                    <dd class="text-lg font-medium text-gray-900">{{ $booking->nip ?? '-' }}</dd>
                                 </div>
+                                <div class="col-span-2 md:col-span-1">
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">No. Telepon</dt>
+                                    <dd class="text-base text-gray-800">{{ $booking->phone_number ?? '-' }}</dd>
+                                </div>
+                                @endif
                             </dl>
                         @else
                             <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">

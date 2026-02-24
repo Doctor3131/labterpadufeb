@@ -45,6 +45,7 @@ class Booking extends Model
     protected $fillable = [
         'lab_id',
         'booking_type',
+        'pribadi_sub_type',
         'unit_type',
         'pic_name',
         'study_program',
@@ -70,12 +71,8 @@ class Booking extends Model
         'end_time',
         'participant_count',
         'document_path',
-        'status',
-        'rejection_reason',
         'tracking_token',
         'admin_notes',
-        'handled_by',
-        'handled_at',
     ];
 
     protected $casts = [

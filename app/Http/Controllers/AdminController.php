@@ -17,19 +17,21 @@ use Carbon\Carbon;
 class AdminController extends Controller
 {
     /**
-     * Show admin dashboard with 3 cards (Lab, BPS, Refinitiv)
+     * Show admin dashboard with 4 cards (Lab, BPS, Refinitiv, Personal)
      */
     public function dashboard()
     {
-        // Get counts for each service
-        $labPendingCount = Booking::where('status', 'pending')->count();
+        // Get counts for each service (pribadi excluded from lab — separate tab)
+        $labPendingCount = Booking::where('status', 'pending')->where('booking_type', '!=', 'pribadi')->count();
         $bpsPendingCount = BpsRequest::where('status', 'pending')->count();
         $refinitivPendingCount = RefinitivRequest::where('attendance_status', 'pending')->count();
+        $personalTotalCount = Booking::where('booking_type', 'pribadi')->count();
 
         return view('admin.dashboard', compact(
             'labPendingCount',
             'bpsPendingCount',
-            'refinitivPendingCount'
+            'refinitivPendingCount',
+            'personalTotalCount'
         ));
     }
 
@@ -39,19 +41,22 @@ class AdminController extends Controller
     public function labBookings()
     {
         // Paginate each status separately with custom page parameter names
-        // This allows independent pagination for each tab
+        // Pribadi excluded — managed in dedicated "Pencatatan Peminjaman Pribadi" tab
         $pendingBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'pending')
+            ->where('booking_type', '!=', 'pribadi')
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'pending_page');
 
         $approvedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'approved')
+            ->where('booking_type', '!=', 'pribadi')
             ->orderBy('handled_at', 'desc')
             ->paginate(15, ['*'], 'approved_page');
 
         $rejectedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'rejected')
+            ->where('booking_type', '!=', 'pribadi')
             ->orderBy('updated_at', 'desc')
             ->paginate(15, ['*'], 'rejected_page');
 
@@ -63,6 +68,12 @@ class AdminController extends Controller
     public function show($id)
     {
         $booking = Booking::with('lab')->findOrFail($id);
+
+        // Pribadi bookings are managed in dedicated tab, not here
+        if ($booking->isPribadi()) {
+            return redirect()->route('admin.personal-borrowings.index');
+        }
+
         return view('admin.booking-detail', compact('booking'));
     }
 
@@ -75,6 +86,12 @@ class AdminController extends Controller
         return DB::transaction(function () use ($id) {
             // Lock the booking row to prevent concurrent approvals
             $booking = Booking::lockForUpdate()->findOrFail($id);
+
+            // Pribadi bookings are auto-approved, cannot be manually approved
+            if ($booking->isPribadi()) {
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'Peminjaman pribadi tidak memerlukan persetujuan.');
+            }
             
             // Check if already processed (race condition guard)
             if ($booking->status !== 'pending') {
@@ -103,17 +120,15 @@ class AdminController extends Controller
                 }
             }
             
-            // Update booking status
-            $updateData = [
-                'status' => 'approved',
-                'handled_at' => now()
-            ];
+            // Update booking status (direct assignment — not mass-assignable for security)
+            $booking->status = 'approved';
+            $booking->handled_at = now();
             
             if (Auth::check()) {
-                $updateData['handled_by'] = Auth::id();
+                $booking->handled_by = Auth::id();
             }
             
-            $booking->update($updateData);
+            $booking->save();
 
             // Create schedule entry from approved booking
             // SKIP for pribadi bookings - they don't appear in public schedule
@@ -166,6 +181,12 @@ class AdminController extends Controller
         ]);
 
         $booking = Booking::findOrFail($id);
+
+        // Pribadi bookings are auto-approved, cannot be rejected
+        if ($booking->isPribadi()) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Peminjaman pribadi tidak dapat ditolak.');
+        }
         
         Log::info('Booking found', [
             'booking_id' => $booking->id,
@@ -173,18 +194,16 @@ class AdminController extends Controller
         ]);
         
         DB::transaction(function () use ($booking, $request) {
-            // Update booking status
-            $updateData = [
-                'status' => 'rejected',
-                'rejection_reason' => $request->rejection_reason,
-                'handled_at' => now()
-            ];
+            // Update booking status (direct assignment — not mass-assignable for security)
+            $booking->status = 'rejected';
+            $booking->rejection_reason = $request->rejection_reason;
+            $booking->handled_at = now();
             
             if (Auth::check()) {
-                $updateData['handled_by'] = Auth::id();
+                $booking->handled_by = Auth::id();
             }
             
-            $booking->update($updateData);
+            $booking->save();
             
             Log::info('Booking rejected successfully', [
                 'booking_id' => $booking->id,

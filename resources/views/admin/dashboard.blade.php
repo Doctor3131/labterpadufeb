@@ -21,6 +21,7 @@
         .dashboard-card:nth-child(1) { animation-delay: 0.1s; }
         .dashboard-card:nth-child(2) { animation-delay: 0.2s; }
         .dashboard-card:nth-child(3) { animation-delay: 0.3s; }
+        .dashboard-card:nth-child(4) { animation-delay: 0.4s; }
     </style>
 @endpush
 
@@ -55,7 +56,7 @@
     @endif
 
     <!-- 3 Service Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Lab Booking Card -->
         <div class="dashboard-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-yellow-100 hover:border-yellow-300 transition-all hover:shadow-xl">
             <div class="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4">
@@ -70,7 +71,7 @@
             </div>
             <div class="p-6">
                 <h3 class="text-xl font-bold text-gray-800 mb-2">Lab</h3>
-                <p class="text-gray-500 text-sm mb-4">Kelola permintaan peminjaman laboratorium</p>
+                <p class="text-gray-500 text-sm mb-4">Kelola peminjaman laboratorium</p>
                 
                 <div class="flex items-center justify-between mb-4">
                     <span class="text-gray-600 text-sm">Pending:</span>
@@ -150,6 +151,40 @@
                 <a href="{{ route('admin.refinitiv.index') }}" class="block w-full text-center px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors">
                     <span class="flex items-center justify-center">
                         Kelola
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Personal Borrowing Card -->
+        <div class="dashboard-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-orange-100 hover:border-orange-300 transition-all hover:shadow-xl">
+            <div class="bg-gradient-to-r from-orange-400 to-orange-500 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="bg-white/20 p-3 rounded-xl">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <span class="text-white/90 text-sm font-medium">Peminjaman</span>
+                </div>
+            </div>
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Pribadi</h3>
+                <p class="text-gray-500 text-sm mb-4">Pencatatan peminjaman pribadi</p>
+                
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-gray-600 text-sm">Total Tercatat:</span>
+                    <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-bold">
+                        {{ $personalTotalCount }}
+                    </span>
+                </div>
+                
+                <a href="{{ route('admin.personal-borrowings.index') }}" class="block w-full text-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors">
+                    <span class="flex items-center justify-center">
+                        Lihat
                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
