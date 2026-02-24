@@ -42,7 +42,7 @@ class InventoryService
             $lab = Lab::findOrFail($labId);
             
             // Get type code from item's asset type code
-            $typeCode = $batch->item->assetTypeCode?->code ?? 'XX';
+            $typeCode = $batch->item->assetTypeCode?->code ?? '';
             
             // Normalize lab code (remove dots/dashes)
             $labCode = $this->normalizeLabCode($lab->name);
@@ -342,8 +342,139 @@ class InventoryService
     }
 
     /**
+     * Transfer asset units to another Lab (e.g. Gudang)
+     */
+    public function transferUnitsToLab(array $unitIds, int $targetLabId, ?string $notes = null): array
+    {
+        return DB::transaction(function () use ($unitIds, $targetLabId, $notes) {
+            $units = AssetUnit::whereIn('id', $unitIds)->get();
+            if ($units->isEmpty()) {
+                return [];
+            }
+
+            $sourceLabId = $units->first()->lab_id;
+            $targetLab = Lab::findOrFail($targetLabId);
+            $sourceLab = Lab::findOrFail($sourceLabId);
+
+            // Create Outgoing transaction for Source Lab
+            $outTransaction = InventoryTransaction::create([
+                'type' => TransactionTypeEnum::TRANSFER, // transferred to another lab
+                'lab_id' => $sourceLabId,
+                'user_id' => Auth::id(),
+                'notes' => $notes ?? "Pindah {$units->count()} unit ke {$targetLab->name}",
+            ]);
+
+            // Create Incoming transaction for Target Lab
+            $inTransaction = InventoryTransaction::create([
+                'type' => TransactionTypeEnum::RECEIPT,
+                'lab_id' => $targetLabId,
+                'user_id' => Auth::id(),
+                'notes' => $notes ?? "Pindahan {$units->count()} unit dari {$sourceLab->name}",
+            ]);
+
+            $updatedUnits = [];
+
+            foreach ($units as $unit) {
+                // Out line
+                TransactionLine::create([
+                    'transaction_id' => $outTransaction->id,
+                    'asset_unit_id' => $unit->id,
+                    'from_condition' => $unit->condition,
+                ]);
+
+                // Update location
+                $unit->update(['lab_id' => $targetLabId]);
+
+                // In line
+                TransactionLine::create([
+                    'transaction_id' => $inTransaction->id,
+                    'asset_unit_id' => $unit->id,
+                    'to_condition' => $unit->condition,
+                ]);
+
+                $updatedUnits[] = $unit;
+            }
+
+            return $updatedUnits;
+        });
+    }
+
+    /**
+     * Transfer aggregate inventory to another Lab (e.g. Gudang)
+     */
+    public function transferAggregateToLab(
+        int $sourceLabId,
+        int $targetLabId,
+        int $batchId,
+        ConditionEnum $condition,
+        int $qty,
+        ?string $notes = null
+    ): array {
+        return DB::transaction(function () use ($sourceLabId, $targetLabId, $batchId, $condition, $qty, $notes) {
+            $sourceLab = Lab::findOrFail($sourceLabId);
+            $targetLab = Lab::findOrFail($targetLabId);
+
+            // Get source balance
+            $fromBalance = InventoryBalance::where([
+                'batch_id' => $batchId,
+                'lab_id' => $sourceLabId,
+                'condition' => $condition,
+            ])->lockForUpdate()->firstOrFail();
+
+            if ($fromBalance->quantity < $qty) {
+                throw new \Exception("Jumlah tidak mencukupi. Tersedia: {$fromBalance->quantity}, diminta: {$qty}");
+            }
+
+            // Get target balance
+            $toBalance = InventoryBalance::lockForUpdate()->firstOrCreate(
+                [
+                    'batch_id' => $batchId,
+                    'lab_id' => $targetLabId,
+                    'condition' => $condition,
+                ],
+                ['quantity' => 0]
+            );
+
+            // Update quantities
+            $fromBalance->decrement('quantity', $qty);
+            $toBalance->increment('quantity', $qty);
+
+            // Outgoing transaction
+            $outTransaction = InventoryTransaction::create([
+                'type' => TransactionTypeEnum::TRANSFER,
+                'lab_id' => $sourceLabId,
+                'user_id' => Auth::id(),
+                'notes' => $notes ?? "Pindah {$qty} unit ke {$targetLab->name}",
+            ]);
+            TransactionLine::create([
+                'transaction_id' => $outTransaction->id,
+                'inventory_balance_id' => $fromBalance->id,
+                'from_condition' => $condition,
+                'quantity' => $qty,
+            ]);
+
+            // Incoming transaction
+            $inTransaction = InventoryTransaction::create([
+                'type' => TransactionTypeEnum::RECEIPT,
+                'lab_id' => $targetLabId,
+                'user_id' => Auth::id(),
+                'notes' => $notes ?? "Pindahan {$qty} unit dari {$sourceLab->name}",
+            ]);
+            TransactionLine::create([
+                'transaction_id' => $inTransaction->id,
+                'inventory_balance_id' => $toBalance->id,
+                'to_condition' => $condition,
+                'quantity' => $qty,
+            ]);
+
+            return [$fromBalance->fresh(), $toBalance->fresh()];
+        });
+    }
+
+    /**
      * Generate asset tag from components
      * Format: {proc_source}.{arrival_mmyy}.{type_code}.{lab_code}.{seq|ADMIN}
+     * Returns empty string if type code is empty (to be filled manually by admin)
      */
     public function generateAssetTag(
         string $procSource,
@@ -352,7 +483,12 @@ class InventoryService
         string $labCode,
         ?int $seq = null,
         ?string $subtype = null
-    ): string {
+    ): ?string {
+        // If type code is empty, return null so admin can fill manually later
+        if (empty($typeCode)) {
+            return null;
+        }
+        
         $suffix = $subtype === 'ADMIN' ? 'ADMIN' : str_pad($seq, 3, '0', STR_PAD_LEFT);
         
         return "{$procSource}.{$arrivalMmyy}.{$typeCode}.{$labCode}.{$suffix}";
@@ -470,6 +606,15 @@ class InventoryService
             }
         }
         
+        // Remove items that have no stock (total == 0) after all calculations
+        $summary = array_filter($summary, function($item) {
+            return $item['total'] > 0;
+        });
+        
+        // Sort by item name
+        usort($summary, fn($a, $b) => strcmp($a['name'], $b['name']));
+        
+        // Re-index before returning
         return array_values($summary);
     }
 }

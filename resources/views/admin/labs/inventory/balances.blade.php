@@ -115,143 +115,345 @@
             $totalQty = $batchBalances->sum('quantity');
         @endphp
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-6">
-            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-semibold text-gray-800">
-                            Batch: {{ $batch->proc_source_code }}.{{ $batch->arrival_mmyy }}
-                        </h3>
-                        <p class="text-sm text-gray-500">
-                            {{ $batch->arrival_formatted }}
-                            @if($batch->source_description)
-                                • {{ $batch->source_description }}
-                            @endif
-                        </p>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-2xl font-bold text-gray-800">{{ $totalQty }}</span>
-                        <span class="text-sm text-gray-500 ml-1">total</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Condition Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
-                @foreach($conditions as $condition)
-                    @php
-                        $balance = $batchBalances->firstWhere('condition', $condition);
-                        $qty = $balance ? $balance->quantity : 0;
-                    @endphp
-                    <div class="{{ $condition->colorClass() }} rounded-xl p-4 border">
-                        <div class="text-2xl font-bold">{{ $qty }}</div>
-                        <div class="text-sm font-medium">{{ $condition->label() }}</div>
-                    </div>
-                @endforeach
-            </div>
-
-            <!-- Transfer Form -->
-            <div class="border-t border-gray-200 px-6 py-4 bg-gradient-to-br from-gray-50 to-blue-50">
-                <div class="mb-4">
-                    <h4 class="text-base font-bold text-gray-800 mb-2 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                        </svg>
-                        Ubah Status Kondisi Barang
-                    </h4>
-                    <p class="text-sm text-gray-600 ml-7">
-                        Gunakan form ini untuk memindahkan barang dari satu kondisi ke kondisi lainnya
-                        <span class="text-gray-500">(contoh: dari Baik ke Rusak jika barang mengalami kerusakan)</span>
+            {{-- Batch Header --}}
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-gray-800">Batch: {{ $batch->proc_source_code }}.{{ $batch->arrival_mmyy }}</h3>
+                    <p class="text-sm text-gray-500">
+                        {{ $batch->arrival_formatted }}
+                        @if($batch->source_description) &bull; {{ $batch->source_description }} @endif
                     </p>
                 </div>
+                <div class="text-right">
+                    <span class="text-2xl font-bold text-gray-800">{{ $totalQty }}</span>
+                    <span class="text-sm text-gray-500 ml-1">total</span>
+                </div>
+            </div>
 
-                <form action="{{ route('admin.labs.inventory.transfer', $lab) }}" method="POST" class="space-y-4">
-                    @csrf
-                    <input type="hidden" name="batch_id" value="{{ $batchId }}">
-                    
-                    <div class="bg-white rounded-lg p-4 border-2 border-blue-100 shadow-sm">
-                        <div class="flex flex-wrap items-center gap-4">
-                            <!-- From Condition -->
-                            <div class="flex-1 min-w-[200px]">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                    <span class="bg-red-100 text-red-800 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mr-2">1</span>
-                                    Kondisi Awal (Dari)
-                                </label>
-                                <select name="from_condition" required 
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-                                    @foreach($conditions as $condition)
-                                        @php $qty = $batchBalances->firstWhere('condition', $condition)?->quantity ?? 0; @endphp
-                                        <option value="{{ $condition->value }}" {{ $qty == 0 ? 'disabled' : '' }}>
-                                            {{ $condition->label() }} - Tersedia: {{ $qty }} unit
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class="text-xs text-gray-500 mt-1">Pilih kondisi barang saat ini</p>
-                            </div>
+            {{-- Per-Condition Table --}}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left">Kondisi</th>
+                            <th class="px-6 py-3 text-center">Jumlah Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($conditions as $condition)
+                            @php
+                                $balance = $batchBalances->firstWhere('condition', $condition);
+                                $qty = $balance ? $balance->quantity : 0;
+                                $savedCode = $balance?->university_asset_code_prefix ?? '';
+                                $balanceId = $balance?->id ?? null;
+                            @endphp
+                            @if($qty > 0 || $balance)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                {{-- Kondisi --}}
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $condition->colorClass() }} border">
+                                        {{ $condition->label() }}
+                                    </span>
+                                </td>
 
-                            <!-- Arrow -->
-                            <div class="flex flex-col items-center justify-center pt-6">
-                                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                                </svg>
-                            </div>
+                                {{-- Jumlah --}}
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1 rounded-full text-base font-bold
+                                        {{ $qty > 0 ? 'bg-gray-100 text-gray-800' : 'bg-gray-50 text-gray-400' }}">
+                                        {{ $qty }}
+                                    </span>
+                                </td>
 
-                            <!-- To Condition -->
-                            <div class="flex-1 min-w-[200px]">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                    <span class="bg-green-100 text-green-800 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mr-2">2</span>
-                                    Kondisi Tujuan (Ke)
-                                </label>
-                                <select name="to_condition" required 
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
-                                    @foreach($conditions as $condition)
-                                        <option value="{{ $condition->value }}">{{ $condition->label() }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="text-xs text-gray-500 mt-1">Pilih kondisi baru untuk barang</p>
-                            </div>
+                            </tr>
+                            @endif
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-                            <!-- Quantity -->
-                            <div class="w-32">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mr-2">3</span>
-                                    Jumlah
-                                </label>
-                                <input type="number" name="quantity" min="1" required 
-                                    placeholder="0"
-                                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm font-bold text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <p class="text-xs text-gray-500 mt-1 text-center">Unit</p>
-                            </div>
-                        </div>
+            <!-- Transfer Section - Per Item -->
+            @php
+                // Pre-compute all generated codes per condition for this batch
+                $batchConditionCodes = [];
+                foreach ($conditions as $cond) {
+                    $bal = $batchBalances->firstWhere('condition', $cond);
+                    $q = $bal ? $bal->quantity : 0;
+                    $pfx = $bal?->university_asset_code_prefix ?? '';
+                    $generated = [];
+                    if ($q > 0) {
+                        if ($pfx) {
+                            if (preg_match('/^(.+\.)([A-Za-z]*)(\d+)$/', $pfx, $pm)) {
+                                for ($pi = 0; $pi < $q; $pi++) {
+                                    $generated[] = ['id' => $pi, 'code' => $pm[1] . $pm[2] . ((int)$pm[3] + $pi)];
+                                }
+                            } else {
+                                for ($pi = 1; $pi <= $q; $pi++) {
+                                    $generated[] = ['id' => $pi - 1, 'code' => $pfx . '-' . $pi];
+                                }
+                            }
+                        } else {
+                            // Belum ada prefix: biarkan code kosong, agar bisa diketik manual
+                            for ($pi = 0; $pi < $q; $pi++) {
+                                $generated[] = ['id' => $pi, 'code' => ''];
+                            }
+                        }
+                    }
+                    $batchConditionCodes[$cond->value] = [
+                        'qty'   => $q,
+                        'codes' => $generated,
+                        'label' => $cond->label(),
+                    ];
+                }
+            @endphp
 
-                        <!-- Notes Section -->
-                        <div class="mt-4 pt-4 border-t border-gray-200">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                                </svg>
-                                Catatan (Opsional)
-                            </label>
-                            <input type="text" name="notes" 
-                                placeholder="Contoh: Rusak karena terjatuh, Sedang diperbaiki, dll." 
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">Tambahkan alasan atau keterangan perubahan kondisi</p>
-                        </div>
+            <div class="border-t border-gray-200 px-6 py-5 bg-gradient-to-br from-gray-50 to-blue-50"
+                 x-data="{
+                     tab: 'condition',
+                     fromCond: '{{ collect($conditions)->first(fn($c) => ($batchBalances->firstWhere('condition', $c)?->quantity ?? 0) > 0)?->value ?? '' }}',
+                     toCond: '',
+                     targetLab: '',
+                     selected: [],
+                     condCodes: {{ Js::from($batchConditionCodes) }},
+                     get currentCodes() { return this.condCodes[this.fromCond]?.codes ?? []; },
+                     get currentQty()  { return this.condCodes[this.fromCond]?.qty ?? 0; },
+                     get selectedCodesText() {
+                         if (!this.currentCodes || this.currentCodes.length === 0 || this.selected.length === 0) return '';
+                         return 'Kode: ' + this.currentCodes.filter(c => this.selected.includes(c.id)).map(c => c.code).join(', ');
+                     },
+                     selectAll()   { this.selected = this.currentCodes.map(c => c.id); },
+                     clearAll()    { this.selected = []; },
+                     toggle(id)  {
+                         const i = this.selected.indexOf(id);
+                         i === -1 ? this.selected.push(id) : this.selected.splice(i, 1);
+                     },
+                     isChecked(id) { return this.selected.includes(id); },
+                     resetFrom() { this.selected = []; }
+                 }">
 
-                        <!-- Submit Button -->
-                        <div class="mt-4 flex justify-end">
-                            <button type="submit" 
-                                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                Proses Transfer
-                            </button>
+                {{-- Tabs --}}
+                <div class="flex gap-2 mb-5">
+                    <button @click="tab = 'condition'"
+                        :class="tab === 'condition' ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                        class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                        </svg>
+                        Ubah Status Kondisi
+                    </button>
+                    <button @click="tab = 'room'"
+                        :class="tab === 'room' ? 'bg-indigo-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                        class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        Pindah Ruangan
+                    </button>
+                </div>
+
+                {{-- Shared: Select Source Condition + Item Checkboxes --}}
+                <div class="bg-white rounded-xl border-2 p-4 mb-4"
+                     :class="tab === 'condition' ? 'border-blue-100' : 'border-indigo-100'">
+
+                    <!-- Source Condition Selector -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <span class="inline-flex items-center justify-center bg-red-100 text-red-800 text-xs font-bold rounded-full w-5 h-5 mr-1">1</span>
+                            Pilih Kondisi Asal
+                        </label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($conditions as $cond)
+                                @php $cQty = $batchBalances->firstWhere('condition', $cond)?->quantity ?? 0; @endphp
+                                @if($cQty > 0)
+                                <button type="button"
+                                    @click="fromCond = '{{ $cond->value }}'; resetFrom()"
+                                    :class="fromCond === '{{ $cond->value }}' ? 'ring-2 ring-offset-1 ring-blue-500 scale-105' : 'opacity-70 hover:opacity-100'"
+                                    class="{{ $cond->colorClass() }} border px-4 py-2 rounded-full text-sm font-semibold transition-all">
+                                    {{ $cond->label() }} ({{ $cQty }})
+                                </button>
+                                @endif
+                            @endforeach
                         </div>
                     </div>
-                </form>
+
+                    <!-- Item Checkbox List -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-semibold text-gray-700">
+                                <span class="inline-flex items-center justify-center bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full w-5 h-5 mr-1">2</span>
+                                Pilih Barang yang Dipindahkan
+                                <span class="ml-2 font-normal text-gray-500">(<span x-text="selected.length"></span> dipilih)</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <button type="button" @click="selectAll()"
+                                    class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 font-semibold transition-colors">
+                                    Pilih Semua
+                                </button>
+                                <button type="button" @click="clearAll()"
+                                    class="text-xs px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 font-semibold transition-colors">
+                                    Bersihkan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Code List -->
+                        <div x-show="currentQty > 0">
+                            <div class="max-h-56 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+                                <template x-for="(item, idx) in currentCodes" :key="item.id">
+                                    <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-yellow-50 transition-colors"
+                                           :class="isChecked(item.id) ? 'bg-yellow-50' : ''">
+                                        <input type="checkbox"
+                                               :checked="isChecked(item.id)"
+                                               @change="toggle(item.id)"
+                                               class="w-4 h-4 rounded accent-yellow-500 cursor-pointer shrink-0">
+                                        <span class="text-xs text-gray-400 w-6 text-right shrink-0 cursor-pointer" x-text="(idx + 1) + '.'"></span>
+                                        <input type="text" x-model="item.code" 
+                                               placeholder="Ketik kode di sini..."
+                                               class="font-mono text-sm text-gray-800 bg-transparent border-0 border-b border-transparent focus:border-yellow-400 focus:ring-0 focus:bg-white w-full max-w-sm px-1 py-0.5 rounded transition-colors"
+                                               :class="isChecked(item.id) ? 'text-yellow-800 font-semibold' : ''"
+                                               title="Ubah kode secara manual jika tidak sesuai">
+                                        <span x-show="isChecked(item.id)" class="ml-auto text-xs text-yellow-600 font-semibold whitespace-nowrap">✓ Terpilih</span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Empty state -->
+                        <div x-show="currentQty === 0" class="rounded-lg border-2 border-dashed border-gray-200 p-4 text-center text-gray-500 text-sm">
+                            Tidak ada barang dengan kondisi ini.
+                        </div>
+
+                        <!-- Warning if none selected and codes exist -->
+                        <p x-show="currentQty > 0 && selected.length === 0"
+                           class="text-xs text-orange-500 mt-1.5 font-medium">
+                           ⚠ Pilih minimal 1 barang untuk melanjutkan.
+                        </p>
+                    </div>
+                </div>
+
+                {{-- ====== FORM: Ubah Kondisi ====== --}}
+                <div x-show="tab === 'condition'" x-transition>
+                    <form action="{{ route('admin.labs.inventory.transfer', $lab) }}" method="POST"
+                          @submit.prevent="
+                            if (currentQty > 0 && selected.length === 0) { alert('Pilih minimal 1 barang.'); return; }
+                            $el.submit();
+                          ">
+                        @csrf
+                        <input type="hidden" name="batch_id" value="{{ $batchId }}">
+                        <input type="hidden" name="from_condition" :value="fromCond">
+                        <input type="hidden" name="quantity" :value="selected.length || 0">
+
+                        <div class="bg-white rounded-xl border-2 border-blue-100 p-4 space-y-4">
+                            <!-- Destination Condition -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <span class="inline-flex items-center justify-center bg-green-100 text-green-800 text-xs font-bold rounded-full w-5 h-5 mr-1">3</span>
+                                    Kondisi Tujuan
+                                </label>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($conditions as $cond)
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="to_condition" value="{{ $cond->value }}"
+                                               x-model="toCond" class="sr-only peer" required>
+                                        <span class="inline-block px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all
+                                            peer-checked:ring-2 peer-checked:ring-offset-1 peer-checked:ring-blue-500 peer-checked:scale-105
+                                            {{ $cond->colorClass() }}">
+                                            {{ $cond->label() }}
+                                        </span>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Catatan (Opsional)</label>
+                                <input type="text" name="notes"
+                                       :value="selectedCodesText"
+                                       placeholder="Catatan alasan perubahan kondisi..."
+                                       class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <!-- Summary + Submit -->
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <p class="text-sm text-gray-600">
+                                    <span x-text="selected.length || 0"></span>
+                                    unit akan dipindahkan
+                                    <span x-show="selected.length > 0" class="text-blue-600 font-medium">
+                                        (<span x-text="fromCond"></span> → <span x-text="toCond"></span>)
+                                    </span>
+                                </p>
+                                <button type="submit"
+                                    :disabled="currentQty > 0 && selected.length === 0"
+                                    class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Proses Transfer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- ====== FORM: Pindah Ruangan ====== --}}
+                <div x-show="tab === 'room'" x-transition>
+                    <form action="{{ route('admin.labs.inventory.transfer-aggregate', $lab) }}" method="POST"
+                          @submit.prevent="
+                            if (currentQty > 0 && selected.length === 0) { alert('Pilih minimal 1 barang.'); return; }
+                            $el.submit();
+                          ">
+                        @csrf
+                        <input type="hidden" name="batch_id" value="{{ $batchId }}">
+                        <input type="hidden" name="condition" :value="fromCond">
+                        <input type="hidden" name="quantity" :value="selected.length || 0">
+
+                        <div class="bg-white rounded-xl border-2 border-indigo-100 p-4 space-y-4">
+                            <!-- Destination Lab -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <span class="inline-flex items-center justify-center bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full w-5 h-5 mr-1">3</span>
+                                    Ruangan Tujuan
+                                </label>
+                                <select name="target_lab_id" x-model="targetLab" required
+                                    class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 bg-white">
+                                    <option value="">-- Pilih Ruangan Tujuan --</option>
+                                    @foreach(\App\Models\Lab::where('id', '!=', $lab->id)->orderBy('name')->get() as $targetLab)
+                                        <option value="{{ $targetLab->id }}">{{ $targetLab->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Notes -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Catatan (Opsional)</label>
+                                <input type="text" name="notes"
+                                       :value="selectedCodesText"
+                                       placeholder="Catatan Pemindahan Barang"
+                                       class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
+                            </div>
+
+                            <!-- Summary + Submit -->
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <p class="text-sm text-gray-600">
+                                    <span x-text="selected.length || 0"></span>
+                                    unit akan dipindahkan
+                                </p>
+                                <button type="submit"
+                                    :disabled="currentQty > 0 && selected.length === 0"
+                                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                    </svg>
+                                    Proses Pindah Ruangan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     @endforeach
+
 
     @if($balances->isEmpty())
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-8 text-center text-gray-500">

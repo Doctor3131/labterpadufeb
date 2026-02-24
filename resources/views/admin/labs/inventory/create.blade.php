@@ -139,18 +139,52 @@
 
             <!-- Asset Type Code (for Structured Tag) -->
             <div x-show="trackingMode === 'STRUCTURED_TAG'" class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Kode Tipe Aset *</label>
-                <select name="asset_type_code" :disabled="trackingMode !== 'STRUCTURED_TAG'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                    <option value="">-- Pilih Kode Tipe --</option>
-                    <option value="H3" {{ old('asset_type_code') == 'H3' ? 'selected' : '' }}>H3 - PC AIO</option>
-                    <option value="I2" {{ old('asset_type_code') == 'I2' ? 'selected' : '' }}>I2 - TV</option>
-                    <option value="BRK" {{ old('asset_type_code') == 'BRK' ? 'selected' : '' }}>BRK - Bracket</option>
-                    <option value="J1" {{ old('asset_type_code') == 'J1' ? 'selected' : '' }}>J1 - Speaker</option>
-                    <option value="O1" {{ old('asset_type_code') == 'O1' ? 'selected' : '' }}>O1 - Laptop</option>
-                    <option value="L1" {{ old('asset_type_code') == 'L1' ? 'selected' : '' }}>L1 - Printer</option>
-                    <option value="P" {{ old('asset_type_code') == 'P' ? 'selected' : '' }}>P - Samsung Tab</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Kode tipe untuk format tag (H3=PC AIO, O1=Laptop, dll)</p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Kode Tipe Aset UPK <span class="text-gray-400 text-xs font-normal">(opsional)</span></label>
+                
+                <!-- Mode Selection -->
+                <div class="flex flex-wrap gap-4 mb-3">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="asset_type_code_mode" value="kosong" x-model="assetTypeCodeMode" class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                        <span class="ml-2 text-sm text-gray-700">Kosongkan</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="asset_type_code_mode" value="pilih" x-model="assetTypeCodeMode" class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                        <span class="ml-2 text-sm text-gray-700">Pilih dari Daftar</span>
+                    </label>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="asset_type_code_mode" value="manual" x-model="assetTypeCodeMode" class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                        <span class="ml-2 text-sm text-gray-700">Isi Manual</span>
+                    </label>
+                </div>
+
+                <!-- Dropdown (Pilih dari Daftar) -->
+                <div x-show="assetTypeCodeMode === 'pilih'" x-transition>
+                    <select name="asset_type_code" :disabled="trackingMode !== 'STRUCTURED_TAG' || assetTypeCodeMode !== 'pilih'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        <option value="">-- Pilih Kode Tipe --</option>
+                        <option value="H3" {{ old('asset_type_code') == 'H3' ? 'selected' : '' }}>H3 - PC AIO</option>
+                        <option value="I2" {{ old('asset_type_code') == 'I2' ? 'selected' : '' }}>I2 - TV</option>
+                        <option value="BRK" {{ old('asset_type_code') == 'BRK' ? 'selected' : '' }}>BRK - Bracket</option>
+                        <option value="J1" {{ old('asset_type_code') == 'J1' ? 'selected' : '' }}>J1 - Speaker</option>
+                        <option value="O1" {{ old('asset_type_code') == 'O1' ? 'selected' : '' }}>O1 - Laptop</option>
+                        <option value="L1" {{ old('asset_type_code') == 'L1' ? 'selected' : '' }}>L1 - Printer</option>
+                        <option value="P" {{ old('asset_type_code') == 'P' ? 'selected' : '' }}>P - Samsung Tab</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Kode tipe untuk format tag (H3=PC AIO, O1=Laptop, dll)</p>
+                </div>
+
+                <!-- Manual Input -->
+                <div x-show="assetTypeCodeMode === 'manual'" x-transition>
+                    <input type="text" name="manual_asset_tag_prefix" :disabled="trackingMode !== 'STRUCTURED_TAG' || assetTypeCodeMode !== 'manual'" 
+                        value="{{ old('manual_asset_tag_prefix') }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        placeholder="Contoh: H3.01.1023">
+                    <p class="text-xs text-gray-500 mt-1">Masukkan kode aset lengkap tanpa nomor urut. Nomor urut akan ditambahkan otomatis (misal: 01.0226.H3.EL 301)</p>
+                </div>
+
+                <!-- Empty info -->
+                <div x-show="assetTypeCodeMode === 'kosong'" x-transition>
+                    <p class="text-xs text-gray-500 italic">Kode tipe aset akan dikosongkan</p>
+                </div>
             </div>
 
 
@@ -312,10 +346,9 @@
             <!-- University Asset Code Field (All Modes) -->
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Kode Aset Universitas *
+                    Kode Aset Universitas <span class="text-gray-400 text-xs font-normal">(opsional)</span>
                 </label>
                 <input type="text" name="university_asset_code_prefix" value="{{ old('university_asset_code_prefix') }}"
-                    required
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
             </div>
 
@@ -350,6 +383,7 @@
         function inventoryForm() {
             return {
                 trackingMode: '{{ old('tracking_mode', 'STRUCTURED_TAG') }}',
+                assetTypeCodeMode: '{{ old('asset_type_code_mode', 'kosong') }}',
                 selectedItemForReference: '',
                 itemName: '{{ old('new_item_name', '') }}',
                 batchId: '{{ old('batch_id', 'new') }}',

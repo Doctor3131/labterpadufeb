@@ -103,10 +103,15 @@ class LabInventoryController extends Controller
                 return $item;
             });
         }
+
+        // Filter out items with 0 total units (orphaned items)
+        $items = $items->filter(fn($item) => $item->total_units > 0);
             
         $groupedItems = $items->groupBy(function($item) {
             return $item->category ?: 'Lainnya';
         })->sortKeys();
+        
+        $gudangLab = $labs->firstWhere('name', 'Gudang') ?? $labs->first(); // Fallback to first lab if no Gudang is found
 
         return view('admin.inventory.global', [
             'labSummaries' => $labSummaries,
@@ -116,6 +121,7 @@ class LabInventoryController extends Controller
             'trackingModes' => TrackingModeEnum::cases(),
             'labs' => $labs,
             'selectedLabId' => $selectedLabId,
+            'gudangLab' => $gudangLab,
         ]);
     }
 
@@ -164,10 +170,12 @@ class LabInventoryController extends Controller
         $mode = TrackingModeEnum::from($validated['tracking_mode']);
         $condition = ConditionEnum::from($validated['condition']);
 
+        // Check asset type code mode from form radio buttons
+        $assetTypeCodeMode = $request->input('asset_type_code_mode', 'kosong');
+
         // Handle Asset Type Code (Find or Create on fly) for Structured Tag
-        // Handle Asset Type Code (Find or Create on fly)
         $assetTypeCodeId = null;
-        if (!empty($validated['asset_type_code'])) {
+        if ($assetTypeCodeMode !== 'kosong' && !empty($validated['asset_type_code'])) {
             $codeStr = $validated['asset_type_code'];
             
             // Map code to name (hardcoded map to match view)
@@ -242,8 +250,15 @@ class LabInventoryController extends Controller
             );
         } else {
             $item = Item::findOrFail($validated['item_id']);
-            // Reset type code if item didn't have one? Or keep existing. 
-            // For new inventory flow, usually we use existing item's config.
+        }
+
+        // If "Kosongkan" was selected, explicitly clear the item's asset_type_code_id
+        // so old values don't persist from previous saves
+        if ($mode === TrackingModeEnum::STRUCTURED_TAG && $assetTypeCodeMode === 'kosong') {
+            $item->update(['asset_type_code_id' => null]);
+        } elseif ($assetTypeCodeId) {
+            // Update the item's asset_type_code_id if a new one was selected
+            $item->update(['asset_type_code_id' => $assetTypeCodeId]);
         }
 
         // Get or create batch
@@ -275,6 +290,35 @@ class LabInventoryController extends Controller
                         $condition,
                         $validated['subtype'] ?? null
                     );
+                    
+                    // Handle manual asset tag prefix if provided
+                    if (!empty($validated['manual_asset_tag_prefix'])) {
+                        $manualPrefix = $validated['manual_asset_tag_prefix'];
+                        
+                        // Determine starting sequence
+                        $startSeq = $validated['start_seq'] ?? null;
+                        if (!$startSeq) {
+                            $existingTags = \App\Models\AssetUnit::where('asset_tag', 'like', $manualPrefix . '.%')
+                                ->pluck('asset_tag');
+                                
+                            $maxSeq = 0;
+                            foreach ($existingTags as $tag) {
+                                $parts = explode('.', $tag);
+                                $seqStr = end($parts);
+                                if (is_numeric($seqStr)) {
+                                    $maxSeq = max($maxSeq, (int)$seqStr);
+                                }
+                            }
+                            $startSeq = $maxSeq + 1;
+                        }
+
+                        foreach ($units as $index => $unit) {
+                            // Format: prefix + . + 3-digit sequence (e.g., H3.01.1023.001)
+                            $seqNum = str_pad($startSeq + $index, 3, '0', STR_PAD_LEFT);
+                            $unit->asset_tag = $manualPrefix . '.' . $seqNum;
+                            $unit->save();
+                        }
+                    }
                     
                     // Handle university asset code if provided
                     if (!empty($validated['university_asset_code_prefix'])) {
@@ -490,6 +534,72 @@ class LabInventoryController extends Controller
     }
 
     /**
+     * Bulk transfer asset units to another lab (e.g., Gudang)
+     */
+    public function bulkTransferUnits(Request $request)
+    {
+        $request->validate([
+            'unit_ids' => 'required|array|min:1',
+            'unit_ids.*' => 'exists:asset_units,id',
+            'target_lab_id' => 'required|exists:labs,id',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $units = $this->inventoryService->transferUnitsToLab(
+                $request->unit_ids,
+                $request->target_lab_id,
+                $request->notes
+            );
+
+            $targetLab = Lab::find($request->target_lab_id);
+
+            return redirect()
+                ->back()
+                ->with('success', count($units) . " unit berhasil dipindahkan ke {$targetLab->name}.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memindahkan unit: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Transfer aggregate balance to another lab (e.g., Gudang)
+     */
+    public function transferAggregate(Request $request, Lab $lab)
+    {
+        $request->validate([
+            'batch_id' => 'required|exists:batches,id',
+            'condition' => 'required|string',
+            'target_lab_id' => 'required|exists:labs,id',
+            'quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $condition = ConditionEnum::from($request->condition);
+            
+            $this->inventoryService->transferAggregateToLab(
+                $lab->id,
+                $request->target_lab_id,
+                $request->batch_id,
+                $condition,
+                $request->quantity,
+                $request->notes
+            );
+
+            $targetLab = Lab::find($request->target_lab_id);
+
+            return redirect()
+                ->back()
+                ->with('success', "Berhasil memindahkan {$request->quantity} unit ke {$targetLab->name}.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memindahkan barang: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Get batches for an item (AJAX)
      */
     public function getBatches(Item $item)
@@ -522,6 +632,8 @@ class LabInventoryController extends Controller
     public function destroyItem(Lab $lab, Item $item)
     {
         try {
+            $itemName = $item->name;
+
             // Delete all asset units for this item in this lab
             $deletedUnits = AssetUnit::where('lab_id', $lab->id)
                 ->whereHas('batch', fn($q) => $q->where('item_id', $item->id))
@@ -534,9 +646,12 @@ class LabInventoryController extends Controller
 
             $totalDeleted = $deletedUnits + $deletedBalances;
 
+            // Clean up orphaned batches and item
+            $this->cleanupOrphanedRecords($item);
+
             return redirect()
                 ->route('admin.labs.inventory', $lab)
-                ->with('success', "Berhasil menghapus {$totalDeleted} unit {$item->name} dari {$lab->name}.");
+                ->with('success', "Berhasil menghapus {$totalDeleted} unit {$itemName} dari {$lab->name}.");
 
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
@@ -554,6 +669,16 @@ class LabInventoryController extends Controller
             $assetTag = $unit->asset_tag;
 
             $unit->delete();
+
+            // Clean up orphaned batches and item
+            $itemDeleted = $this->cleanupOrphanedRecords($item);
+
+            // If item was fully deleted, redirect to lab inventory index instead
+            if ($itemDeleted) {
+                return redirect()
+                    ->route('admin.labs.inventory', $lab)
+                    ->with('success', "Berhasil menghapus unit {$assetTag}. Barang telah dihapus karena tidak ada unit tersisa.");
+            }
 
             return redirect()
                 ->route('admin.labs.inventory.units', [$lab, $item])
@@ -587,6 +712,16 @@ class LabInventoryController extends Controller
             
             $deletedCount = AssetUnit::whereIn('id', $request->unit_ids)->delete();
 
+            // Clean up orphaned batches and item
+            $itemDeleted = $this->cleanupOrphanedRecords($item);
+
+            // If item was fully deleted, redirect to lab inventory index instead
+            if ($itemDeleted) {
+                return redirect()
+                    ->route('admin.labs.inventory', $lab)
+                    ->with('success', "Berhasil menghapus {$deletedCount} unit. Barang telah dihapus karena tidak ada unit tersisa.");
+            }
+
             return redirect()
                 ->route('admin.labs.inventory.units', [$lab, $item])
                 ->with('success', "Berhasil menghapus {$deletedCount} unit.");
@@ -613,6 +748,76 @@ class LabInventoryController extends Controller
             'message' => 'Kode aset universitas berhasil diperbarui',
             'university_asset_code' => $unit->university_asset_code,
         ]);
+    }
+
+    /**
+     * Update university asset code prefix for a specific inventory balance (AJAX)
+     */
+    public function updateUniversityCodeBalance(Request $request, InventoryBalance $balance)
+    {
+        $request->validate([
+            'university_asset_code_prefix' => 'nullable|string|max:255',
+        ]);
+
+        $balance->update(['university_asset_code_prefix' => $request->university_asset_code_prefix]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kode aset universitas berhasil diperbarui',
+            'university_asset_code_prefix' => $balance->university_asset_code_prefix,
+        ]);
+    }
+
+
+    /**
+     * Update asset tag (UPK code) for a specific unit
+     */
+    public function updateAssetTag(Request $request, AssetUnit $unit)
+    {
+        $request->validate([
+            'asset_tag' => 'nullable|string|max:255',
+        ]);
+
+        $unit->asset_tag = $request->asset_tag;
+        $unit->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asset tag berhasil diperbarui',
+            'asset_tag' => $unit->asset_tag,
+        ]);
+    }
+
+    /**
+     * Clean up orphaned Batch and Item records after units/balances are deleted.
+     * Returns true if the Item itself was deleted (no inventory left anywhere).
+     */
+    private function cleanupOrphanedRecords(Item $item): bool
+    {
+        // Delete batches that have no remaining units AND no remaining balances (or all zero)
+        $batches = Batch::where('item_id', $item->id)->get();
+
+        foreach ($batches as $batch) {
+            $hasUnits = AssetUnit::where('batch_id', $batch->id)->exists();
+            $hasNonZeroBalances = InventoryBalance::where('batch_id', $batch->id)
+                ->where('quantity', '>', 0)
+                ->exists();
+
+            if (!$hasUnits && !$hasNonZeroBalances) {
+                // Delete zero-quantity balance records too
+                InventoryBalance::where('batch_id', $batch->id)->delete();
+                $batch->delete();
+            }
+        }
+
+        // If the item has no remaining batches, delete the item too
+        $remainingBatches = Batch::where('item_id', $item->id)->exists();
+        if (!$remainingBatches) {
+            $item->delete();
+            return true;
+        }
+
+        return false;
     }
 
     /**

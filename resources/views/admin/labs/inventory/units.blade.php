@@ -157,7 +157,7 @@
     </div>
 
     <!-- Units Table with Bulk Actions -->
-    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden" x-data="bulkActions()">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mb-12" x-data="bulkActions()">
         <!-- Bulk Action Bar -->
         <div x-show="selectedCount > 0" 
              x-transition:enter="transition ease-out duration-200"
@@ -193,6 +193,14 @@
                     </svg>
                     Hapus
                 </button>
+
+                <!-- Bulk Transfer Button -->
+                <button @click="openBulkTransferModal()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md text-sm transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+                    Pindah
+                </button>
             </div>
         </div>
 
@@ -203,7 +211,7 @@
                     <div class="flex items-start gap-3">
                         <input type="checkbox" :value="{{ $unit->id }}" @change="toggleSelection({{ $unit->id }})" class="mt-1 w-4 h-4 text-blue-600 rounded">
                         <div class="flex-1">
-                            <div class="font-mono text-sm font-bold text-gray-800">{{ $unit->asset_tag }}</div>
+                            <div class="font-mono text-sm font-bold text-gray-800">{{ $unit->asset_tag ?: '-' }}</div>
                             @if($unit->university_asset_code)
                                 <div class="font-mono text-xs font-medium text-blue-900 bg-blue-50 px-2 py-1 rounded mt-1 inline-block">
                                     Kode Univ: {{ $unit->university_asset_code }}
@@ -262,7 +270,20 @@
                                 <input type="checkbox" :value="{{ $unit->id }}" @change="toggleSelection({{ $unit->id }})" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             </td>
                             <td class="px-6 py-3">
-                                <span class="font-mono text-sm font-medium text-gray-900">{{ $unit->asset_tag }}</span>
+                                <div class="flex items-center gap-2 group">
+                                    @if($unit->asset_tag)
+                                        <span class="font-mono text-sm font-medium text-gray-900">{{ $unit->asset_tag }}</span>
+                                    @else
+                                        <span class="text-gray-400 text-sm">-</span>
+                                    @endif
+                                    <button onclick="openEditAssetTagModal({{ $unit->id }}, '{{ $unit->asset_tag ?? '' }}')" 
+                                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                                        title="Edit Asset Tag">
+                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </td>
                             <td class="px-6 py-3">
                                 <div class="flex items-center gap-2 group">
@@ -381,6 +402,60 @@
         </div>
     </div>
 
+    <!-- Bulk Transfer Modal -->
+    <div id="bulkTransferModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="relative mx-auto w-full max-w-md px-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6">
+                <!-- Icon -->
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-50 mb-4">
+                    <svg class="h-8 w-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
+                </div>
+
+                <!-- Title -->
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Pindah Ruangan Barang</h3>
+                
+                <!-- Message -->
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 text-center">
+                        Memindahkan <span id="transferCount" class="font-bold text-gray-900"></span> unit ke ruangan lain.
+                    </p>
+                </div>
+
+                <!-- Form -->
+                <form id="bulkTransferForm" method="POST" action="{{ route('admin.inventory.bulk-transfer') }}" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Lab / Ruangan Tujuan</label>
+                        <select name="target_lab_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <option value="">-- Pilih Tujuan --</option>
+                            @foreach(\App\Models\Lab::where('id', '!=', $lab->id)->orderBy('name')->get() as $target)
+                                <option value="{{ $target->id }}">{{ $target->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Pindahan (Opsional)</label>
+                        <input type="text" name="notes" placeholder="Contoh: Dipindahkan berdasarkan surat tugas No..." 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="closeBulkTransferModal()" class="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            Pindahkan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit University Code Modal -->
     <div id="editUniversityCodeModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
         <div class="relative mx-auto w-full max-w-md px-4">
@@ -412,6 +487,45 @@
                             Batal
                         </button>
                         <button type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Asset Tag Modal -->
+    <div id="editAssetTagModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="relative mx-auto w-full max-w-md px-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6">
+                <!-- Icon -->
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-50 mb-4">
+                    <svg class="h-8 w-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+
+                <!-- Title -->
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Edit Asset Tag UPK</h3>
+                
+                <!-- Form -->
+                <form id="editAssetTagForm" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Asset Tag UPK</label>
+                        <input type="text" id="assetTagInput" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            placeholder="Contoh: H3.01.1023.EL301.001">
+                        <p class="text-xs text-gray-500 mt-1">Kosongkan jika belum ada kode</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeEditAssetTagModal()" class="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors">
                             Simpan
                         </button>
                     </div>
@@ -473,10 +587,20 @@
             document.getElementById('bulkDeleteModal').classList.add('hidden');
         }
 
+        function closeBulkTransferModal() {
+            document.getElementById('bulkTransferModal').classList.add('hidden');
+        }
+
         // Close modal when clicking outside
         document.getElementById('bulkDeleteModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeBulkDeleteModal();
+            }
+        });
+        
+        document.getElementById('bulkTransferModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBulkTransferModal();
             }
         });
 
@@ -548,6 +672,73 @@
         document.getElementById('editUniversityCodeModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeEditUniversityCodeModal();
+            }
+        });
+
+        // Edit Asset Tag Modal Functions
+        let currentEditAssetTagUnitId = null;
+
+        function openEditAssetTagModal(unitId, currentTag) {
+            currentEditAssetTagUnitId = unitId;
+            document.getElementById('assetTagInput').value = currentTag || '';
+            document.getElementById('editAssetTagModal').classList.remove('hidden');
+        }
+
+        function closeEditAssetTagModal() {
+            document.getElementById('editAssetTagModal').classList.add('hidden');
+            currentEditAssetTagUnitId = null;
+        }
+
+        // Handle asset tag form submission
+        document.getElementById('editAssetTagForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const assetTag = document.getElementById('assetTagInput').value;
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'Menyimpan...';
+            
+            try {
+                const response = await fetch(`/admin/inventory/units/${currentEditAssetTagUnitId}/asset-tag`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        asset_tag: assetTag || null
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Gagal memperbarui asset tag: ' + (data.message || 'Unknown error'));
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat memperbarui asset tag: ' + error.message);
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        });
+
+        // Close asset tag modal when clicking outside
+        document.getElementById('editAssetTagModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditAssetTagModal();
             }
         });
     </script>

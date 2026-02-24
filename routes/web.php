@@ -102,6 +102,23 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.labs.inventory.units');
     Route::get('/admin/labs/{lab}/inventory/{item}/balances', [App\Http\Controllers\Admin\LabInventoryController::class, 'showBalances'])
         ->name('admin.labs.inventory.balances');
+        
+    // Lab Inventory Logs (Mutasi Barang - Global)
+    Route::get('/admin/inventory-logs', [App\Http\Controllers\Admin\InventoryLogController::class, 'index'])
+        ->name('admin.inventory.logs.index');
+    Route::get('/admin/inventory-logs/create', [App\Http\Controllers\Admin\InventoryLogController::class, 'create'])
+        ->name('admin.inventory.logs.create');
+    Route::post('/admin/inventory-logs', [App\Http\Controllers\Admin\InventoryLogController::class, 'store'])
+        ->name('admin.inventory.logs.store');
+    Route::get('/admin/inventory-logs/{log}/edit', [App\Http\Controllers\Admin\InventoryLogController::class, 'edit'])
+        ->name('admin.inventory.logs.edit');
+    Route::put('/admin/inventory-logs/{log}', [App\Http\Controllers\Admin\InventoryLogController::class, 'update'])
+        ->name('admin.inventory.logs.update');
+    Route::patch('/admin/inventory-logs/{log}/toggle-flow', [App\Http\Controllers\Admin\InventoryLogController::class, 'toggleFlow'])
+        ->name('admin.inventory.logs.toggle-flow');
+    Route::delete('/admin/inventory-logs/{log}', [App\Http\Controllers\Admin\InventoryLogController::class, 'destroy'])
+        ->name('admin.inventory.logs.destroy');
+
     Route::post('/admin/inventory/bulk-update-condition', [App\Http\Controllers\Admin\LabInventoryController::class, 'bulkUpdateCondition'])
         ->name('admin.inventory.bulk-condition');
     Route::post('/admin/labs/{lab}/inventory/transfer-balance', [App\Http\Controllers\Admin\LabInventoryController::class, 'transferBalance'])
@@ -118,6 +135,26 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.inventory.bulk-delete');
     Route::patch('/admin/inventory/units/{unit}/university-code', [App\Http\Controllers\Admin\LabInventoryController::class, 'updateUniversityCode'])
         ->name('admin.inventory.units.update-university-code');
+    Route::patch('/admin/inventory/units/{unit}/asset-tag', [App\Http\Controllers\Admin\LabInventoryController::class, 'updateAssetTag'])
+        ->name('admin.inventory.units.update-asset-tag');
+    Route::patch('/admin/inventory/balance/{balance}/university-code', [App\Http\Controllers\Admin\LabInventoryController::class, 'updateUniversityCodeBalance'])
+        ->name('admin.inventory.balance.update-university-code');
+
+    // Transfer inventory (e.g. to Gudang) routes
+    Route::post('/admin/inventory/bulk-transfer-units', [App\Http\Controllers\Admin\LabInventoryController::class, 'bulkTransferUnits'])
+        ->name('admin.inventory.bulk-transfer');
+    Route::post('/admin/labs/{lab}/inventory/transfer-aggregate', [App\Http\Controllers\Admin\LabInventoryController::class, 'transferAggregate'])
+        ->name('admin.labs.inventory.transfer-aggregate');
+        
+    // Unified Transfer Form
+    Route::get('/admin/inventory/transfer', [App\Http\Controllers\Admin\InventoryTransferController::class, 'create'])
+        ->name('admin.inventory.transfer.create');
+    Route::post('/admin/inventory/transfer', [App\Http\Controllers\Admin\InventoryTransferController::class, 'store'])
+        ->name('admin.inventory.transfer.store');
+        
+    // API for Unified Transfer Form
+    Route::get('/admin/api/inventory/{lab}/items', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItems']);
+    Route::get('/admin/api/inventory/{lab}/items/{item}', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItemDetails']);
 
     // Admin Reports
     Route::get('/admin/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])
