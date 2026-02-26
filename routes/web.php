@@ -10,6 +10,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\BpsRequestController;
 use App\Http\Controllers\RefinitivRequestController;
 use App\Http\Controllers\PersonalBorrowingController;
+use App\Http\Controllers\BloombergRequestController;
 
 // Public Routes
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -62,6 +63,17 @@ Route::post('/refinitiv', [RefinitivRequestController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('refinitiv.store');
 Route::get('/refinitiv/success/{token}', [RefinitivRequestController::class, 'success'])->name('refinitiv.success');
+
+// Bloomberg Reservation Routes (Public)
+Route::get('/bloomberg', [BloombergRequestController::class, 'create'])->name('bloomberg.create');
+Route::get('/bloomberg/walk-in', [BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walk-in');
+Route::post('/bloomberg', [BloombergRequestController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('bloomberg.store');
+Route::get('/bloomberg/success/{token}', [BloombergRequestController::class, 'success'])->name('bloomberg.success');
+Route::get('/api/bloomberg/capacity', [BloombergRequestController::class, 'checkCapacity'])
+    ->middleware('throttle:60,1')
+    ->name('api.bloomberg.capacity');
 
 // Schedule Routes (Public)
 Route::get('/schedules', function () {
@@ -158,6 +170,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/refinitiv/{request}/hadir', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'markHadir'])->name('admin.refinitiv.hadir');
     Route::put('/admin/refinitiv/{request}/tidak-hadir', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'markTidakHadir'])->name('admin.refinitiv.tidak-hadir');
     Route::put('/admin/refinitiv/{request}/reset', [App\Http\Controllers\Admin\RefinitivRequestController::class, 'resetStatus'])->name('admin.refinitiv.reset');
+
+    // Admin Bloomberg Reservation Management
+    Route::get('/admin/bloomberg', [App\Http\Controllers\Admin\BloombergRequestController::class, 'index'])->name('admin.bloomberg.index');
+    Route::get('/admin/bloomberg/blocked-dates', [App\Http\Controllers\Admin\BloombergRequestController::class, 'blockedDates'])->name('admin.bloomberg.blocked-dates');
+    Route::post('/admin/bloomberg/blocked-dates', [App\Http\Controllers\Admin\BloombergRequestController::class, 'addBlockedDate'])->name('admin.bloomberg.blocked-dates.store');
+    Route::delete('/admin/bloomberg/blocked-dates/{blockedDate}', [App\Http\Controllers\Admin\BloombergRequestController::class, 'removeBlockedDate'])->name('admin.bloomberg.blocked-dates.destroy');
+    Route::get('/admin/bloomberg/settings', [App\Http\Controllers\Admin\BloombergRequestController::class, 'settings'])->name('admin.bloomberg.settings');
+    Route::put('/admin/bloomberg/settings', [App\Http\Controllers\Admin\BloombergRequestController::class, 'updateSettings'])->name('admin.bloomberg.settings.update');
+    Route::get('/admin/bloomberg/{request}', [App\Http\Controllers\Admin\BloombergRequestController::class, 'show'])->name('admin.bloomberg.show');
 
     // Admin Announcements
     Route::resource('/admin/announcements', App\Http\Controllers\Admin\AnnouncementController::class)

@@ -9,7 +9,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Laporan</h1>
-                    <p class="text-xs md:text-sm text-indigo-100">Export data Lab, BPS, dan Refinitiv</p>
+                    <p class="text-xs md:text-sm text-indigo-100">Export data Lab, BPS, Refinitiv, dan Bloomberg</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-sm p-2 md:p-3 rounded-xl">
                     <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,6 +51,16 @@
                     </svg>
                     <span class="hidden sm:inline">Data Refinitiv</span>
                     <span class="sm:hidden">Refinitiv</span>
+                </div>
+            </button>
+            <button type="button" data-report-type="bloomberg" 
+               class="report-tab flex-1 px-4 py-4 text-center font-semibold transition-all {{ $reportType === 'bloomberg' ? 'text-indigo-600 border-b-2 border-indigo-500 bg-indigo-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }}">
+                <div class="flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="hidden sm:inline">Bloomberg</span>
+                    <span class="sm:hidden">BB</span>
                 </div>
             </button>
         </div>
@@ -112,6 +122,16 @@
                         @endforeach
                     </select>
                 </div>
+
+                <!-- Bloomberg Type Filter (only for bloomberg report) -->
+                <div id="bloomberg-type-filter-container" class="{{ $reportType !== 'bloomberg' ? 'hidden' : '' }}">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipe</label>
+                    <select name="bloomberg_type" id="bloomberg_type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Semua Tipe</option>
+                        <option value="reservasi" {{ request('bloomberg_type') == 'reservasi' ? 'selected' : '' }}>Reservasi</option>
+                        <option value="walk_in" {{ request('bloomberg_type') == 'walk_in' ? 'selected' : '' }}>Kunjungan Langsung</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Action Buttons -->
@@ -132,7 +152,7 @@
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    Export CSV
+                    Export Excel
                 </a>
                 <a href="#" id="btn-export-word" class="flex-1 sm:flex-none px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,13 +206,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const reportTypeNames = {
         'lab': 'Peminjaman Lab',
         'bps': 'Permohonan Data BPS',
-        'refinitiv': 'Permohonan Data Refinitiv'
+        'refinitiv': 'Permohonan Data Refinitiv',
+        'bloomberg': 'Reservasi Bloomberg'
     };
     
     const tabColors = {
         'lab': { active: 'text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50', inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' },
         'bps': { active: 'text-teal-600 border-b-2 border-teal-500 bg-teal-50', inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' },
-        'refinitiv': { active: 'text-blue-600 border-b-2 border-blue-500 bg-blue-50', inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }
+        'refinitiv': { active: 'text-blue-600 border-b-2 border-blue-500 bg-blue-50', inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' },
+        'bloomberg': { active: 'text-indigo-600 border-b-2 border-indigo-500 bg-indigo-50', inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }
     };
 
     // Get current filter params
@@ -207,6 +229,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (reportTypeInput.value === 'lab') {
             if (labIdInput.value) params.set('lab_id', labIdInput.value);
             if (typeInput.value) params.set('type', typeInput.value);
+        }
+
+        // Include bloomberg type filter
+        if (reportTypeInput.value === 'bloomberg') {
+            const bloombergType = document.getElementById('bloomberg_type');
+            if (bloombergType && bloombergType.value) params.set('bloomberg_type', bloombergType.value);
         }
         
         return params;
@@ -239,17 +267,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update filter visibility based on report type
     function updateFilterVisibility(reportType) {
+        const bloombergTypeContainer = document.getElementById('bloomberg-type-filter-container');
+
         if (reportType === 'lab') {
             labFilterContainer.classList.remove('hidden');
             typeFilterContainer.classList.remove('hidden');
+            bloombergTypeContainer.classList.add('hidden');
             filterFields.classList.remove('lg:grid-cols-2');
             filterFields.classList.add('lg:grid-cols-4');
+        } else if (reportType === 'bloomberg') {
+            labFilterContainer.classList.add('hidden');
+            typeFilterContainer.classList.add('hidden');
+            bloombergTypeContainer.classList.remove('hidden');
+            filterFields.classList.remove('lg:grid-cols-4');
+            filterFields.classList.add('lg:grid-cols-2');
+            filterFields.classList.remove('lg:grid-cols-2');
+            filterFields.classList.add('lg:grid-cols-3');
+            labIdInput.value = '';
+            typeInput.value = '';
         } else {
             labFilterContainer.classList.add('hidden');
             typeFilterContainer.classList.add('hidden');
-            filterFields.classList.remove('lg:grid-cols-4');
+            bloombergTypeContainer.classList.add('hidden');
+            filterFields.classList.remove('lg:grid-cols-4', 'lg:grid-cols-3');
             filterFields.classList.add('lg:grid-cols-2');
-            // Reset lab filters when switching away from lab
             labIdInput.value = '';
             typeInput.value = '';
         }

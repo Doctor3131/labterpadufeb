@@ -193,6 +193,83 @@
                     @endforelse
                 </tbody>
             </table>
+
+        @elseif($reportType === 'bloomberg')
+            {{-- Bloomberg Requests Table --}}
+            <table class="w-full">
+                <thead class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">No</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Timestamp</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">Tipe</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Nama</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">NIM/NIP</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Prodi</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Tanggal & Sesi</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Keperluan</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Detail</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($data as $index => $request)
+                        @php
+                            $purposes = \App\Models\BloombergRequest::PURPOSES;
+                            $purposeLabel = $purposes[$request->purpose] ?? $request->purpose;
+                            $detail = $request->research_title ?: ($request->subject_name ?: ($request->lecturer_name ?: '-'));
+                        @endphp
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 text-sm text-gray-600 text-center">
+                                {{ ($data->currentPage() - 1) * $data->perPage() + $index + 1 }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ \Carbon\Carbon::parse($request->created_at)->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if($request->type === 'walk_in')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Walk-in</span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">Reservasi</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-sm font-medium text-gray-900">{{ $request->name }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ $request->applicant_type_label }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ $request->nim_nip }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ $request->study_program ?? '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ \Carbon\Carbon::parse($request->usage_date)->format('d/m/Y') }}
+                                <span class="text-xs text-gray-400">({{ $request->session_label }})</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ $purposeLabel }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">
+                                {{ $detail }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="10" class="px-4 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <p class="text-gray-500 font-medium">Tidak ada data reservasi Bloomberg</p>
+                                    <p class="text-gray-400 text-sm mt-1">Coba ubah filter untuk melihat data lainnya</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         @endif
     </div>
 

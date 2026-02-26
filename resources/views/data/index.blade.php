@@ -24,6 +24,7 @@
         .animation-delay-200 { animation-delay: 0.2s; opacity: 0; }
         .animation-delay-300 { animation-delay: 0.3s; opacity: 0; }
         .animation-delay-400 { animation-delay: 0.4s; opacity: 0; }
+        .animation-delay-500 { animation-delay: 0.5s; opacity: 0; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen flex flex-col">
@@ -71,8 +72,8 @@
         <!-- Main Content -->
         <section class="pb-12 pt-0 lg:pb-16 lg:pt-0">
         <div class="container mx-auto px-4 lg:px-8">
-            <div class="max-w-4xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            <div class="max-w-5xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                     
                     <!-- Card Refinitiv -->
                     <a href="{{ route('refinitiv.create') }}" class="group block animate-fade-in-up animation-delay-300">
@@ -100,8 +101,57 @@
                         </div>
                     </a>
 
+                    <!-- Card Bloomberg -->
+                    <div class="animate-fade-in-up animation-delay-400">
+                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-indigo-200">
+                            <!-- Header with Icon -->
+                            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 lg:p-8">
+                                <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                                    <svg class="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl lg:text-3xl font-bold text-white">Bloomberg</h2>
+                                <p class="text-indigo-100 mt-2">Terminal Data Keuangan</p>
+                            </div>
+                            
+                            <!-- Two Options -->
+                            <div class="p-4 space-y-3">
+                                <!-- Option 1: Reservasi -->
+                                <a href="{{ route('bloomberg.create') }}" class="group block px-4 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="font-semibold text-indigo-700">Reservasi</span>
+                                            <p class="text-xs text-indigo-500">Pesan tempat terlebih dahulu</p>
+                                        </div>
+                                        <svg class="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+                                </a>
+                                <!-- Option 2: Sudah di tempat -->
+                                @php $walkInEnabled = \App\Models\ServiceSetting::isEnabled('bloomberg', 'walk_in_enabled'); @endphp
+                                <a href="{{ route('bloomberg.walk-in') }}" class="group block px-4 py-3 {{ $walkInEnabled ? 'bg-orange-50 hover:bg-orange-100' : 'bg-gray-50' }} rounded-xl transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-semibold {{ $walkInEnabled ? 'text-orange-700' : 'text-gray-500' }}">Sudah di tempat</span>
+                                            @if($walkInEnabled)
+                                                <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded">Dibuka</span>
+                                            @else
+                                                <span class="px-1.5 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded">Ditutup</span>
+                                            @endif
+                                        </div>
+                                        <svg class="w-5 h-5 {{ $walkInEnabled ? 'text-orange-400 group-hover:translate-x-1' : 'text-gray-300' }} transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Card BPS -->
-                    <a href="{{ route('bps.create') }}" class="group block animate-fade-in-up animation-delay-400">
+                    <a href="{{ route('bps.create') }}" class="group block animate-fade-in-up animation-delay-500">
                         <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-teal-200 transform hover:-translate-y-2">
                             <!-- Header with Icon -->
                             <div class="bg-gradient-to-br from-teal-500 to-teal-600 p-6 lg:p-8">

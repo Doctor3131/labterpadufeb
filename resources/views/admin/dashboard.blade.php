@@ -22,6 +22,7 @@
         .dashboard-card:nth-child(2) { animation-delay: 0.2s; }
         .dashboard-card:nth-child(3) { animation-delay: 0.3s; }
         .dashboard-card:nth-child(4) { animation-delay: 0.4s; }
+        .dashboard-card:nth-child(5) { animation-delay: 0.5s; }
     </style>
 @endpush
 
@@ -55,8 +56,8 @@
         </div>
     @endif
 
-    <!-- 3 Service Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Service Cards - 3x2 Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Lab Booking Card -->
         <div class="dashboard-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-yellow-100 hover:border-yellow-300 transition-all hover:shadow-xl">
             <div class="bg-gradient-to-r from-yellow-400 to-yellow-500 p-4">
@@ -149,6 +150,40 @@
                 </div>
                 
                 <a href="{{ route('admin.refinitiv.index') }}" class="block w-full text-center px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors">
+                    <span class="flex items-center justify-center">
+                        Kelola
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Bloomberg Card -->
+        <div class="dashboard-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-indigo-100 hover:border-indigo-300 transition-all hover:shadow-xl">
+            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="bg-white/20 p-3 rounded-xl">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <span class="text-white/90 text-sm font-medium">Terminal Data</span>
+                </div>
+            </div>
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Bloomberg</h3>
+                <p class="text-gray-500 text-sm mb-4">Kelola reservasi Bloomberg</p>
+                
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-gray-600 text-sm">Total:</span>
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-bold">
+                        {{ $bloombergTotalCount }}
+                    </span>
+                </div>
+                
+                <a href="{{ route('admin.bloomberg.index') }}" class="block w-full text-center px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl transition-colors">
                     <span class="flex items-center justify-center">
                         Kelola
                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

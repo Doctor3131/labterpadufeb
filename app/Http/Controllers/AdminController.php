@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleDocument;
 use App\Models\BpsRequest;
 use App\Models\RefinitivRequest;
+use App\Models\BloombergRequest;
 use App\Services\ScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,12 +26,14 @@ class AdminController extends Controller
         $labPendingCount = Booking::where('status', 'pending')->where('booking_type', '!=', 'pribadi')->count();
         $bpsPendingCount = BpsRequest::where('status', 'pending')->count();
         $refinitivPendingCount = RefinitivRequest::where('attendance_status', 'pending')->count();
+        $bloombergTotalCount = BloombergRequest::count();
         $personalTotalCount = Booking::where('booking_type', 'pribadi')->count();
 
         return view('admin.dashboard', compact(
             'labPendingCount',
             'bpsPendingCount',
             'refinitivPendingCount',
+            'bloombergTotalCount',
             'personalTotalCount'
         ));
     }
