@@ -64,8 +64,9 @@ Route::post('/refinitiv', [RefinitivRequestController::class, 'store'])
     ->name('refinitiv.store');
 Route::get('/refinitiv/success/{token}', [RefinitivRequestController::class, 'success'])->name('refinitiv.success');
 
-// Bloomberg Reservation Routes (Public)
-Route::get('/bloomberg', [BloombergRequestController::class, 'create'])->name('bloomberg.create');
+// Bloomberg Routes (Public)
+Route::get('/bloomberg', function () { return view('bloomberg.index'); })->name('bloomberg.index');
+Route::get('/bloomberg/reservasi', [BloombergRequestController::class, 'create'])->name('bloomberg.create');
 Route::get('/bloomberg/walk-in', [BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walk-in');
 Route::post('/bloomberg', [BloombergRequestController::class, 'store'])
     ->middleware('throttle:10,1')

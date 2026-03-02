@@ -20,6 +20,7 @@ class BloombergRequest extends Model
         'usage_date',
         'session',
         'purpose',
+        'purpose_other',
         'research_title',
         'subject_name',
         'lecturer_name',
@@ -134,6 +135,9 @@ class BloombergRequest extends Model
      */
     public function getPurposeLabelAttribute(): string
     {
+        if ($this->purpose === 'lainnya' && $this->purpose_other) {
+            return $this->purpose_other;
+        }
         return self::PURPOSES[$this->purpose] ?? $this->purpose;
     }
 

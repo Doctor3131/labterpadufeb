@@ -702,7 +702,7 @@ class ReportController extends Controller
         $row = 2;
         foreach ($requests as $no => $req) {
             $typeLabel = BloombergRequest::TYPES[$req->type] ?? $req->type;
-            $purposeLabel = BloombergRequest::PURPOSES[$req->purpose] ?? $req->purpose;
+            $purposeLabel = $req->purpose_label;
             $sessionLabel = $req->session_label;
 
             $detail = '';
@@ -768,7 +768,7 @@ class ReportController extends Controller
         $no = 1;
         foreach ($requests as $req) {
             $typeLabel = BloombergRequest::TYPES[$req->type] ?? $req->type;
-            $purposeLabel = BloombergRequest::PURPOSES[$req->purpose] ?? $req->purpose;
+            $purposeLabel = $req->purpose_label;
             $sessionLabel = $req->session_label;
 
             $detail = '';

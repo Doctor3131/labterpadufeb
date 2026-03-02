@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Lab Bloomberg - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animation-delay-100 { animation-delay: 0.1s; opacity: 0; }
+        .animation-delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .animation-delay-300 { animation-delay: 0.3s; opacity: 0; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen flex flex-col">
+    
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-16 lg:h-20">
+                <a href="{{ route('landing') }}" class="flex items-center space-x-3 group cursor-pointer">
+                    <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 lg:h-16 w-auto object-contain group-hover:scale-105 transition-all duration-300">
+                </a>
+                <a href="{{ route('landing') }}" class="px-4 py-2 text-gray-600 hover:text-indigo-600 font-semibold rounded-lg hover:bg-indigo-50 transition-all duration-300 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Kembali
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Wrapper -->
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="relative bg-gradient-to-br from-indigo-500 via-indigo-500 to-purple-500 text-white overflow-hidden pb-24 lg:pb-32">
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="container mx-auto px-4 lg:px-8 pt-12 lg:pt-16 pb-12 lg:pb-16 relative z-10">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-3xl lg:text-4xl font-bold mb-4 drop-shadow-md animate-fade-in-up animation-delay-100">
+                        Lab Bloomberg
+                    </h1>
+                    <p class="text-lg text-indigo-50 drop-shadow animate-fade-in-up animation-delay-200">
+                        Akses Bloomberg Terminal untuk kebutuhan data keuangan
+                    </p>
+                </div>
+            </div>
+            <!-- Wave Decoration -->
+            <div class="absolute bottom-0 left-0 right-0 -mb-1">
+                <svg viewBox="0 0 1440 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 50L48 45.7C96 41.3 192 32.7 288 30.2C384 27.7 480 31.3 576 39.8C672 48.3 768 61.7 864 65.8C960 70 1056 65 1152 55.2C1248 45.3 1344 30.7 1392 23.3L1440 16V100H1392C1344 100 1248 100 1152 100C1056 100 960 100 864 100C768 100 672 100 576 100C480 100 384 100 288 100C192 100 96 100 48 100H0V50Z" fill="#f8fafc"/>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <section class="pb-12 pt-0 lg:pb-16 lg:pt-0">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="max-w-md mx-auto">
+                <div class="animate-fade-in-up animation-delay-300">
+                    <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-indigo-200">
+                        <!-- Header with Icon -->
+                        <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 lg:p-8">
+                            <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                                <svg class="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl lg:text-3xl font-bold text-white">Bloomberg Terminal</h2>
+                            <p class="text-indigo-100 mt-2">Pilih metode penggunaan</p>
+                        </div>
+                        
+                        <!-- Two Options -->
+                        <div class="p-4 space-y-3">
+                            <!-- Option 1: Reservasi -->
+                            <a href="{{ route('bloomberg.create') }}" class="group block px-4 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <span class="font-semibold text-indigo-700">Reservasi</span>
+                                        <p class="text-xs text-indigo-500">Pesan tempat terlebih dahulu</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </a>
+                            <!-- Option 2: Sudah di tempat -->
+                            @php $walkInEnabled = \App\Models\ServiceSetting::isEnabled('bloomberg', 'walk_in_enabled'); @endphp
+                            <a href="{{ route('bloomberg.walk-in') }}" class="group block px-4 py-3 {{ $walkInEnabled ? 'bg-orange-50 hover:bg-orange-100' : 'bg-gray-50' }} rounded-xl transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold {{ $walkInEnabled ? 'text-orange-700' : 'text-gray-500' }}">Sudah di tempat</span>
+                                        @if($walkInEnabled)
+                                            <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded">Dibuka</span>
+                                        @else
+                                            <span class="px-1.5 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded">Ditutup</span>
+                                        @endif
+                                    </div>
+                                    <svg class="w-5 h-5 {{ $walkInEnabled ? 'text-orange-400 group-hover:translate-x-1' : 'text-gray-300' }} transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+            &copy; {{ date('Y') }} Laboratorium dan Fasilitas Digital FEB UNDIP. All rights reserved.
+        </div>
+    </footer>
+
+</body>
+</html>

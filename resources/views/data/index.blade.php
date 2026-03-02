@@ -73,14 +73,14 @@
         <section class="pb-12 pt-0 lg:pb-16 lg:pt-0">
         <div class="container mx-auto px-4 lg:px-8">
             <div class="max-w-5xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
                     
                     <!-- Card Refinitiv -->
-                    <a href="{{ route('refinitiv.create') }}" class="group block animate-fade-in-up animation-delay-300">
-                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 transform hover:-translate-y-2">
+                    <div class="animate-fade-in-up animation-delay-300">
+                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200">
                             <!-- Header with Icon -->
                             <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 lg:p-8">
-                                <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                     </svg>
@@ -89,59 +89,15 @@
                                 <p class="text-blue-100 mt-2">Data Pasar Keuangan</p>
                             </div>
                             
-                            <!-- Content -->
-                            <div class="p-6">
-                                <div class="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
-                                    <span>Ajukan Peminjaman</span>
-                                    <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Card Bloomberg -->
-                    <div class="animate-fade-in-up animation-delay-400">
-                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-indigo-200">
-                            <!-- Header with Icon -->
-                            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 lg:p-8">
-                                <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
-                                    <svg class="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                </div>
-                                <h2 class="text-2xl lg:text-3xl font-bold text-white">Bloomberg</h2>
-                                <p class="text-indigo-100 mt-2">Terminal Data Keuangan</p>
-                            </div>
-                            
-                            <!-- Two Options -->
-                            <div class="p-4 space-y-3">
-                                <!-- Option 1: Reservasi -->
-                                <a href="{{ route('bloomberg.create') }}" class="group block px-4 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors">
+                            <!-- Button -->
+                            <div class="p-4">
+                                <a href="{{ route('refinitiv.create') }}" class="group block px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors">
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            <span class="font-semibold text-indigo-700">Reservasi</span>
-                                            <p class="text-xs text-indigo-500">Pesan tempat terlebih dahulu</p>
+                                            <span class="font-semibold text-blue-700">Ajukan Peminjaman</span>
+                                            <p class="text-xs text-blue-500">Isi form permohonan data</p>
                                         </div>
-                                        <svg class="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </div>
-                                </a>
-                                <!-- Option 2: Sudah di tempat -->
-                                @php $walkInEnabled = \App\Models\ServiceSetting::isEnabled('bloomberg', 'walk_in_enabled'); @endphp
-                                <a href="{{ route('bloomberg.walk-in') }}" class="group block px-4 py-3 {{ $walkInEnabled ? 'bg-orange-50 hover:bg-orange-100' : 'bg-gray-50' }} rounded-xl transition-colors">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-semibold {{ $walkInEnabled ? 'text-orange-700' : 'text-gray-500' }}">Sudah di tempat</span>
-                                            @if($walkInEnabled)
-                                                <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded">Dibuka</span>
-                                            @else
-                                                <span class="px-1.5 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded">Ditutup</span>
-                                            @endif
-                                        </div>
-                                        <svg class="w-5 h-5 {{ $walkInEnabled ? 'text-orange-400 group-hover:translate-x-1' : 'text-gray-300' }} transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                         </svg>
                                     </div>
@@ -151,11 +107,11 @@
                     </div>
 
                     <!-- Card BPS -->
-                    <a href="{{ route('bps.create') }}" class="group block animate-fade-in-up animation-delay-500">
-                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-teal-200 transform hover:-translate-y-2">
+                    <div class="animate-fade-in-up animation-delay-500">
+                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-teal-200">
                             <!-- Header with Icon -->
                             <div class="bg-gradient-to-br from-teal-500 to-teal-600 p-6 lg:p-8">
-                                <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
                                     </svg>
@@ -164,17 +120,22 @@
                                 <p class="text-teal-100 mt-2">Badan Pusat Statistik</p>
                             </div>
                             
-                            <!-- Content -->
-                            <div class="p-6">
-                                <div class="flex items-center text-teal-600 font-semibold group-hover:text-teal-700">
-                                    <span>Ajukan Permintaan</span>
-                                    <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                                    </svg>
-                                </div>
+                            <!-- Button -->
+                            <div class="p-4">
+                                <a href="{{ route('bps.create') }}" class="group block px-4 py-3 bg-teal-50 hover:bg-teal-100 rounded-xl transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="font-semibold text-teal-700">Ajukan Permintaan</span>
+                                            <p class="text-xs text-teal-500">Isi form permohonan data</p>
+                                        </div>
+                                        <svg class="w-5 h-5 text-teal-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+                                </a>
                             </div>
                         </div>
-                    </a>
+                    </div>
 
                 </div>
             </div>

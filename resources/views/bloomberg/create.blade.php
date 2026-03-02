@@ -23,7 +23,7 @@
     <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4">
             <div class="flex items-center justify-between">
-                <a href="{{ route('data.index') }}" class="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
+                <a href="{{ route('bloomberg.index') }}" class="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
@@ -107,6 +107,26 @@
             @csrf
             <input type="hidden" name="type" value="{{ $isWalkIn ? 'walk_in' : 'reservasi' }}">
 
+            <!-- Tata Tertib -->
+            <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-6 mb-6">
+                <h4 class="font-bold text-indigo-900 mb-3 flex items-center text-lg">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    Tata Tertib Penggunaan Laboratorium Bloomberg FEB UNDIP
+                </h4>
+                <div class="text-sm text-indigo-800 space-y-2">
+                    <ol class="list-decimal list-inside space-y-2 ml-2">
+                        <li>Bagi pengunjung yang belum melakukan reservasi tetapi sudah berada di tempat, silakan hubungi admin untuk mengisi form kunjungan langsung. WA admin: <a href="https://wa.me/6285155266697" target="_blank" class="font-semibold text-indigo-600 hover:text-indigo-800 underline">085155266697</a></li>
+                        <li>Pengunjung <strong>TIDAK DIPERKENANKAN</strong> menggunakan fasilitas <strong>EXPORT</strong> atau <strong>DOWNLOAD</strong> di Terminal Bloomberg.</li>
+                        <li>Pengunjung <strong>TIDAK DIPERKENANKAN</strong> untuk menggunakan <strong>FLASHDISK</strong> atau Penyimpanan External Lainnya di komputer Bloomberg.</li>
+                        <li>Tidak memperjualbelikan atau menyebarluaskan data yang diperoleh dari Terminal Bloomberg.</li>
+                        <li>Akun tidak boleh dipindahtangankan kepada orang lain.</li>
+                        <li>Wajib melakukan citation (sitasi).</li>
+                    </ol>
+                </div>
+            </div>
+
             <!-- STEP 1: Data Diri -->
             <div id="step-1" class="form-step active">
                 <div class="bg-white rounded-2xl shadow-lg p-6 lg:p-8">
@@ -117,7 +137,7 @@
 
                     <!-- Applicant Type -->
                     <div class="mb-6">
-                        <label class="block text-sm font-semibold text-gray-700 mb-3">Status Pemohon <span class="text-red-500">*</span></label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">Status <span class="text-red-500">*</span></label>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             @foreach($applicantTypes as $value => $label)
                                 <label class="radio-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-indigo-300 block">
@@ -298,6 +318,16 @@
                         </div>
                     </div>
 
+                    <!-- Purpose Other (for lainnya) -->
+                    <div id="purpose-other-field" class="mb-6 hidden">
+                        <label for="purpose_other_input" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Jelaskan Keperluan <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="purpose_other_input" name="purpose_other" value="{{ old('purpose_other') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="Masukkan keperluan Anda">
+                    </div>
+
                     <!-- Research Title (for skripsi/thesis/disertasi/lomba) -->
                     <div id="research-title-field" class="mb-6 hidden">
                         <label for="research_title_input" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -355,12 +385,30 @@
                     <!-- Statement File Upload -->
                     <div class="mb-6">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Surat Pengantar Kaprodi/Dosen <span class="text-red-500">*</span></label>
+                        
+                        <!-- Template Download -->
+                        <div class="mb-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center gap-3">
+                            <div class="flex-shrink-0 bg-indigo-100 p-2 rounded-lg">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-indigo-800">Template Surat Izin</p>
+                                <a href="https://bit.ly/Surat_Bloomberg" target="_blank" rel="noopener noreferrer" class="text-sm text-indigo-600 hover:text-indigo-800 underline transition-colors">
+                                    https://bit.ly/Surat_Bloomberg
+                                </a>
+                            </div>
+                        </div>
+
                         <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors">
                             <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                             </svg>
-                            <input type="file" id="statement_file_input" name="statement_file" accept=".pdf" required
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                            <div class="flex justify-center items-center">
+                                <input type="file" id="statement_file_input" name="statement_file" accept=".pdf" required
+                                       class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                            </div>
                             <p class="text-xs text-gray-500 mt-2">Format: PDF | Maksimal: 5MB</p>
                         </div>
                         <div id="file-error" class="hidden mt-2 text-red-600 text-sm flex items-center">
@@ -377,33 +425,44 @@
                         </div>
                     </div>
 
-                    <!-- Agreement / Tata Tertib -->
+                    <!-- Agreement 1: Citation -->
                     <div class="mb-6">
-                        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-6">
-                            <h4 class="font-bold text-indigo-900 mb-3 flex items-center">
-                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                </svg>
-                                Tata Tertib Penggunaan Bloomberg Terminal
-                            </h4>
-                            <div class="text-sm text-indigo-800 space-y-2">
-                                <p>Dengan ini saya menyatakan dan bersedia untuk:</p>
-                                <ol class="list-decimal list-inside space-y-1 ml-2">
-                                    <li>Menggunakan Bloomberg Terminal sesuai dengan ketentuan yang berlaku</li>
-                                    <li>Tidak menyebarluaskan data yang diperoleh dari Bloomberg Terminal kepada pihak yang tidak berhak</li>
-                                    <li>Menjaga kerahasiaan akses dan tidak membagikan kredensial kepada pihak lain</li>
-                                    <li>Bertanggung jawab atas segala aktivitas yang dilakukan selama menggunakan Bloomberg Terminal</li>
-                                    <li>Mengikuti peraturan dan tata tertib ruang Digilib FEB UNDIP</li>
-                                    <li>Mengembalikan fasilitas dalam kondisi baik setelah selesai digunakan</li>
-                                </ol>
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5">
+                            <p class="text-sm text-gray-800 mb-3">
+                                Bersedia mensitasi segala data yang bersumber dari Bloomberg Laboratory FEB Undip. <span class="text-red-500">*</span>
+                            </p>
+                            <p class="text-sm text-gray-700 mb-2">Contoh:</p>
+                            <div class="text-sm text-gray-600 space-y-3 ml-2">
+                                <div>
+                                    <p class="italic">Untuk data saham dan instrumen keuangan yang bersifat harian atau lebih kecil lagi (jam atau menit), ditulis tiap variabel, negara (atau tempat dimana perusahaan-perusahaan tersebut listed) dan nama ticker:</p>
+                                    <p class="mt-1 text-gray-800 font-medium">Bloomberg L.P. (2006). Daily stock price and trading volume data from 11/1/05 to 11/1/06 for firms that were listed in Indonesia Stock Exchange: AALI, ASII, and BBCA. Retrieved from Bloomberg database</p>
+                                </div>
+                                <div>
+                                    <p class="italic">Untuk data rasio keuangan dan informasi ekonomi yang bersifat kuartalan atau tahunan, ditulis tiap variabel, sektor perusahaan dan negara yang diambil:</p>
+                                    <p class="mt-1 text-gray-800 font-medium">Bloomberg L.P. (2006). Annual data on ROA, NPL, and Total Equity for firms that were listed in Indonesia financial sector from 2010 to 2020. Retrieved from Bloomberg database.</p>
+                                </div>
                             </div>
+                            <p class="text-xs text-gray-500 mt-3">Sumber: <a href="https://guides.library.ubc.ca/finance/bloomberg/citing" target="_blank" class="text-indigo-600 hover:text-indigo-800 underline">https://guides.library.ubc.ca/finance/bloomberg/citing</a></p>
                         </div>
-                        <label class="flex items-start mt-4 cursor-pointer">
-                            <input type="checkbox" id="agreement_checkbox" name="agreement" value="1"
-                                   class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mt-0.5">
-                            <span class="ml-3 text-sm text-gray-700">
-                                Saya telah membaca dan menyetujui tata tertib penggunaan Bloomberg Terminal di atas <span class="text-red-500">*</span>
-                            </span>
+                        <label class="flex items-center mt-3 cursor-pointer">
+                            <input type="radio" id="agreement_citation" name="agreement_citation" value="1" required
+                                   class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-700">Saya bersedia</span>
+                        </label>
+                    </div>
+
+                    <!-- Agreement 2: Compliance -->
+                    <div class="mb-6">
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5">
+                            <p class="text-sm text-gray-800">
+                                Dengan ini saya bersedia untuk mematuhi aturan di Lab Bloomberg FEB-Undip. <span class="text-red-500">*</span>
+                                Bahwa saya tidak akan menggunakan fasilitas <strong>EXPORT</strong> atau <strong>DOWNLOAD</strong> di Terminal Bloomberg, tidak akan memakai <strong>Flash disk</strong> atau penyimpanan eksternal lainnya pada komputer di Lab Bloomberg serta tidak memperjualbelikan atau menyebarluaskan data yang diperoleh dari Terminal Bloomberg.
+                            </p>
+                        </div>
+                        <label class="flex items-center mt-3 cursor-pointer">
+                            <input type="radio" id="agreement_compliance" name="agreement_compliance" value="1" required
+                                   class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-700">Saya bersedia</span>
                         </label>
                     </div>
 
@@ -491,7 +550,7 @@
             const phone = document.getElementById('phone_input').value.trim();
 
             if (!name) { alert('Nama lengkap wajib diisi.'); return false; }
-            if (!applicantType) { alert('Status pemohon wajib dipilih.'); return false; }
+            if (!applicantType) { alert('Status wajib dipilih.'); return false; }
             if (!phone || !/^08[0-9]{8,13}$/.test(phone)) { alert('Nomor HP wajib diisi dan harus diawali 08 (10-15 digit).'); return false; }
 
             const isLecturer = ['dosen_undip', 'dosen_non_undip'].includes(applicantType.value);
@@ -543,6 +602,10 @@
             if (purposeVal === 'penelitian_dosen') {
                 const lecturer = document.getElementById('lecturer_name_input').value.trim();
                 if (!lecturer) { alert('Nama dosen wajib diisi.'); return false; }
+            }
+            if (purposeVal === 'lainnya') {
+                const other = document.getElementById('purpose_other_input').value.trim();
+                if (!other) { alert('Keperluan lainnya wajib diisi.'); return false; }
             }
 
             return true;
@@ -735,6 +798,7 @@
         const researchTitleField = document.getElementById('research-title-field');
         const subjectNameField = document.getElementById('subject-name-field');
         const lecturerNameField = document.getElementById('lecturer-name-field');
+        const purposeOtherField = document.getElementById('purpose-other-field');
         const researchTitleLabel = document.getElementById('research-title-label');
 
         purposeRadios.forEach(radio => {
@@ -743,6 +807,7 @@
                 researchTitleField.classList.add('hidden');
                 subjectNameField.classList.add('hidden');
                 lecturerNameField.classList.add('hidden');
+                purposeOtherField.classList.add('hidden');
 
                 // Show relevant field
                 if (['skripsi', 'thesis', 'disertasi'].includes(this.value)) {
@@ -755,6 +820,8 @@
                     subjectNameField.classList.remove('hidden');
                 } else if (this.value === 'penelitian_dosen') {
                     lecturerNameField.classList.remove('hidden');
+                } else if (this.value === 'lainnya') {
+                    purposeOtherField.classList.remove('hidden');
                 }
             });
         });

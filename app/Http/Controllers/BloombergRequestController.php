@@ -97,7 +97,8 @@ class BloombergRequestController extends Controller
             'session' => 'required|in:sesi_1,sesi_2',
             'purpose' => 'required|in:skripsi,thesis,disertasi,sertifikasi_bloomberg,lomba,tugas_mk,penelitian_dosen,explore,lainnya',
             'statement_file' => 'required|file|mimes:pdf|max:5120',
-            'agreement' => 'required|accepted',
+            'agreement_citation' => 'required',
+            'agreement_compliance' => 'required',
         ];
 
         // Conditional rules based on applicant type
@@ -123,6 +124,9 @@ class BloombergRequestController extends Controller
         if ($purpose === 'penelitian_dosen') {
             $rules['lecturer_name'] = 'required|string|max:255';
         }
+        if ($purpose === 'lainnya') {
+            $rules['purpose_other'] = 'required|string|max:255';
+        }
 
         $validated = $request->validate($rules, [
             'name.required' => 'Nama wajib diisi',
@@ -133,7 +137,7 @@ class BloombergRequestController extends Controller
             'nip.regex' => 'NIP harus 18 digit angka',
             'phone.required' => 'Nomor HP wajib diisi',
             'phone.regex' => 'Nomor HP harus diawali 08 dan berisi 10-15 digit angka',
-            'applicant_type.required' => 'Status pemohon wajib dipilih',
+            'applicant_type.required' => 'Status wajib dipilih',
             'study_program.required' => 'Program Studi wajib dipilih',
             'study_program_other.required' => 'Program studi lainnya wajib diisi',
             'usage_date.required' => 'Tanggal pemakaian wajib diisi',
@@ -143,11 +147,12 @@ class BloombergRequestController extends Controller
             'research_title.required' => 'Judul Penelitian/Nama Lomba wajib diisi',
             'subject_name.required' => 'Nama mata kuliah wajib diisi',
             'lecturer_name.required' => 'Nama dosen wajib diisi',
+            'purpose_other.required' => 'Keperluan lainnya wajib diisi',
             'statement_file.required' => 'Surat Pengantar wajib diupload',
             'statement_file.mimes' => 'File surat harus berupa PDF',
             'statement_file.max' => 'Ukuran file surat maksimal 5MB',
-            'agreement.required' => 'Anda harus menyetujui pernyataan',
-            'agreement.accepted' => 'Anda harus menyetujui pernyataan',
+            'agreement_citation.required' => 'Anda harus menyetujui pernyataan sitasi',
+            'agreement_compliance.required' => 'Anda harus menyetujui pernyataan kepatuhan',
         ]);
 
         try {
@@ -189,6 +194,7 @@ class BloombergRequestController extends Controller
                     'usage_date' => $validated['usage_date'],
                     'session' => $validated['session'],
                     'purpose' => $validated['purpose'],
+                    'purpose_other' => $validated['purpose_other'] ?? null,
                     'research_title' => $validated['research_title'] ?? null,
                     'subject_name' => $validated['subject_name'] ?? null,
                     'lecturer_name' => $validated['lecturer_name'] ?? null,
