@@ -874,9 +874,9 @@
         const submitBtn = document.getElementById('submit-btn');
 
         form.addEventListener('submit', function(e) {
-            if (!document.getElementById('agreement_checkbox').checked) {
+            if (!document.getElementById('agreement_citation').checked || !document.getElementById('agreement_compliance').checked) {
                 e.preventDefault();
-                alert('Anda harus menyetujui tata tertib penggunaan Bloomberg Terminal.');
+                alert('Anda harus menyetujui kedua pernyataan persetujuan.');
                 return;
             }
 
