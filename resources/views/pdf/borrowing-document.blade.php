@@ -261,32 +261,52 @@
             </thead>
             <tbody>
                 @php
-                    // Kelompokkan items berdasarkan item_id untuk memisahkan varian/merk
-                    $groupedItems = collect($items)->groupBy('item_id')->map(function($group) {
-                        $first = $group->first();
-                        return [
-                            // Nama Barang diisi Kategori (jika ada), jika tidak gunakan Nama Item
-                            'name' => $first->item->category ?? $first->item->name,
-                            // Merk/Tipe diambil dari Item
-                            'brand_type' => $first->item->brand ?? '-',
-                            'quantity' => $group->sum('quantity'),
-                            'condition_good' => $first->condition_good,
-                            'condition_adequate' => $first->condition_adequate,
-                            'condition_complete' => $first->condition_complete,
-                            'remarks' => $first->remarks ?? '',
-                        ];
-                    })->values();
+                    // Gunakan items_override (diedit admin) jika tersedia,
+                    // fallback ke grouping otomatis dari borrowedItems
+                    if (!empty($borrowing->items_override)) {
+                        // Admin sudah menetapkan daftar barang secara manual
+                        $groupedItems = collect($borrowing->items_override)->map(function($row) {
+                            return [
+                                'name'               => $row['name'] ?? '',
+                                'brand_type'         => $row['brand_type'] ?? '-',
+                                'quantity'           => (int) ($row['quantity'] ?? 1),
+                                'condition_good'     => $row['condition_good'] ?? true,
+                                'condition_adequate' => $row['condition_adequate'] ?? false,
+                                'condition_complete' => $row['condition_complete'] ?? true,
+                                'remarks'            => $row['remarks'] ?? '',
+                            ];
+                        })->values();
+                    } else {
+                        // Kelompokkan berdasarkan Kategori + Merk/Tipe + item_id
+                        // agar item dengan merk berbeda selalu tampil sebagai baris terpisah
+                        $groupedItems = collect($items)->groupBy(function($item) {
+                            $category = $item->item->category ?? $item->item->name;
+                            $brand = $item->brand_type ?? $item->item->brand ?? $item->item->name ?? '-';
+                            return $category . '|' . $brand . '|' . $item->item_id;
+                        })->map(function($group) {
+                            $first = $group->first();
+                            return [
+                                'name'               => $first->item->category ?? $first->item->name,
+                                'brand_type'         => $first->brand_type ?? $first->item->brand ?? $first->item->name ?? '-',
+                                'quantity'           => $group->sum('quantity'),
+                                'condition_good'     => $first->condition_good,
+                                'condition_adequate' => $first->condition_adequate,
+                                'condition_complete' => $first->condition_complete,
+                                'remarks'            => $first->remarks ?? '',
+                            ];
+                        })->values();
+                    }
                 @endphp
                 @foreach($groupedItems as $index => $item)
                 <tr>
                     <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td>{{ $item['name'] }}</td>
+                    <td style="text-align: center;">{{ $item['name'] }}</td>
                     <td style="text-align: center;">{{ $item['brand_type'] }}</td>
                     <td style="text-align: center;">{{ $item['quantity'] }}</td>
                     <td class="condition-col">{{ $item['condition_good'] ? 'x' : '' }}</td>
                     <td class="condition-col">{{ $item['condition_adequate'] ? 'x' : '' }}</td>
                     <td class="condition-col">{{ $item['condition_complete'] ? 'x' : '' }}</td>
-                    <td>{{ $item['remarks'] }}</td>
+                    <td style="text-align: center;">{{ $item['remarks'] }}</td>
                 </tr>
                 @endforeach
                 @php
@@ -295,13 +315,13 @@
                 @for($i = 0; $i < $emptyRows; $i++)
                 <tr>
                     <td style="text-align: center;">{{ $groupedItems->count() + $i + 1 }}</td>
-                    <td style="height: 20px;">&nbsp;</td>
+                    <td style="height: 20px; text-align: center;">&nbsp;</td>
                     <td style="text-align: center;">&nbsp;</td>
                     <td style="text-align: center;">&nbsp;</td>
                     <td class="condition-col">&nbsp;</td>
                     <td class="condition-col">&nbsp;</td>
                     <td class="condition-col">&nbsp;</td>
-                    <td>&nbsp;</td>
+                    <td style="text-align: center;">&nbsp;</td>
                 </tr>
                 @endfor
             </tbody>

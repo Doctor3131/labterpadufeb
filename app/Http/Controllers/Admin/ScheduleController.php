@@ -55,7 +55,7 @@ class ScheduleController extends Controller
             ->paginate(100)
             ->withQueryString();
 
-        $labs = Lab::orderBy('name')->get();
+        $labs = Lab::excludeWarehouse()->orderBy('name')->get();
         $types = $this->types;
 
         // Return partial view for AJAX requests
@@ -71,7 +71,7 @@ class ScheduleController extends Controller
      */
     public function create()
     {
-        $labs = Lab::orderBy('name')->get();
+        $labs = Lab::excludeWarehouse()->orderBy('name')->get();
         $days = DayHelper::SCHEDULE_DAYS;
         $types = $this->types;
 
@@ -104,7 +104,7 @@ class ScheduleController extends Controller
 
         // Get all labs with schedules and bookings eager loaded
         // Only get labs that are available (not in maintenance)
-        $labs = Lab::where('status', 'available')
+        $labs = Lab::excludeWarehouse()->where('status', 'available')
             ->with(['schedules', 'bookings'])
             ->orderBy('name')
             ->get();
@@ -276,7 +276,7 @@ class ScheduleController extends Controller
     public function edit($id)
     {
         $schedule = Schedule::with(['booking', 'document'])->findOrFail($id);
-        $labs = Lab::orderBy('name')->get();
+        $labs = Lab::excludeWarehouse()->orderBy('name')->get();
         $days = DayHelper::SCHEDULE_DAYS;
         $types = $this->types;
 

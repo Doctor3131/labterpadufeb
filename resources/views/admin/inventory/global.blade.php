@@ -132,7 +132,8 @@
                                 <th class="px-6 py-4 w-16 text-center">No</th>
                                 <th class="px-6 py-4">Barang</th>
                                 <th class="px-6 py-4 text-center w-32">Jumlah Total</th>
-                                <th class="px-6 py-4 text-right w-48">Tahun Pengadaan</th>
+                                <th class="px-6 py-4 text-center w-48">Tahun Pengadaan</th>
+                                <th class="px-6 py-4 text-center w-40">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
@@ -151,7 +152,9 @@
                                 <tr class="hover:bg-gray-50 transition-colors group">
                                     <td class="px-6 py-4 text-center text-gray-400 group-hover:text-gray-600">{{ $index + 1 }}</td>
                                     <td class="px-6 py-4">
-                                        <div class="font-medium text-gray-900 truncate" title="{{ $item->name }}">{{ $item->name }}</div>
+                                        <span class="font-bold text-gray-800 truncate inline-block" title="{{ $item->name }}">
+                                            {{ $item->name }}
+                                        </span>
                                         @if($item->description)
                                             <div class="text-sm text-gray-500 mt-0.5 truncate" title="{{ $item->description }}">{{ $item->description }}</div>
                                         @endif
@@ -181,8 +184,17 @@
                                             {{ $totalUnits }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right text-gray-600 font-mono text-sm">
+                                    <td class="px-6 py-4 text-center text-gray-600 font-mono text-sm">
                                         {{ $years ?: '-' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <a href="{{ route('admin.items.show', $item) }}" class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg hover:bg-yellow-100 border border-yellow-200 transition-colors" title="Lihat Detail {{ $item->name }}">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                            Detail
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach

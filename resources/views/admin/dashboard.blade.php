@@ -1360,14 +1360,25 @@
 
     // Approve booking
     function approveBooking(id) {
-        if (confirm('✅ Setujui peminjaman ini?\n\nPeminjam akan dapat menggunakan laboratorium sesuai jadwal yang diminta.')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/admin/bookings/${id}/approve`;
-            form.innerHTML = '@csrf';
-            document.body.appendChild(form);
-            form.submit();
-        }
+        Swal.fire({
+            title: 'Setujui Peminjaman Lab?',
+            text: 'Peminjam akan dapat menggunakan laboratorium sesuai jadwal yang diminta.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Setujui',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/admin/bookings/${id}/approve`;
+                form.innerHTML = '@csrf';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
 
     // Show reject modal
@@ -1435,24 +1446,28 @@
     window.approveAssetBorrowing = function(id) {
         console.log('Approve clicked for ID:', id);
         
-        if (!confirm('✅ Setujui peminjaman barang ini?')) {
-            return;
-        }
-        
-        console.log('Creating form for approve...');
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/asset-borrowings/${id}/approve`;
-        
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = '{{ csrf_token() }}';
-        form.appendChild(csrfInput);
-        
-        document.body.appendChild(form);
-        console.log('Submitting form...', form);
-        form.submit();
+        Swal.fire({
+            title: 'Setujui Peminjaman Barang?',
+            text: 'Anda akan menyetujui peminjaman barang ini.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Setujui',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Creating form for approve...');
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/admin/asset-borrowings/${id}/approve`;
+                form.innerHTML = '@csrf';
+                document.body.appendChild(form);
+                
+                console.log('Form created, submitting...');
+                form.submit();
+            }
+        });
     };
 
     window.rejectAssetBorrowing = function(id) {
@@ -1503,31 +1518,100 @@
             const data = await response.json();
             
             if (data.length === 0) {
-                containerDiv.innerHTML = '<p class="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-4">ℹ️ Tidak ada barang yang memerlukan pemilihan unit spesifik (barang tipe aggregate).</p>';
+                containerDiv.innerHTML = '<p class="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-4">ℹ️ Tidak ada barang yang perlu diserahkan.</p>';
             } else {
                 let html = '';
                 data.forEach((item) => {
-                    html += `
-                        <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h4 class="font-bold text-gray-900 text-lg">${item.item_name}</h4>
-                                    <p class="text-xs text-gray-500 mt-1">📦 Total dipinjam: <span class="font-semibold text-purple-600">${item.total_quantity} unit</span> · Tersedia: <span class="font-semibold ${item.units.length >= item.total_quantity ? 'text-green-600' : 'text-red-600'}">${item.units.length} unit</span></p>
+                    if (item.tracking_mode === 'AGGREGATE') {
+                        // Show aggregate item with detailed unit list
+                        const totalAvailable = item.inventory_units ? item.inventory_units.length : 0;
+                        
+                        html += `
+                            <div class="border-2 border-gray-200 rounded-xl p-4 bg-gradient-to-br from-orange-50 to-amber-50">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 text-lg">${item.item_name}</h4>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            📦 Total dipinjam: <span class="font-semibold text-purple-600">${item.total_quantity} unit</span>
+                                            · Tersedia: <span class="font-semibold ${totalAvailable >= item.total_quantity ? 'text-green-600' : 'text-red-600'}">${totalAvailable} unit</span>
+                                        </p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">Aggregate</span>
                                 </div>
+                                
+                                <div class="mt-3 bg-white border-2 border-orange-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                                    <p class="text-xs text-gray-600 font-bold mb-3 flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        Unit yang Tersedia untuk Dipinjamkan:
+                                    </p>
+                                    ${item.inventory_units && item.inventory_units.length > 0 ? `
+                                        <div class="grid grid-cols-1 gap-2">
+                                            ${item.inventory_units.map((unit, idx) => `
+                                                <label class="flex items-center gap-2 p-2 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-orange-200 rounded-lg cursor-pointer hover:border-orange-400 hover:shadow-md transition-all">
+                                                    <input type="checkbox" 
+                                                        name="aggregate_units[${item.item_name}][]" 
+                                                        value="${unit.code}|${unit.batch_number}|${unit.lab_name}"
+                                                        data-item-name="${item.item_name}"
+                                                        data-required="${item.total_quantity}"
+                                                        class="w-5 h-5 text-orange-600 border-2 border-orange-300 rounded focus:ring-2 focus:ring-orange-500 aggregate-checkbox"
+                                                        onchange="validateAggregateSelection('${item.item_name}', ${item.total_quantity})">
+                                                    <span class="flex-shrink-0 w-6 h-6 bg-orange-500 text-white rounded-full text-xs font-bold flex items-center justify-center">${idx + 1}</span>
+                                                    <div class="flex-1">
+                                                        <p class="text-sm font-mono font-semibold text-gray-800">${unit.code}</p>
+                                                        <p class="text-xs text-gray-500">📍 ${unit.lab_name}</p>
+                                                    </div>
+                                                </label>
+                                            `).join('')}
+                                        </div>
+                                        <p class="text-xs text-orange-600 font-semibold mt-2 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                                            <span id="selection-status-${item.item_name.replace(/\s+/g, '-')}">Pilih ${item.total_quantity} unit dari ${item.inventory_units.length} unit tersedia</span>
+                                        </p>
+                                    ` : `
+                                        <p class="text-sm text-gray-500 italic text-center py-3">Tidak ada unit tersedia</p>
+                                    `}
+                                </div>
+                                
+                                <p class="text-xs text-blue-600 mt-3 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                                    Tersedia ${totalAvailable} unit. Admin dapat memutuskan ${item.total_quantity} unit mana yang akan dipinjamkan
+                                </p>
                             </div>
-                            ${generateUnitSelectsModal(item)}
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        // Show structured/seat items with unit selection
+                        html += `
+                            <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 text-lg">${item.item_name}</h4>
+                                        <p class="text-xs text-gray-500 mt-1">📦 Total dipinjam: <span class="font-semibold text-purple-600">${item.total_quantity} unit</span> · Tersedia: <span class="font-semibold ${item.units.length >= item.total_quantity ? 'text-green-600' : 'text-red-600'}">${item.units.length} unit</span></p>
+                                    </div>
+                                </div>
+                                ${generateUnitSelectsModal(item)}
+                            </div>
+                        `;
+                    }
                 });
                 containerDiv.innerHTML = html;
                 initUnitSelectListeners();
+                
+                // Initialize validation for aggregate items
+                const aggregateItems = data.filter(item => item.tracking_mode === 'AGGREGATE');
+                aggregateItems.forEach(item => {
+                    validateAggregateSelection(item.item_name, item.total_quantity);
+                });
             }
             
             loadingDiv.classList.add('hidden');
             containerDiv.classList.remove('hidden');
             notesSection.classList.remove('hidden');
             submitSection.classList.remove('hidden');
-            submitBtn.disabled = false;
+            // Keep submit disabled initially if there are items requiring selection
+            const hasItems = data.length > 0;
+            submitBtn.disabled = hasItems;
             
         } catch (error) {
             console.error('Error details:', error);
@@ -1587,9 +1671,72 @@
                         }
                     });
                 });
+                
+                // Trigger aggregate validation to update submit button
+                const firstAggregateCheckbox = document.querySelector('.aggregate-checkbox');
+                if (firstAggregateCheckbox) {
+                    const itemName = firstAggregateCheckbox.dataset.itemName;
+                    const required = parseInt(firstAggregateCheckbox.dataset.required);
+                    validateAggregateSelection(itemName, required);
+                } else {
+                    // No aggregate items, just check if all selects are filled
+                    const allSelects = document.querySelectorAll('.unit-select');
+                    const allFilled = Array.from(allSelects).every(s => s.value);
+                    const submitBtn = document.getElementById('submitHandoutBtnModal');
+                    if (submitBtn) {
+                        submitBtn.disabled = !allFilled;
+                    }
+                }
             });
         });
     }
+
+    window.validateAggregateSelection = function(itemName, requiredCount) {
+        const checkboxes = document.querySelectorAll(`input[data-item-name="${itemName}"].aggregate-checkbox`);
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const statusElement = document.getElementById(`selection-status-${itemName.replace(/\s+/g, '-')}`);
+        const submitBtn = document.getElementById('submitHandoutBtnModal');
+        
+        if (statusElement) {
+            if (checkedCount === requiredCount) {
+                statusElement.innerHTML = `✅ ${checkedCount} unit dipilih (sesuai kebutuhan)`;
+                statusElement.className = 'text-green-600 font-bold';
+            } else if (checkedCount < requiredCount) {
+                statusElement.innerHTML = `⚠️ Pilih ${requiredCount - checkedCount} unit lagi (${checkedCount}/${requiredCount})`;
+                statusElement.className = 'text-orange-600 font-semibold';
+            } else {
+                statusElement.innerHTML = `❌ Terlalu banyak! Pilih hanya ${requiredCount} unit (dipilih: ${checkedCount})`;
+                statusElement.className = 'text-red-600 font-bold';
+            }
+        }
+        
+        // Validate all aggregate items
+        const allItemNames = new Set();
+        document.querySelectorAll('.aggregate-checkbox').forEach(cb => {
+            allItemNames.add(cb.dataset.itemName);
+        });
+        
+        let allValid = true;
+        allItemNames.forEach(name => {
+            const cbs = document.querySelectorAll(`input[data-item-name="${name}"].aggregate-checkbox`);
+            const required = parseInt(cbs[0]?.dataset.required || 0);
+            const checked = Array.from(cbs).filter(c => c.checked).length;
+            if (checked !== required) {
+                allValid = false;
+            }
+        });
+        
+        // Also check if there are structured/seat items that need validation
+        const structuredSelects = document.querySelectorAll('.unit-select');
+        if (structuredSelects.length > 0) {
+            const allFilled = Array.from(structuredSelects).every(s => s.value);
+            allValid = allValid && allFilled;
+        }
+        
+        if (submitBtn) {
+            submitBtn.disabled = !allValid;
+        }
+    };
 
     window.receiveAssetBorrowing = async function(id) {
         const modal = document.getElementById('receiveAssetModal');
@@ -1662,22 +1809,22 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-green-50 has-[:checked]:border-green-500 has-[:checked]:bg-green-50">
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-green-50 has-[:checked]:border-green-500 has:checked:bg-green-50">
                         <input type="radio" name="${conditionName}" value="BAIK" checked 
                             class="text-green-600 focus:ring-green-500" onchange="toggleReturnNotes('${notesId}', this.value)">
                         <span class="text-xs font-semibold text-gray-700">✅ Baik</span>
                     </label>
-                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-yellow-50 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-yellow-50 has:checked:border-yellow-500 has:checked:bg-yellow-50">
                         <input type="radio" name="${conditionName}" value="RUSAK_RINGAN"
                             class="text-yellow-600 focus:ring-yellow-500" onchange="toggleReturnNotes('${notesId}', this.value)">
                         <span class="text-xs font-semibold text-gray-700">⚠️ Rusak Ringan</span>
                     </label>
-                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-red-50 has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-red-50 has:checked:border-red-500 has:checked:bg-red-50">
                         <input type="radio" name="${conditionName}" value="RUSAK_BERAT"
                             class="text-red-600 focus:ring-red-500" onchange="toggleReturnNotes('${notesId}', this.value)">
                         <span class="text-xs font-semibold text-gray-700">🔴 Rusak Berat</span>
                     </label>
-                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-gray-100 has-[:checked]:border-gray-600 has-[:checked]:bg-gray-100">
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-all hover:bg-gray-100 has:checked:border-gray-600 has:checked:bg-gray-100">
                         <input type="radio" name="${conditionName}" value="HILANG"
                             class="text-gray-600 focus:ring-gray-500" onchange="toggleReturnNotes('${notesId}', this.value)">
                         <span class="text-xs font-semibold text-gray-700">❌ Hilang</span>
@@ -1746,4 +1893,7 @@
         }
     });
 </script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endpush
+```

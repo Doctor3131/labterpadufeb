@@ -61,6 +61,15 @@ class Lab extends Model
     }
 
     /**
+     * Scope: exclude the warehouse (Gudang) room.
+     * Gudang is used only for inventory management, not for bookings or scheduling.
+     */
+    public function scopeExcludeWarehouse($query)
+    {
+        return $query->where('name', '!=', 'Gudang');
+    }
+
+    /**
      * Check if lab is available at specific date and time
      * Checks both:
      * 1. Recurring schedules (schedules table) - for permanent classes

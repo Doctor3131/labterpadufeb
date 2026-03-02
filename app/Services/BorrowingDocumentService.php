@@ -43,11 +43,16 @@ class BorrowingDocumentService
     {
         // Load borrowed items with relationships
         $borrowing->load([
-            'borrowedItems.item', 
-            'borrowedItems.assetUnit.batch', 
-            'borrowedItems.inventoryBalance.batch',
+            'borrowedItems.item',
+            'borrowedItems.assetUnit.batch.item',
+            'borrowedItems.inventoryBalance.batch.item',
             'lab'
         ]);
+
+        // Delete old cached PDF so it is always regenerated fresh
+        if ($borrowing->generated_document_path) {
+            Storage::delete('public/' . $borrowing->generated_document_path);
+        }
         
         // Generate nomor surat jika belum ada
         if (!$borrowing->document_number) {

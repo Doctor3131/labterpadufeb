@@ -20,11 +20,19 @@ class AssetBorrowingController extends Controller
      */
     public function create()
     {
-        $labs = Lab::orderBy('name')->get();
+        $labs = Lab::excludeWarehouse()->orderBy('name')->get();
         
         // Get borrowable items (items that can be borrowed)
         // Group by CATEGORY to simplify selection
-        $items = Item::with(['assetTypeCode', 'batches', 'batches.inventoryBalances', 'batches.assetUnits'])
+        $items = Item::with([
+                'assetTypeCode',
+                'batches.inventoryBalances' => function($query) {
+                    $query->where('condition', 'BAIK')->where('quantity', '>', 0);
+                },
+                'batches.assetUnits' => function($query) {
+                    $query->where('is_available', true)->where('condition', 'BAIK');
+                }
+            ])
             ->where(function($query) {
                 $query->whereHas('assetTypeCode', function($q) {
                     $q->where('is_borrowable', true);
@@ -33,15 +41,17 @@ class AssetBorrowingController extends Controller
             })
             ->get();
 
-        // Group items by Category (or Name if category is null)
+        // Group items by Category AND Tracking Mode to avoid mixing different types
         $borrowableItems = $items->groupBy(function($item) {
-            return $item->category ?? $item->name;
+            // Group by category + tracking_mode to ensure consistency
+            $category = $item->category ?? $item->name;
+            return $category . '|' . $item->tracking_mode->value;
         })->map(function($group) {
             $first = $group->first();
             
-            // Calculate total available stock for this entire CATEGORY
+            // Calculate total available stock for this entire GROUP (only available units)
             $totalQuantity = $group->sum(function($item) {
-                return $item->total_units; // Uses the accessor in Item model
+                return $item->available_units; // Uses the new available_units accessor
             });
 
             // Use category name as the display name if available, otherwise item name
@@ -57,6 +67,9 @@ class AssetBorrowingController extends Controller
                 'total_available_quantity' => $totalQuantity,
                 'is_grouped' => $group->count() > 1
             ];
+        })->filter(function($item) {
+            // Only include items that have available quantity > 0
+            return $item['total_available_quantity'] > 0;
         })->values()->sortBy('display_name')->values();
 
         return view('asset-borrowing.create', compact('labs', 'borrowableItems'));
@@ -97,6 +110,19 @@ class AssetBorrowingController extends Controller
             'items.*.condition_complete' => 'nullable|boolean',
             'items.*.remarks' => 'nullable|string|max:255',
         ]);
+
+        // Custom validation: If same day, return time must be after borrow time
+        if ($validated['borrow_date'] === $validated['return_date']) {
+            $borrowTime = $validated['borrow_time'] ?? null;
+            $returnTime = $validated['return_time'] ?? null;
+            
+            if ($borrowTime && $returnTime && $returnTime <= $borrowTime) {
+                return back()->withInput()->withErrors([
+                    'return_time' => 'Pada hari yang sama, jam kembali harus lebih dari jam pinjam. ' .
+                                     'Anda set jam pinjam ' . $borrowTime . ' dan jam kembali ' . $returnTime . '.'
+                ]);
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -141,6 +167,68 @@ class AssetBorrowingController extends Controller
                 'tracking_token' => \Illuminate\Support\Str::random(10), // Ensure token is generated
             ]);
 
+            // Pre-validate stock availability for ALL items before creating any records
+            foreach ($validated['items'] as $itemData) {
+                $primaryItem = Item::find($itemData['item_id']);
+                if (!$primaryItem) {
+                    throw new \Exception("Barang dengan ID {$itemData['item_id']} tidak ditemukan.");
+                }
+
+                $targetItemIds = collect([$primaryItem->id]);
+                if ($primaryItem->category) {
+                    $targetItemIds = Item::where('category', $primaryItem->category)
+                        ->where('tracking_mode', $primaryItem->tracking_mode)
+                        ->pluck('id');
+                }
+
+                if ($primaryItem->tracking_mode->value === 'AGGREGATE') {
+                    $requestedQty = (int) ($itemData['quantity'] ?? 1);
+
+                    // Total quantity in BAIK condition
+                    $totalInStock = InventoryBalance::whereHas('batch', function($q) use ($targetItemIds) {
+                            $q->whereIn('item_id', $targetItemIds);
+                        })
+                        ->where('condition', 'BAIK')
+                        ->where('quantity', '>', 0)
+                        ->sum('quantity');
+
+                    // Subtract already-approved (reserved) but not yet handed out
+                    $reservedQty = AssetBorrowingItem::whereIn('item_id', $targetItemIds)
+                        ->whereHas('borrowing', function($q) {
+                            $q->where('status', 'approved');
+                        })
+                        ->sum('quantity');
+
+                    $actualAvailable = $totalInStock - $reservedQty;
+
+                    if ($requestedQty > $actualAvailable) {
+                        $itemName = $primaryItem->category ?? $primaryItem->name;
+                        throw new \Exception(
+                            "Stok tidak cukup untuk \"{$itemName}\". " .
+                            "Diminta: {$requestedQty}, Tersedia: " . max(0, $actualAvailable) . " unit."
+                        );
+                    }
+                } else {
+                    // STRUCTURED_TAG or SEAT_NUMBER
+                    $requestedQty = (int) ($itemData['quantity'] ?? 1);
+
+                    $availableCount = AssetUnit::whereHas('batch', function($q) use ($targetItemIds) {
+                            $q->whereIn('item_id', $targetItemIds);
+                        })
+                        ->where('condition', 'BAIK')
+                        ->where('is_available', true)
+                        ->count();
+
+                    if ($requestedQty > $availableCount) {
+                        $itemName = $primaryItem->category ?? $primaryItem->name;
+                        throw new \Exception(
+                            "Unit tidak cukup untuk \"{$itemName}\". " .
+                            "Diminta: {$requestedQty}, Tersedia: {$availableCount} unit."
+                        );
+                    }
+                }
+            }
+
             // Create borrowing items
             foreach ($validated['items'] as $itemData) {
                 // Determine target pool of items
@@ -157,7 +245,8 @@ class AssetBorrowingController extends Controller
                 $baseBorrowingItemData = [
                     'asset_borrowing_id' => $borrowing->id,
                     // item_id will be set dynamically based on allocation
-                    'brand_type' => null, 
+                    // brand_type will be set per-allocation from the actual Item brand
+                    'brand_type' => null,
                     'condition_good' => $itemData['condition_good'] ?? true,
                     'condition_adequate' => $itemData['condition_adequate'] ?? false,
                     'condition_complete' => $itemData['condition_complete'] ?? true,
@@ -187,8 +276,10 @@ class AssetBorrowingController extends Controller
                             ->first();
 
                         if ($balance) {
+                             $actualItem = $balance->batch->item;
                              $newItemData = $baseBorrowingItemData;
                              $newItemData['item_id'] = $balance->batch->item_id; // Use actual item ID
+                             $newItemData['brand_type'] = $actualItem->brand ?? $actualItem->name ?? null; // Set brand from actual Item
                              $newItemData['inventory_balance_id'] = $balance->id;
                              $newItemData['quantity'] = $remainingQty;
                              AssetBorrowingItem::create($newItemData);
@@ -197,7 +288,7 @@ class AssetBorrowingController extends Controller
                         // Automatic assignment
                         // Fetch ALL candidates in category, Sort by quantity desc
                         
-                        $candidates = InventoryBalance::with('batch')
+                        $candidates = InventoryBalance::with(['batch.item'])
                            ->whereHas('batch', function($q) use ($targetItemIds) {
                                $q->whereIn('item_id', $targetItemIds);
                            })
@@ -212,9 +303,11 @@ class AssetBorrowingController extends Controller
                             if ($toAllocate <= 0) break;
                             
                             $take = min($toAllocate, $balance->quantity);
+                            $actualItem = $balance->batch->item;
                             
                             $newItemData = $baseBorrowingItemData;
                             $newItemData['item_id'] = $balance->batch->item_id; // Use actual item ID
+                            $newItemData['brand_type'] = $actualItem->brand ?? $actualItem->name ?? null; // Set brand from actual Item
                             $newItemData['inventory_balance_id'] = $balance->id;
                             $newItemData['quantity'] = $take;
                             
@@ -237,7 +330,7 @@ class AssetBorrowingController extends Controller
                     $availableUnits = AssetUnit::whereHas('batch', function($q) use ($targetItemIds) {
                             $q->whereIn('item_id', $targetItemIds);
                         })
-                        ->with('batch')
+                        ->with('batch.item')
                         ->where('condition', 'BAIK')
                         ->where('is_available', true)
                         ->limit($quantity)
@@ -251,8 +344,10 @@ class AssetBorrowingController extends Controller
                     
                     // Create borrowing item for each unit
                     foreach ($allocatedUnits as $unit) {
+                        $actualItem = $unit->batch->item;
                         $newItemData = $baseBorrowingItemData;
                         $newItemData['item_id'] = $unit->batch->item_id; // Use actual item ID
+                        $newItemData['brand_type'] = $actualItem->brand ?? $actualItem->name ?? null; // Set brand from actual Item
                         $newItemData['asset_unit_id'] = $unit->id;
                         $newItemData['quantity'] = 1;
                         
@@ -338,15 +433,39 @@ class AssetBorrowingController extends Controller
                 ->where('condition', 'BAIK')
                 ->where('quantity', '>', 0)
                 ->get();
-            
-            // Group by Lab and sum quantity
-            $labs = $balances->groupBy('lab_id')->map(function($group) {
+
+            // Subtract quantities reserved (approved but not yet handed out).
+            // Items with status 'borrowed' are already deducted from inventory_balances
+            // during handout, so only 'approved' needs to be subtracted here.
+            $reservedByLab = AssetBorrowingItem::whereIn('item_id', $itemIds)
+                ->whereNotNull('inventory_balance_id')
+                ->whereHas('borrowing', function($q) {
+                    $q->where('status', 'approved');
+                })
+                ->with('inventoryBalance')
+                ->get()
+                ->groupBy(fn($bi) => optional($bi->inventoryBalance)->lab_id)
+                ->map(fn($group) => $group->sum('quantity'));
+
+            // Also cover approved items that don't have inventory_balance_id set yet
+            $reservedByItemNoBalance = AssetBorrowingItem::whereIn('item_id', $itemIds)
+                ->whereNull('inventory_balance_id')
+                ->whereHas('borrowing', function($q) {
+                    $q->where('status', 'approved');
+                })
+                ->sum('quantity');
+
+            // Group by Lab and sum quantity, then subtract reserved
+            $labs = $balances->groupBy('lab_id')->map(function($group) use ($reservedByLab, $reservedByItemNoBalance) {
+                $labId = $group->first()->lab_id;
+                $reserved = ($reservedByLab[$labId] ?? 0);
+                $available = max(0, $group->sum('quantity') - $reserved);
                 return [
-                    'lab_id' => $group->first()->lab_id,
+                    'lab_id' => $labId,
                     'lab_name' => $group->first()->lab->name,
-                    'available_quantity' => $group->sum('quantity')
+                    'available_quantity' => $available,
                 ];
-            })->values();
+            })->filter(fn($lab) => $lab['available_quantity'] > 0)->values();
 
             $data = [
                 'type' => 'aggregate',
@@ -423,11 +542,78 @@ class AssetBorrowingController extends Controller
             'first_party_phone' => 'required|string|max:20',
             'document_date' => 'nullable|date',
             'document_number' => 'nullable|string|max:100',
+            'items_override' => 'nullable|array',
+            'items_override.*.name' => 'required|string|max:255',
+            'items_override.*.brand_type' => 'nullable|string|max:255',
+            'items_override.*.quantity' => 'required|integer|min:1',
+            'items_override.*.condition_good' => 'nullable|boolean',
+            'items_override.*.condition_adequate' => 'nullable|boolean',
+            'items_override.*.condition_complete' => 'nullable|boolean',
+            'items_override.*.remarks' => 'nullable|string|max:500',
         ]);
 
         try {
             // Update first party data
             $documentService->updateFirstPartyData($borrowing, $validated);
+
+            // Save items_override if provided
+            if ($request->has('items_override') && is_array($request->items_override)) {
+                \Log::info('Items override received:', ['count' => count($request->items_override), 'data' => $request->items_override]);
+                
+                // Calculate borrowed totals per category name
+                $borrowedTotals = $borrowing->borrowedItems
+                    ->groupBy(function($bi) {
+                        return strtolower(trim($bi->item->category ?? $bi->item->name));
+                    })->map(function($group) {
+                        return $group->sum('quantity');
+                    });
+                
+                $itemsOverride = [];
+                $itemSums = [];
+                
+                foreach ($request->items_override as $row) {
+                    if (empty(trim($row['name'] ?? ''))) continue;
+                    
+                    $name = trim($row['name']);
+                    $nameKey = strtolower($name);
+                    $qty = (int) ($row['quantity'] ?? 1);
+                    
+                    // Accumulate sums per item name
+                    if (!isset($itemSums[$nameKey])) {
+                        $itemSums[$nameKey] = 0;
+                    }
+                    $itemSums[$nameKey] += $qty;
+                    
+                    $itemsOverride[] = [
+                        'name'               => $name,
+                        'brand_type'         => trim($row['brand_type'] ?? ''),
+                        'quantity'           => $qty,
+                        'condition_good'     => ($row['condition_good'] ?? '0') == '1',
+                        'condition_adequate' => ($row['condition_adequate'] ?? '0') == '1',
+                        'condition_complete' => ($row['condition_complete'] ?? '0') == '1',
+                        'remarks'            => trim($row['remarks'] ?? ''),
+                    ];
+                }
+                
+                // Validate: sum per item name must not exceed borrowed total
+                foreach ($itemSums as $nameKey => $inputTotal) {
+                    if (isset($borrowedTotals[$nameKey])) {
+                        $borrowedTotal = $borrowedTotals[$nameKey];
+                        if ($inputTotal > $borrowedTotal) {
+                            throw new \Exception(
+                                "Jumlah {$nameKey} yang Anda input ({$inputTotal} unit) melebihi yang dipinjam ({$borrowedTotal} unit)."
+                            );
+                        }
+                    }
+                }
+                
+                $borrowing->items_override = count($itemsOverride) > 0 ? $itemsOverride : null;
+                $borrowing->save();
+                
+                \Log::info('Items override saved:', ['count' => count($itemsOverride)]);
+            } else {
+                \Log::warning('No items_override in request');
+            }
 
             // Generate PDF
             $pdfPath = $documentService->generatePDF($borrowing);
@@ -436,6 +622,7 @@ class AssetBorrowingController extends Controller
                 ->with('success', 'Data PIHAK PERTAMA berhasil disimpan dan surat peminjaman telah dibuat!');
 
         } catch (\Exception $e) {
+            \Log::error('Update first party error: ' . $e->getMessage());
             return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
@@ -465,14 +652,15 @@ class AssetBorrowingController extends Controller
      */
     public function previewDocument($id, BorrowingDocumentService $documentService)
     {
-        $borrowing = AssetBorrowing::with(['borrowedItems.item', 'borrowedItems.assetUnit', 'lab'])
-            ->findOrFail($id);
+        $borrowing = AssetBorrowing::with([
+            'borrowedItems.item',
+            'borrowedItems.assetUnit.batch.item',
+            'borrowedItems.inventoryBalance.batch.item',
+            'lab'
+        ])->findOrFail($id);
 
-        // Generate PDF preview
-        $borrowing->load(['borrowedItems.item', 'borrowedItems.assetUnit', 'lab']);
-        
         $documentDate = $borrowing->document_date ?? now();
-        
+
         $data = [
             'borrowing' => $borrowing,
             'items' => $borrowing->borrowedItems,
@@ -481,7 +669,7 @@ class AssetBorrowingController extends Controller
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.borrowing-document', $data);
-        
+
         return $pdf->stream('preview-surat-peminjaman.pdf');
     }
 
@@ -554,8 +742,8 @@ class AssetBorrowingController extends Controller
             
             $result = [];
             foreach ($grouped as $itemId => $group) {
-                // Only get units for items with individual tracking
                 if ($group['tracking_mode'] === 'STRUCTURED_TAG' || $group['tracking_mode'] === 'SEAT_NUMBER') {
+                    // Get units for items with individual tracking
                     $units = AssetUnit::whereHas('batch', function($q) use ($itemId) {
                             $q->where('item_id', $itemId);
                         })
@@ -579,6 +767,52 @@ class AssetBorrowingController extends Controller
                         'total_quantity' => $group['total_quantity'],
                         'borrowing_items' => $group['borrowing_items'],
                         'units' => $units,
+                    ];
+                } else {
+                    // For aggregate items, get inventory balances with university codes
+                    $inventoryBalances = \App\Models\InventoryBalance::with(['batch', 'lab'])
+                        ->whereHas('batch', function($q) use ($itemId) {
+                            $q->where('item_id', $itemId);
+                        })
+                        ->where('condition', 'BAIK')
+                        ->where('quantity', '>', 0)
+                        ->get()
+                        ->map(function($balance) {
+                            // Generate individual unit codes if university_asset_code_prefix exists
+                            $units = [];
+                            $prefix = $balance->university_asset_code_prefix;
+                            
+                            if ($prefix) {
+                                // Generate codes like: 132343242423.. X-1, X-2, etc.
+                                for ($i = 1; $i <= $balance->quantity; $i++) {
+                                    $units[] = [
+                                        'code' => $prefix . ' X-' . $i,
+                                        'batch_number' => $balance->batch->batch_number,
+                                        'lab_name' => $balance->lab->name,
+                                    ];
+                                }
+                            } else {
+                                // No university code yet, but still track by batch and lab
+                                for ($i = 1; $i <= $balance->quantity; $i++) {
+                                    $units[] = [
+                                        'code' => 'Batch ' . $balance->batch->batch_number . ' - Unit ' . $i . ' (Belum ada kode)',
+                                        'batch_number' => $balance->batch->batch_number,
+                                        'lab_name' => $balance->lab->name,
+                                    ];
+                                }
+                            }
+                            
+                            return $units;
+                        })
+                        ->flatten(1)
+                        ->values();
+                    
+                    $result[] = [
+                        'item_name' => $group['item_name'],
+                        'tracking_mode' => $group['tracking_mode'],
+                        'total_quantity' => $group['total_quantity'],
+                        'borrowing_items' => $group['borrowing_items'],
+                        'inventory_units' => $inventoryBalances,
                     ];
                 }
             }
@@ -606,6 +840,8 @@ class AssetBorrowingController extends Controller
             'unit_assignments' => 'nullable|array',
             'unit_assignments.*' => 'array',
             'unit_assignments.*.*' => 'exists:asset_units,id',
+            'aggregate_units' => 'nullable|array', // For aggregate items
+            'aggregate_units.*' => 'array',
         ]);
 
         // Flatten and validate unit assignments
@@ -631,15 +867,50 @@ class AssetBorrowingController extends Controller
             'borrow_condition_notes' => $validated['borrow_condition_notes'] ?? null,
         ]);
 
+        // Process aggregate units selection
+        $aggregateUnitsInfo = [];
+        if (isset($validated['aggregate_units'])) {
+            foreach ($validated['aggregate_units'] as $itemName => $units) {
+                $aggregateUnitsInfo[$itemName] = $units;
+            }
+        }
+
         // Assign units and mark as unavailable
         foreach ($borrowing->borrowedItems as $item) {
-            if (isset($flatAssignments[$item->id]) && count($flatAssignments[$item->id]) > 0) {
-                // Take the first unit for this borrowing item
-                $unitId = array_shift($flatAssignments[$item->id]);
-                $item->update(['asset_unit_id' => $unitId]);
-                AssetUnit::where('id', $unitId)->update(['is_available' => false]);
-            } elseif ($item->asset_unit_id) {
-                AssetUnit::where('id', $item->asset_unit_id)->update(['is_available' => false]);
+            $itemModel = $item->item;
+            
+            // Handle structured/seat items (individual units)
+            if ($itemModel->tracking_mode->value === 'STRUCTURED_TAG' || $itemModel->tracking_mode->value === 'SEAT_NUMBER') {
+                if (isset($flatAssignments[$item->id]) && count($flatAssignments[$item->id]) > 0) {
+                    // Take the first unit for this borrowing item
+                    $unitId = array_shift($flatAssignments[$item->id]);
+                    $item->update(['asset_unit_id' => $unitId]);
+                    AssetUnit::where('id', $unitId)->update(['is_available' => false]);
+                } elseif ($item->asset_unit_id) {
+                    AssetUnit::where('id', $item->asset_unit_id)->update(['is_available' => false]);
+                }
+            } 
+            // Handle aggregate items
+            else {
+                $itemName = $itemModel->name;
+                
+                // Save the selected units info in remarks
+                if (isset($aggregateUnitsInfo[$itemName])) {
+                    $selectedUnits = array_slice($aggregateUnitsInfo[$itemName], 0, $item->quantity);
+                    $unitsText = implode('; ', $selectedUnits);
+                    $item->update(['remarks' => 'Unit dipinjamkan: ' . $unitsText]);
+                    
+                    // Remove processed units
+                    $aggregateUnitsInfo[$itemName] = array_slice($aggregateUnitsInfo[$itemName], $item->quantity);
+                }
+                
+                // CRITICAL: Reduce quantity in inventory_balances
+                if ($item->inventory_balance_id) {
+                    $balance = \App\Models\InventoryBalance::find($item->inventory_balance_id);
+                    if ($balance && $balance->quantity >= $item->quantity) {
+                        $balance->decrement('quantity', $item->quantity);
+                    }
+                }
             }
         }
 
@@ -751,6 +1022,40 @@ class AssetBorrowingController extends Controller
                             'condition' => $unitCondition,
                         ]);
                     }
+                    // Handle aggregate items - restore quantity to inventory balance
+                    elseif ($borrowingItem->inventory_balance_id) {
+                        $balance = \App\Models\InventoryBalance::find($borrowingItem->inventory_balance_id);
+                        if ($balance) {
+                            // Restore quantity based on return condition
+                            if ($condition === 'BAIK') {
+                                // Return to same balance with BAIK condition
+                                $balance->increment('quantity', $borrowingItem->quantity);
+                            } elseif ($condition === 'HILANG') {
+                                // Don't return quantity - it's lost
+                                // Optionally log this as missing inventory
+                            } else {
+                                // RUSAK_RINGAN or RUSAK_BERAT - add to damaged balance
+                                $damagedCondition = match($condition) {
+                                    'RUSAK_RINGAN' => 'MAINTENANCE',
+                                    'RUSAK_BERAT' => 'RUSAK',
+                                    default => 'RUSAK',
+                                };
+                                
+                                // Find or create balance for damaged condition
+                                $damagedBalance = \App\Models\InventoryBalance::firstOrCreate(
+                                    [
+                                        'batch_id' => $balance->batch_id,
+                                        'lab_id' => $balance->lab_id,
+                                        'condition' => $damagedCondition,
+                                    ],
+                                    [
+                                        'quantity' => 0,
+                                    ]
+                                );
+                                $damagedBalance->increment('quantity', $borrowingItem->quantity);
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -759,6 +1064,13 @@ class AssetBorrowingController extends Controller
                 $item->update(['return_condition' => 'BAIK']);
                 if ($item->asset_unit_id) {
                     AssetUnit::where('id', $item->asset_unit_id)->update(['is_available' => true]);
+                }
+                // Handle aggregate items - restore quantity
+                elseif ($item->inventory_balance_id) {
+                    $balance = \App\Models\InventoryBalance::find($item->inventory_balance_id);
+                    if ($balance) {
+                        $balance->increment('quantity', $item->quantity);
+                    }
                 }
             }
         }

@@ -55,6 +55,7 @@ class AssetBorrowing extends Model
         'replacement_notes',
         'document_path',
         'generated_document_path',
+        'items_override',
     ];
 
     protected $casts = [
@@ -69,6 +70,7 @@ class AssetBorrowing extends Model
         'replaced_at' => 'datetime',
         'is_damaged_on_return' => 'boolean',
         'is_replaced' => 'boolean',
+        'items_override' => 'array',
     ];
 
     /**

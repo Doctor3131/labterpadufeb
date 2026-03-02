@@ -535,6 +535,8 @@
     </div>
 
     @push('scripts')
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function bulkActions() {
             return {
@@ -645,8 +647,25 @@
                 });
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response error:', errorText);
+                    if (response.status === 422) {
+                        const errorData = await response.json();
+                        let errorMessage = 'Data tidak valid.';
+                        if (errorData.errors) {
+                            errorMessage = Object.values(errorData.errors).flat().join('\n');
+                        } else if (errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validasi Gagal',
+                            text: errorMessage,
+                            confirmButtonColor: '#d33',
+                        });
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalText;
+                        return;
+                    }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
@@ -656,13 +675,27 @@
                     // Reload page to show updated data
                     window.location.reload();
                 } else {
-                    alert('Gagal memperbarui kode: ' + (data.message || 'Unknown error'));
+                    let errorMessage = data.message || 'Unknown error';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).flat().join('\n');
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: errorMessage,
+                        confirmButtonColor: '#d33',
+                    });
                     submitButton.disabled = false;
                     submitButton.textContent = originalText;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan saat memperbarui kode: ' + error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Terjadi kesalahan saat memperbarui kode universitas.',
+                    confirmButtonColor: '#d33',
+                });
                 submitButton.disabled = false;
                 submitButton.textContent = originalText;
             }
@@ -715,6 +748,25 @@
                 });
                 
                 if (!response.ok) {
+                    if (response.status === 422) {
+                        const errorData = await response.json();
+                        let errorMessage = 'Data tidak valid.';
+                        if (errorData.errors) {
+                            errorMessage = Object.values(errorData.errors).flat().join('\n');
+                        } else if (errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validasi Gagal',
+                            text: errorMessage,
+                            confirmButtonColor: '#d33',
+                        });
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalText;
+                        return;
+                    }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
@@ -723,13 +775,27 @@
                 if (data.success) {
                     window.location.reload();
                 } else {
-                    alert('Gagal memperbarui asset tag: ' + (data.message || 'Unknown error'));
+                    let errorMessage = data.message || 'Unknown error';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).flat().join('\n');
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: errorMessage,
+                        confirmButtonColor: '#d33',
+                    });
                     submitButton.disabled = false;
                     submitButton.textContent = originalText;
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan saat memperbarui asset tag: ' + error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Terjadi kesalahan saat memperbarui asset tag.',
+                    confirmButtonColor: '#d33',
+                });
                 submitButton.disabled = false;
                 submitButton.textContent = originalText;
             }

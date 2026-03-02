@@ -62,18 +62,45 @@
             <hr class="my-6">
 
             <!-- Step 2: Item Selection -->
-            <div class="mb-6">
+            <div class="mb-6" x-data="{ dropdownOpen: false }">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Barang</label>
-                <select x-model="selectedItemForReference" @change="fillItemNameAndLoadBatches()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                    <option value="">-- Pilih dari Daftar (Opsional) --</option>
-                    @foreach($items as $item)
-                        <option value="{{ $item->id }}" data-name="{{ $item->name }}">
-                            {{ $item->name }}
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Pilih dari daftar untuk mengisi nama otomatis dan melihat batch sebelumnya</p>
-                <input type="hidden" name="item_id" value="">
+                <div class="relative">
+                    <!-- Trigger -->
+                    <button type="button" @click="dropdownOpen = !dropdownOpen" @click.away="dropdownOpen = false" class="w-full bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent flex justify-between items-center text-left">
+                        <span x-text="selectedItemForReference ? masterItems.find(i => i.id == selectedItemForReference)?.name || '-- Pilih dari Daftar (Opsional) --' : '-- Pilih dari Daftar (Opsional) --'" class="block truncate"></span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Dropdown List -->
+                    <div x-show="dropdownOpen" x-transition.opacity class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg" style="display: none;">
+                        <ul class="max-h-60 overflow-y-auto py-1 text-sm text-gray-700">
+                            <li>
+                                <div @click="selectItem(''); dropdownOpen = false" class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-500 italic">
+                                    -- Pilih dari Daftar (Opsional) --
+                                </div>
+                            </li>
+                            <template x-for="item in masterItems" :key="item.id">
+                                <li class="flex justify-between items-center hover:bg-gray-50 group border-b border-gray-50 last:border-0 border-solid">
+                                    <div @click="selectItem(item.id); dropdownOpen = false" class="flex-1 px-4 py-2 cursor-pointer truncate" x-text="item.name"></div>
+                                    <button type="button" @click.stop="deleteItemFromList(item.id, item.name)" class="px-3 py-2 text-gray-400 hover:text-red-600 hover:bg-red-50 focus:outline-none transition-colors opacity-100 md:opacity-0 group-hover:opacity-100 mr-2 rounded-md" title="Hapus Barang">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </li>
+                            </template>
+                            <li x-show="masterItems.length === 0" class="px-4 py-3 text-gray-500 italic text-center">
+                                Belum ada barang master.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <p class="text-xs text-gray-500 mt-2">Pilih dari daftar untuk mengisi nama otomatis. Klik tombol silang (X) di ujung kanan setiap barang untuk menyembunyikannya dari daftar jika tidak relevan.</p>
+                <!-- Hidden inputs so proper value is submitted if needed -->
+                <input type="hidden" name="item_id" :value="selectedItemForReference">
             </div>
 
             <!-- New Item Fields -->
@@ -367,7 +394,7 @@
             </div>
 
             <!-- Submit -->
-            <div class="flex justify-end gap-3">
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
                 <a href="{{ route('admin.labs.inventory', $lab) }}" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-all">
                     Batal
                 </a>
@@ -376,12 +403,16 @@
                 </button>
             </div>
         </form>
+        
+        <!-- Hidden Form for Deletion (placed outside main form to prevent nested form bug) -->
+        
     </div>
 
     @push('scripts')
     <script>
         function inventoryForm() {
             return {
+                masterItems: @json($items->map(function($i) { return ['id' => $i->id, 'name' => $i->name]; })),
                 trackingMode: '{{ old('tracking_mode', 'STRUCTURED_TAG') }}',
                 assetTypeCodeMode: '{{ old('asset_type_code_mode', 'kosong') }}',
                 selectedItemForReference: '',
@@ -393,15 +424,25 @@
                     // No auto-loading needed
                 },
                 
+                selectItem(itemId) {
+                    this.selectedItemForReference = itemId;
+                    this.fillItemNameAndLoadBatches();
+                },
+                
+                deleteItemFromList(itemId, itemName) {
+                    this.masterItems = this.masterItems.filter(i => i.id != itemId);
+                    if (this.selectedItemForReference == itemId) {
+                        this.selectedItemForReference = '';
+                        this.fillItemNameAndLoadBatches();
+                    }
+                },
+                
                 fillItemNameAndLoadBatches() {
                     if (this.selectedItemForReference) {
-                        // Get selected option's data-name
-                        const select = document.querySelector('select[x-model="selectedItemForReference"]');
-                        const selectedOption = select.options[select.selectedIndex];
-                        const itemName = selectedOption.getAttribute('data-name');
+                        const item = this.masterItems.find(i => i.id == this.selectedItemForReference);
                         
-                        if (itemName) {
-                            this.itemName = itemName;
+                        if (item) {
+                            this.itemName = item.name;
                         }
                         
                         // Load batches for selected item

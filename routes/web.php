@@ -152,6 +152,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/inventory/transfer', [App\Http\Controllers\Admin\InventoryTransferController::class, 'store'])
         ->name('admin.inventory.transfer.store');
         
+    // Item Master Data Route
+    Route::get('/admin/items/{item}', [App\Http\Controllers\Admin\ItemController::class, 'show'])
+        ->name('admin.items.show');
+    Route::delete('/admin/items/{item}', [App\Http\Controllers\Admin\ItemController::class, 'destroy'])
+        ->name('admin.items.destroy');
     // API for Unified Transfer Form
     Route::get('/admin/api/inventory/{lab}/items', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItems']);
     Route::get('/admin/api/inventory/{lab}/items/{item}', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItemDetails']);

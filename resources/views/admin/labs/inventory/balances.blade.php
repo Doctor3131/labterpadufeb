@@ -334,7 +334,10 @@
                 <div x-show="tab === 'condition'" x-transition>
                     <form action="{{ route('admin.labs.inventory.transfer', $lab) }}" method="POST"
                           @submit.prevent="
-                            if (currentQty > 0 && selected.length === 0) { alert('Pilih minimal 1 barang.'); return; }
+                            if (currentQty > 0 && selected.length === 0) {
+                                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih minimal 1 barang.' });
+                                return;
+                            }
                             $el.submit();
                           ">
                         @csrf
@@ -399,7 +402,10 @@
                 <div x-show="tab === 'room'" x-transition>
                     <form action="{{ route('admin.labs.inventory.transfer-aggregate', $lab) }}" method="POST"
                           @submit.prevent="
-                            if (currentQty > 0 && selected.length === 0) { alert('Pilih minimal 1 barang.'); return; }
+                            if (currentQty > 0 && selected.length === 0) {
+                                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih minimal 1 barang.' });
+                                return;
+                            }
                             $el.submit();
                           ">
                         @csrf
@@ -469,4 +475,8 @@
             </a>
         </div>
     @endif
+    
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @endpush
 @endsection

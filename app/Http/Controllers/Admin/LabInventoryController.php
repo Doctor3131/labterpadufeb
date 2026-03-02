@@ -312,11 +312,24 @@ class LabInventoryController extends Controller
                             $startSeq = $maxSeq + 1;
                         }
 
+                        $generatedTags = [];
                         foreach ($units as $index => $unit) {
                             // Format: prefix + . + 3-digit sequence (e.g., H3.01.1023.001)
                             $seqNum = str_pad($startSeq + $index, 3, '0', STR_PAD_LEFT);
-                            $unit->asset_tag = $manualPrefix . '.' . $seqNum;
+                            $newTag = $manualPrefix . '.' . $seqNum;
+                            
+                            // Check for duplication
+                            if (\App\Models\AssetUnit::where('asset_tag', $newTag)->exists()) {
+                                // Undo the creation of these units
+                                \App\Models\AssetUnit::whereIn('id', collect($units)->pluck('id'))->delete();
+                                return back()
+                                    ->withInput()
+                                    ->with('error', "Gagal menambahkan inventory: Kode Aset UPK '{$newTag}' sudah ada di database. Silakan gunakan prefix atau sequence yang lain.");
+                            }
+                            
+                            $unit->asset_tag = $newTag;
                             $unit->save();
+                            $generatedTags[] = $newTag;
                         }
                     }
                     
@@ -775,7 +788,9 @@ class LabInventoryController extends Controller
     public function updateAssetTag(Request $request, AssetUnit $unit)
     {
         $request->validate([
-            'asset_tag' => 'nullable|string|max:255',
+            'asset_tag' => 'nullable|string|max:255|unique:asset_units,asset_tag,' . $unit->id,
+        ], [
+            'asset_tag.unique' => 'Asset tag ini sudah digunakan oleh barang lain.'
         ]);
 
         $unit->asset_tag = $request->asset_tag;

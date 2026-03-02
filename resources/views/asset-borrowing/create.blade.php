@@ -236,27 +236,32 @@
                         Jadwal & Tujuan Peminjaman
                     </h3>
 
+                    <!-- Date/Time Validation Error -->
+                    <div id="datetime-error" class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <strong>⚠️ Error:</strong> <span id="datetime-error-message"></span>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Pinjam *</label>
-                            <input type="date" name="borrow_date" value="{{ old('borrow_date') }}" required
+                            <input type="date" id="borrow_date" name="borrow_date" value="{{ old('borrow_date') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Pinjam</label>
-                            <input type="time" name="borrow_time" value="{{ old('borrow_time') }}"
+                            <input type="time" id="borrow_time" name="borrow_time" value="{{ old('borrow_time') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Kembali *</label>
-                            <input type="date" name="return_date" value="{{ old('return_date') }}" required
+                            <input type="date" id="return_date" name="return_date" value="{{ old('return_date') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Kembali</label>
-                            <input type="time" name="return_time" value="{{ old('return_time') }}"
+                            <input type="time" id="return_time" name="return_time" value="{{ old('return_time') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
                         </div>
                     </div>
@@ -532,6 +537,16 @@
                 }
             }
 
+            // Special validation for step 3 (date/time)
+            if (step === 3) {
+                if (!validateDateTime()) {
+                    alert('Mohon perbaiki error pada jadwal peminjaman.');
+                    // Scroll to error
+                    document.getElementById('datetime-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+            }
+
             console.log('Validation passed, moving to step:', step + 1);
             
             document.getElementById(`step-${step}`).classList.add('hidden');
@@ -557,6 +572,43 @@
             
             currentStep = step - 1;
             window.scrollTo(0, 0);
+        }
+
+        // Validate date/time to prevent return time earlier than borrow time on same day
+        function validateDateTime() {
+            const borrowDate = document.getElementById('borrow_date').value;
+            const borrowTime = document.getElementById('borrow_time').value;
+            const returnDate = document.getElementById('return_date').value;
+            const returnTime = document.getElementById('return_time').value;
+            
+            const errorDiv = document.getElementById('datetime-error');
+            const errorMsg = document.getElementById('datetime-error-message');
+            
+            // If dates are not filled, skip validation
+            if (!borrowDate || !returnDate) {
+                errorDiv.classList.add('hidden');
+                return true;
+            }
+            
+            // If return date is before borrow date, show error
+            if (returnDate < borrowDate) {
+                errorMsg.textContent = 'Tanggal kembali tidak boleh lebih awal dari tanggal pinjam.';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            // If same day and times are filled, check times
+            if (borrowDate === returnDate && borrowTime && returnTime) {
+                if (returnTime <= borrowTime) {
+                    errorMsg.textContent = 'Pada hari yang sama, jam kembali harus lebih dari jam pinjam. Anda set jam pinjam ' + borrowTime + ' dan jam kembali ' + returnTime + '.';
+                    errorDiv.classList.remove('hidden');
+                    return false;
+                }
+            }
+            
+            // All validations passed
+            errorDiv.classList.add('hidden');
+            return true;
         }
 
         function showConfirmation() {
@@ -590,9 +642,28 @@
              // Use 1 initial row
              addItemRow();
 
-            // Form submission logging
+            // Add date/time validation listeners
+            const borrowDateInput = document.getElementById('borrow_date');
+            const borrowTimeInput = document.getElementById('borrow_time');
+            const returnDateInput = document.getElementById('return_date');
+            const returnTimeInput = document.getElementById('return_time');
+            
+            if (borrowDateInput) borrowDateInput.addEventListener('change', validateDateTime);
+            if (borrowTimeInput) borrowTimeInput.addEventListener('change', validateDateTime);
+            if (returnDateInput) returnDateInput.addEventListener('change', validateDateTime);
+            if (returnTimeInput) returnTimeInput.addEventListener('change', validateDateTime);
+
+            // Form submission logging and validation
             const form = document.getElementById('borrowingForm');
             form.addEventListener('submit', function(e) {
+                // Final validation before submit
+                if (!validateDateTime()) {
+                    e.preventDefault();
+                    alert('Mohon perbaiki error pada jadwal peminjaman sebelum submit.');
+                    // Scroll to error
+                    document.getElementById('datetime-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
                 console.log('Form is being submitted...');
                 // ... logging ...
             });

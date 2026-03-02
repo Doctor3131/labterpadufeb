@@ -17,7 +17,7 @@ class BookingController extends Controller
      */
     public function create()
     {
-        $labs = Lab::orderBy('name')->get();
+        $labs = Lab::excludeWarehouse()->orderBy('name')->get();
         return view('booking.create', compact('labs'));
     }
 
@@ -37,7 +37,7 @@ class BookingController extends Controller
         
         // Get all labs with eager loading to prevent N+1 queries
         // Only get labs that are available (not in maintenance)
-        $labs = Lab::where('status', 'available')
+        $labs = Lab::excludeWarehouse()->where('status', 'available')
             ->with(['schedules', 'bookings' => function ($query) use ($date) {
                 $query->where('booking_date', $date)->where('status', 'pending');
             }])->orderBy('capacity', 'asc')->get();

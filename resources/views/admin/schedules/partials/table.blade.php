@@ -69,11 +69,12 @@
                                class="px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium">
                                 Edit
                             </a>
-                            <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Yakin ingin menghapus jadwal ini?{{ $schedule->booking ? ' Booking terkait akan ditandai sebagai Deleted.' : '' }}')">
+                            <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
+                                <button type="button" 
+                                    onclick="confirmForm(this.closest('form'), 'Yakin ingin menghapus jadwal ini?{{ $schedule->booking ? ' Booking terkait akan ditandai sebagai Deleted.' : '' }}')"
+                                    class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
                                     Hapus
                                 </button>
                             </form>
@@ -139,11 +140,12 @@
                    class="flex-1 px-4 py-2.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium text-center">
                     Edit
                 </a>
-                <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" class="flex-1"
-                      onsubmit="return confirm('Yakin ingin menghapus jadwal ini?{{ $schedule->booking ? ' Booking terkait akan ditandai sebagai Deleted.' : '' }}')">
+                <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" class="flex-1">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="w-full px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
+                    <button type="button" 
+                        onclick="confirmForm(this.closest('form'), 'Yakin ingin menghapus jadwal ini?{{ $schedule->booking ? ' Booking terkait akan ditandai sebagai Deleted.' : '' }}')"
+                        class="w-full px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
                         Hapus
                     </button>
                 </form>
