@@ -161,6 +161,21 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/api/inventory/{lab}/items', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItems']);
     Route::get('/admin/api/inventory/{lab}/items/{item}', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItemDetails']);
 
+    // External Transfer (Gudang → Eksternal)
+    Route::get('/admin/external-transfers', [App\Http\Controllers\Admin\ExternalTransferController::class, 'index'])
+        ->name('admin.external-transfers.index');
+    Route::get('/admin/external-transfers/create', [App\Http\Controllers\Admin\ExternalTransferController::class, 'create'])
+        ->name('admin.external-transfers.create');
+    Route::post('/admin/external-transfers', [App\Http\Controllers\Admin\ExternalTransferController::class, 'store'])
+        ->name('admin.external-transfers.store');
+    Route::patch('/admin/external-transfers/{externalTransfer}/toggle-status', [App\Http\Controllers\Admin\ExternalTransferController::class, 'toggleStatus'])
+        ->name('admin.external-transfers.toggle-status');
+    Route::get('/admin/external-transfers/{externalTransfer}', [App\Http\Controllers\Admin\ExternalTransferController::class, 'show'])
+        ->name('admin.external-transfers.show');
+    // API for External Transfer Form
+    Route::get('/admin/api/external-transfers/items', [App\Http\Controllers\Admin\ExternalTransferController::class, 'getGudangItems']);
+    Route::get('/admin/api/external-transfers/items/{item}', [App\Http\Controllers\Admin\ExternalTransferController::class, 'getItemDetails']);
+
     // Admin Reports
     Route::get('/admin/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])
         ->name('admin.reports.index');

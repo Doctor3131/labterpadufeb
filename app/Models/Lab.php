@@ -61,12 +61,21 @@ class Lab extends Model
     }
 
     /**
-     * Scope: exclude the warehouse (Gudang) room.
+     * Scope: exclude the warehouse (Gudang) and external (Eksternal) rooms.
      * Gudang is used only for inventory management, not for bookings or scheduling.
+     * Eksternal is used only for tracking items transferred outside.
      */
     public function scopeExcludeWarehouse($query)
     {
-        return $query->where('name', '!=', 'Gudang');
+        return $query->whereNotIn('name', ['Gudang', 'Eksternal']);
+    }
+
+    /**
+     * Scope: exclude the external (Eksternal) room.
+     */
+    public function scopeExcludeExternal($query)
+    {
+        return $query->where('name', '!=', 'Eksternal');
     }
 
     /**
