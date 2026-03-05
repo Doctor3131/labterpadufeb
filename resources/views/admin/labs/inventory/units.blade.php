@@ -194,13 +194,15 @@
                     Hapus
                 </button>
 
-                <!-- Bulk Transfer Button -->
+                @if($lab->name === 'Eksternal')
+                <!-- Bulk Transfer Button (Eksternal only) -->
                 <button @click="openBulkTransferModal()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md text-sm transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                     </svg>
                     Pindah
                 </button>
+                @endif
             </div>
         </div>
 
@@ -228,12 +230,17 @@
                             <div class="text-xs text-gray-500 mt-2">
                                 Batch: {{ $unit->batch->arrival_formatted }}
                             </div>
-                            @php
-                                $notes = $unit->getLatestConditionNotes();
-                            @endphp
-                            @if($notes)
-                                <div class="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
-                                    <span class="font-semibold">Catatan:</span> {{ Str::limit($notes, 80) }}
+                            @if($unit->notes)
+                                <div class="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded cursor-pointer" onclick="openEditNotesModal({{ $unit->id }}, {{ json_encode($unit->notes ?? '') }})">
+                                    <span class="font-semibold">Catatan:</span> {{ Str::limit($unit->notes, 80) }}
+                                    <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </div>
+                            @else
+                                <div class="mt-2">
+                                    <button onclick="openEditNotesModal({{ $unit->id }}, '')" class="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Catatan
+                                    </button>
                                 </div>
                             @endif
                         </div>
@@ -320,16 +327,22 @@
                                 </span>
                             </td>
                             <td class="px-6 py-3">
-                                @php
-                                    $notes = $unit->getLatestConditionNotes();
-                                @endphp
-                                @if($notes)
-                                    <span class="text-sm text-gray-700" title="{{ $notes }}">
-                                        {{ Str::limit($notes, 50) }}
-                                    </span>
-                                @else
-                                    <span class="text-gray-400">-</span>
-                                @endif
+                                <div class="flex items-center gap-2 group">
+                                    @if($unit->notes)
+                                        <span class="text-sm text-gray-700" title="{{ $unit->notes }}">
+                                            {{ Str::limit($unit->notes, 50) }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                    <button onclick="openEditNotesModal({{ $unit->id }}, {{ json_encode($unit->notes ?? '') }})" 
+                                        class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded"
+                                        title="Edit Catatan">
+                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </td>
                             <td class="px-6 py-3 text-center">
                                 @if($unit->is_available)
@@ -402,7 +415,8 @@
         </div>
     </div>
 
-    <!-- Bulk Transfer Modal -->
+    @if($lab->name === 'Eksternal')
+    <!-- Bulk Transfer Modal (Eksternal only) -->
     <div id="bulkTransferModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
         <div class="relative mx-auto w-full max-w-md px-4">
             <div class="bg-white rounded-2xl shadow-2xl p-6">
@@ -438,7 +452,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Pindahan (Opsional)</label>
-                        <input type="text" name="notes" placeholder="Contoh: Dipindahkan berdasarkan surat tugas No..." 
+                        <input type="text" name="notes" placeholder="Contoh: Dikembalikan ke Gudang..." 
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     </div>
 
@@ -455,6 +469,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Edit University Code Modal -->
     <div id="editUniversityCodeModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
@@ -534,6 +549,46 @@
         </div>
     </div>
 
+    <!-- Edit Notes Modal -->
+    <div id="editNotesModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="relative mx-auto w-full max-w-md px-4">
+            <div class="bg-white rounded-2xl shadow-2xl p-6">
+                <!-- Icon -->
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-teal-50 mb-4">
+                    <svg class="h-8 w-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                    </svg>
+                </div>
+
+                <!-- Title -->
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Edit Catatan Unit</h3>
+                <p class="text-sm text-gray-500 text-center mb-4">Tambahkan catatan untuk unit ini, misal: asal barang, keterangan pinjaman, dll.</p>
+                
+                <!-- Form -->
+                <form id="editNotesForm" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
+                        <textarea id="notesInput" rows="3"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                            placeholder="Contoh: Dipinjam dari Lab Komputer Lt.2, Transfer dari Gudang Pusat, Hibah Rektorat..."></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Maks. 500 karakter. Kosongkan untuk menghapus catatan.</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeEditNotesModal()" class="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -581,6 +636,25 @@
                         // Show modal
                         document.getElementById('bulkDeleteModal').classList.remove('hidden');
                     }
+                },
+                openBulkTransferModal() {
+                    if (this.selectedCount > 0) {
+                        const transferCountEl = document.getElementById('transferCount');
+                        if (transferCountEl) transferCountEl.textContent = this.selectedCount;
+
+                        const form = document.getElementById('bulkTransferForm');
+                        if (form) {
+                            form.querySelectorAll('input[name="unit_ids[]"]').forEach(input => input.remove());
+                            this.selectedIds.forEach(id => {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'unit_ids[]';
+                                input.value = id;
+                                form.appendChild(input);
+                            });
+                            document.getElementById('bulkTransferModal').classList.remove('hidden');
+                        }
+                    }
                 }
             }
         }
@@ -590,7 +664,8 @@
         }
 
         function closeBulkTransferModal() {
-            document.getElementById('bulkTransferModal').classList.add('hidden');
+            const modal = document.getElementById('bulkTransferModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         // Close modal when clicking outside
@@ -599,7 +674,7 @@
                 closeBulkDeleteModal();
             }
         });
-        
+
         document.getElementById('bulkTransferModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeBulkTransferModal();
@@ -805,6 +880,108 @@
         document.getElementById('editAssetTagModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeEditAssetTagModal();
+            }
+        });
+
+        // Edit Notes Modal Functions
+        let currentEditNotesUnitId = null;
+
+        function openEditNotesModal(unitId, currentNotes) {
+            currentEditNotesUnitId = unitId;
+            document.getElementById('notesInput').value = currentNotes || '';
+            document.getElementById('editNotesModal').classList.remove('hidden');
+            // Focus textarea after modal opens
+            setTimeout(() => document.getElementById('notesInput').focus(), 100);
+        }
+
+        function closeEditNotesModal() {
+            document.getElementById('editNotesModal').classList.add('hidden');
+            currentEditNotesUnitId = null;
+        }
+
+        // Handle notes form submission
+        document.getElementById('editNotesForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const notes = document.getElementById('notesInput').value;
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'Menyimpan...';
+            
+            try {
+                const response = await fetch(`/admin/inventory/units/${currentEditNotesUnitId}/notes`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        notes: notes || null
+                    })
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        const errorData = await response.json();
+                        let errorMessage = 'Data tidak valid.';
+                        if (errorData.errors) {
+                            errorMessage = Object.values(errorData.errors).flat().join('\n');
+                        } else if (errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validasi Gagal',
+                            text: errorMessage,
+                            confirmButtonColor: '#d33',
+                        });
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalText;
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    let errorMessage = data.message || 'Unknown error';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).flat().join('\n');
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: errorMessage,
+                        confirmButtonColor: '#d33',
+                    });
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Terjadi kesalahan saat memperbarui catatan.',
+                    confirmButtonColor: '#d33',
+                });
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        });
+
+        // Close notes modal when clicking outside
+        document.getElementById('editNotesModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditNotesModal();
             }
         });
     </script>

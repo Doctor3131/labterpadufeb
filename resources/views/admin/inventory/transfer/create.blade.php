@@ -50,12 +50,23 @@
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
                         Dari (Ruangan Asal) <span class="text-red-500">*</span>
                     </label>
-                    <select name="source_lab_id" x-model="sourceLabId" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Pilih Ruangan Asal --</option>
-                        @foreach($labs as $lab)
-                            <option value="{{ $lab->id }}">{{ $lab->name }}</option>
-                        @endforeach
-                    </select>
+                    @php
+                        $isFromEksternal = isset($sourceLabId) && $labs->firstWhere('id', $sourceLabId)?->name === 'Eksternal';
+                        $gudangLab = $labs->firstWhere('name', 'Gudang');
+                    @endphp
+                    @if($isFromEksternal)
+                        <input type="hidden" name="source_lab_id" value="{{ $sourceLabId }}">
+                        <div class="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
+                            Eksternal
+                        </div>
+                    @else
+                        <select name="source_lab_id" x-model="sourceLabId" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Pilih Ruangan Asal --</option>
+                            @foreach($labs as $lab)
+                                <option value="{{ $lab->id }}">{{ $lab->name }}</option>
+                            @endforeach
+                        </select>
+                    @endif
                 </div>
 
                 <!-- Target Lab -->
@@ -64,12 +75,19 @@
                         Ke (Ruangan Tujuan) <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <select name="target_lab_id" x-model="targetLabId" required class="w-full px-4 py-2.5 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                            <option value="">-- Pilih Ruangan Tujuan --</option>
-                            @foreach($labs as $lab)
-                                <option value="{{ $lab->id }}" x-show="sourceLabId != {{ $lab->id }}">{{ $lab->name }}</option>
-                            @endforeach
-                        </select>
+                        @if($isFromEksternal && $gudangLab)
+                            <input type="hidden" name="target_lab_id" value="{{ $gudangLab->id }}">
+                            <div class="w-full px-4 py-2.5 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-lg font-medium">
+                                Gudang
+                            </div>
+                        @else
+                            <select name="target_lab_id" x-model="targetLabId" required class="w-full px-4 py-2.5 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                <option value="">-- Pilih Ruangan Tujuan --</option>
+                                @foreach($labs as $lab)
+                                    <option value="{{ $lab->id }}" x-show="sourceLabId != {{ $lab->id }}">{{ $lab->name }}</option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -187,7 +205,7 @@
                 <a href="{{ route('admin.inventory.index') }}" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
                     Batal
                 </a>
-                <button type="submit" :disabled="!targetLabId || !itemDetails" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
+                <button type="submit" :disabled="!targetLabId && !{{ $isFromEksternal ? 'true' : 'false' }} || !itemDetails" class="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
                     Pindahkan Barang
                 </button>
             </div>
@@ -199,7 +217,7 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('transferForm', () => ({
                 sourceLabId: '{{ $sourceLabId ?? old('source_lab_id', '') }}',
-                targetLabId: '{{ old('target_lab_id', '') }}',
+                targetLabId: '{{ $isFromEksternal && $gudangLab ? $gudangLab->id : old('target_lab_id', '') }}',
                 items: [],
                 selectedItem: null,
                 selectedItemId: '{{ old('item_id', '') }}',

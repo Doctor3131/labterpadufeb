@@ -804,6 +804,25 @@ class LabInventoryController extends Controller
     }
 
     /**
+     * Update the notes of a single asset unit (AJAX).
+     */
+    public function updateNotes(Request $request, AssetUnit $unit)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $unit->notes = $request->notes;
+        $unit->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Catatan berhasil diperbarui',
+            'notes' => $unit->notes,
+        ]);
+    }
+
+    /**
      * Clean up orphaned Batch and Item records after units/balances are deleted.
      * Returns true if the Item itself was deleted (no inventory left anywhere).
      */

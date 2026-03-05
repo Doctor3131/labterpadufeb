@@ -137,6 +137,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.inventory.units.update-university-code');
     Route::patch('/admin/inventory/units/{unit}/asset-tag', [App\Http\Controllers\Admin\LabInventoryController::class, 'updateAssetTag'])
         ->name('admin.inventory.units.update-asset-tag');
+    Route::patch('/admin/inventory/units/{unit}/notes', [App\Http\Controllers\Admin\LabInventoryController::class, 'updateNotes'])
+        ->name('admin.inventory.units.update-notes');
     Route::patch('/admin/inventory/balance/{balance}/university-code', [App\Http\Controllers\Admin\LabInventoryController::class, 'updateUniversityCodeBalance'])
         ->name('admin.inventory.balance.update-university-code');
 

@@ -25,6 +25,7 @@ class AssetUnit extends Model
         'subtype',
         'condition',
         'is_available',
+        'notes',
     ];
 
     protected $casts = [

@@ -3,16 +3,6 @@
 @section('title', 'Transfer Eksternal - Lab Digital FEB UNDIP')
 
 @section('content')
-    <style>
-        .animate-pulse-subtle {
-            animation: pulse-subtle 2s ease-in-out infinite;
-        }
-        @keyframes pulse-subtle {
-            0%, 100% { box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2); }
-            50% { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35); }
-        }
-    </style>
-
     <!-- Back Button -->
     <div class="mb-4">
         <a href="{{ route('admin.inventory.index') }}" class="inline-flex items-center text-gray-600 hover:text-yellow-600 font-medium transition-all group">
@@ -69,10 +59,8 @@
     @php
         $totalTransfers = $transfers->total();
         $totalQuantity = $transfers->sum('quantity');
-        $totalDipinjam = $transfers->where('status', 'dipinjam')->count();
-        $totalDikembalikan = $transfers->where('status', 'dikembalikan')->count();
     @endphp
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 gap-4 mb-6">
         <div class="bg-white rounded-xl p-4 border border-gray-200">
             <div class="text-3xl font-bold text-amber-600">{{ $totalTransfers }}</div>
             <div class="text-sm text-gray-600 font-medium">Total Transfer</div>
@@ -80,14 +68,6 @@
         <div class="bg-white rounded-xl p-4 border border-gray-200">
             <div class="text-3xl font-bold text-amber-600">{{ $totalQuantity }}</div>
             <div class="text-sm text-gray-600 font-medium">Total Barang</div>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200">
-            <div class="text-3xl font-bold text-red-500">{{ $totalDipinjam }}</div>
-            <div class="text-sm text-gray-600 font-medium">Belum Dikembalikan</div>
-        </div>
-        <div class="bg-white rounded-xl p-4 border border-gray-200">
-            <div class="text-3xl font-bold text-green-500">{{ $totalDikembalikan }}</div>
-            <div class="text-sm text-gray-600 font-medium">Sudah Dikembalikan</div>
         </div>
     </div>
 
@@ -106,24 +86,6 @@
                                 </span>
                             </div>
                             <span class="text-xs text-gray-500">{{ $transfer->transfer_date->format('d/m/Y') }}</span>
-                        </div>
-                        <!-- Status Toggle (Mobile) -->
-                        <div class="mb-3">
-                            <form action="{{ route('admin.external-transfers.toggle-status', $transfer) }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" title="{{ $transfer->status === 'dipinjam' ? 'Klik untuk tandai sudah dikembalikan' : 'Klik untuk tandai belum dikembalikan' }}" class="w-full px-3 py-2.5 text-sm font-semibold rounded-lg border-2 shadow-sm cursor-pointer transition-all duration-200 transform hover:scale-[1.02] active:scale-95 {{ $transfer->status === 'dipinjam' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100 hover:border-red-400 hover:shadow-md animate-pulse-subtle' : 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100 hover:border-green-400 hover:shadow-md' }}">
-                                    @if($transfer->status === 'dipinjam')
-                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        Dipinjam — Tandai Dikembalikan
-                                        <svg class="w-3.5 h-3.5 inline ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
-                                    @else
-                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        Dikembalikan {{ $transfer->returned_date ? '(' . $transfer->returned_date->format('d/m/Y') . ')' : '' }}
-                                        <svg class="w-3.5 h-3.5 inline ml-1 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
-                                    @endif
-                                </button>
-                            </form>
                         </div>
                         <div class="space-y-1.5 text-sm">
                             <div class="flex items-center text-gray-600">
@@ -157,7 +119,6 @@
                             <th class="px-6 py-4 font-semibold">Nama Barang</th>
                             <th class="px-6 py-4 font-semibold">Penerima</th>
                             <th class="px-6 py-4 font-semibold text-center">Jumlah</th>
-                            <th class="px-6 py-4 font-semibold text-center">Status</th>
                             <th class="px-6 py-4 font-semibold">Catatan</th>
                             <th class="px-6 py-4 font-semibold">Oleh</th>
                         </tr>
@@ -184,26 +145,6 @@
                                     <span class="inline-flex items-center justify-center min-w-[2rem] bg-amber-100 text-amber-800 text-sm font-bold px-2.5 py-0.5 rounded-full">
                                         {{ $transfer->quantity }}
                                     </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <form action="{{ route('admin.external-transfers.toggle-status', $transfer) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" title="{{ $transfer->status === 'dipinjam' ? 'Klik untuk tandai sudah dikembalikan' : 'Klik untuk tandai belum dikembalikan' }}" class="group inline-flex items-center px-3.5 py-2 text-xs font-bold rounded-full border-2 shadow-sm cursor-pointer transition-all duration-200 transform hover:scale-105 hover:shadow-lg active:scale-95 {{ $transfer->status === 'dipinjam' ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100 hover:border-red-400 animate-pulse-subtle' : 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100 hover:border-green-400' }}">
-                                            @if($transfer->status === 'dipinjam')
-                                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                Dipinjam
-                                                <svg class="w-3 h-3 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                                            @else
-                                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                Dikembalikan
-                                                <svg class="w-3 h-3 ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                                            @endif
-                                        </button>
-                                    </form>
-                                    @if($transfer->status === 'dikembalikan' && $transfer->returned_date)
-                                        <div class="text-[10px] text-gray-400 mt-1">{{ $transfer->returned_date->format('d/m/Y') }}</div>
-                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                                     {{ $transfer->notes ?? '-' }}
