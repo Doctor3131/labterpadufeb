@@ -100,7 +100,7 @@
                             </a>
                             <!-- Option 2: Sudah di tempat -->
                             @php $walkInEnabled = \App\Models\ServiceSetting::isEnabled('bloomberg', 'walk_in_enabled'); @endphp
-                            <a href="{{ route('bloomberg.walk-in') }}" class="group block px-4 py-3 {{ $walkInEnabled ? 'bg-orange-50 hover:bg-orange-100' : 'bg-gray-50' }} rounded-xl transition-colors">
+                            <a href="{{ route('bloomberg.walkin') }}" class="group block px-4 py-3 {{ $walkInEnabled ? 'bg-orange-50 hover:bg-orange-100' : 'bg-gray-50' }} rounded-xl transition-colors">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
                                         <span class="font-semibold {{ $walkInEnabled ? 'text-orange-700' : 'text-gray-500' }}">Sudah di tempat</span>

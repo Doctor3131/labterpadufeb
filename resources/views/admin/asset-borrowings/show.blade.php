@@ -577,6 +577,65 @@
                                     @endif
                                 </div>
                             @endif
+
+                            @if($borrowing->is_damaged_on_return && $borrowing->replacement_deadline)
+                                @php
+                                    $daysRemaining = now()->startOfDay()->diffInDays($borrowing->replacement_deadline->copy()->startOfDay(), false);
+                                @endphp
+                                <div class="mt-3 {{ $borrowing->is_replaced ? 'bg-emerald-50 border border-emerald-200' : ($daysRemaining < 0 ? 'bg-red-50 border border-red-300' : 'bg-orange-50 border border-orange-300') }} rounded-lg p-4">
+                                    <div class="flex items-start gap-3">
+                                        <div class="{{ $borrowing->is_replaced ? 'bg-emerald-100' : ($daysRemaining < 0 ? 'bg-red-100' : 'bg-orange-100') }} p-2 rounded-lg flex-shrink-0">
+                                            @if($borrowing->is_replaced)
+                                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            @else
+                                                <svg class="w-5 h-5 {{ $daysRemaining < 0 ? 'text-red-600' : 'text-orange-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                </svg>
+                                            @endif
+                                        </div>
+                                        <div class="flex-1">
+                                            @if($borrowing->is_replaced)
+                                                <p class="text-sm font-bold text-emerald-800">Penggantian Telah Dikonfirmasi</p>
+                                                <p class="text-xs text-emerald-700 mt-0.5">
+                                                    Dikonfirmasi pada {{ $borrowing->replaced_at?->format('d M Y') }}
+                                                    oleh {{ $borrowing->replacedBy->name ?? 'Admin' }}
+                                                </p>
+                                                @if($borrowing->replacement_notes)
+                                                    <p class="text-xs text-emerald-700 mt-1"><span class="font-medium">Catatan:</span> {{ $borrowing->replacement_notes }}</p>
+                                                @endif
+                                            @else
+                                                <p class="text-sm font-bold {{ $daysRemaining < 0 ? 'text-red-800' : 'text-orange-800' }}">
+                                                    {{ $daysRemaining < 0 ? 'Deadline Penggantian Telah Lewat!' : 'Menunggu Penggantian Barang' }}
+                                                </p>
+                                                <p class="text-xs {{ $daysRemaining < 0 ? 'text-red-700' : 'text-orange-700' }} mt-0.5">
+                                                    Deadline: <span class="font-semibold">{{ $borrowing->replacement_deadline->format('d M Y') }}</span>
+                                                    @if($daysRemaining >= 0)
+                                                        &mdash; sisa <span class="font-semibold">{{ $daysRemaining }} hari</span>
+                                                    @else
+                                                        &mdash; <span class="font-semibold">terlambat {{ abs($daysRemaining) }} hari</span>
+                                                    @endif
+                                                </p>
+                                                @if($borrowing->damage_description)
+                                                    <p class="text-xs text-gray-600 mt-2 bg-white/60 rounded p-2">
+                                                        <span class="font-medium">Detail kerusakan:</span><br>
+                                                        {!! nl2br(e($borrowing->damage_description)) !!}
+                                                    </p>
+                                                @endif
+                                                <div class="mt-3">
+                                                    <button onclick="document.getElementById('confirmReplacementModal').classList.remove('hidden')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm flex items-center gap-1.5 w-fit">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                        </svg>
+                                                        Konfirmasi Penggantian
+                                                    </button>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -738,6 +797,101 @@
     </div>
 </div>
 
+<!-- Modal Konfirmasi Penggantian Barang Rusak -->
+<div id="confirmReplacementModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onclick="document.getElementById('confirmReplacementModal').classList.add('hidden')"></div>
+        <div class="bg-white rounded-2xl overflow-hidden shadow-xl transform transition-all max-w-md w-full z-20">
+            <div class="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Konfirmasi Penggantian</h3>
+                        <p class="text-sm text-emerald-100">Tandai barang rusak sudah diganti</p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('confirmReplacementModal').classList.add('hidden')" class="text-white/80 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form action="{{ route('admin.asset-borrowings.confirm-replacement', $borrowing->id) }}" method="POST">
+                @csrf
+                <div class="p-6">
+                    <div class="mb-5">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Catatan Penggantian <span class="text-gray-400 font-normal">(Opsional)</span>
+                        </label>
+                        <textarea
+                            name="replacement_notes"
+                            rows="3"
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                            placeholder="Contoh: Barang sudah diganti dengan yang baru sesuai spesifikasi..."
+                        ></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="document.getElementById('confirmReplacementModal').classList.add('hidden')"
+                            class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold transition-all text-sm">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shadow-sm hover:shadow-md transition-all text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Konfirmasi Penggantian
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Persetujuan Peminjaman -->
+<div id="approveConfirmModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity"></div>
+        <div class="bg-white rounded-2xl overflow-hidden shadow-xl transform transition-all max-w-md w-full z-20">
+            <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Setujui Peminjaman</h3>
+                        <p class="text-sm text-green-100" id="approveConfirmSubtitle">Konfirmasi persetujuan peminjaman</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeApproveConfirmModal()" class="text-white/80 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-700 text-sm mb-6">Anda akan menyetujui peminjaman ini. Tindakan ini tidak dapat dibatalkan.</p>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeApproveConfirmModal()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold transition-all text-sm">Batal</button>
+                    <button type="button" id="approveConfirmSubmitBtn" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-sm hover:shadow-md transition-all text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Ya, Setujui
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Penolakan Peminjaman -->
 <div id="rejectModal" class="hidden fixed z-10 inset-0 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4">
@@ -808,7 +962,24 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+let _pendingConfirmForm = null;
+function confirmForm(form, message) {
+    _pendingConfirmForm = form;
+    document.getElementById('approveConfirmSubtitle').textContent = message;
+    document.getElementById('approveConfirmModal').classList.remove('hidden');
+}
+function closeApproveConfirmModal() {
+    document.getElementById('approveConfirmModal').classList.add('hidden');
+    _pendingConfirmForm = null;
+}
+document.getElementById('approveConfirmSubmitBtn').addEventListener('click', function() {
+    if (_pendingConfirmForm) {
+        _pendingConfirmForm.submit();
+    }
+});
+
 function showCustomAlert(title, subtitle, bodyHtml) {
     document.getElementById('customAlertTitle').textContent = title;
     document.getElementById('customAlertSubtitle').textContent = subtitle;

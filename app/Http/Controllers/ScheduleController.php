@@ -47,7 +47,7 @@ class ScheduleController extends Controller
             $weekLabel = $this->scheduleService->getWeekLabel($startOfWeek, $endOfWeek);
             
             // Get all labs for filter dropdown
-            $labs = Lab::excludeWarehouse()->orderBy('name')->get(['id', 'name']);
+            $labs = Lab::orderBy('name')->get(['id', 'name']);
             
             return response()->json([
                 'week_start' => $startOfWeek->format('Y-m-d'),

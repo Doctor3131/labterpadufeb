@@ -22,30 +22,30 @@
                 <div class="flex items-center gap-2 lg:gap-4">
                     <!-- Desktop Menu -->
                     <!-- Laporkan Masalah Button -->
-                    <button onclick="openFeedbackModal()" class="hidden lg:inline-flex items-center px-4 py-2 text-slate-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onclick="openFeedbackModal()" class="hidden lg:inline-flex items-center px-4 py-2 text-slate-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-300 animate-fade-in-down animation-delay-200">
+                        <svg class="w-5 h-5 mr-1 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                         Report
                     </button>
 
-                    <a href="{{ route('schedules.index') }}" class="hidden lg:inline-flex items-center px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('schedules.index') }}" class="hidden lg:inline-flex items-center px-4 py-2 text-yellow-600 font-semibold hover:text-yellow-700 hover:bg-yellow-50 rounded-lg hover:-translate-y-1 hover:shadow-lg transition-all duration-300 animate-fade-in-down animation-delay-300">
+                        <svg class="w-5 h-5 mr-1 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         Jadwal
                     </a>
 
                     <!-- Login/Dashboard Button -->
-                    @if(auth()->check())
-                        <a href="{{ route('dashboard') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-xl hover:scale-110 transition-all duration-300 text-sm lg:text-base whitespace-nowrap animate-fade-in-down animation-delay-400">
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-lg hover:scale-105 transition-all duration-300 text-sm lg:text-base whitespace-nowrap">
+                        <a href="{{ route('login') }}" class="px-4 lg:px-6 py-2 border-2 border-yellow-500 text-yellow-600 font-semibold rounded-lg hover:bg-yellow-500 hover:text-white hover:shadow-xl hover:scale-110 transition-all duration-300 text-sm lg:text-base whitespace-nowrap animate-fade-in-down animation-delay-400">
                             Login
                         </a>
-                    @endif
+                    @endauth
                 </div>
             </div>
         </div>
@@ -68,26 +68,45 @@
         {{-- <div class="absolute inset-0 bg-grid-white/10"></div> --}}
         <div class="container mx-auto px-4 lg:px-8 py-12 lg:py-24 relative z-10">
             <div class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md">
+                <h2 class="text-3xl lg:text-5xl font-bold mb-3 lg:mb-6 leading-tight drop-shadow-md animate-fade-in-up animation-delay-100">
                     Jadwal & Manajemen<br class="hidden lg:block"/> Laboratorium Digital
                 </h2>
-                <p class="text-base lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-6 lg:mb-10">
+                <p class="text-base lg:text-xl text-yellow-50 max-w-2xl mx-auto drop-shadow mb-6 lg:mb-10 animate-fade-in-up animation-delay-200">
                     Pantau jadwal praktikum dan ajukan penggunaan fasilitas laboratorium secara terintegrasi
                 </p>
                 
                 <!-- CTA Buttons - Center untuk semua device -->
-                <div class="flex flex-col sm:flex-row justify-center gap-4 lg:gap-6">
-                    <a href="{{ route('booking.create') }}" class="inline-flex items-center justify-center px-8 py-3 lg:px-12 lg:py-5 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-105">
-                        <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                <div class="flex flex-wrap items-center justify-center gap-3 lg:gap-4 animate-fade-in-up animation-delay-300">
+                    <!-- Button Peminjaman Lab -->
+                    <a href="{{ route('booking.create') }}" class="inline-flex items-center px-7 py-3 lg:px-9 lg:py-4 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-base hover:scale-110">
+                        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
-                        Pinjam Lab
+                        Peminjaman Lab
                     </a>
-                    <a href="{{ route('asset-borrowing.create') }}" class="inline-flex items-center justify-center px-8 py-3 lg:px-12 lg:py-5 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-105 border-2 border-yellow-400">
-                        <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+
+                    <!-- Button Lab Bloomberg -->
+                    <a href="{{ route('bloomberg.index') }}" class="inline-flex items-center px-7 py-3 lg:px-9 lg:py-4 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-base hover:scale-110">
+                        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Lab Bloomberg
+                    </a>
+
+                    <!-- Button Pinjam Barang -->
+                    <a href="{{ route('asset-borrowing.create') }}" class="inline-flex items-center px-7 py-3 lg:px-9 lg:py-4 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-base hover:scale-110">
+                        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
                         Pinjam Barang
+                    </a>
+
+                    <!-- Button Peminjaman Data -->
+                    <a href="{{ route('data.index') }}" class="inline-flex items-center px-7 py-3 lg:px-9 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-base hover:scale-110">
+                        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                        </svg>
+                        Peminjaman Data
                     </a>
                 </div>
             </div>
@@ -98,7 +117,7 @@
     <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">
             <!-- Week Info -->
-            <div class="text-center mb-6">
+            <div class="text-center mb-6 animate-fade-in-up animation-delay-400">
                 <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Jadwal Minggu Ini</h2>
                 <p class="text-slate-600">
                     {{ $startOfWeek->isoFormat('D MMMM') }} - {{ $startOfWeek->copy()->endOfWeek()->isoFormat('D MMMM Y') }}
@@ -112,205 +131,237 @@
                 </a>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                
-                <!-- Tabs -->
-                <div class="border-b border-slate-200 overflow-x-auto">
-                    <div class="flex min-w-max lg:min-w-0 lg:justify-center">
-                        @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $day)
-                        <button 
-                            onclick="showSchedule('{{ $day }}')" 
-                            id="tab-{{ $day }}"
-                            class="schedule-tab px-6 lg:px-8 py-4 font-semibold text-sm lg:text-base transition border-b-2 {{ $day === 'Senin' ? 'border-yellow-500 text-yellow-600 bg-yellow-50' : 'border-transparent text-slate-600 hover:text-yellow-600 hover:bg-yellow-50' }}">
-                            <div class="flex flex-col items-center">
-                                <span>{{ $day }}</span>
-                                <span class="text-xs font-normal text-slate-400 mt-1">
-                                    {{ isset($schedules[$day]['date']) ? \Carbon\Carbon::parse($schedules[$day]['date'])->format('d/m') : '-' }}
-                                </span>
-                            </div>
-                        </button>
-                        @endforeach
-                    </div>
+            {{-- Pass PHP data to JS --}}
+            @php
+                $jsSchedules = [];
+                $days = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                foreach ($days as $i => $day) {
+                    $dayData = $schedules[$day] ?? ['date'=>'','items'=>[]];
+                    $date = $dayData['date'] ?? '';
+                    $dd = $date ? \Carbon\Carbon::parse($date)->format('d/m') : '-';
+                    foreach (($dayData['items'] ?? []) as $item) {
+                        $jsSchedules[] = [
+                            'day'          => $day,
+                            'date'         => $date,
+                            'dateStr'      => $dd,
+                            'lab_id'       => $item['lab_id']     ?? null,
+                            'lab'          => $item['lab']        ?? '',
+                            'course'       => $item['course']     ?? '-',
+                            'start_time'   => $item['start_time'] ?? '00:00',
+                            'end_time'     => $item['end_time']   ?? '00:00',
+                            'lecturer'     => $item['lecturer']   ?? '',
+                            'booking_type' => $item['booking_type'] ?? 'perkuliahan_tetap',
+                        ];
+                    }
+                }
+                $jsLabs = $labs->map(fn($l) => ['id'=>$l->id,'name'=>$l->name])->values()->toArray();
+                $jsDayMeta = [];
+                foreach ($days as $i => $day) {
+                    $date = $schedules[$day]['date'] ?? '';
+                    $jsDayMeta[$day] = $date ? \Carbon\Carbon::parse($date)->format('d/m') : '-';
+                }
+            @endphp
+
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in-up animation-delay-500" style="display:flex;flex-direction:column;">
+
+                <!-- Day Tabs -->
+                <div class="border-b border-slate-200 flex-shrink-0">
+                    <div id="landingDayTabs" class="flex w-full"></div>
                 </div>
 
-                <!-- Table Container -->
-                <div class="overflow-x-auto">
-                    @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $day)
-                    <div id="schedule-{{ $day }}" class="schedule-content {{ $day !== 'Senin' ? 'hidden' : '' }}">
-                        <!-- Filter Ruangan -->
-                        <div class="bg-gradient-to-r from-yellow-50 to-white px-4 lg:px-6 py-3 border-b">
-                            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                                <label for="labFilter" class="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">Filter Ruangan:</label>
-                                <div class="flex-1 flex gap-2">
-                                    <select id="labFilter" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs lg:text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white">
-                                        <option value="">Semua Ruangan</option>
-                                        @if(isset($labs) && $labs->count() > 0)
-                                            @foreach($labs as $lab)
-                                                <option value="{{ $lab->name }}">{{ $lab->name }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                    <button id="clearLabFilter" class="px-3 py-2 text-xs lg:text-sm text-yellow-600 hover:text-yellow-700 font-semibold border border-yellow-500 rounded-lg hover:bg-yellow-50 transition-colors hidden whitespace-nowrap">
-                                        Reset
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Desktop Table View -->
-                        <div class="hidden lg:block">
-                            <table class="w-full min-w-[800px]">
-                                <thead class="bg-slate-100 text-slate-700 text-sm">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left font-semibold">Waktu</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Ruang</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Kegiatan / Mata Kuliah</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Dosen / PIC</th>
-                                        <th class="px-6 py-4 text-left font-semibold">Info</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm lg:text-base">
-                                    @forelse(($schedules[$day]['items'] ?? []) as $item)
-                                    <tr class="schedule-row border-t border-slate-200 hover:bg-slate-50 transition" data-lab="{{ $item['lab'] }}">
-                                        <td class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
-                                            {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-sm" />
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-slate-700 font-medium">{{ $item['course'] }}</div>
-                                            @if($item['type'] === 'booking' || isset($item['booking_type']))
-                                                <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="mt-1" />
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-slate-600">{{ $item['lecturer'] }}</div>
-                                            @if($item['komting'])
-                                                <div class="text-xs text-slate-400 mt-1">{{ in_array($item['booking_type'], ['pribadi', 'non_perkuliahan']) ? 'Peminjam' : 'Komting' }}: {{ $item['komting'] }}</div>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4 text-slate-500 text-xs">
-                                            @if($item['student_count'])
-                                                <div class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                    </svg>
-                                                    {{ $item['student_count'] }} peserta
-                                                </div>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-12 text-center text-slate-500">
-                                            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                            </svg>
-                                            <p class="text-lg font-medium">Tidak ada jadwal untuk hari {{ $day }}</p>
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Mobile Card View -->
-                        <div class="lg:hidden p-4 space-y-3 bg-slate-50">
-                            @forelse(($schedules[$day]['items'] ?? []) as $item)
-                            <div class="schedule-row bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all" data-lab="{{ $item['lab'] }}">
-                                <!-- Header: Time & Room -->
-                                <div class="flex justify-between items-start mb-3">
-                                    <div class="flex items-center text-slate-800 font-bold text-sm bg-slate-100 px-2.5 py-1 rounded-lg">
-                                        <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {{ \Carbon\Carbon::parse($item['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($item['end_time'])->format('H:i') }}
-                                    </div>
-                                    <x-room-badge :lab="$item['lab']" :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-xs shadow-sm" />
-                                </div>
-
-                                <!-- Body: Course Name -->
-                                <div class="mb-3">
-                                    <h4 class="font-bold text-slate-900 text-base leading-snug mb-1.5">{{ $item['course'] }}</h4>
-                                    @if($item['type'] === 'booking' || isset($item['booking_type']))
-                                        <div class="inline-block">
-                                            <x-booking-badge :type="$item['booking_type'] ?? 'perkuliahan_tetap'" class="text-[10px] px-2 py-0.5" />
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <!-- Footer: Lecturer & Info -->
-                                <div class="border-t border-slate-100 pt-3 flex flex-col gap-3">
-                                    <!-- Lecturer -->
-                                    <div class="flex items-start text-xs text-slate-600">
-                                        <svg class="w-4 h-4 mr-2 text-slate-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                        <span class="font-medium leading-relaxed">{{ $item['lecturer'] }}</span>
-                                    </div>
-                                    
-                                    <!-- Meta Info (Student Count & PIC) -->
-                                    @if($item['student_count'] || $item['komting'])
-                                    <div class="flex items-center justify-between gap-3 text-xs text-slate-500">
-                                        @if($item['student_count'])
-                                            <div class="flex-shrink-0 flex items-center bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                                <span class="font-medium text-slate-600">{{ $item['student_count'] }} Peserta</span>
-                                            </div>
-                                        @endif
-
-                                        @if($item['komting'])
-                                            <div class="flex-1 min-w-0 text-right">
-                                                <span class="text-slate-400 mr-1">PIC:</span>
-                                                <span class="font-medium text-slate-700 break-words leading-tight" title="{{ $item['komting'] }}">
-                                                    {{ $item['komting'] }}
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                            @empty
-                            <div class="text-center py-12 px-4">
-                                <div class="bg-white rounded-full p-4 inline-flex mb-4 shadow-sm">
-                                    <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                </div>
-                                <p class="text-slate-500 font-medium">Tidak ada jadwal</p>
-                            </div>
-                            @endforelse
-                        </div>
-                    </div>
-                    @endforeach
+                <!-- Timetable grid (x scroll only, full height) -->
+                <div id="landingTimetableWrap" class="overflow-x-auto flex-1">
+                    <div id="landingTimetableContent"></div>
                 </div>
 
-                <!-- Legend / Notice -->
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-sm text-slate-600">
-                    <div class="font-semibold mb-2">Keterangan Warna:</div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-yellow-500"></span>
+                <!-- Legend -->
+                <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex-shrink-0 text-xs text-slate-600">
+                    <div class="font-semibold text-slate-700 mb-1.5">Keterangan Warna:</div>
+                    <div class="flex justify-between items-center">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm inline-block flex-shrink-0" style="background:#eab308;"></span>
                             <span><strong>Kuning:</strong> Perkuliahan Tetap</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-indigo-500"></span>
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm inline-block flex-shrink-0" style="background:#6366f1;"></span>
                             <span><strong>Ungu:</strong> Perkuliahan Tidak Tetap</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded bg-emerald-500"></span>
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm inline-block flex-shrink-0" style="background:#10b981;"></span>
                             <span><strong>Hijau:</strong> Non-Perkuliahan</span>
-                        </div>
+                        </span>
                     </div>
                 </div>
 
             </div>
         </div>
     </section>
+
+    <script>
+    (function() {
+        // ── Data from PHP ──────────────────────────────────────
+        const LANDING_SCHEDULES = @json($jsSchedules);
+        const LANDING_LABS      = @json($jsLabs);
+        const LANDING_DAY_META  = @json($jsDayMeta);
+        const DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+        // ── Grid Config ────────────────────────────────────────
+        const TIME_START  = 5;
+        const TIME_END    = 23;
+        const SLOT_MINS   = 10;
+        const PX_PER_SLOT = 10;
+        const PX_PER_HOUR = (60 / SLOT_MINS) * PX_PER_SLOT; // 60px/hour
+        const TIME_COL_W  = 64;
+        const LAB_MIN_W   = 140;
+        const TOTAL_H     = (TIME_END - TIME_START) * PX_PER_HOUR;
+
+        const TYPE_COLORS = {
+            perkuliahan_tetap:       { bg:'#fef9c3', accent:'#ca8a04', text:'#713f12' },
+            perkuliahan_tidak_tetap: { bg:'#c7d2fe', accent:'#4338ca', text:'#1e1b4b' },
+            non_perkuliahan:         { bg:'#a7f3d0', accent:'#059669', text:'#064e3b' },
+            pribadi:                 { bg:'#fed7aa', accent:'#c2410c', text:'#431407' },
+        };
+
+        const toMins = t => { const p = t.split(':'); return +p[0]*60 + +p[1]; };
+        const fmtT   = t => { const p = t.split(':'); return p[0]+':'+p[1]; };
+        const esc    = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+        function todayName() {
+            return ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][new Date().getDay()];
+        }
+
+        let activeDay = null;
+
+        // ── Render Tabs ────────────────────────────────────────
+        function renderTabs() {
+            document.getElementById('landingDayTabs').innerHTML = DAYS.map(day => {
+                const active  = day === activeDay;
+                const dateStr = LANDING_DAY_META[day] || '-';
+                return `
+                <button onclick="landingSelectDay('${day}')" data-lday="${day}"
+                    class="landing-day-tab flex-1 py-4 text-center border-b-2 transition-colors
+                           ${active ? 'border-yellow-500 text-yellow-700 bg-yellow-50'
+                                    : 'border-transparent text-slate-600 hover:text-yellow-600 hover:bg-yellow-50/50'}">
+                    <div class="font-semibold text-sm">${day}</div>
+                    <div class="text-xs mt-0.5 ${active ? 'text-yellow-500' : 'text-slate-400'}">${dateStr}</div>
+                </button>`;
+            }).join('');
+        }
+
+        function updateTabs() {
+            document.querySelectorAll('.landing-day-tab').forEach(btn => {
+                const active = btn.dataset.lday === activeDay;
+                btn.className = `landing-day-tab flex-1 py-4 text-center border-b-2 transition-colors
+                    ${active ? 'border-yellow-500 text-yellow-700 bg-yellow-50'
+                             : 'border-transparent text-slate-600 hover:text-yellow-600 hover:bg-yellow-50/50'}`;
+                const sub = btn.querySelectorAll('div')[1];
+                if (sub) sub.className = `text-xs mt-0.5 ${active ? 'text-yellow-500' : 'text-slate-400'}`;
+            });
+        }
+
+        // ── Render Timetable ───────────────────────────────────
+        function renderTimetable(day) {
+            const content = document.getElementById('landingTimetableContent');
+            const items   = LANDING_SCHEDULES.filter(s => s.day === day);
+            const labs    = LANDING_LABS;
+            if (!labs.length) { content.innerHTML = '<div class="text-center py-12 text-slate-400 text-sm">Tidak ada data ruangan</div>'; return; }
+
+            const minW = TIME_COL_W + labs.length * LAB_MIN_W;
+
+            // Time labels — every 30 min
+            let timeLabels = '';
+            for (let h = TIME_START; h < TIME_END; h++) {
+                const tH = ((h - TIME_START) * 60 / SLOT_MINS) * PX_PER_SLOT;
+                const tG = tH + (30 / SLOT_MINS) * PX_PER_SLOT;
+                timeLabels += `
+                    <div style="position:absolute;top:${tH}px;right:6px;font-size:11px;font-weight:600;color:#64748b;line-height:${PX_PER_SLOT}px;">${String(h).padStart(2,'0')}:00</div>
+                    <div style="position:absolute;top:${tG}px;right:6px;font-size:10px;color:#94a3b8;line-height:${PX_PER_SLOT}px;">${String(h).padStart(2,'0')}:30</div>`;
+            }
+
+            // Gridlines — 10-min slots
+            let gridlines = '';
+            const totalSlots = (TIME_END - TIME_START) * 60 / SLOT_MINS;
+            for (let slot = 0; slot <= totalSlots; slot++) {
+                const mins = slot * SLOT_MINS;
+                const top  = slot * PX_PER_SLOT;
+                if (mins % 60 === 0) {
+                    gridlines += `<div style="position:absolute;top:${top}px;left:0;right:0;height:1px;background:#e2e8f0;"></div>`;
+                } else if (mins % 30 === 0) {
+                    gridlines += `<div style="position:absolute;top:${top}px;left:0;right:0;border-top:1px dashed #e2e8f0;"></div>`;
+                } else {
+                    gridlines += `<div style="position:absolute;top:${top}px;left:0;right:0;border-top:1px solid #f8fafc;"></div>`;
+                }
+            }
+
+            // Lab columns
+            const labCols = labs.map(lab => {
+                const blocks = items.filter(i => i.lab_id == lab.id).map(buildBlock).join('');
+                return `<div style="flex:1;min-width:${LAB_MIN_W}px;position:relative;height:${TOTAL_H}px;border-left:1px solid #f1f5f9;">${gridlines}${blocks}</div>`;
+            }).join('');
+
+            // Header
+            const headerCols = [`<div style="width:${TIME_COL_W}px;flex-shrink:0;background:#1e293b;"></div>`]
+                .concat(labs.map(lab =>
+                    `<div style="flex:1;min-width:${LAB_MIN_W}px;background:#1e293b;color:#fff;text-align:center;padding:12px 6px;font-weight:700;font-size:13px;border-left:1px solid #334155;">${esc(lab.name)}</div>`
+                )).join('');
+
+            content.innerHTML = `
+                <div style="min-width:${minW}px;">
+                    <div style="display:flex;position:sticky;top:0;z-index:20;">${headerCols}</div>
+                    <div style="display:flex;height:${TOTAL_H}px;">
+                        <div style="width:${TIME_COL_W}px;flex-shrink:0;position:relative;height:${TOTAL_H}px;background:#f8fafc;border-right:1px solid #e2e8f0;">${timeLabels}</div>
+                        ${labCols}
+                    </div>
+                </div>`;
+
+            const wrap = document.getElementById('landingTimetableWrap');
+            setTimeout(() => { wrap.scrollTop = ((7 - TIME_START) * 60 / SLOT_MINS) * PX_PER_SLOT; }, 60);
+        }
+
+        function buildBlock(item) {
+            const startOffset = toMins(item.start_time) - TIME_START*60;
+            const duration    = toMins(item.end_time)   - toMins(item.start_time);
+            if (startOffset < 0 || duration <= 0) return '';
+            const top    = (startOffset / SLOT_MINS) * PX_PER_SLOT;
+            const height = (duration    / SLOT_MINS) * PX_PER_SLOT;
+            const type   = item.booking_type || 'perkuliahan_tetap';
+            const c      = TYPE_COLORS[type] || TYPE_COLORS.perkuliahan_tetap;
+            const isKul  = ['perkuliahan_tetap','perkuliahan_tidak_tetap'].includes(type);
+            const course = esc(item.course || '-');
+            const lec    = isKul && item.lecturer ? esc(item.lecturer) : '';
+            const s = fmtT(item.start_time), e = fmtT(item.end_time);
+            const tip = esc(`${item.course||''}${item.lecturer?'\n'+item.lecturer:''}\n${s} - ${e}`);
+            return `
+            <div title="${tip}" style="position:absolute;top:${top}px;height:${height}px;left:3px;right:3px;
+                        background:${c.bg};border-radius:7px;overflow:hidden;z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.1);">
+                <div style="position:absolute;top:0;bottom:0;left:0;width:5px;background:${c.accent};border-radius:7px 0 0 7px;"></div>
+                <div style="padding:3px 4px 3px 9px;height:100%;display:flex;flex-direction:column;gap:1px;overflow:hidden;">
+                    <div style="font-size:11px;font-weight:700;color:${c.text};line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${course}</div>
+                    ${height>36?`<div style="font-size:10px;color:${c.text};opacity:.85;display:flex;align-items:center;gap:2px;white-space:nowrap;">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${s} - ${e}
+                    </div>`:''}
+                    ${height>52&&lec?`<div style="font-size:10px;color:${c.text};opacity:.75;display:flex;align-items:center;gap:2px;overflow:hidden;">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lec}</span>
+                    </div>`:''}
+                </div>
+            </div>`;
+        }
+
+        // ── Public API ─────────────────────────────────────────
+        window.landingSelectDay = function(day) {
+            activeDay = day;
+            updateTabs();
+            renderTimetable(day);
+        };
+
+        // ── Init ───────────────────────────────────────────────
+        const today = todayName();
+        activeDay = DAYS.includes(today) ? today : 'Senin';
+        renderTabs();
+        renderTimetable(activeDay);
+    })();
+    </script>
 
     <!-- Download PDF Section -->
     <section class="py-8 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
@@ -476,89 +527,8 @@
         </div>
     </footer>
 
-    <!-- JavaScript for Tabs -->
+    <!-- Utility Scripts -->
     <script>
-        let selectedLab = ''; // Track selected lab filter
-
-        function showSchedule(day) {
-            // Hide all schedules
-            document.querySelectorAll('.schedule-content').forEach(el => {
-                el.classList.add('hidden');
-            });
-            
-            // Remove active state from all tabs
-            document.querySelectorAll('.schedule-tab').forEach(tab => {
-                tab.classList.remove('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
-                tab.classList.add('border-transparent', 'text-slate-600');
-            });
-            
-            // Show selected schedule
-            document.getElementById('schedule-' + day).classList.remove('hidden');
-            
-            // Activate selected tab
-            const activeTab = document.getElementById('tab-' + day);
-            activeTab.classList.add('border-yellow-500', 'text-yellow-600', 'bg-yellow-50');
-            activeTab.classList.remove('border-transparent', 'text-slate-600');
-
-            // Apply lab filter after switching tabs
-            applyLabFilter();
-        }
-
-        // Lab Filter Functionality
-        function applyLabFilter() {
-            const allRows = document.querySelectorAll('.schedule-row');
-            const clearButton = document.getElementById('clearLabFilter');
-
-            // Show/hide clear button
-            if (selectedLab !== '') {
-                clearButton.classList.remove('hidden');
-            } else {
-                clearButton.classList.add('hidden');
-            }
-
-            // If no filter selected, show all rows
-            if (selectedLab === '') {
-                allRows.forEach(row => {
-                    row.style.display = '';
-                });
-                return;
-            }
-
-            // Filter rows based on selected lab
-            allRows.forEach(row => {
-                const labName = row.getAttribute('data-lab');
-                if (labName === selectedLab) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        // Initialize filter dropdown
-        document.addEventListener('DOMContentLoaded', function() {
-            const labFilterSelect = document.getElementById('labFilter');
-            
-            if (labFilterSelect) {
-                labFilterSelect.addEventListener('change', function() {
-                    selectedLab = this.value;
-                    applyLabFilter();
-                });
-            }
-
-            // Clear filter button
-            const clearButton = document.getElementById('clearLabFilter');
-            if (clearButton) {
-                clearButton.addEventListener('click', function() {
-                    selectedLab = '';
-                    if (labFilterSelect) {
-                        labFilterSelect.value = '';
-                    }
-                    applyLabFilter();
-                });
-            }
-        });
-
         // Handle download form submit
         function handleDownloadSubmit(event) {
             event.preventDefault();

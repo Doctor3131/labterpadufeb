@@ -583,7 +583,7 @@ class LabInventoryController extends Controller
     {
         $request->validate([
             'batch_id' => 'required|exists:batches,id',
-            'condition' => 'required|string',
+            'condition' => ['required', \Illuminate\Validation\Rule::enum(ConditionEnum::class)],
             'target_lab_id' => 'required|exists:labs,id',
             'quantity' => 'required|integer|min:1',
             'notes' => 'nullable|string|max:255',

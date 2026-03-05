@@ -1012,9 +1012,9 @@ class AssetBorrowingController extends Controller
                     if ($borrowingItem->asset_unit_id) {
                         $unitCondition = match($condition) {
                             'BAIK' => 'BAIK',
-                            'RUSAK_RINGAN' => 'KURANG_BAIK',
+                            'RUSAK_RINGAN' => 'MAINTENANCE',
                             'RUSAK_BERAT' => 'RUSAK',
-                            'HILANG' => 'RUSAK',
+                            'HILANG' => 'HILANG',
                             default => 'BAIK',
                         };
                         AssetUnit::where('id', $borrowingItem->asset_unit_id)->update([

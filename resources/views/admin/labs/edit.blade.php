@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Ruang Lab - Lab Digital FEB UNDIP')
+@section('title', 'Edit Ruang Lab - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <div class="max-w-4xl mx-auto">
@@ -32,7 +32,7 @@
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nama Lab <span class="text-red-500">*</span></label>
                         <input type="text" name="name" id="name" value="{{ old('name', $lab->name) }}" required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition @error('name') border-red-500 @enderror"
-                            placeholder="EL. 301">
+                            placeholder="Contoh: Lab EL 307">
                         @error('name')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -43,7 +43,7 @@
                         <label for="capacity" class="block text-sm font-medium text-gray-700 mb-2">Kapasitas (Orang) <span class="text-red-500">*</span></label>
                         <input type="number" name="capacity" id="capacity" value="{{ old('capacity', $lab->capacity) }}" required min="1"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition @error('capacity') border-red-500 @enderror"
-                            placeholder="40">
+                            placeholder="0">
                         @error('capacity')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror

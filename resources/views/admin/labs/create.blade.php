@@ -31,7 +31,7 @@
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nama Lab <span class="text-red-500">*</span></label>
                         <input type="text" name="name" id="name" value="{{ old('name') }}" required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition @error('name') border-red-500 @enderror"
-                            placeholder="EL. 301">
+                            placeholder="Pasca">
                         @error('name')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror

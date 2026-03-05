@@ -37,48 +37,6 @@ class Lab extends Model
     }
 
     /**
-     * Get all asset units in this lab
-     */
-    public function assetUnits()
-    {
-        return $this->hasMany(AssetUnit::class);
-    }
-
-    /**
-     * Get all inventory balances for this lab
-     */
-    public function inventoryBalances()
-    {
-        return $this->hasMany(InventoryBalance::class);
-    }
-
-    /**
-     * Get inventory transactions for this lab
-     */
-    public function inventoryTransactions()
-    {
-        return $this->hasMany(InventoryTransaction::class);
-    }
-
-    /**
-     * Scope: exclude the warehouse (Gudang) and external (Eksternal) rooms.
-     * Gudang is used only for inventory management, not for bookings or scheduling.
-     * Eksternal is used only for tracking items transferred outside.
-     */
-    public function scopeExcludeWarehouse($query)
-    {
-        return $query->whereNotIn('name', ['Gudang', 'Eksternal']);
-    }
-
-    /**
-     * Scope: exclude the external (Eksternal) room.
-     */
-    public function scopeExcludeExternal($query)
-    {
-        return $query->where('name', '!=', 'Eksternal');
-    }
-
-    /**
      * Check if lab is available at specific date and time
      * Checks both:
      * 1. Recurring schedules (schedules table) - for permanent classes

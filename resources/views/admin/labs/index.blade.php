@@ -49,54 +49,45 @@
     <!-- Labs Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($labs as $lab)
-            <div class="bg-white rounded-2xl shadow-lg border-2 border-amber-200 overflow-hidden hover:shadow-xl transition-all duration-300">
-                <!-- Top Border -->
-                <div class="h-1.5 bg-gradient-to-r from-yellow-400 to-amber-500"></div>
-                
+            <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
                 <!-- Lab Info -->
-                <div class="p-6">
+                <div class="p-5">
                     <div class="flex justify-between items-start mb-3">
                         <div>
-                            <h3 class="font-bold text-gray-800 text-xl">{{ $lab->name }}</h3>
+                            <h3 class="font-bold text-gray-800 text-lg">{{ $lab->name }}</h3>
                         </div>
                         @php
                             $statusConfig = match($lab->status) {
-                                'available' => ['bg' => 'bg-green-500', 'label' => 'Aktif'],
-                                'inactive' => ['bg' => 'bg-red-500', 'label' => 'Nonaktif'],
-                                default => ['bg' => 'bg-gray-500', 'label' => 'Unknown'],
+                                'available' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Aktif'],
+                                'inactive' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Nonaktif'],
+                                default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Unknown'],
                             };
                         @endphp
-                        <span class="{{ $statusConfig['bg'] }} text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">
                             {{ $statusConfig['label'] }}
                         </span>
                     </div>
 
-                    <p class="text-gray-600 text-sm mb-5 line-clamp-2">{{ $lab->description ?: 'Tidak ada deskripsi' }}</p>
+                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $lab->description ?: 'Tidak ada deskripsi' }}</p>
 
-                    <!-- Stats -->
-                    <div class="space-y-2 text-sm mb-5 bg-amber-50 rounded-lg p-3 border border-amber-100">
-                        <div class="flex items-center text-gray-700">
-                            <svg class="w-4 h-4 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            <span>Kapasitas: <span class="text-amber-700 font-bold">{{ $lab->capacity }}</span> orang</span>
+                            <span>Kapasitas: {{ $lab->capacity }} orang</span>
                         </div>
-                        <div class="flex items-center text-gray-700">
-                            <svg class="w-4 h-4 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                             </svg>
-                            <span>Jadwal: <span class="text-amber-700 font-bold">{{ $lab->schedules_count }}</span> | Booking: <span class="text-amber-700 font-bold">{{ $lab->bookings_count }}</span></span>
+                            <span>Jadwal: {{ $lab->schedules_count }} | Booking: {{ $lab->bookings_count }}</span>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex gap-2 pt-4 border-t border-amber-200">
-                        <a href="{{ route('admin.labs.inventory', $lab->id) }}" class="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors shadow-md" title="Inventaris">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                            </svg>
-                        </a>
-                        <a href="{{ route('admin.labs.edit', $lab->id) }}" class="flex-1 flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md">
+                    <div class="flex gap-2 pt-3 border-t border-gray-100">
+                        <a href="{{ route('admin.labs.edit', $lab->id) }}" class="flex-1 inline-flex justify-center items-center px-3 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg hover:bg-blue-100 transition-colors">
                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
@@ -105,7 +96,7 @@
                         
                         <form action="{{ route('admin.labs.toggle-status', $lab->id) }}" method="POST" class="flex-1">
                             @csrf
-                            <button type="submit" class="w-full flex items-center justify-center px-3 py-2 {{ $lab->status === 'available' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700' }} text-white text-sm font-semibold rounded-lg transition-colors shadow-md">
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-3 py-2 {{ $lab->status === 'available' ? 'bg-red-50 text-red-700 hover:bg-red-100' : 'bg-green-50 text-green-700 hover:bg-green-100' }} text-sm font-semibold rounded-lg transition-colors">
                                 @if($lab->status === 'available')
                                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
@@ -120,12 +111,11 @@
                             </button>
                         </form>
 
-                        <form action="{{ route('admin.labs.destroy', $lab->id) }}" method="POST" id="deleteForm-{{ $lab->id }}">
+                        <form action="{{ route('admin.labs.destroy', $lab->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus lab ini? Lab dengan jadwal/booking aktif tidak dapat dihapus.');">
                             @csrf
                             @method('DELETE')
-                            <button type="button" class="p-2 bg-gray-600 hover:bg-red-600 text-white rounded-lg transition-colors shadow-md"
-                                onclick="confirmForm(document.getElementById('deleteForm-{{ $lab->id }}'), 'Apakah Anda yakin ingin menghapus lab ini? Lab dengan jadwal/booking aktif tidak dapat dihapus.')">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button type="submit" class="inline-flex justify-center items-center px-3 py-2 bg-red-50 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
                             </button>
@@ -149,26 +139,4 @@
             </div>
         @endforelse
     </div>
-
-    @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function confirmForm(form, message) {
-            Swal.fire({
-                title: 'Konfirmasi Hapus',
-                text: message,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626', // red-600
-                cancelButtonColor: '#6b7280', // gray-500
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        }
-    </script>
-    @endpush
 @endsection

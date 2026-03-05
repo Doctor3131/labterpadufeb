@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\AssetBorrowing;
+use App\Models\BpsRequest;
+use App\Models\RefinitivRequest;
+use App\Models\BloombergRequest;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,25 +17,47 @@ use Carbon\Carbon;
 class AdminController extends Controller
 {
     /**
-     * Show admin dashboard with pending bookings
-     * Paginated to improve performance with large datasets
+     * Show admin dashboard with service cards
      */
     public function dashboard()
     {
-        // Paginate each status separately with custom page parameter names
-        // This allows independent pagination for each tab
+        $labPendingCount = Booking::where('status', 'pending')->where('booking_type', '!=', 'pribadi')->count();
+        $bpsPendingCount = BpsRequest::where('status', 'pending')->count();
+        $refinitivPendingCount = RefinitivRequest::where('attendance_status', 'pending')->count();
+        $bloombergTotalCount = BloombergRequest::count();
+        $personalTotalCount = Booking::where('booking_type', 'pribadi')->count();
+        $assetBorrowingPendingCount = AssetBorrowing::where('status', 'pending')->count();
+
+        return view('admin.dashboard', compact(
+            'labPendingCount',
+            'bpsPendingCount',
+            'refinitivPendingCount',
+            'bloombergTotalCount',
+            'personalTotalCount',
+            'assetBorrowingPendingCount'
+        ));
+    }
+
+    /**
+     * Show lab bookings management (paginated)
+     */
+    public function labBookings()
+    {
         $pendingBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'pending')
+            ->where('booking_type', '!=', 'pribadi')
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'pending_page');
 
         $approvedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'approved')
+            ->where('booking_type', '!=', 'pribadi')
             ->orderBy('handled_at', 'desc')
             ->paginate(15, ['*'], 'approved_page');
 
         $rejectedBookings = Booking::with(['lab', 'handler'])
             ->where('status', 'rejected')
+            ->where('booking_type', '!=', 'pribadi')
             ->orderBy('updated_at', 'desc')
             ->paginate(15, ['*'], 'rejected_page');
 
@@ -52,7 +77,7 @@ class AdminController extends Controller
             ->orderBy('updated_at', 'desc')
             ->paginate(15, ['*'], 'asset_completed_page');
 
-        return view('admin.dashboard', compact(
+        return view('admin.lab-bookings', compact(
             'pendingBookings', 
             'approvedBookings', 
             'rejectedBookings',
