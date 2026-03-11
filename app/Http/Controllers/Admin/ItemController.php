@@ -40,6 +40,39 @@ class ItemController extends Controller
         return view('admin.items.show', compact('item', 'unitsByLab', 'balancesByLab', 'totalUnits'));
     }
 
+    public function bulkUpdateUnitBrand(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'unit_ids' => 'required|array|min:1',
+            'unit_ids.*' => 'integer|exists:asset_units,id',
+            'brand' => 'nullable|string|max:100',
+        ]);
+        $brand = $request->input('brand') ?: null;
+        $updated = AssetUnit::whereIn('id', $request->input('unit_ids'))->update(['brand' => $brand]);
+        return response()->json(['success' => true, 'brand' => $brand, 'updated' => $updated]);
+    }
+
+    public function updateBatchBrand(\Illuminate\Http\Request $request, \App\Models\Batch $batch)
+    {
+        $request->validate(['brand' => 'nullable|string|max:100']);
+        $batch->update(['brand' => $request->input('brand') ?: null]);
+        return response()->json(['success' => true, 'brand' => $batch->brand]);
+    }
+
+    public function updateUnitBrand(\Illuminate\Http\Request $request, \App\Models\AssetUnit $unit)
+    {
+        $request->validate(['brand' => 'nullable|string|max:100']);
+        $unit->update(['brand' => $request->input('brand') ?: null]);
+        return response()->json(['success' => true, 'brand' => $unit->brand]);
+    }
+
+    public function updateBalanceBrand(\Illuminate\Http\Request $request, \App\Models\InventoryBalance $balance)
+    {
+        $request->validate(['brand' => 'nullable|string|max:100']);
+        $balance->update(['brand' => $request->input('brand') ?: null]);
+        return response()->json(['success' => true, 'brand' => $balance->brand]);
+    }
+
     /**
      * Remove the specified resource from storage.
      */

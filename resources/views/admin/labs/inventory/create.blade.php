@@ -47,9 +47,10 @@
                     @foreach($trackingModes as $mode)
                         <label class="relative cursor-pointer h-full">
                             <input type="radio" name="tracking_mode" value="{{ $mode->value }}" 
-                                x-model="trackingMode" 
+                                x-model="trackingMode"
+                                onchange="switchTrackingMode(this.value)"
                                 class="peer sr-only" 
-                                {{ old('tracking_mode') === $mode->value ? 'checked' : '' }}>
+                                {{ old('tracking_mode', 'STRUCTURED_TAG') === $mode->value ? 'checked' : '' }}>
                             <div class="h-full p-4 border rounded-lg peer-checked:border-yellow-500 peer-checked:bg-yellow-50 hover:border-gray-400 transition-all flex flex-col">
                                 <div class="font-medium text-gray-800">{{ $mode->label() }}</div>
                                 <div class="text-xs text-gray-500 mt-1 leading-relaxed">{{ $mode->description() }}</div>
@@ -61,69 +62,23 @@
 
             <hr class="my-6">
 
-            <!-- Step 2: Item Selection -->
-            <div class="mb-6" x-data="{ dropdownOpen: false }">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Barang</label>
-                <div class="relative">
-                    <!-- Trigger -->
-                    <button type="button" @click="dropdownOpen = !dropdownOpen" @click.away="dropdownOpen = false" class="w-full bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent flex justify-between items-center text-left">
-                        <span x-text="selectedItemForReference ? masterItems.find(i => i.id == selectedItemForReference)?.name || '-- Pilih dari Daftar (Opsional) --' : '-- Pilih dari Daftar (Opsional) --'" class="block truncate"></span>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    
-                    <!-- Dropdown List -->
-                    <div x-show="dropdownOpen" x-transition.opacity class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg" style="display: none;">
-                        <ul class="max-h-60 overflow-y-auto py-1 text-sm text-gray-700">
-                            <li>
-                                <div @click="selectItem(''); dropdownOpen = false" class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-500 italic">
-                                    -- Pilih dari Daftar (Opsional) --
-                                </div>
-                            </li>
-                            <template x-for="item in masterItems" :key="item.id">
-                                <li class="flex justify-between items-center hover:bg-gray-50 group border-b border-gray-50 last:border-0 border-solid">
-                                    <div @click="selectItem(item.id); dropdownOpen = false" class="flex-1 px-4 py-2 cursor-pointer truncate" x-text="item.name"></div>
-                                    <button type="button" @click.stop="deleteItemFromList(item.id, item.name)" class="px-3 py-2 text-gray-400 hover:text-red-600 hover:bg-red-50 focus:outline-none transition-colors opacity-100 md:opacity-0 group-hover:opacity-100 mr-2 rounded-md" title="Hapus Barang">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </li>
-                            </template>
-                            <li x-show="masterItems.length === 0" class="px-4 py-3 text-gray-500 italic text-center">
-                                Belum ada barang master.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <p class="text-xs text-gray-500 mt-2">Pilih dari daftar untuk mengisi nama otomatis. Klik tombol silang (X) di ujung kanan setiap barang untuk menyembunyikannya dari daftar jika tidak relevan.</p>
-                <!-- Hidden inputs so proper value is submitted if needed -->
-                <input type="hidden" name="item_id" :value="selectedItemForReference">
-            </div>
-
-            <!-- New Item Fields -->
-            <div class="mb-6 p-4 bg-gray-50 rounded-lg space-y-4" x-data="{ 
-                showCustomCategory: false,
-                selectedCategory: '{{ old('category') }}',
-                customCategory: ''
-            }">
+            <!-- Item Fields -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nama Aset Baru *</label>
-                    <input type="text" name="new_item_name" x-model="itemName" value="{{ old('new_item_name') }}" 
+                    <input type="text" name="new_item_name" value="{{ old('new_item_name') }}" 
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Contoh: Mouse Ajazz, Keyboard Asus, Router Cisco">
                 </div>
                 
                 <!-- Category hanya untuk non-STRUCTURED_TAG -->
-                <div x-show="trackingMode !== 'STRUCTURED_TAG'">
+                <div id="item-category-section" x-show="trackingMode !== 'STRUCTURED_TAG'" style="display:none">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Kategori Barang *</label>
                     
                     <!-- Dropdown Kategori -->
                     <select 
-                        x-model="selectedCategory"
-                        @change="showCustomCategory = (selectedCategory === 'custom')"
+                        id="category-select"
+                        onchange="switchCategorySelect(this.value)"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent mb-2">
                         <option value="">-- Pilih Kategori --</option>
                         <option value="PC" {{ old('category') == 'PC' ? 'selected' : '' }}>PC</option>
@@ -148,45 +103,46 @@
                     </select>
                     
                     <!-- Input untuk kategori custom -->
-                    <div x-show="showCustomCategory" class="mt-2">
+                    <div id="custom-category-section" class="mt-2" style="display:none">
                         <input 
                             type="text" 
-                            x-model="customCategory"
+                            id="custom-category-input"
+                            oninput="document.getElementById('category-hidden').value = this.value"
                             placeholder="Masukkan kategori baru..."
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Kategori baru akan disimpan dan bisa digunakan lagi</p>
                     </div>
                     
                     <!-- Hidden input untuk submit -->
-                    <input type="hidden" name="category" :value="selectedCategory === 'custom' ? customCategory : selectedCategory">
+                    <input type="hidden" id="category-hidden" name="category" value="{{ old('category') }}">
                     
                     <p class="text-xs text-gray-500 mt-1">Pilih dari daftar atau buat kategori baru</p>
                 </div>
             </div>
 
             <!-- Asset Type Code (for Structured Tag) -->
-            <div x-show="trackingMode === 'STRUCTURED_TAG'" class="mb-6">
+            <div id="asset-type-code-section" x-show="trackingMode === 'STRUCTURED_TAG'" class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Kode Tipe Aset UPK <span class="text-gray-400 text-xs font-normal">(opsional)</span></label>
                 
                 <!-- Mode Selection -->
                 <div class="flex flex-wrap gap-4 mb-3">
                     <label class="inline-flex items-center cursor-pointer">
-                        <input type="radio" name="asset_type_code_mode" value="kosong" x-model="assetTypeCodeMode" class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                        <input type="radio" name="asset_type_code_mode" value="kosong" onchange="toggleAssetTypeCodeMode(this.value)" {{ old('asset_type_code_mode', 'kosong') === 'kosong' ? 'checked' : '' }} class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
                         <span class="ml-2 text-sm text-gray-700">Kosongkan</span>
                     </label>
                     <label class="inline-flex items-center cursor-pointer">
-                        <input type="radio" name="asset_type_code_mode" value="pilih" x-model="assetTypeCodeMode" class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                        <input type="radio" name="asset_type_code_mode" value="pilih" onchange="toggleAssetTypeCodeMode(this.value)" {{ old('asset_type_code_mode', 'kosong') === 'pilih' ? 'checked' : '' }} class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
                         <span class="ml-2 text-sm text-gray-700">Pilih dari Daftar</span>
                     </label>
                     <label class="inline-flex items-center cursor-pointer">
-                        <input type="radio" name="asset_type_code_mode" value="manual" x-model="assetTypeCodeMode" class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
+                        <input type="radio" name="asset_type_code_mode" value="manual" onchange="toggleAssetTypeCodeMode(this.value)" {{ old('asset_type_code_mode', 'kosong') === 'manual' ? 'checked' : '' }} class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
                         <span class="ml-2 text-sm text-gray-700">Isi Manual</span>
                     </label>
                 </div>
 
                 <!-- Dropdown (Pilih dari Daftar) -->
-                <div x-show="assetTypeCodeMode === 'pilih'" x-transition>
-                    <select name="asset_type_code" :disabled="trackingMode !== 'STRUCTURED_TAG' || assetTypeCodeMode !== 'pilih'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                <div id="atc-pilih" style="display:none">
+                    <select name="asset_type_code" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <option value="">-- Pilih Kode Tipe --</option>
                         <option value="H3" {{ old('asset_type_code') == 'H3' ? 'selected' : '' }}>H3 - PC AIO</option>
                         <option value="I2" {{ old('asset_type_code') == 'I2' ? 'selected' : '' }}>I2 - TV</option>
@@ -200,8 +156,8 @@
                 </div>
 
                 <!-- Manual Input -->
-                <div x-show="assetTypeCodeMode === 'manual'" x-transition>
-                    <input type="text" name="manual_asset_tag_prefix" :disabled="trackingMode !== 'STRUCTURED_TAG' || assetTypeCodeMode !== 'manual'" 
+                <div id="atc-manual" style="display:none">
+                    <input type="text" name="manual_asset_tag_prefix" 
                         value="{{ old('manual_asset_tag_prefix') }}"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                         placeholder="Contoh: H3.01.1023">
@@ -209,31 +165,18 @@
                 </div>
 
                 <!-- Empty info -->
-                <div x-show="assetTypeCodeMode === 'kosong'" x-transition>
+                <div id="atc-kosong">
                     <p class="text-xs text-gray-500 italic">Kode tipe aset akan dikosongkan</p>
                 </div>
             </div>
 
-
-
             <hr class="my-6">
 
-            <!-- Step 3: Batch Selection -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Batch/Pengadaan</label>
-                <select name="batch_id" x-model="batchId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                    <option value="new">-- Buat Batch Baru --</option>
-                    <template x-for="batch in batches" :key="batch.id">
-                        <option :value="batch.id" x-text="batch.label"></option>
-                    </template>
-                </select>
-            </div>
-
-            <!-- New Batch Fields -->
-            <div x-show="batchId === 'new'" class="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
+            <!-- Batch Fields -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Source Code Field -->
-                    <div x-show="trackingMode === 'STRUCTURED_TAG'">
+                    <div id="batch-source-code" x-show="trackingMode === 'STRUCTURED_TAG'">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Kode Sumber Pengadaan *</label>
                         <select name="proc_source_code" :disabled="trackingMode !== 'STRUCTURED_TAG'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             <option value="01" {{ old('proc_source_code') == '01' ? 'selected' : '' }}>01 - Universitas</option>
@@ -243,14 +186,14 @@
                     </div>
 
                     <!-- Hidden input moved here to not mess up grid -->
-                    <input type="hidden" name="proc_source_code" value="01" :disabled="trackingMode === 'STRUCTURED_TAG'">
+                    <input type="hidden" id="hidden-proc-source" name="proc_source_code" value="01" disabled>
 
                     <!-- Arrival Date (MMYY) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Waktu Datang *</label>
                         
                         <!-- Format 1023 (Structured Tag) -->
-                        <div x-show="trackingMode === 'STRUCTURED_TAG'">
+                        <div id="batch-arrival-structured" x-show="trackingMode === 'STRUCTURED_TAG'" style="display:none">
                             <input type="text" name="arrival_mmyy_text" value="{{ old('arrival_mmyy_text', '1023') }}" 
                                 :disabled="trackingMode !== 'STRUCTURED_TAG'"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -259,7 +202,7 @@
                         </div>
 
                         <!-- Format Dropdown (Other Modes) -->
-                        <div x-show="trackingMode !== 'STRUCTURED_TAG'" class="grid grid-cols-2 gap-2">
+                        <div id="batch-arrival-other" x-show="trackingMode !== 'STRUCTURED_TAG'" class="grid grid-cols-2 gap-2" style="display:none">
                             <div>
                                 <select name="arrival_month" :disabled="trackingMode === 'STRUCTURED_TAG'" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     <option value="" disabled selected>Bulan</option>
@@ -314,14 +257,13 @@
 
             <hr class="my-6">
 
-            <!-- Step 4: Mode-specific Fields -->
+            <!-- Mode-specific Fields -->
             <!-- Structured Tag Fields -->
-            <div x-show="trackingMode === 'STRUCTURED_TAG'" class="mb-6 space-y-4">
+            <div id="fields-structured-tag" x-show="trackingMode === 'STRUCTURED_TAG'" class="mb-6 space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Unit *</label>
-                        <input type="number" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="999"
-                            :disabled="trackingMode !== 'STRUCTURED_TAG'"
+                        <input type="number" id="qty-structured" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="999"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
                     <div>
@@ -343,12 +285,11 @@
             </div>
 
             <!-- Seat Number Fields -->
-            <div x-show="trackingMode === 'SEAT_NUMBER'" class="mb-6 space-y-4">
+            <div id="fields-seat-number" x-show="trackingMode === 'SEAT_NUMBER'" class="mb-6 space-y-4" style="display:none">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Unit *</label>
-                        <input type="number" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="999"
-                            :disabled="trackingMode !== 'SEAT_NUMBER'"
+                        <input type="number" id="qty-seat" name="quantity" value="{{ old('quantity', 1) }}" min="1" max="999" disabled
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
                     <div>
@@ -363,10 +304,9 @@
             </div>
 
             <!-- Aggregate Fields -->
-            <div x-show="trackingMode === 'AGGREGATE'" class="mb-6">
+            <div id="fields-aggregate" x-show="trackingMode === 'AGGREGATE'" class="mb-6" style="display:none">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah *</label>
-                <input type="number" name="quantity" value="{{ old('quantity', 1) }}" min="1"
-                    :disabled="trackingMode !== 'AGGREGATE'"
+                <input type="number" id="qty-aggregate" name="quantity" value="{{ old('quantity', 1) }}" min="1" disabled
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
             </div>
 
@@ -403,75 +343,77 @@
                 </button>
             </div>
         </form>
-        
-        <!-- Hidden Form for Deletion (placed outside main form to prevent nested form bug) -->
-        
     </div>
 
     @push('scripts')
     <script>
         function inventoryForm() {
             return {
-                masterItems: @json($items->map(function($i) { return ['id' => $i->id, 'name' => $i->name]; })),
                 trackingMode: '{{ old('tracking_mode', 'STRUCTURED_TAG') }}',
-                assetTypeCodeMode: '{{ old('asset_type_code_mode', 'kosong') }}',
-                selectedItemForReference: '',
-                itemName: '{{ old('new_item_name', '') }}',
-                batchId: '{{ old('batch_id', 'new') }}',
-                batches: [],
-                
-                init() {
-                    // No auto-loading needed
-                },
-                
-                selectItem(itemId) {
-                    this.selectedItemForReference = itemId;
-                    this.fillItemNameAndLoadBatches();
-                },
-                
-                deleteItemFromList(itemId, itemName) {
-                    this.masterItems = this.masterItems.filter(i => i.id != itemId);
-                    if (this.selectedItemForReference == itemId) {
-                        this.selectedItemForReference = '';
-                        this.fillItemNameAndLoadBatches();
-                    }
-                },
-                
-                fillItemNameAndLoadBatches() {
-                    if (this.selectedItemForReference) {
-                        const item = this.masterItems.find(i => i.id == this.selectedItemForReference);
-                        
-                        if (item) {
-                            this.itemName = item.name;
-                        }
-                        
-                        // Load batches for selected item
-                        this.loadBatches();
-                    } else {
-                        this.batches = [];
-                        this.batchId = 'new';
-                    }
-                },
-                
-                async loadBatches() {
-                    if (!this.selectedItemForReference) {
-                        this.batches = [];
-                        this.batchId = 'new';
-                        return;
-                    }
-                    
-                    try {
-                        const response = await fetch(`/admin/items/${this.selectedItemForReference}/batches`);
-                        const data = await response.json();
-                        this.batches = data;
-                        this.batchId = 'new';
-                    } catch (error) {
-                        console.error('Error loading batches:', error);
-                        this.batches = [];
+            }
+        }
+
+        function switchCategorySelect(val) {
+            document.getElementById('custom-category-section').style.display = (val === 'custom') ? '' : 'none';
+            if (val !== 'custom') {
+                document.getElementById('category-hidden').value = val;
+            } else {
+                document.getElementById('category-hidden').value = document.getElementById('custom-category-input').value;
+            }
+        }
+
+        function switchTrackingMode(mode) {
+            var map = {
+                'item-category-section':    mode !== 'STRUCTURED_TAG',
+                'asset-type-code-section':  mode === 'STRUCTURED_TAG',
+                'batch-source-code':        mode === 'STRUCTURED_TAG',
+                'batch-arrival-structured': mode === 'STRUCTURED_TAG',
+                'batch-arrival-other':      mode !== 'STRUCTURED_TAG',
+                'fields-structured-tag':    mode === 'STRUCTURED_TAG',
+                'fields-seat-number':       mode === 'SEAT_NUMBER',
+                'fields-aggregate':         mode === 'AGGREGATE',
+            };
+            Object.entries(map).forEach(function([id, show]) {
+                var el = document.getElementById(id);
+                if (el) el.style.display = show ? '' : 'none';
+            });
+            // Disable inactive quantity inputs so they don't override the active one on submit
+            document.getElementById('qty-structured').disabled = (mode !== 'STRUCTURED_TAG');
+            document.getElementById('qty-seat').disabled       = (mode !== 'SEAT_NUMBER');
+            document.getElementById('qty-aggregate').disabled  = (mode !== 'AGGREGATE');
+            // Disable proc_source_code hidden input when STRUCTURED_TAG (the select handles it instead)
+            document.getElementById('hidden-proc-source').disabled = (mode === 'STRUCTURED_TAG');
+        }
+
+        function toggleAssetTypeCodeMode(mode) {
+            document.getElementById('atc-kosong').style.display = mode === 'kosong' ? '' : 'none';
+            document.getElementById('atc-pilih').style.display  = mode === 'pilih'  ? '' : 'none';
+            document.getElementById('atc-manual').style.display = mode === 'manual' ? '' : 'none';
+        }
+
+        // Init on page load (handles old() re-render after validation error)
+        (function() {
+            var initMode = '{{ old('tracking_mode', 'STRUCTURED_TAG') }}';
+            switchTrackingMode(initMode);
+
+            var initAtcMode = '{{ old('asset_type_code_mode', 'kosong') }}';
+            if (initAtcMode !== 'kosong') toggleAssetTypeCodeMode(initAtcMode);
+
+            // Restore category select state after validation error
+            var oldCat = '{{ old('category') }}';
+            if (oldCat) {
+                var catSel = document.getElementById('category-select');
+                if (catSel) {
+                    var matched = Array.from(catSel.options).some(function(o) { return o.value === oldCat; });
+                    if (!matched) {
+                        // Custom value not in list → show custom input, set select to 'custom'
+                        catSel.value = 'custom';
+                        document.getElementById('custom-category-section').style.display = '';
+                        document.getElementById('custom-category-input').value = oldCat;
                     }
                 }
             }
-        }
+        })();
     </script>
     @endpush
 @endsection

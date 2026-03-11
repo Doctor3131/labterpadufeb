@@ -38,17 +38,8 @@
                     <div class="flex-1">
                         <div class="flex items-center gap-3 flex-wrap">
                             <h2 class="text-lg font-bold text-gray-800">Peminjaman #{{ $borrowing->id }}</h2>
-                            @php
-                                $statusColors = [
-                                    'pending' => 'bg-yellow-100 text-yellow-800',
-                                    'approved' => 'bg-green-100 text-green-800',
-                                    'rejected' => 'bg-red-100 text-red-800',
-                                    'borrowed' => 'bg-blue-100 text-blue-800',
-                                    'returned' => 'bg-gray-100 text-gray-800',
-                                ];
-                            @endphp
-                            <span class="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full {{ $statusColors[$borrowing->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ ucfirst($borrowing->status) }}
+                            <span class="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full {{ $borrowing->getStatusBadgeColor() }}">
+                                {{ $borrowing->getStatusLabel() }}
                             </span>
                             @if($borrowing->document_number)
                                 <span class="text-xs text-gray-600">No: {{ $borrowing->document_number }}</span>
@@ -318,6 +309,56 @@
                         
                         console.log('Borrowed totals:', borrowedTotals);
 
+                        function getTotalBorrowed() {
+                            return Object.values(borrowedTotals).reduce(function(a, b) { return a + b; }, 0);
+                        }
+
+                        function getCurrentTotalQty() {
+                            let total = 0;
+                            document.querySelectorAll('#items-container .item-row').forEach(function(row) {
+                                const qtyInput = row.querySelector('[data-field="quantity"]:not([type="hidden"])');
+                                if (qtyInput) total += parseInt(qtyInput.value) || 0;
+                            });
+                            return total;
+                        }
+
+                        function updateAddButtonState() {
+                            const btn = document.querySelector('button[onclick="addItemRow()"]');
+                            if (!btn) return;
+                            const totalBorrowed = getTotalBorrowed();
+                            const currentQty = getCurrentTotalQty();
+                            if (currentQty >= totalBorrowed) {
+                                btn.disabled = true;
+                                btn.title = 'Jumlah barang sudah terpenuhi (' + totalBorrowed + ' unit)';
+                                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                                btn.classList.remove('hover:bg-green-700');
+                            } else {
+                                btn.disabled = false;
+                                btn.title = '';
+                                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                btn.classList.add('hover:bg-green-700');
+                            }
+                        }
+
+                        function onQtyChange(input) {
+                            const totalBorrowed = getTotalBorrowed();
+                            // Current total EXCLUDING this row's contribution
+                            let otherTotal = 0;
+                            document.querySelectorAll('#items-container .item-row').forEach(function(row) {
+                                const q = row.querySelector('[data-field="quantity"]:not([type="hidden"])');
+                                if (q && q !== input) otherTotal += parseInt(q.value) || 0;
+                            });
+                            const maxAllowed = totalBorrowed - otherTotal;
+                            const entered = parseInt(input.value) || 0;
+                            if (entered > maxAllowed) {
+                                input.value = maxAllowed > 0 ? maxAllowed : 1;
+                                showCustomAlert('Peringatan', 'Jumlah Melebihi Batas',
+                                    '<p>Total jumlah barang tidak boleh melebihi <strong>' + totalBorrowed + '</strong> unit yang dipinjam. Nilai otomatis disesuaikan.</p>');
+                            }
+                            if (parseInt(input.value) < 1) input.value = 1;
+                            updateAddButtonState();
+                        }
+
                         function addItemRow(data = {}) {
                             const template = document.getElementById('item-row-template');
                             const clone = template.content.cloneNode(true);
@@ -341,7 +382,27 @@
                                 }
                             });
 
+                            // Block adding if total qty already met (only for manual adds, not seed)
+                            const isManualAdd = Object.keys(data).length === 0;
+                            if (isManualAdd) {
+                                const totalBorrowed = getTotalBorrowed();
+                                const currentQty = getCurrentTotalQty();
+                                if (currentQty >= totalBorrowed) {
+                                    showCustomAlert('Peringatan', 'Batas Tercapai', '<p>Total jumlah barang sudah memenuhi jumlah yang dipinjam (<strong>' + totalBorrowed + '</strong> unit). Tidak bisa menambahkan baris baru.</p>');
+                                    return;
+                                }
+                            }
+
                             document.getElementById('items-container').appendChild(clone);
+
+                            // Attach qty listener for button state update
+                            const addedRow = document.querySelector('#items-container .item-row:last-child');
+                            if (addedRow) {
+                                const qtyInput = addedRow.querySelector('[data-field="quantity"]:not([type="hidden"])');
+                                if (qtyInput) qtyInput.addEventListener('input', function() { onQtyChange(this); });
+                            }
+
+                            updateAddButtonState();
                         }
 
                         function removeItemRow(btn) {
@@ -351,6 +412,7 @@
                                 return;
                             }
                             btn.closest('.item-row').remove();
+                            updateAddButtonState();
                         }
 
                         // Initialize on page load
@@ -361,6 +423,13 @@
                             } else {
                                 addItemRow();
                             }
+
+                            // Attach qty listeners to seeded rows & set initial button state
+                            document.querySelectorAll('#items-container .item-row').forEach(function(row) {
+                                const qtyInput = row.querySelector('[data-field="quantity"]:not([type="hidden"])');
+                                if (qtyInput) qtyInput.addEventListener('input', function() { onQtyChange(this); });
+                            });
+                            updateAddButtonState();
 
                             // 2. Setup form submit handler
                             const form = document.getElementById('first-party-form');
@@ -390,7 +459,15 @@
                                     
                                     console.log('Item sums:', itemSums);
                                     
-                                    // Check against borrowed totals
+                                    // Check 1: total across ALL rows must not exceed total borrowed
+                                    const grandTotal = Object.values(itemSums).reduce(function(a, b) { return a + b; }, 0);
+                                    const maxTotal = getTotalBorrowed();
+                                    if (grandTotal > maxTotal) {
+                                        hasError = true;
+                                        errorMsg += '• Total semua barang: Anda input ' + grandTotal + ' unit, tapi yang dipinjam hanya ' + maxTotal + ' unit.\n';
+                                    }
+
+                                    // Check 2: per-name check vs borrowed totals (for known item names)
                                     for (const itemName in itemSums) {
                                         const inputTotal = itemSums[itemName];
                                         const borrowedTotal = borrowedTotals[itemName];

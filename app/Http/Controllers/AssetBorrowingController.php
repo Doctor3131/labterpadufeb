@@ -10,7 +10,9 @@ use App\Models\AssetUnit;
 use App\Models\InventoryBalance;
 use App\Services\BorrowingDocumentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AssetBorrowingController extends Controller
@@ -20,7 +22,7 @@ class AssetBorrowingController extends Controller
      */
     public function create()
     {
-        $labs = Lab::excludeWarehouse()->orderBy('name')->get();
+        $labs = Lab::orderBy('name')->get();
         
         // Get borrowable items (items that can be borrowed)
         // Group by CATEGORY to simplify selection
@@ -370,7 +372,7 @@ class AssetBorrowingController extends Controller
 
             DB::commit();
 
-            return redirect()->route('asset-borrowing.success', $borrowing->id)
+            return redirect()->route('asset-borrowing.success', $borrowing->tracking_token)
                 ->with('success', 'Permohonan peminjaman aset berhasil diajukan!');
 
         } catch (\Exception $e) {
@@ -387,10 +389,11 @@ class AssetBorrowingController extends Controller
     /**
      * Show success page
      */
-    public function success($id)
+    public function success($token)
     {
         $borrowing = AssetBorrowing::with(['lab', 'borrowedItems.item', 'borrowedItems.assetUnit'])
-            ->findOrFail($id);
+            ->where('tracking_token', $token)
+            ->firstOrFail();
 
         return view('asset-borrowing.success', compact('borrowing'));
     }
@@ -558,7 +561,7 @@ class AssetBorrowingController extends Controller
 
             // Save items_override if provided
             if ($request->has('items_override') && is_array($request->items_override)) {
-                \Log::info('Items override received:', ['count' => count($request->items_override), 'data' => $request->items_override]);
+                Log::info('Items override received:', ['count' => count($request->items_override), 'data' => $request->items_override]);
                 
                 // Calculate borrowed totals per category name
                 $borrowedTotals = $borrowing->borrowedItems
@@ -610,9 +613,9 @@ class AssetBorrowingController extends Controller
                 $borrowing->items_override = count($itemsOverride) > 0 ? $itemsOverride : null;
                 $borrowing->save();
                 
-                \Log::info('Items override saved:', ['count' => count($itemsOverride)]);
+                Log::info('Items override saved:', ['count' => count($itemsOverride)]);
             } else {
-                \Log::warning('No items_override in request');
+                Log::warning('No items_override in request');
             }
 
             // Generate PDF
@@ -622,7 +625,7 @@ class AssetBorrowingController extends Controller
                 ->with('success', 'Data PIHAK PERTAMA berhasil disimpan dan surat peminjaman telah dibuat!');
 
         } catch (\Exception $e) {
-            \Log::error('Update first party error: ' . $e->getMessage());
+            Log::error('Update first party error: ' . $e->getMessage());
             return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
@@ -682,7 +685,7 @@ class AssetBorrowingController extends Controller
 
         $borrowing->update([
             'status' => 'approved',
-            'approved_by' => auth()->id(),
+            'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
@@ -702,7 +705,7 @@ class AssetBorrowingController extends Controller
 
         $borrowing->update([
             'status' => 'rejected',
-            'rejected_by' => auth()->id(),
+            'rejected_by' => Auth::id(),
             'rejected_at' => now(),
             'rejection_reason' => $validated['rejection_reason'],
         ]);
@@ -819,7 +822,7 @@ class AssetBorrowingController extends Controller
 
             return response()->json($result);
         } catch (\Exception $e) {
-            \Log::error('Error in getAvailableUnits: ' . $e->getMessage());
+            Log::error('Error in getAvailableUnits: ' . $e->getMessage());
             return response()->json(['error' => 'Terjadi kesalahan saat mengambil data unit: ' . $e->getMessage()], 500);
         }
     }
@@ -862,7 +865,7 @@ class AssetBorrowingController extends Controller
 
         $borrowing->update([
             'status' => 'borrowed',
-            'handed_out_by' => auth()->id(),
+            'handed_out_by' => Auth::id(),
             'handed_out_at' => now(),
             'borrow_condition_notes' => $validated['borrow_condition_notes'] ?? null,
         ]);
@@ -955,7 +958,7 @@ class AssetBorrowingController extends Controller
 
             return response()->json(array_values($grouped));
         } catch (\Exception $e) {
-            \Log::error('Error in getBorrowedUnits: ' . $e->getMessage());
+            Log::error('Error in getBorrowedUnits: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -1082,7 +1085,7 @@ class AssetBorrowingController extends Controller
 
         $borrowing->update([
             'status' => 'returned',
-            'received_back_by' => auth()->id(),
+            'received_back_by' => Auth::id(),
             'received_back_at' => now(),
             'return_condition_notes' => $validated['return_condition_notes'] ?? null,
             'is_damaged_on_return' => $isDamaged,
@@ -1118,7 +1121,7 @@ class AssetBorrowingController extends Controller
 
         $borrowing->update([
             'is_replaced' => true,
-            'replaced_by' => auth()->id(),
+            'replaced_by' => Auth::id(),
             'replaced_at' => now(),
             'replacement_notes' => $validated['replacement_notes'] ?? null,
         ]);

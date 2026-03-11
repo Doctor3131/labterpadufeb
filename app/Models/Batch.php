@@ -13,6 +13,7 @@ class Batch extends Model
 
     protected $fillable = [
         'item_id',
+        'brand',
         'proc_source_code',
         'arrival_mmyy',
         'procurement_date',

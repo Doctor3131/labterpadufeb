@@ -270,6 +270,7 @@ class LabInventoryController extends Controller
                     'arrival_mmyy' => $validated['arrival_mmyy'],
                 ],
                 [
+                    'brand' => $validated['brand'] ?? null,
                     'source_description' => $validated['source_description'] ?? null,
                     'unit_price' => $validated['unit_price'] ?? null,
                 ]

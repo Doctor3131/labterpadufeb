@@ -76,7 +76,7 @@ Route::get('/asset-borrowing', [AssetBorrowingController::class, 'create'])->nam
 Route::post('/asset-borrowing', [AssetBorrowingController::class, 'store'])
     ->middleware('throttle:10,1') // Max 10 submissions per minute
     ->name('asset-borrowing.store');
-Route::get('/asset-borrowing/success/{id}', [AssetBorrowingController::class, 'success'])->name('asset-borrowing.success');
+Route::get('/asset-borrowing/success/{token}', [AssetBorrowingController::class, 'success'])->name('asset-borrowing.success');
 Route::get('/asset-borrowing/available-assets', [AssetBorrowingController::class, 'getAvailableAssets'])
     ->middleware('throttle:60,1')
     ->name('asset-borrowing.available-assets');
@@ -119,6 +119,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/admin/schedules', App\Http\Controllers\Admin\ScheduleController::class)
         ->names('admin.schedules')
         ->except(['show']);
+    Route::get('/admin/schedules/{schedule}/print', [App\Http\Controllers\Admin\ScheduleController::class, 'print'])
+        ->name('admin.schedules.print');
+    Route::delete('/admin/schedules/{schedule}/ktm', [App\Http\Controllers\Admin\ScheduleController::class, 'deleteKtm'])
+        ->name('admin.schedules.delete-ktm');
 
     // Admin Inventory Management (Global overview)
     Route::get('/admin/inventory', [App\Http\Controllers\Admin\LabInventoryController::class, 'globalIndex'])
@@ -194,6 +198,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.items.show');
     Route::delete('/admin/items/{item}', [App\Http\Controllers\Admin\ItemController::class, 'destroy'])
         ->name('admin.items.destroy');
+    Route::patch('/admin/batches/{batch}/brand', [App\Http\Controllers\Admin\ItemController::class, 'updateBatchBrand'])
+        ->name('admin.batches.updateBrand');
+    Route::patch('/admin/units/bulk-brand', [App\Http\Controllers\Admin\ItemController::class, 'bulkUpdateUnitBrand'])
+        ->name('admin.units.bulkUpdateBrand');
+    Route::patch('/admin/units/{unit}/brand', [App\Http\Controllers\Admin\ItemController::class, 'updateUnitBrand'])
+        ->name('admin.units.updateBrand');
+    Route::patch('/admin/balances/{balance}/brand', [App\Http\Controllers\Admin\ItemController::class, 'updateBalanceBrand'])
+        ->name('admin.balances.updateBrand');
     // API for Unified Transfer Form
     Route::get('/admin/api/inventory/{lab}/items', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItems']);
     Route::get('/admin/api/inventory/{lab}/items/{item}', [App\Http\Controllers\Admin\InventoryTransferController::class, 'getItemDetails']);

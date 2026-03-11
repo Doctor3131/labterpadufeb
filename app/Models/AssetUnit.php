@@ -14,6 +14,7 @@ class AssetUnit extends Model
 
     protected $fillable = [
         'batch_id',
+        'brand',
         'lab_id',
         'proc_source_code',
         'arrival_mmyy',

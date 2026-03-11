@@ -14,6 +14,7 @@ class InventoryBalance extends Model
 
     protected $fillable = [
         'batch_id',
+        'brand',
         'lab_id',
         'condition',
         'quantity',

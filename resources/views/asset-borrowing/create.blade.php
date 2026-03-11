@@ -165,7 +165,6 @@
                                 <option value="Mahasiswa" {{ old('borrower_type') == 'Mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                                 <option value="Dosen" {{ old('borrower_type') == 'Dosen' ? 'selected' : '' }}>Dosen</option>
                                 <option value="Tendik" {{ old('borrower_type') == 'Tendik' ? 'selected' : '' }}>Tendik</option>
-                                <option value="Lainnya" {{ old('borrower_type') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                         </div>
                     </div>

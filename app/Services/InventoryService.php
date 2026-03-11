@@ -267,6 +267,7 @@ class InventoryService
                 $unit->update([
                     'condition' => $newCondition,
                     'is_available' => $newCondition->isUsable(),
+                    'notes' => $notes ?? $unit->notes,
                 ]);
                 
                 $updatedUnits[] = $unit;

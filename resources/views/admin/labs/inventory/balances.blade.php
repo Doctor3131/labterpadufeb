@@ -123,6 +123,25 @@
                         {{ $batch->arrival_formatted }}
                         @if($batch->source_description) &bull; {{ $batch->source_description }} @endif
                     </p>
+                    <div class="flex items-center gap-2 mt-1.5 group">
+                        @if($batch->brand)
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold text-orange-800 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded batch-brand-cell-{{ $batch->id }}">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                {{ $batch->brand }}
+                            </span>
+                        @else
+                            <span class="text-xs text-gray-400 italic batch-brand-cell-{{ $batch->id }}">Belum ada merk</span>
+                        @endif
+                        <button onclick="openBatchBrandModal({{ $batch->id }}, '{{ addslashes($batch->brand ?? '') }}')"
+                            class="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded"
+                            title="Edit Merk">
+                            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="text-right">
                     <span class="text-2xl font-bold text-gray-800">{{ $totalQty }}</span>
@@ -137,6 +156,7 @@
                         <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             <th class="px-6 py-3 text-left">Kondisi</th>
                             <th class="px-6 py-3 text-center">Jumlah Unit</th>
+                            <th class="px-6 py-3 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -164,6 +184,21 @@
                                     </span>
                                 </td>
 
+                                {{-- Aksi --}}
+                                <td class="px-6 py-4 text-center">
+                                    @if($qty > 0)
+                                    <button
+                                        onclick="openConditionModal('{{ $batchId }}', '{{ $condition->value }}', '{{ $condition->label() }}', {{ $qty }})"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200 transition-colors">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                        </svg>
+                                        Ubah Kondisi
+                                    </button>
+                                    @else
+                                        <span class="text-gray-300 text-xs">—</span>
+                                    @endif
+                                </td>
                             </tr>
                             @endif
                         @endforeach
@@ -171,292 +206,105 @@
                 </table>
             </div>
 
-            <!-- Transfer Section - Per Item -->
+            {{-- Kode Universitas per Kondisi --}}
             @php
-                // Pre-compute all generated codes per condition for this batch
-                $batchConditionCodes = [];
+                $hasAnyBalance = false;
                 foreach ($conditions as $cond) {
                     $bal = $batchBalances->firstWhere('condition', $cond);
-                    $q = $bal ? $bal->quantity : 0;
-                    $pfx = $bal?->university_asset_code_prefix ?? '';
-                    $generated = [];
-                    if ($q > 0) {
-                        if ($pfx) {
-                            if (preg_match('/^(.+\.)([A-Za-z]*)(\d+)$/', $pfx, $pm)) {
-                                for ($pi = 0; $pi < $q; $pi++) {
-                                    $generated[] = ['id' => $pi, 'code' => $pm[1] . $pm[2] . ((int)$pm[3] + $pi)];
-                                }
-                            } else {
-                                for ($pi = 1; $pi <= $q; $pi++) {
-                                    $generated[] = ['id' => $pi - 1, 'code' => $pfx . '-' . $pi];
-                                }
-                            }
-                        } else {
-                            // Belum ada prefix: biarkan code kosong, agar bisa diketik manual
-                            for ($pi = 0; $pi < $q; $pi++) {
-                                $generated[] = ['id' => $pi, 'code' => ''];
-                            }
-                        }
-                    }
-                    $batchConditionCodes[$cond->value] = [
-                        'qty'   => $q,
-                        'codes' => $generated,
-                        'label' => $cond->label(),
-                    ];
+                    if ($bal && $bal->quantity > 0) { $hasAnyBalance = true; break; }
                 }
             @endphp
+            @if($hasAnyBalance)
+            <div class="border-t border-gray-200 px-6 py-5 bg-gray-50">
+                <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                    Kode Aset Universitas
+                </h4>
+                <div class="space-y-4">
+                    @foreach($conditions as $cond)
+                        @php
+                            $bal = $batchBalances->firstWhere('condition', $cond);
+                            $qty = $bal ? $bal->quantity : 0;
+                            if ($qty <= 0) continue;
+                            $pfx = $bal->university_asset_code_prefix ?? '';
+                            $generated = [];
+                            if ($pfx) {
+                                if (preg_match('/^(.+\.)([A-Za-z]*)(\d+)$/', $pfx, $pm)) {
+                                    for ($pi = 0; $pi < $qty; $pi++) {
+                                        $generated[] = $pm[1] . $pm[2] . ((int)$pm[3] + $pi);
+                                    }
+                                } else {
+                                    for ($pi = 1; $pi <= $qty; $pi++) {
+                                        $generated[] = $pfx . '-' . $pi;
+                                    }
+                                }
+                            }
+                        @endphp
+                        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            {{-- Kondisi Header --}}
+                            <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $cond->colorClass() }} border">
+                                    {{ $cond->label() }}
+                                </span>
+                                <span class="text-sm font-bold text-gray-700">{{ $qty }} unit</span>
+                            </div>
 
-            <div class="border-t border-gray-200 px-6 py-5 bg-gradient-to-br from-gray-50 to-blue-50"
-                 x-data="{
-                     tab: 'condition',
-                     fromCond: '{{ collect($conditions)->first(fn($c) => ($batchBalances->firstWhere('condition', $c)?->quantity ?? 0) > 0)?->value ?? '' }}',
-                     toCond: '',
-                     targetLab: '',
-                     selected: [],
-                     condCodes: {{ Js::from($batchConditionCodes) }},
-                     get currentCodes() { return this.condCodes[this.fromCond]?.codes ?? []; },
-                     get currentQty()  { return this.condCodes[this.fromCond]?.qty ?? 0; },
-                     get selectedCodesText() {
-                         if (!this.currentCodes || this.currentCodes.length === 0 || this.selected.length === 0) return '';
-                         return 'Kode: ' + this.currentCodes.filter(c => this.selected.includes(c.id)).map(c => c.code).join(', ');
-                     },
-                     selectAll()   { this.selected = this.currentCodes.map(c => c.id); },
-                     clearAll()    { this.selected = []; },
-                     toggle(id)  {
-                         const i = this.selected.indexOf(id);
-                         i === -1 ? this.selected.push(id) : this.selected.splice(i, 1);
-                     },
-                     isChecked(id) { return this.selected.includes(id); },
-                     resetFrom() { this.selected = []; }
-                 }">
+                            {{-- Prefix form --}}
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <form action="{{ route('admin.inventory.balance.update-university-code', $bal->id) }}" method="POST"
+                                      class="flex items-center gap-2"
+                                      onsubmit="submitPrefixForm(event, this)"
+                                      data-qty="{{ $qty }}"
+                                      data-codelist="codelist-{{ $bal->id }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <div class="flex-1">
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">Kode Awal (Prefix)</label>
+                                        <input type="text" name="university_asset_code_prefix"
+                                               value="{{ $pfx }}"
+                                               placeholder="Contoh: 132100102001.X71"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <p class="text-xs text-gray-400 mt-1">Kode berikutnya akan digenerate otomatis secara berurutan</p>
+                                    </div>
+                                    <div class="pt-4">
+                                        <button type="submit"
+                                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap">
+                                            Simpan
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
 
-                {{-- Tabs --}}
-                <div class="flex gap-2 mb-5">
-                    <button @click="tab = 'condition'"
-                        :class="tab === 'condition' ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
-                        class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                        </svg>
-                        Ubah Status Kondisi
-                    </button>
-                    <button @click="tab = 'room'"
-                        :class="tab === 'room' ? 'bg-indigo-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
-                        class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
-                        Pindah Ruangan
-                    </button>
-                </div>
-
-                {{-- Shared: Select Source Condition + Item Checkboxes --}}
-                <div class="bg-white rounded-xl border-2 p-4 mb-4"
-                     :class="tab === 'condition' ? 'border-blue-100' : 'border-indigo-100'">
-
-                    <!-- Source Condition Selector -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <span class="inline-flex items-center justify-center bg-red-100 text-red-800 text-xs font-bold rounded-full w-5 h-5 mr-1">1</span>
-                            Pilih Kondisi Asal
-                        </label>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($conditions as $cond)
-                                @php $cQty = $batchBalances->firstWhere('condition', $cond)?->quantity ?? 0; @endphp
-                                @if($cQty > 0)
-                                <button type="button"
-                                    @click="fromCond = '{{ $cond->value }}'; resetFrom()"
-                                    :class="fromCond === '{{ $cond->value }}' ? 'ring-2 ring-offset-1 ring-blue-500 scale-105' : 'opacity-70 hover:opacity-100'"
-                                    class="{{ $cond->colorClass() }} border px-4 py-2 rounded-full text-sm font-semibold transition-all">
-                                    {{ $cond->label() }} ({{ $cQty }})
-                                </button>
+                            {{-- Generated code list --}}
+                            <div id="codelist-{{ $bal->id }}" class="divide-y divide-gray-50 max-h-64 overflow-y-auto">
+                                @if(count($generated) > 0)
+                                    @foreach($generated as $gIdx => $gCode)
+                                    <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group">
+                                        <span class="text-xs text-gray-400 w-6 text-right shrink-0">{{ $gIdx + 1 }}.</span>
+                                        <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-0.5 rounded flex-1">{{ $gCode }}</span>
+                                        <button
+                                            onclick="openSingleConditionModal('{{ $batchId }}', '{{ $cond->value }}', '{{ $cond->label() }}', {{ $qty }}, {{ json_encode($gCode) }})"
+                                            class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-semibold rounded-lg border border-orange-200 whitespace-nowrap">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                                            </svg>
+                                            Ubah Kondisi
+                                        </button>
+                                    </div>
+                                    @endforeach
+                                @else
+                                    <div class="px-4 py-4 text-center text-sm text-gray-400">
+                                        Belum ada kode — isi prefix di atas lalu simpan.
+                                    </div>
                                 @endif
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- Item Checkbox List -->
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-sm font-semibold text-gray-700">
-                                <span class="inline-flex items-center justify-center bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full w-5 h-5 mr-1">2</span>
-                                Pilih Barang yang Dipindahkan
-                                <span class="ml-2 font-normal text-gray-500">(<span x-text="selected.length"></span> dipilih)</span>
-                            </label>
-                            <div class="flex gap-2">
-                                <button type="button" @click="selectAll()"
-                                    class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 font-semibold transition-colors">
-                                    Pilih Semua
-                                </button>
-                                <button type="button" @click="clearAll()"
-                                    class="text-xs px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 font-semibold transition-colors">
-                                    Bersihkan
-                                </button>
                             </div>
                         </div>
-
-                        <!-- Code List -->
-                        <div x-show="currentQty > 0">
-                            <div class="max-h-56 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
-                                <template x-for="(item, idx) in currentCodes" :key="item.id">
-                                    <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-yellow-50 transition-colors"
-                                           :class="isChecked(item.id) ? 'bg-yellow-50' : ''">
-                                        <input type="checkbox"
-                                               :checked="isChecked(item.id)"
-                                               @change="toggle(item.id)"
-                                               class="w-4 h-4 rounded accent-yellow-500 cursor-pointer shrink-0">
-                                        <span class="text-xs text-gray-400 w-6 text-right shrink-0 cursor-pointer" x-text="(idx + 1) + '.'"></span>
-                                        <input type="text" x-model="item.code" 
-                                               placeholder="Ketik kode di sini..."
-                                               class="font-mono text-sm text-gray-800 bg-transparent border-0 border-b border-transparent focus:border-yellow-400 focus:ring-0 focus:bg-white w-full max-w-sm px-1 py-0.5 rounded transition-colors"
-                                               :class="isChecked(item.id) ? 'text-yellow-800 font-semibold' : ''"
-                                               title="Ubah kode secara manual jika tidak sesuai">
-                                        <span x-show="isChecked(item.id)" class="ml-auto text-xs text-yellow-600 font-semibold whitespace-nowrap">✓ Terpilih</span>
-                                    </label>
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- Empty state -->
-                        <div x-show="currentQty === 0" class="rounded-lg border-2 border-dashed border-gray-200 p-4 text-center text-gray-500 text-sm">
-                            Tidak ada barang dengan kondisi ini.
-                        </div>
-
-                        <!-- Warning if none selected and codes exist -->
-                        <p x-show="currentQty > 0 && selected.length === 0"
-                           class="text-xs text-orange-500 mt-1.5 font-medium">
-                           ⚠ Pilih minimal 1 barang untuk melanjutkan.
-                        </p>
-                    </div>
-                </div>
-
-                {{-- ====== FORM: Ubah Kondisi ====== --}}
-                <div x-show="tab === 'condition'" x-transition>
-                    <form action="{{ route('admin.labs.inventory.transfer', $lab) }}" method="POST"
-                          @submit.prevent="
-                            if (currentQty > 0 && selected.length === 0) {
-                                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih minimal 1 barang.' });
-                                return;
-                            }
-                            $el.submit();
-                          ">
-                        @csrf
-                        <input type="hidden" name="batch_id" value="{{ $batchId }}">
-                        <input type="hidden" name="from_condition" :value="fromCond">
-                        <input type="hidden" name="quantity" :value="selected.length || 0">
-
-                        <div class="bg-white rounded-xl border-2 border-blue-100 p-4 space-y-4">
-                            <!-- Destination Condition -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    <span class="inline-flex items-center justify-center bg-green-100 text-green-800 text-xs font-bold rounded-full w-5 h-5 mr-1">3</span>
-                                    Kondisi Tujuan
-                                </label>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($conditions as $cond)
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="to_condition" value="{{ $cond->value }}"
-                                               x-model="toCond" class="sr-only peer" required>
-                                        <span class="inline-block px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all
-                                            peer-checked:ring-2 peer-checked:ring-offset-1 peer-checked:ring-blue-500 peer-checked:scale-105
-                                            {{ $cond->colorClass() }}">
-                                            {{ $cond->label() }}
-                                        </span>
-                                    </label>
-                                    @endforeach
-                                </div>
-                            </div>
-
-                            <!-- Notes -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Catatan (Opsional)</label>
-                                <input type="text" name="notes"
-                                       :value="selectedCodesText"
-                                       placeholder="Catatan alasan perubahan kondisi..."
-                                       class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                            </div>
-
-                            <!-- Summary + Submit -->
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <p class="text-sm text-gray-600">
-                                    <span x-text="selected.length || 0"></span>
-                                    unit akan dipindahkan
-                                    <span x-show="selected.length > 0" class="text-blue-600 font-medium">
-                                        (<span x-text="fromCond"></span> → <span x-text="toCond"></span>)
-                                    </span>
-                                </p>
-                                <button type="submit"
-                                    :disabled="currentQty > 0 && selected.length === 0"
-                                    class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow transition-all flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                    Proses Transfer
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                {{-- ====== FORM: Pindah Ruangan ====== --}}
-                <div x-show="tab === 'room'" x-transition>
-                    <form action="{{ route('admin.labs.inventory.transfer-aggregate', $lab) }}" method="POST"
-                          @submit.prevent="
-                            if (currentQty > 0 && selected.length === 0) {
-                                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih minimal 1 barang.' });
-                                return;
-                            }
-                            $el.submit();
-                          ">
-                        @csrf
-                        <input type="hidden" name="batch_id" value="{{ $batchId }}">
-                        <input type="hidden" name="condition" :value="fromCond">
-                        <input type="hidden" name="quantity" :value="selected.length || 0">
-
-                        <div class="bg-white rounded-xl border-2 border-indigo-100 p-4 space-y-4">
-                            <!-- Destination Lab -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    <span class="inline-flex items-center justify-center bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full w-5 h-5 mr-1">3</span>
-                                    Ruangan Tujuan
-                                </label>
-                                <select name="target_lab_id" x-model="targetLab" required
-                                    class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 bg-white">
-                                    <option value="">-- Pilih Ruangan Tujuan --</option>
-                                    @foreach(\App\Models\Lab::where('id', '!=', $lab->id)->orderBy('name')->get() as $targetLab)
-                                        <option value="{{ $targetLab->id }}">{{ $targetLab->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Notes -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Catatan (Opsional)</label>
-                                <input type="text" name="notes"
-                                       :value="selectedCodesText"
-                                       placeholder="Catatan Pemindahan Barang"
-                                       class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500">
-                            </div>
-
-                            <!-- Summary + Submit -->
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <p class="text-sm text-gray-600">
-                                    <span x-text="selected.length || 0"></span>
-                                    unit akan dipindahkan
-                                </p>
-                                <button type="submit"
-                                    :disabled="currentQty > 0 && selected.length === 0"
-                                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow transition-all flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-                                    </svg>
-                                    Proses Pindah Ruangan
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    @endforeach
                 </div>
             </div>
+            @endif
         </div>
     @endforeach
 
@@ -475,8 +323,308 @@
             </a>
         </div>
     @endif
-    
-    @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @endpush
+
+<!-- Ubah Kondisi Modal -->
+<div id="conditionModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.5)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-bold text-gray-900">Ubah Kondisi Barang</h3>
+            <button onclick="closeConditionModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="conditionModalForm" method="POST" action="{{ route('admin.labs.inventory.transfer', $lab) }}">
+            @csrf
+            <input type="hidden" name="batch_id" id="modal_batch_id">
+            <input type="hidden" name="from_condition" id="modal_from_condition">
+
+            <!-- From -->
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Kondisi Asal</label>
+                <span id="modal_from_label" class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700 border border-gray-200"></span>
+            </div>
+
+            <!-- To Condition -->
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Kondisi Tujuan <span class="text-red-500">*</span></label>
+                <div class="flex flex-wrap gap-2" id="modal_to_conditions">
+                    @foreach($conditions as $cond)
+                    <label class="cursor-pointer">
+                        <input type="radio" name="to_condition" value="{{ $cond->value }}" class="sr-only peer" required>
+                        <span class="inline-block px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all
+                            peer-checked:ring-2 peer-checked:ring-offset-1 peer-checked:ring-blue-500 peer-checked:scale-105
+                            {{ $cond->colorClass() }}"
+                            data-cond="{{ $cond->value }}">
+                            {{ $cond->label() }}
+                        </span>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Item Code (only shown in single-item mode) -->
+            <div id="modal_item_row" class="mb-4 hidden">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Barang</label>
+                <span id="modal_item_code" class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-3 py-1.5 rounded-lg inline-block"></span>
+            </div>
+
+            <!-- Quantity -->
+            <div class="mb-4" id="modal_qty_row">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Jumlah yang Dipindah <span class="text-red-500">*</span></label>
+                <div class="flex items-center gap-2">
+                    <input type="number" name="quantity" id="modal_quantity"
+                        min="1" required
+                        class="w-28 px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center">
+                    <span class="text-sm text-gray-500">dari <span id="modal_max_qty" class="font-bold text-gray-700"></span> unit tersedia</span>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Catatan (Opsional)</label>
+                <input type="text" name="notes" placeholder="Alasan perubahan kondisi..."
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3">
+                <button type="button" onclick="closeConditionModal()"
+                    class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                    class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Proses Transfer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Batch Brand Edit Modal --}}
+<div id="batchBrandModal" class="hidden fixed inset-0 overflow-y-auto h-full w-full z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.5);">
+    <div class="relative mx-auto w-full max-w-md px-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6">
+            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-orange-50 mb-4">
+                <svg class="h-7 w-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 text-center mb-1">Edit Merk Barang</h3>
+            <p class="text-sm text-gray-500 text-center mb-4">Masukkan nama merk untuk batch ini</p>
+            <form id="batchBrandForm" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Merk / Brand</label>
+                    <input type="text" id="batchBrandInput"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="Contoh: JBL, Sony, Logitech">
+                    <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ada merk</p>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeBatchBrandModal()"
+                        class="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-300 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="flex-1 px-4 py-2.5 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition-colors">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+// ---- Batch Brand Edit ----
+let _batchBrandId = null;
+
+function openBatchBrandModal(batchId, currentBrand) {
+    _batchBrandId = batchId;
+    document.getElementById('batchBrandInput').value = currentBrand;
+    document.getElementById('batchBrandModal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('batchBrandInput').focus(), 100);
+}
+
+function closeBatchBrandModal() {
+    document.getElementById('batchBrandModal').classList.add('hidden');
+    _batchBrandId = null;
+}
+
+document.getElementById('batchBrandForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!_batchBrandId) return;
+    const brand = document.getElementById('batchBrandInput').value.trim();
+    const submitBtn = this.querySelector('[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Menyimpan...';
+    try {
+        const res = await fetch('/admin/batches/' + _batchBrandId + '/brand', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ brand }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.querySelectorAll('.batch-brand-cell-' + _batchBrandId).forEach(function(el) {
+                if (data.brand) {
+                    el.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>${data.brand}`;
+                    el.className = 'inline-flex items-center gap-1 text-xs font-semibold text-orange-800 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded batch-brand-cell-' + _batchBrandId;
+                    // update button onclick
+                    el.nextElementSibling && (el.nextElementSibling.onclick = () => openBatchBrandModal(_batchBrandId, data.brand));
+                } else {
+                    el.textContent = 'Belum ada merk';
+                    el.className = 'text-xs text-gray-400 italic batch-brand-cell-' + _batchBrandId;
+                    el.nextElementSibling && (el.nextElementSibling.onclick = () => openBatchBrandModal(_batchBrandId, ''));
+                }
+            });
+        }
+    } catch(err) { console.error(err); }
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Simpan';
+    closeBatchBrandModal();
+});
+
+document.getElementById('batchBrandModal').addEventListener('click', function(e) {
+    if (e.target === this) closeBatchBrandModal();
+});
+// ---- End Batch Brand Edit ----
+function generateCodes(prefix, qty) {
+    const codes = [];
+    if (!prefix) return codes;
+    const m = prefix.match(/^(.+\.)([A-Za-z]*)(\d+)$/);
+    if (m) {
+        for (let i = 0; i < qty; i++) {
+            codes.push(m[1] + m[2] + (parseInt(m[3]) + i));
+        }
+    } else {
+        for (let i = 1; i <= qty; i++) {
+            codes.push(prefix + '-' + i);
+        }
+    }
+    return codes;
+}
+
+function renderCodeList(containerId, codes) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (codes.length === 0) {
+        el.innerHTML = '<div class="px-4 py-4 text-center text-sm text-gray-400">Belum ada kode — isi prefix di atas lalu simpan.</div>';
+        return;
+    }
+    el.innerHTML = codes.map((code, i) =>
+        `<div class="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors">
+            <span class="text-xs text-gray-400 w-6 text-right shrink-0">${i + 1}.</span>
+            <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-0.5 rounded">${code}</span>
+        </div>`
+    ).join('');
+}
+
+function _setupConditionModal(batchId, fromCondition, fromLabel, maxQty) {
+    document.getElementById('modal_batch_id').value = batchId;
+    document.getElementById('modal_from_condition').value = fromCondition;
+    document.getElementById('modal_from_label').textContent = fromLabel;
+    document.getElementById('modal_max_qty').textContent = maxQty;
+    const qtyInput = document.getElementById('modal_quantity');
+    qtyInput.max = maxQty;
+    // Disable the from_condition radio so user can't pick same
+    document.querySelectorAll('#modal_to_conditions input[type="radio"]').forEach(r => {
+        r.disabled = r.value === fromCondition;
+        if (r.value === fromCondition) r.checked = false;
+        r.closest('label').querySelector('span').style.opacity = r.value === fromCondition ? '0.3' : '1';
+        r.closest('label').style.cursor = r.value === fromCondition ? 'not-allowed' : 'pointer';
+    });
+    document.querySelectorAll('#modal_to_conditions input[type="radio"]').forEach(r => { if (!r.disabled) r.checked = false; });
+    document.querySelector('#conditionModalForm input[name="notes"]').value = '';
+}
+
+function openConditionModal(batchId, fromCondition, fromLabel, maxQty) {
+    _setupConditionModal(batchId, fromCondition, fromLabel, maxQty);
+    // Bulk mode: show qty input freely
+    const qtyInput = document.getElementById('modal_quantity');
+    qtyInput.value = '';
+    qtyInput.readOnly = false;
+    qtyInput.classList.remove('bg-gray-100');
+    document.getElementById('modal_qty_row').classList.remove('hidden');
+    document.getElementById('modal_item_row').classList.add('hidden');
+    document.getElementById('conditionModal').classList.remove('hidden');
+}
+
+function openSingleConditionModal(batchId, fromCondition, fromLabel, maxQty, itemCode) {
+    _setupConditionModal(batchId, fromCondition, fromLabel, maxQty);
+    // Single-item mode: lock qty=1, show item code
+    const qtyInput = document.getElementById('modal_quantity');
+    qtyInput.value = 1;
+    qtyInput.readOnly = true;
+    qtyInput.classList.add('bg-gray-100');
+    document.getElementById('modal_item_code').textContent = itemCode;
+    document.getElementById('modal_item_row').classList.remove('hidden');
+    document.getElementById('modal_qty_row').classList.remove('hidden');
+    document.getElementById('conditionModal').classList.remove('hidden');
+}
+
+function closeConditionModal() {
+    document.getElementById('conditionModal').classList.add('hidden');
+}
+
+// Close on backdrop click
+document.getElementById('conditionModal').addEventListener('click', function(e) {
+    if (e.target === this) closeConditionModal();
+});
+
+async function submitPrefixForm(event, form) {
+    event.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    const qty = parseInt(form.dataset.qty) || 0;
+    const codelistId = form.dataset.codelist;
+    const prefix = form.querySelector('input[name="university_asset_code_prefix"]').value.trim();
+
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    try {
+        const formData = new FormData(form);
+        const res = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData,
+        });
+        const data = await res.json();
+        if (data.success) {
+            const codes = generateCodes(prefix, qty);
+            renderCodeList(codelistId, codes);
+            btn.textContent = '✓ Tersimpan';
+            btn.classList.replace('bg-blue-600', 'bg-green-600');
+            btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+            setTimeout(() => {
+                btn.textContent = 'Simpan';
+                btn.classList.replace('bg-green-600', 'bg-blue-600');
+                btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                btn.disabled = false;
+            }, 2000);
+        } else {
+            alert('Gagal menyimpan.');
+            btn.textContent = 'Simpan';
+            btn.disabled = false;
+        }
+    } catch (e) {
+        alert('Terjadi kesalahan.');
+        btn.textContent = 'Simpan';
+        btn.disabled = false;
+    }
+}
+</script>
+@endpush
+
 @endsection

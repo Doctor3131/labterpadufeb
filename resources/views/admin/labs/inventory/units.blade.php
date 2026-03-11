@@ -169,11 +169,8 @@
             </span>
             <div class="flex items-center gap-3">
                 <!-- Update Condition Form -->
-                <form action="{{ route('admin.inventory.bulk-condition') }}" method="POST" class="flex items-center gap-3">
+                <form id="bulkConditionForm" action="{{ route('admin.inventory.bulk-condition') }}" method="POST" onsubmit="return injectCheckedUnitsToForm(this)" class="flex items-center gap-3">
                     @csrf
-                    <template x-for="id in selectedIds" :key="id">
-                        <input type="hidden" name="unit_ids[]" :value="id">
-                    </template>
                     <select name="condition" required class="px-3 py-1.5 border border-blue-300 bg-white rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Ubah kondisi ke...</option>
                         @foreach($conditions as $condition)
@@ -187,7 +184,7 @@
                 </form>
                 
                 <!-- Bulk Delete Button -->
-                <button @click="openBulkDeleteModal()" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md text-sm transition-colors flex items-center gap-2">
+                <button onclick="openBulkDeleteModal()" class="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md text-sm transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
@@ -211,7 +208,7 @@
             @forelse($units as $unit)
                 <div class="bg-white border rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
                     <div class="flex items-start gap-3">
-                        <input type="checkbox" :value="{{ $unit->id }}" @change="toggleSelection({{ $unit->id }})" class="mt-1 w-4 h-4 text-blue-600 rounded">
+                        <input type="checkbox" value="{{ $unit->id }}" @change="toggleSelection({{ $unit->id }})" class="mt-1 w-4 h-4 text-blue-600 rounded">
                         <div class="flex-1">
                             <div class="font-mono text-sm font-bold text-gray-800">{{ $unit->asset_tag ?: '-' }}</div>
                             @if($unit->university_asset_code)
@@ -274,7 +271,7 @@
                     @forelse($units as $unit)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-3">
-                                <input type="checkbox" :value="{{ $unit->id }}" @change="toggleSelection({{ $unit->id }})" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                <input type="checkbox" value="{{ $unit->id }}" @change="toggleSelection({{ $unit->id }})" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
                             </td>
                             <td class="px-6 py-3">
                                 <div class="flex items-center gap-2 group">
@@ -593,6 +590,23 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Standalone helper: collects all checked unit checkboxes and injects them into a form before submit
+        function injectCheckedUnitsToForm(form) {
+            form.querySelectorAll('input[name="unit_ids[]"]').forEach(input => input.remove());
+            var checked = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+            if (checked.length === 0) {
+                alert('Pilih minimal satu unit terlebih dahulu.');
+                return false;
+            }
+            checked.forEach(function(cb) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'unit_ids[]';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+            return true;
+        }
         function bulkActions() {
             return {
                 selectedIds: [],
@@ -655,12 +669,42 @@
                             document.getElementById('bulkTransferModal').classList.remove('hidden');
                         }
                     }
+                },
+                injectConditionIds(form) {
+                    // kept for compatibility, not used by condition form
+                    form.querySelectorAll('input[name="unit_ids[]"]').forEach(input => input.remove());
+                    this.selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'unit_ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
                 }
             }
         }
 
         function closeBulkDeleteModal() {
             document.getElementById('bulkDeleteModal').classList.add('hidden');
+        }
+
+        function openBulkDeleteModal() {
+            var checked = document.querySelectorAll('tbody input[type="checkbox"]:checked');
+            if (checked.length === 0) {
+                alert('Pilih minimal satu unit terlebih dahulu.');
+                return;
+            }
+            document.getElementById('deleteCount').textContent = checked.length;
+            var form = document.getElementById('bulkDeleteForm');
+            form.querySelectorAll('input[name="unit_ids[]"]').forEach(function(input) { input.remove(); });
+            checked.forEach(function(cb) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'unit_ids[]';
+                input.value = cb.value;
+                form.appendChild(input);
+            });
+            document.getElementById('bulkDeleteModal').classList.remove('hidden');
         }
 
         function closeBulkTransferModal() {

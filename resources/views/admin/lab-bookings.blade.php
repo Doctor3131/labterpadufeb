@@ -33,7 +33,7 @@
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Manajemen Peminjaman</h1>
-                    <p class="text-xs md:text-sm text-yellow-50">Kelola permintaan peminjaman lab dan barang</p>
+                    <p class="text-xs md:text-sm text-yellow-50">Kelola permintaan peminjaman laboratorium</p>
                 </div>
                 <div class="bg-white/20 backdrop-blur-sm p-2 md:p-3 rounded-xl">
                     <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,25 +42,7 @@
                 </div>
             </div>
             
-            <!-- Toggle Buttons -->
-            <div class="flex gap-2 md:gap-3">
-                <button onclick="switchView('lab')" id="btn-view-lab" class="view-toggle flex-1 px-4 py-2.5 md:py-3 bg-white text-yellow-700 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                    <span class="hidden sm:inline">Peminjaman Lab</span>
-                    <span class="sm:hidden">Lab</span>
-                    <span class="px-2 py-0.5 bg-yellow-500 text-white rounded-full text-xs font-bold">{{ $pendingBookings->total() }}</span>
-                </button>
-                <button onclick="switchView('asset')" id="btn-view-asset" class="view-toggle flex-1 px-4 py-2.5 md:py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                    </svg>
-                    <span class="hidden sm:inline">Peminjaman Barang</span>
-                    <span class="sm:hidden">Barang</span>
-                    <span class="px-2 py-0.5 bg-yellow-500 text-white rounded-full text-xs font-bold">{{ $pendingAssetBorrowings->total() }}</span>
-                </button>
-            </div>
+
         </div>
     </div>
 
@@ -554,10 +536,7 @@
     </div>
 </div>
 
-<!-- ========================================= -->
-<!-- ASSET BORROWING SECTION (PURPLE THEME) -->
-<!-- ========================================= -->
-<div id="asset-section" class="mb-6 mt-8 hidden">
+<div id="asset-section" class="hidden">
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div class="border-b-2 border-gray-100 overflow-x-auto">
             <!-- Tab Title -->
@@ -1056,8 +1035,8 @@
     </div>
 </div>
 
-<!-- Reject Asset Borrowing Modal -->
-<div id="rejectAssetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+<!-- Reject Asset Borrowing Modal (removed) -->
+<div id="rejectAssetModal" class="hidden">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
         <div class="bg-gradient-to-r from-red-600 to-rose-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -1218,8 +1197,8 @@
     </div>
 </div>
 
-<!-- Approve Asset Borrowing Modal -->
-<div id="approveAssetModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+<!-- Approve Asset Borrowing Modal (removed) -->
+<div id="approveAssetModal" class="hidden">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
         <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -1259,40 +1238,7 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // View switching between Lab and Asset
-    function switchView(view) {
-        const labSection = document.getElementById('lab-section');
-        const assetSection = document.getElementById('asset-section');
-        const btnLab = document.getElementById('btn-view-lab');
-        const btnAsset = document.getElementById('btn-view-asset');
-        
-        if (view === 'lab') {
-            // Show lab section
-            labSection.classList.remove('hidden');
-            assetSection.classList.add('hidden');
-            
-            // Update button styles
-            btnLab.classList.remove('bg-white/20', 'hover:bg-white/30', 'text-white');
-            btnLab.classList.add('bg-white', 'text-yellow-700', 'shadow-lg');
-            
-            btnAsset.classList.remove('bg-white', 'text-yellow-700', 'shadow-lg');
-            btnAsset.classList.add('bg-white/20', 'hover:bg-white/30', 'text-white');
-        } else {
-            // Show asset section
-            labSection.classList.add('hidden');
-            assetSection.classList.remove('hidden');
-            
-            // Update button styles
-            btnAsset.classList.remove('bg-white/20', 'hover:bg-white/30', 'text-white');
-            btnAsset.classList.add('bg-white', 'text-yellow-700', 'shadow-lg');
-            
-            btnLab.classList.remove('bg-white', 'text-yellow-700', 'shadow-lg');
-            btnLab.classList.add('bg-white/20', 'hover:bg-white/30', 'text-white');
-        }
-        
-        // Smooth scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+
 
     // Tab switching with smooth animations
     function showTab(tabName) {
@@ -1323,31 +1269,6 @@
                 const badge = btn.querySelector('span.rounded-full');
                 if (badge) {
                     badge.classList.remove('bg-yellow-500', 'text-white', 'bg-green-500', 'bg-red-500');
-                    badge.classList.add('bg-gray-300', 'text-gray-700');
-                }
-            });
-        } else if (isAssetTab) {
-            // Hide all asset borrowing tabs
-            document.getElementById('asset-pending-tab').classList.add('hidden');
-            document.getElementById('asset-approved-tab').classList.add('hidden');
-            document.getElementById('asset-completed-tab').classList.add('hidden');
-            
-            // Remove active state from all asset tab buttons
-            document.querySelectorAll('#asset-section .tab-button').forEach(btn => {
-                btn.classList.remove('border-purple-500', 'text-purple-700', 'border-blue-500', 'text-blue-700', 'border-green-500', 'text-green-700');
-                btn.classList.add('border-transparent', 'text-gray-500');
-                
-                // Reset icon backgrounds
-                const iconBg = btn.querySelector('div.bg-purple-100, div.bg-blue-100, div.bg-green-100');
-                if (iconBg) {
-                    iconBg.classList.remove('bg-purple-100', 'bg-blue-100', 'bg-green-100');
-                    iconBg.classList.add('bg-gray-100');
-                }
-                
-                // Update badge colors
-                const badge = btn.querySelector('span.rounded-full');
-                if (badge) {
-                    badge.classList.remove('bg-purple-500', 'text-white', 'bg-blue-500', 'bg-green-500');
                     badge.classList.add('bg-gray-300', 'text-gray-700');
                 }
             });
@@ -1390,36 +1311,6 @@
             if (badge) {
                 badge.classList.remove('bg-gray-300', 'text-gray-700');
                 badge.classList.add('bg-red-500', 'text-white');
-            }
-        } else if (tabName === 'asset-pending') {
-            activeBtn.classList.add('border-purple-500', 'text-purple-700');
-            if (iconBg) {
-                iconBg.classList.remove('bg-gray-100');
-                iconBg.classList.add('bg-purple-100');
-            }
-            if (badge) {
-                badge.classList.remove('bg-gray-300', 'text-gray-700');
-                badge.classList.add('bg-purple-500', 'text-white');
-            }
-        } else if (tabName === 'asset-approved') {
-            activeBtn.classList.add('border-blue-500', 'text-blue-700');
-            if (iconBg) {
-                iconBg.classList.remove('bg-gray-100');
-                iconBg.classList.add('bg-blue-100');
-            }
-            if (badge) {
-                badge.classList.remove('bg-gray-300', 'text-gray-700');
-                badge.classList.add('bg-blue-500', 'text-white');
-            }
-        } else if (tabName === 'asset-completed') {
-            activeBtn.classList.add('border-green-500', 'text-green-700');
-            if (iconBg) {
-                iconBg.classList.remove('bg-gray-100');
-                iconBg.classList.add('bg-green-100');
-            }
-            if (badge) {
-                badge.classList.remove('bg-gray-300', 'text-gray-700');
-                badge.classList.add('bg-green-500', 'text-white');
             }
         }
         
@@ -1500,17 +1391,6 @@
             showTab('pending');
         }
         
-        // Check which pagination parameter exists for Asset section
-        if (urlParams.has('asset_pending_page')) {
-            showTab('asset-pending');
-        } else if (urlParams.has('asset_approved_page')) {
-            showTab('asset-approved');
-        } else if (urlParams.has('asset_completed_page')) {
-            showTab('asset-completed');
-        } else {
-            // Default: show asset-pending tab for asset section
-            showTab('asset-pending');
-        }
     });
 
     // Asset Borrowing Actions - defined in window scope

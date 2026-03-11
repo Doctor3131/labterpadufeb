@@ -39,7 +39,7 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden" x-data="externalTransferForm()">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <form action="{{ route('admin.external-transfers.store') }}" method="POST" class="p-6 md:p-8 space-y-8">
             @csrf
 
@@ -78,95 +78,46 @@
                     <label class="block text-sm font-semibold text-gray-700">
                         Nama Barang <span class="text-red-500">*</span>
                     </label>
-                    <span x-show="isLoadingItems" class="text-xs text-amber-600 flex items-center">
-                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Memuat barang...
-                    </span>
+                    @if($availableItems->isEmpty())
+                        <span class="text-xs text-red-500">Tidak ada barang tersedia di Gudang.</span>
+                    @else
+                        <span class="text-xs text-gray-500">{{ $availableItems->count() }} barang tersedia</span>
+                    @endif
                 </div>
 
-                <select name="item_id" x-model="selectedItemId" required :disabled="items.length === 0" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 mb-2">
+                <select name="item_id" id="item-select" required
+                    onchange="loadItemDetails(this.value)"
+                    @disabled($availableItems->isEmpty())
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 mb-2">
                     <option value="">-- Pilih Barang dari Gudang --</option>
-                    <template x-for="item in items" :key="item.id">
-                        <option :value="item.id" x-text="`${item.name} (${item.total} tersedia)`"></option>
-                    </template>
+                    @foreach($availableItems as $item)
+                        <option value="{{ $item['id'] }}"
+                            data-tracking="{{ $item['tracking_mode'] }}"
+                            {{ old('item_id') == $item['id'] ? 'selected' : '' }}>
+                            {{ $item['name'] }} ({{ $item['total'] }} tersedia)
+                        </option>
+                    @endforeach
                 </select>
-                <p x-show="items.length === 0 && !isLoadingItems" class="text-xs text-red-500 mt-1">
-                    Tidak ada barang tersedia di Gudang.
-                </p>
 
-                <input type="hidden" name="tracking_mode" :value="selectedItem ? selectedItem.tracking_mode : ''">
+                <input type="hidden" name="tracking_mode" id="tracking-mode-input" value="{{ old('tracking_mode') }}">
             </div>
 
             <!-- 3. Dynamic Unit/Balance Selection Area -->
-            <div x-show="itemDetails" x-cloak class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+            <div id="item-details-section" class="bg-gray-50 rounded-xl p-5 border border-gray-200" style="display:none">
                 <h3 class="text-md font-semibold text-gray-800 mb-4 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                     Pilih Unit / Kuantitas yang akan ditransfer
-                    <span x-show="isLoadingDetails" class="ml-4 text-xs text-amber-600 flex items-center">
-                        <svg class="animate-spin h-3 w-3 mr-1 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <span id="details-spinner" class="ml-4 text-xs text-amber-600 items-center hidden">
+                        <svg class="animate-spin h-3 w-3 mr-1 text-amber-600 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
+                        Memuat...
                     </span>
                 </h3>
-
-                <!-- Unit Checkboxes (Tag/Seat) -->
-                <div x-show="itemDetails?.type === 'units'">
-                    <p class="text-sm text-gray-600 mb-3">Centang unit yang ingin ditransfer ke Eksternal:</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <template x-for="unit in itemDetails?.data" :key="unit.id">
-                            <label class="flex items-start p-3 bg-white border rounded-lg cursor-pointer hover:bg-amber-50 hover:border-amber-300 transition-colors">
-                                <input type="checkbox" name="unit_ids[]" :value="unit.id" class="mt-1 mr-3 w-4 h-4 text-amber-600 rounded">
-                                <div class="flex-1">
-                                    <div class="font-mono text-sm font-bold text-gray-800" x-text="unit.asset_tag || '-'"></div>
-                                    <div x-show="unit.university_asset_code" class="text-xs text-gray-500 mt-0.5" x-text="`Univ: ${unit.university_asset_code}`"></div>
-                                    <div class="mt-1.5 flex items-center justify-between">
-                                        <span class="text-[10px] text-gray-500" x-text="`Batch: ${unit.batch_formatted}`"></span>
-                                        <span :class="`${unit.condition_color} text-[10px] font-bold px-2.5 py-0.5 rounded-full`" x-text="unit.condition_label"></span>
-                                    </div>
-                                </div>
-                            </label>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Balance Inputs (Aggregate) -->
-                <div x-show="itemDetails?.type === 'balances'">
-                    <p class="text-sm text-gray-600 mb-3">Masukkan jumlah yang ingin ditransfer untuk tiap batch/kondisi:</p>
-                    <div class="space-y-3">
-                        <template x-for="(balance, index) in (itemDetails?.type === 'balances' ? itemDetails.data : [])" :key="balance.id">
-                            <div class="flex items-center justify-between p-4 bg-white border rounded-lg">
-                                <div>
-                                    <div class="text-sm font-semibold text-gray-800" x-text="`Batch: ${balance.batch_formatted}`"></div>
-                                    <span :class="`${balance.condition_color} text-xs font-bold px-2 py-0.5 rounded-full mt-1 inline-block`" x-text="balance.condition_label"></span>
-                                    <div class="text-xs text-gray-500 mt-1" x-text="`Tersedia: ${balance.max_quantity} unit`"></div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <input type="hidden" :name="`transfers[${index}][batch_id]`" :value="balance.batch_id">
-                                    <input type="hidden" :name="`transfers[${index}][condition]`" :value="balance.condition_value">
-
-                                    <div class="flex items-center">
-                                        <button type="button" @click="$refs[`qty_${index}`].stepDown()" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-l-md hover:bg-gray-200">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
-                                        </button>
-                                        <input type="number" :name="`transfers[${index}][quantity]`" :x-ref="`qty_${index}`" min="0" :max="balance.max_quantity" value="0" class="w-20 text-center py-2 border-y border-gray-300 focus:ring-0 focus:outline-none">
-                                        <button type="button" @click="$refs[`qty_${index}`].stepUp()" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-r-md hover:bg-gray-200">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                        </button>
-                                    </div>
-                                    <button type="button" @click="$refs[`qty_${index}`].value = balance.max_quantity" class="text-xs text-amber-600 hover:text-amber-800 font-medium bg-amber-50 px-2 py-1.5 rounded border border-amber-100">
-                                        Max
-                                    </button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
+                <div id="item-details-content"></div>
             </div>
 
             <!-- Notes -->
@@ -182,7 +133,7 @@
                 <a href="{{ route('admin.external-transfers.index') }}" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
                     Batal
                 </a>
-                <button type="submit" :disabled="!selectedItemId || !itemDetails" class="px-6 py-2.5 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
+                <button type="submit" id="submit-btn" disabled class="px-6 py-2.5 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
                     <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
@@ -194,44 +145,124 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('externalTransferForm', () => ({
-                items: @json($availableItems),
-                selectedItem: null,
-                selectedItemId: '{{ old('item_id', '') }}',
-                itemDetails: null,
-                isLoadingItems: false,
-                isLoadingDetails: false,
+    async function loadItemDetails(itemId) {
+        const section   = document.getElementById('item-details-section');
+        const content   = document.getElementById('item-details-content');
+        const spinner   = document.getElementById('details-spinner');
+        const submitBtn = document.getElementById('submit-btn');
+        const trackingInput = document.getElementById('tracking-mode-input');
 
-                async loadItemDetails() {
-                    if (!this.selectedItemId) {
-                        this.itemDetails = null;
-                        this.selectedItem = null;
-                        return;
-                    }
+        // Update tracking_mode from selected option
+        const sel = document.getElementById('item-select');
+        const selectedOpt = sel.options[sel.selectedIndex];
+        trackingInput.value = selectedOpt ? (selectedOpt.dataset.tracking || '') : '';
 
-                    this.selectedItem = this.items.find(i => i.id == this.selectedItemId);
-                    this.isLoadingDetails = true;
+        if (!itemId) {
+            section.style.display = 'none';
+            content.innerHTML = '';
+            submitBtn.disabled = true;
+            return;
+        }
 
-                    try {
-                        const response = await fetch(`/admin/api/external-transfers/items/${this.selectedItemId}`);
-                        this.itemDetails = await response.json();
-                    } catch (e) {
-                        console.error('Failed to load item details:', e);
-                    }
-                    this.isLoadingDetails = false;
-                },
+        section.style.display = 'block';
+        spinner.classList.remove('hidden');
+        spinner.classList.add('inline-flex');
+        content.innerHTML = '<p class="text-sm text-gray-400 py-4 text-center">Memuat data...</p>';
+        submitBtn.disabled = true;
 
-                init() {
-                    if (this.selectedItemId) {
-                        this.loadItemDetails();
-                    }
-                    this.$watch('selectedItemId', value => {
-                        this.loadItemDetails();
-                    });
-                }
-            }));
+        try {
+            const res  = await fetch(`/admin/api/external-transfers/items/${itemId}`);
+            const data = await res.json();
+
+            spinner.classList.add('hidden');
+            spinner.classList.remove('inline-flex');
+
+            if (data.type === 'units') {
+                renderUnits(content, data.data);
+            } else if (data.type === 'balances') {
+                renderBalances(content, data.data);
+            } else {
+                content.innerHTML = '<p class="text-sm text-red-500">Gagal memuat data barang.</p>';
+            }
+
+            submitBtn.disabled = false;
+        } catch (e) {
+            spinner.classList.add('hidden');
+            content.innerHTML = '<p class="text-sm text-red-500">Terjadi kesalahan saat memuat data.</p>';
+        }
+    }
+
+    function renderUnits(container, units) {
+        if (!units || units.length === 0) {
+            container.innerHTML = '<p class="text-sm text-gray-500">Tidak ada unit tersedia.</p>';
+            return;
+        }
+        let html = '<p class="text-sm text-gray-600 mb-3">Centang unit yang ingin ditransfer ke Eksternal:</p>';
+        html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">';
+        units.forEach(unit => {
+            html += `
+                <label class="flex items-start p-3 bg-white border rounded-lg cursor-pointer hover:bg-amber-50 hover:border-amber-300 transition-colors">
+                    <input type="checkbox" name="unit_ids[]" value="${unit.id}" class="mt-1 mr-3 w-4 h-4 text-amber-600 rounded">
+                    <div class="flex-1">
+                        <div class="font-mono text-sm font-bold text-gray-800">${unit.asset_tag || '-'}</div>
+                        ${unit.university_asset_code ? `<div class="text-xs text-gray-500 mt-0.5">Univ: ${unit.university_asset_code}</div>` : ''}
+                        <div class="mt-1.5 flex items-center justify-between">
+                            <span class="text-[10px] text-gray-500">Batch: ${unit.batch_formatted}</span>
+                            <span class="${unit.condition_color} text-[10px] font-bold px-2.5 py-0.5 rounded-full">${unit.condition_label}</span>
+                        </div>
+                    </div>
+                </label>`;
         });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderBalances(container, balances) {
+        if (!balances || balances.length === 0) {
+            container.innerHTML = '<p class="text-sm text-gray-500">Tidak ada saldo tersedia.</p>';
+            return;
+        }
+        let html = '<p class="text-sm text-gray-600 mb-3">Masukkan jumlah yang ingin ditransfer untuk tiap batch/kondisi:</p>';
+        html += '<div class="space-y-3">';
+        balances.forEach((balance, index) => {
+            html += `
+                <div class="flex items-center justify-between p-4 bg-white border rounded-lg">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-800">Batch: ${balance.batch_formatted}</div>
+                        <span class="${balance.condition_color} text-xs font-bold px-2 py-0.5 rounded-full mt-1 inline-block">${balance.condition_label}</span>
+                        <div class="text-xs text-gray-500 mt-1">Tersedia: ${balance.max_quantity} unit</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="hidden" name="transfers[${index}][batch_id]" value="${balance.batch_id}">
+                        <input type="hidden" name="transfers[${index}][condition]" value="${balance.condition_value}">
+                        <div class="flex items-center">
+                            <button type="button" onclick="this.nextElementSibling.stepDown()" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-l-md hover:bg-gray-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                            </button>
+                            <input type="number" id="qty_${index}" name="transfers[${index}][quantity]" min="0" max="${balance.max_quantity}" value="0"
+                                class="w-20 text-center py-2 border-y border-gray-300 focus:ring-0 focus:outline-none">
+                            <button type="button" onclick="this.previousElementSibling.stepUp()" class="px-3 py-2 bg-gray-100 border border-gray-300 rounded-r-md hover:bg-gray-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </button>
+                        </div>
+                        <button type="button" onclick="document.getElementById('qty_${index}').value = ${balance.max_quantity}"
+                            class="text-xs text-amber-600 hover:text-amber-800 font-medium bg-amber-50 px-2 py-1.5 rounded border border-amber-100">
+                            Max
+                        </button>
+                    </div>
+                </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Restore on page load if old() value is present
+    (function() {
+        const sel = document.getElementById('item-select');
+        if (sel && sel.value) {
+            loadItemDetails(sel.value);
+        }
+    })();
     </script>
     @endpush
 @endsection
