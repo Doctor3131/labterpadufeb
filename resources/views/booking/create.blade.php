@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Ajukan Peminjaman - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
+    <title>Ajukan Peminjaman - Lab Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .step-disabled {
@@ -407,7 +407,7 @@
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Keperluan <span class="text-red-500">*</span></label>
                                 <input type="text" name="purpose" id="purpose" value="{{ old('purpose') }}"
-                                    placeholder="Contoh: Ujian, Mengerjakan tugas pribadi"
+                                    placeholder="Contoh: Ujian, Kuliah, Mengerjakan tugas pribadi"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                         </div>
@@ -436,11 +436,6 @@
                             <input type="date" name="booking_date" id="booking_date" value="{{ old('booking_date') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            <p class="text-xs text-gray-500 mt-1">⚠️ Peminjaman tidak tersedia pada hari Minggu</p>
-                            <!-- Sunday Warning -->
-                            <div id="sunday-warning" class="hidden mt-2 bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-sm">
-                                ⚠️ Hari Minggu tidak tersedia untuk peminjaman lab. Silakan pilih tanggal lain.
-                            </div>
                         </div>
 
                         <div>
@@ -452,47 +447,14 @@
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai <span class="text-red-500">*</span></label>
-                            <input type="hidden" name="start_time" id="start_time" value="{{ old('start_time') }}" required>
-                            <div class="flex gap-2">
-                                <select id="start_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
-                                    <option value="" disabled selected>Jam</option>
-                                    @foreach(range(0, 23) as $h)
-                                        <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="self-center font-bold text-gray-400">:</span>
-                                <select id="start_minute" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
-                                    <option value="" disabled selected>Menit</option>
-                                    @foreach(range(0, 55, 5) as $m)
-                                        <option value="{{ sprintf('%02d', $m) }}">{{ sprintf('%02d', $m) }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <input type="time" name="start_time" id="start_time" value="{{ old('start_time') }}" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Selesai <span class="text-red-500">*</span></label>
-                            <input type="hidden" name="end_time" id="end_time" value="{{ old('end_time') }}" required>
-                            <div class="flex gap-2">
-                                <select id="end_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
-                                    <option value="" disabled selected>Jam</option>
-                                    @foreach(range(0, 23) as $h)
-                                        <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="self-center font-bold text-gray-400">:</span>
-                                <select id="end_minute" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
-                                    <option value="" disabled selected>Menit</option>
-                                    @foreach(range(0, 55, 5) as $m)
-                                        <option value="{{ sprintf('%02d', $m) }}">{{ sprintf('%02d', $m) }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- Time Validation Error -->
-                        <div class="md:col-span-2">
-                            <p id="time-error" class="text-sm text-red-500 hidden"><strong>* Jam Selesai harus setelah Jam Mulai</strong></p>
+                            <input type="time" name="end_time" id="end_time" value="{{ old('end_time') }}" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <!-- Lab Selection Container - Hidden for pribadi bookings -->
@@ -649,132 +611,7 @@
                         </button>
                     </div>
                 </div>
-
             </form>
-
-            <!-- Personal Borrowing Section (separate from main booking form) -->
-            <div id="personal-borrowing-section" class="hidden">
-                <div class="mb-6">
-                    <button type="button" id="btn-back-to-step1" class="inline-flex items-center text-gray-600 hover:text-yellow-600 transition-colors mb-4">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                        ← Kembali Pilih Tipe
-                    </button>
-                </div>
-
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">Peminjaman Pribadi</h3>
-                <p class="text-gray-600 mb-6">Pilih kategori peminjam</p>
-
-                <!-- Borrower Type Selection -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <button type="button" id="btn-mahasiswa" class="border-2 border-gray-300 rounded-xl p-4 md:p-6 text-center hover:border-blue-500 transition-all">
-                        <div class="mb-2">
-                            <svg class="w-8 h-8 mx-auto text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-                            </svg>
-                        </div>
-                        <div class="font-bold text-gray-800">Mahasiswa</div>
-                        <div class="text-xs text-gray-500 mt-1">Mahasiswa FEB UNDIP</div>
-                    </button>
-                    <button type="button" id="btn-non-mahasiswa" class="border-2 border-gray-300 rounded-xl p-4 md:p-6 text-center hover:border-purple-500 transition-all">
-                        <div class="mb-2">
-                            <svg class="w-8 h-8 mx-auto text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </div>
-                        <div class="font-bold text-gray-800">Non-Mahasiswa</div>
-                        <div class="text-xs text-gray-500 mt-1">Dosen / Pegawai / Lainnya</div>
-                    </button>
-                </div>
-
-                <!-- Mahasiswa Form -->
-                <form id="mahasiswaForm" action="{{ route('booking.store') }}" method="POST" class="hidden">
-                    @csrf
-                    <input type="hidden" name="booking_type" value="pribadi">
-                    <input type="hidden" name="pribadi_sub_type" value="mahasiswa">
-                    
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-                        <h4 class="font-bold text-blue-800 mb-4">Masukkan NIM Anda</h4>
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIM <span class="text-red-500">*</span></label>
-                            <div class="flex gap-3">
-                                <input type="text" name="nim" id="pb-nim" required
-                                    maxlength="20"
-                                    placeholder="Masukkan NIM Anda"
-                                    inputmode="numeric"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 20)"
-                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <button type="button" id="btn-validate-nim" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors whitespace-nowrap">
-                                    Cari
-                                </button>
-                            </div>
-                            <p id="nim-validation-msg" class="text-xs mt-2 hidden"></p>
-                        </div>
-
-                        <!-- NIM Result (hidden initially) -->
-                        <div id="nim-result" class="hidden mt-4 bg-white rounded-lg p-4 border border-green-200">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-sm font-semibold text-green-700">NIM valid — data mahasiswa ditemukan</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btn-submit-mahasiswa" disabled
-                        class="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
-                        Ajukan Peminjaman
-                    </button>
-                </form>
-
-                <!-- Non-Mahasiswa Form -->
-                <form id="nonMahasiswaForm" action="{{ route('booking.store') }}" method="POST" class="hidden">
-                    @csrf
-                    <input type="hidden" name="booking_type" value="pribadi">
-                    <input type="hidden" name="pribadi_sub_type" value="non_mahasiswa">
-                    
-                    <div class="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-6">
-                        <h4 class="font-bold text-purple-800 mb-4">Data Non-Mahasiswa</h4>
-                        <div class="grid grid-cols-1 gap-4">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
-                                <input type="text" name="pic_name" required
-                                    pattern="[a-zA-Z\s\.']+"
-                                    oninput="this.value = this.value.replace(/[^a-zA-Z\s\.']/g, '')"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                    placeholder="Masukkan nama lengkap">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span></label>
-                                <input type="text" name="nip" required
-                                    maxlength="30"
-                                    placeholder="Masukkan NIP"
-                                    inputmode="numeric"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 30)"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon <span class="text-red-500">*</span></label>
-                                <input type="tel" name="phone_number" required
-                                    minlength="10" maxlength="15" pattern="^08[0-9]{8,13}$"
-                                    placeholder="Contoh: 081234567890"
-                                    inputmode="numeric"
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15)"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                                <p class="text-xs text-gray-500 mt-1">Nomor telepon diawali 08</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-bold transition-colors">
-                        Ajukan Peminjaman
-                    </button>
-                </form>
-            </div>
-
         </div>
 
         <!-- Back to Home -->
@@ -872,16 +709,12 @@
                          input.disabled = true;
                          input.checked = false;
                      });
-                     // Hide entire step indicator bar since pribadi goes to separate section
-                     document.querySelector('.step-indicator').classList.add('hidden');
                      
                 } else {
                      // For others, unit type is required
                      document.getElementById('unit-selection').classList.remove('hidden');
                      unitTypeInputs.forEach(input => input.disabled = false);
                      document.getElementById('btn-next-1').disabled = !(bookingType && unitType);
-                     // Show step indicator bar
-                     document.querySelector('.step-indicator').classList.remove('hidden');
                 }
                 
                 if (bookingType) {
@@ -890,22 +723,30 @@
                     if (selectedBookingType === 'non_perkuliahan') {
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.remove('hidden');
+                        document.getElementById('pribadi-fields').classList.add('hidden');
+                        document.getElementById('pribadi-status-fields').classList.add('hidden');
                         
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', true);
+                        setRequiredFields('pribadi-fields', false);
                     } else if (selectedBookingType === 'pribadi') {
-                        // Pribadi uses a separate section, hide regular step 2 fields
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
+                        document.getElementById('pribadi-fields').classList.remove('hidden');
+                        document.getElementById('pribadi-status-fields').classList.remove('hidden');
                         
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', false);
+                        setRequiredFields('pribadi-fields', true);
                     } else {
                         document.getElementById('perkuliahan-fields').classList.remove('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
+                        document.getElementById('pribadi-fields').classList.add('hidden');
+                        document.getElementById('pribadi-status-fields').classList.add('hidden');
                         
                         setRequiredFields('perkuliahan-fields', true);
                         setRequiredFields('non-perkuliahan-fields', false);
+                        setRequiredFields('pribadi-fields', false);
                     }
                     
                     // Toggle lab selection based on booking type
@@ -1316,45 +1157,10 @@
             const startTime = document.getElementById('start_time').value;
             const endTime = document.getElementById('end_time').value;
             const lab = document.getElementById('labSelect').value;
-            const sundayWarning = document.getElementById('sunday-warning');
-            const timeError = document.getElementById('time-error');
-
-            // Check if selected date is a Sunday
-            let isSunday = false;
-            if (bookingDate) {
-                const date = new Date(bookingDate);
-                isSunday = date.getDay() === 0; // 0 = Sunday
-                
-                if (isSunday) {
-                    sundayWarning.classList.remove('hidden');
-                } else {
-                    sundayWarning.classList.add('hidden');
-                }
-            } else {
-                sundayWarning.classList.add('hidden');
-            }
-
-            // Validate time - end time must be after start time
-            let isTimeValid = true;
-            if (startTime && endTime) {
-                const [startH, startM] = startTime.split(':').map(Number);
-                const [endH, endM] = endTime.split(':').map(Number);
-                const startMinutes = startH * 60 + startM;
-                const endMinutes = endH * 60 + endM;
-                
-                if (endMinutes <= startMinutes) {
-                    isTimeValid = false;
-                    timeError.classList.remove('hidden');
-                } else {
-                    timeError.classList.add('hidden');
-                }
-            } else {
-                timeError.classList.add('hidden');
-            }
 
             // For pribadi bookings, lab is not required
             const isPribadi = selectedBookingType === 'pribadi';
-            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab) && !isSunday && isTimeValid;
+            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab);
             document.getElementById('btn-next-3').disabled = !isValid;
         }
 
@@ -1471,17 +1277,7 @@
 
         // Navigation
         function setupNavigationButtons() {
-            document.getElementById('btn-next-1').addEventListener('click', () => {
-                if (selectedBookingType === 'pribadi') {
-                    // Show personal borrowing section instead of regular step 2
-                    document.getElementById('step-1').classList.add('hidden');
-                    document.getElementById('personal-borrowing-section').classList.remove('hidden');
-                    document.querySelector('.step-indicator').classList.add('hidden');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                    goToStep(2);
-                }
-            });
+            document.getElementById('btn-next-1').addEventListener('click', () => goToStep(2));
             document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
             document.getElementById('btn-next-3').addEventListener('click', () => {
                 generateSummary();
@@ -1502,9 +1298,12 @@
             let requiredUpload = true;
             
             if (selectedBookingType === 'pribadi') {
-                 // Pribadi: Hide and Not Required for all
-                 showUpload = false;
-                 requiredUpload = false;
+                 const status = document.getElementById('applicant_status').value;
+                 if (status !== 'Mahasiswa') {
+                     // Non-mahasiswa pribadi: Hide and Not Required
+                     showUpload = false;
+                     requiredUpload = false;
+                 }
             }
             
             if (showUpload) {
@@ -1612,90 +1411,52 @@
             summary.push(`<div><strong>Waktu:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</div>`);
             summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('participant_count').value} orang</div>`);
             
-            // Lab and capacity warning only shown for non-pribadi bookings
+            const labSelect = document.getElementById('labSelect');
+            const labName = labSelect.options[labSelect.selectedIndex].text;
+            summary.push(`<div><strong>Lab:</strong> ${labName}</div>`);
+
+            document.getElementById('booking-summary').innerHTML = summary.join('');
+
+            // Check and display capacity warning
+            const participantCount = parseInt(document.getElementById('participant_count').value);
+            const labCapacity = parseInt(labSelect.options[labSelect.selectedIndex].dataset.capacity);
             const warningBox = document.getElementById('capacity-warning-text');
-            if (selectedBookingType !== 'pribadi') {
-                const labSelect = document.getElementById('labSelect');
-                const labName = labSelect.options[labSelect.selectedIndex].text;
-                summary.push(`<div><strong>Lab:</strong> ${labName}</div>`);
-                
-                document.getElementById('booking-summary').innerHTML = summary.join('');
 
-                // Check and display capacity warning
-                const participantCount = parseInt(document.getElementById('participant_count').value);
-                const labCapacity = parseInt(labSelect.options[labSelect.selectedIndex].dataset.capacity);
-
-                if (labCapacity < participantCount) {
-                    // Show warning
-                    document.getElementById('warning-participant-count').textContent = participantCount;
-                    document.getElementById('warning-lab-capacity').textContent = labCapacity;
-                    document.getElementById('warning-overflow').textContent = participantCount - labCapacity;
-                    warningBox.classList.remove('hidden');
-                } else {
-                    // Hide warning
-                    warningBox.classList.add('hidden');
-                }
+            if (labCapacity < participantCount) {
+                // Show warning
+                document.getElementById('warning-participant-count').textContent = participantCount;
+                document.getElementById('warning-lab-capacity').textContent = labCapacity;
+                document.getElementById('warning-overflow').textContent = participantCount - labCapacity;
+                warningBox.classList.remove('hidden');
             } else {
-                document.getElementById('booking-summary').innerHTML = summary.join('');
-                // Hide capacity warning for pribadi bookings
+                // Hide warning
                 warningBox.classList.add('hidden');
             }
         }
 
         // File Upload
         function setupFileUpload() {
-            const docInput = document.getElementById('document');
-            if (!docInput || docInput._fileUploadBound) return; // Guard against double-binding
-            docInput._fileUploadBound = true;
-
-            docInput.addEventListener('change', function(e) {
+            document.getElementById('document').addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 const fileNameDisplay = document.getElementById('file-name');
-                const uploadBox = this.closest('.border-dashed');
-                
-                // Remove previous error
-                const existingError = uploadBox.parentElement.querySelector('.file-validation-error');
-                if (existingError) existingError.remove();
-                uploadBox.classList.remove('border-red-400', 'bg-red-50');
                 
                 if (file) {
-                    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-                    const allowedType = 'application/pdf';
-                    const allowedExt = file.name.toLowerCase().endsWith('.pdf');
-                    let errorMsg = '';
+                    // Check file size (2MB = 2097152 bytes)
+                    const maxSize = 2 * 1024 * 1024; // 2MB in bytes
                     
-                    if (file.type !== allowedType && !allowedExt) {
-                        errorMsg = '⚠️ Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
-                    } else if (file.size > maxSize) {
-                        errorMsg = '⚠️ Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
-                    }
-                    
-                    if (errorMsg) {
-                        // Show custom error modal
-                        showFileErrorModal(errorMsg);
-
-                        // Show inline error
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'file-validation-error mt-2 bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm flex items-center';
-                        errorDiv.innerHTML = '<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' + errorMsg;
-                        uploadBox.parentElement.appendChild(errorDiv);
-                        uploadBox.classList.add('border-red-400', 'bg-red-50');
-                        
-                        this.value = '';
+                    if (file.size > maxSize) {
+                        alert('⚠️ File terlalu besar!\n\nUkuran file: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB\nMaksimal: 2 MB\n\nSilakan compress file PDF Anda terlebih dahulu.');
+                        this.value = ''; // Clear the file input
                         fileNameDisplay.textContent = '';
-                        fileNameDisplay.classList.remove('text-green-600');
-                        validateStep4();
+                        validateStep4(); // Re-validate
                         return;
                     }
                     
                     const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
                     fileNameDisplay.textContent = `✓ Terpilih: ${file.name} (${fileSizeMB} MB)`;
                     fileNameDisplay.classList.add('text-green-600');
-                    uploadBox.classList.add('border-green-400', 'bg-green-50');
                 } else {
                     fileNameDisplay.textContent = '';
-                    fileNameDisplay.classList.remove('text-green-600');
-                    uploadBox.classList.remove('border-green-400', 'bg-green-50');
                 }
                 validateStep4();
             });
@@ -1736,54 +1497,6 @@
                     field.setAttribute('data-conditional-required', 'true');
                 }
             });
-        });
-
-        // Time Dropdown Logic
-        function setupTimeDropdowns() {
-            const timeInputs = ['start', 'end'];
-            
-            timeInputs.forEach(prefix => {
-                const hourSelect = document.getElementById(prefix + '_hour');
-                const minuteSelect = document.getElementById(prefix + '_minute');
-                const hiddenInput = document.getElementById(prefix + '_time');
-                
-                function updateHiddenInput() {
-                    if (hourSelect.value && minuteSelect.value) {
-                        hiddenInput.value = `${hourSelect.value}:${minuteSelect.value}`;
-                        
-                        // Trigger change event manually for fetchAvailableLabs and validation
-                        hiddenInput.dispatchEvent(new Event('change'));
-                    } else {
-                        hiddenInput.value = '';
-                    }
-                }
-                
-                // Initialize from hidden input (e.g. old value)
-                if (hiddenInput.value) {
-                    const [h, m] = hiddenInput.value.split(':');
-                    if (h) hourSelect.value = h;
-                    if (m) minuteSelect.value = m;
-                }
-                
-                hourSelect.addEventListener('change', updateHiddenInput);
-                minuteSelect.addEventListener('change', updateHiddenInput);
-            });
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            setupTimeDropdowns(); // Add this line
-            updateStepIndicator();
-            setupBookingTypeListener();
-            setupStep2Validation();
-            setupStep3Validation();
-            setupNavigationButtons();
-            setupFileUpload();
-            setupApplicantStatusListener();
-            setupStudyProgramListener();
-
-            setupRealtimeValidation();
-            preventEnterSubmit();
         });
 
         // Realtime Validation Logic
@@ -2046,132 +1759,6 @@
                 }
             });
         });
-
-        // ===== PERSONAL BORROWING SECTION JS =====
-        document.addEventListener('DOMContentLoaded', function() {
-            const btnBackToStep1 = document.getElementById('btn-back-to-step1');
-            const btnMahasiswa = document.getElementById('btn-mahasiswa');
-            const btnNonMahasiswa = document.getElementById('btn-non-mahasiswa');
-            const mahasiswaForm = document.getElementById('mahasiswaForm');
-            const nonMahasiswaForm = document.getElementById('nonMahasiswaForm');
-            const btnValidateNim = document.getElementById('btn-validate-nim');
-            const pbNimInput = document.getElementById('pb-nim');
-            const nimResult = document.getElementById('nim-result');
-            const nimValidationMsg = document.getElementById('nim-validation-msg');
-            const btnSubmitMahasiswa = document.getElementById('btn-submit-mahasiswa');
-
-            // Back to step 1
-            if (btnBackToStep1) {
-                btnBackToStep1.addEventListener('click', function() {
-                    document.getElementById('personal-borrowing-section').classList.add('hidden');
-                    document.getElementById('step-1').classList.remove('hidden');
-                    document.querySelector('.step-indicator').classList.remove('hidden');
-                    // Reset personal borrowing forms
-                    if (mahasiswaForm) mahasiswaForm.classList.add('hidden');
-                    if (nonMahasiswaForm) nonMahasiswaForm.classList.add('hidden');
-                    if (nimResult) nimResult.classList.add('hidden');
-                    if (nimValidationMsg) nimValidationMsg.classList.add('hidden');
-                    if (pbNimInput) pbNimInput.value = '';
-                    if (btnSubmitMahasiswa) btnSubmitMahasiswa.disabled = true;
-                    // Reset button styles
-                    btnMahasiswa.classList.remove('border-blue-500', 'bg-blue-50');
-                    btnNonMahasiswa.classList.remove('border-purple-500', 'bg-purple-50');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
-            }
-
-            // Mahasiswa button
-            if (btnMahasiswa) {
-                btnMahasiswa.addEventListener('click', function() {
-                    btnMahasiswa.classList.add('border-blue-500', 'bg-blue-50');
-                    btnNonMahasiswa.classList.remove('border-purple-500', 'bg-purple-50');
-                    mahasiswaForm.classList.remove('hidden');
-                    nonMahasiswaForm.classList.add('hidden');
-                });
-            }
-
-            // Non-Mahasiswa button
-            if (btnNonMahasiswa) {
-                btnNonMahasiswa.addEventListener('click', function() {
-                    btnNonMahasiswa.classList.add('border-purple-500', 'bg-purple-50');
-                    btnMahasiswa.classList.remove('border-blue-500', 'bg-blue-50');
-                    nonMahasiswaForm.classList.remove('hidden');
-                    mahasiswaForm.classList.add('hidden');
-                    // Reset mahasiswa form state
-                    if (nimResult) nimResult.classList.add('hidden');
-                    if (nimValidationMsg) nimValidationMsg.classList.add('hidden');
-                    if (pbNimInput) pbNimInput.value = '';
-                    if (btnSubmitMahasiswa) btnSubmitMahasiswa.disabled = true;
-                });
-            }
-
-            // NIM Validation via AJAX
-            if (btnValidateNim) {
-                btnValidateNim.addEventListener('click', function() {
-                    const nim = pbNimInput.value.trim();
-                    if (!nim) {
-                        nimValidationMsg.textContent = 'Masukkan NIM terlebih dahulu.';
-                        nimValidationMsg.className = 'text-xs mt-2 text-red-500';
-                        nimValidationMsg.classList.remove('hidden');
-                        return;
-                    }
-
-                    // Show loading state
-                    btnValidateNim.disabled = true;
-                    btnValidateNim.textContent = 'Mencari...';
-                    nimValidationMsg.classList.add('hidden');
-                    nimResult.classList.add('hidden');
-                    btnSubmitMahasiswa.disabled = true;
-
-                    fetch('{{ route("personal-borrowing.validate-nim") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ nim: nim })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        btnValidateNim.disabled = false;
-                        btnValidateNim.textContent = 'Cari';
-
-                        if (data.found) {
-                            // Show simple valid confirmation (no personal data displayed)
-                            nimResult.classList.remove('hidden');
-                            nimValidationMsg.classList.add('hidden');
-                            btnSubmitMahasiswa.disabled = false;
-                        } else {
-                            nimValidationMsg.textContent = data.message || 'NIM tidak ditemukan dalam database mahasiswa FEB.';
-                            nimValidationMsg.className = 'text-xs mt-2 text-red-500';
-                            nimValidationMsg.classList.remove('hidden');
-                            nimResult.classList.add('hidden');
-                            btnSubmitMahasiswa.disabled = true;
-                        }
-                    })
-                    .catch(error => {
-                        btnValidateNim.disabled = false;
-                        btnValidateNim.textContent = 'Cari';
-                        nimValidationMsg.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
-                        nimValidationMsg.className = 'text-xs mt-2 text-red-500';
-                        nimValidationMsg.classList.remove('hidden');
-                    });
-                });
-            }
-
-            // Allow Enter key on NIM input to trigger search
-            if (pbNimInput) {
-                pbNimInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        btnValidateNim.click();
-                    }
-                });
-            }
-        });
     </script>
-
-@include('components.file-error-modal')
 </body>
 </html>

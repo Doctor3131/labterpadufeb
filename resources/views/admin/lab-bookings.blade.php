@@ -71,10 +71,6 @@
     <!-- LAB BORROWING SECTION -->
     <div id="lab-section" class="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
         <div class="border-b-2 border-gray-100 overflow-x-auto">
-            <!-- Tab Title -->
-            <div class="bg-yellow-50 px-4 py-2 border-b border-yellow-200">
-                <h3 class="text-sm font-bold text-yellow-800">Peminjaman Laboratorium</h3>
-            </div>
             <nav class="flex px-2 min-w-max" aria-label="Tabs">
                 <button onclick="showTab('pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700" data-tab="pending">
                     <div class="flex items-center justify-center">
