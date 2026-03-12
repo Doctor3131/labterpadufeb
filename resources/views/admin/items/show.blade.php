@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Detail Barang: ' . $item->name . ' - Lab Digital FEB UNDIP')
+@section('title', 'Detail Barang: ' . $item->name . ' - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
 <div class="container mx-auto px-4 py-6">

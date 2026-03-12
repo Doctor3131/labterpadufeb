@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Transfer Eksternal - Lab Digital FEB UNDIP')
+@section('title', 'Transfer Eksternal - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <!-- Back Button -->

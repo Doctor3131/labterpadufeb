@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Catat Arus Barang Global - Lab Digital FEB UNDIP')
+@section('title', 'Catat Arus Barang Global - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @section('content')
     <!-- Back Button -->

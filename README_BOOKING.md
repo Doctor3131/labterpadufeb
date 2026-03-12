@@ -488,7 +488,7 @@ Proprietary - FEB UNDIP © 2025
 
 ## 🎉 Credits
 
-**Developed by:** Lab Digital FEB UNDIP Team  
+**Developed by:** Laboratorium dan Fasilitas Digital FEB UNDIP Team  
 **Powered by:** Laravel, Tailwind CSS, Vite  
 **Design:** FEB UNDIP Brand Identity
 
