@@ -268,9 +268,9 @@ class LabInventoryController extends Controller
                     'item_id' => $item->id,
                     'proc_source_code' => $validated['proc_source_code'],
                     'arrival_mmyy' => $validated['arrival_mmyy'],
+                    'brand' => $validated['brand'] ?? null, // brand jadi bagian dari key agar batch berbeda merk tidak disatukan
                 ],
                 [
-                    'brand' => $validated['brand'] ?? null,
                     'source_description' => $validated['source_description'] ?? null,
                     'unit_price' => $validated['unit_price'] ?? null,
                 ]

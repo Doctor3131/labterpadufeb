@@ -38,12 +38,12 @@ class StoreInventoryRequest extends FormRequest
             'new_item_name' => ['required_without:item_id', 'nullable', 'string', 'max:255'],
             'brand' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'string', 'max:100'],
-            'batch_id' => ['required'], // 'new' or valid ID
+            'batch_id' => ['nullable', 'string'], // null/'new' = create new batch, or valid ID
             'condition' => ['required', Rule::enum(ConditionEnum::class)],
         ];
         
-        // Validate batch_id exists if it's not 'new'
-        if ($this->input('batch_id') !== 'new') {
+        // Validate batch_id exists only when it is a real ID (not null and not 'new')
+        if (!empty($this->input('batch_id')) && $this->input('batch_id') !== 'new') {
             $rules['batch_id'][] = 'exists:batches,id';
         }
 
