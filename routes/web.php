@@ -81,6 +81,21 @@ Route::get('/asset-borrowing/available-assets', [AssetBorrowingController::class
     ->middleware('throttle:60,1')
     ->name('asset-borrowing.available-assets');
 
+// BPS Data Request Routes (Public)
+Route::get('/bps', [BpsRequestController::class, 'create'])->name('bps.create');
+Route::post('/bps', [BpsRequestController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('bps.store');
+Route::get('/bps/success/{token}', [BpsRequestController::class, 'success'])->name('bps.success');
+Route::get('/api/bps/sub-data/{master}', [BpsRequestController::class, 'getSubData'])->name('api.bps.sub-data');
+
+// Refinitiv Data Request Routes (Public)
+Route::get('/refinitiv', [RefinitivRequestController::class, 'create'])->name('refinitiv.create');
+Route::post('/refinitiv', [RefinitivRequestController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('refinitiv.store');
+Route::get('/refinitiv/success/{token}', [RefinitivRequestController::class, 'success'])->name('refinitiv.success');
+
 // Schedule Routes (Public)
 Route::get('/schedules', function () {
     return view('schedules.index');
