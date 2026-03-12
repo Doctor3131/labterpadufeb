@@ -105,7 +105,7 @@
                         </svg>
                         <span class="font-medium text-gray-700">KTM</span>
                     </div>
-                    <a href="{{ Storage::url($bpsRequest->ktm_path) }}" target="_blank" class="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">
+                    <a href="{{ route('admin.secure-file', ['path' => $bpsRequest->ktm_path]) }}" target="_blank" class="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">
                         Lihat
                     </a>
                 </div>
@@ -117,7 +117,7 @@
                         </svg>
                         <span class="font-medium text-gray-700">Surat Pernyataan</span>
                     </div>
-                    <a href="{{ Storage::url($bpsRequest->statement_letter_path) }}" target="_blank" class="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600">
+                    <a href="{{ route('admin.secure-file', ['path' => $bpsRequest->statement_letter_path]) }}" target="_blank" class="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600">
                         Lihat
                     </a>
                 </div>

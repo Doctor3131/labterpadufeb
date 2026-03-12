@@ -19,28 +19,30 @@ Route::get('/data', function () {
     return view('data.index');
 })->name('data.index');
 
-// BPS Data Request Routes (Public)
+// BPS Data Request Routes (Public - rate limited)
 Route::get('/bps', [BpsRequestController::class, 'create'])->name('bps.create');
 Route::post('/bps', [BpsRequestController::class, 'store'])
+    ->middleware('throttle:10,1')
     ->name('bps.store');
 Route::get('/bps/success/{token}', [BpsRequestController::class, 'success'])->name('bps.success');
 Route::get('/api/bps/sub-data/{master}', [BpsRequestController::class, 'getSubData'])->name('api.bps.sub-data');
 
-// Refinitiv Data Request Routes (Public)
+// Refinitiv Data Request Routes (Public - rate limited)
 Route::get('/refinitiv', [RefinitivRequestController::class, 'create'])->name('refinitiv.create');
 Route::post('/refinitiv', [RefinitivRequestController::class, 'store'])
+    ->middleware('throttle:10,1')
     ->name('refinitiv.store');
 Route::get('/refinitiv/success/{token}', [RefinitivRequestController::class, 'success'])->name('refinitiv.success');
 
-// Bloomberg Reservation Routes (Public)
-Route::get('/bloomberg', fn() => view('bloomberg.index'))->name('bloomberg.index');
-Route::get('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'create'])->name('bloomberg.create');
-Route::post('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'store'])
-    ->middleware('throttle:10,1')
-    ->name('bloomberg.store');
-Route::get('/bloomberg/walkin', [App\Http\Controllers\BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walkin');
-Route::get('/bloomberg/capacity', [App\Http\Controllers\BloombergRequestController::class, 'checkCapacity'])->name('bloomberg.capacity');
-Route::get('/bloomberg/success/{token}', [App\Http\Controllers\BloombergRequestController::class, 'success'])->name('bloomberg.success');
+// Bloomberg Reservation Routes (Public) - disabled sementara
+// Route::get('/bloomberg', fn() => view('bloomberg.index'))->name('bloomberg.index');
+// Route::get('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'create'])->name('bloomberg.create');
+// Route::post('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'store'])
+//     ->middleware('throttle:10,1')
+//     ->name('bloomberg.store');
+// Route::get('/bloomberg/walkin', [App\Http\Controllers\BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walkin');
+// Route::get('/bloomberg/capacity', [App\Http\Controllers\BloombergRequestController::class, 'checkCapacity'])->name('bloomberg.capacity');
+// Route::get('/bloomberg/success/{token}', [App\Http\Controllers\BloombergRequestController::class, 'success'])->name('bloomberg.success');
 
 // Personal Borrowing Routes (Public - NIM Validation)
 Route::post('/personal-borrowing/validate-nim', [App\Http\Controllers\PersonalBorrowingController::class, 'validateNim'])
@@ -81,21 +83,6 @@ Route::get('/asset-borrowing/available-assets', [AssetBorrowingController::class
     ->middleware('throttle:60,1')
     ->name('asset-borrowing.available-assets');
 
-// BPS Data Request Routes (Public)
-Route::get('/bps', [BpsRequestController::class, 'create'])->name('bps.create');
-Route::post('/bps', [BpsRequestController::class, 'store'])
-    ->middleware('throttle:10,1')
-    ->name('bps.store');
-Route::get('/bps/success/{token}', [BpsRequestController::class, 'success'])->name('bps.success');
-Route::get('/api/bps/sub-data/{master}', [BpsRequestController::class, 'getSubData'])->name('api.bps.sub-data');
-
-// Refinitiv Data Request Routes (Public)
-Route::get('/refinitiv', [RefinitivRequestController::class, 'create'])->name('refinitiv.create');
-Route::post('/refinitiv', [RefinitivRequestController::class, 'store'])
-    ->middleware('throttle:10,1')
-    ->name('refinitiv.store');
-Route::get('/refinitiv/success/{token}', [RefinitivRequestController::class, 'success'])->name('refinitiv.success');
-
 // Schedule Routes (Public)
 Route::get('/schedules', function () {
     return view('schedules.index');
@@ -108,11 +95,16 @@ Route::get('/display', [App\Http\Controllers\ScheduleController::class, 'display
 // Auth Routes (rate limited to prevent brute force)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
-    ->middleware('throttle:10,1'); // Max 10 login attempts per minute
+    ->middleware('throttle:5,1'); // Max 5 login attempts per minute
 
 // Protected Routes (Admin/Super Admin only)
 // Uses 'admin' middleware to explicitly check role, not just authentication
 Route::middleware(['auth', 'admin'])->group(function () {
+    // Secure file access (serves files from storage through authenticated route)
+    Route::get('/admin/files/{path}', [App\Http\Controllers\SecureFileController::class, 'show'])
+        ->where('path', '.*')
+        ->name('admin.secure-file');
+    
     // Redirect /dashboard to admin dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

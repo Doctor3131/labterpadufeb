@@ -102,6 +102,12 @@ class AdminController extends Controller
     public function approve($id)
     {
         $booking = Booking::findOrFail($id);
+
+        // State guard: only pending bookings can be approved
+        if ($booking->status !== 'pending') {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
+        }
         
         // CRITICAL: Check for schedule conflicts BEFORE approving
         $bookingDate = \Carbon\Carbon::parse($booking->booking_date);
@@ -120,17 +126,13 @@ class AdminController extends Controller
         }
         
         DB::transaction(function () use ($booking) {
-            // Update booking status
-            $updateData = [
-                'status' => 'approved',
-                'handled_at' => now()
-            ];
-            
+            // Update booking status via explicit assignment (not mass assignment)
+            $booking->status = 'approved';
+            $booking->handled_at = now();
             if (Auth::check()) {
-                $updateData['handled_by'] = Auth::id();
+                $booking->handled_by = Auth::id();
             }
-            
-            $booking->update($updateData);
+            $booking->save();
 
             // Create schedule entry from approved booking
             // Important: Use Carbon with Asia/Jakarta timezone to get correct day
@@ -205,6 +207,12 @@ class AdminController extends Controller
         ]);
 
         $booking = Booking::findOrFail($id);
+
+        // State guard: only pending bookings can be rejected
+        if ($booking->status !== 'pending') {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
+        }
         
         Log::info('Booking found', [
             'booking_id' => $booking->id,
@@ -217,18 +225,14 @@ class AdminController extends Controller
                 $booking->schedule->delete();
             }
             
-            // Update booking status
-            $updateData = [
-                'status' => 'rejected',
-                'rejection_reason' => $request->rejection_reason,
-                'handled_at' => now()
-            ];
-            
+            // Update booking status via explicit assignment (not mass assignment)
+            $booking->status = 'rejected';
+            $booking->rejection_reason = $request->rejection_reason;
+            $booking->handled_at = now();
             if (Auth::check()) {
-                $updateData['handled_by'] = Auth::id();
+                $booking->handled_by = Auth::id();
             }
-            
-            $booking->update($updateData);
+            $booking->save();
             
             Log::info('Booking rejected successfully', [
                 'booking_id' => $booking->id,

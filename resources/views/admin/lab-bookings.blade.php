@@ -27,6 +27,16 @@
 @endpush
 
 @section('content')
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-gray-600 hover:text-yellow-600 font-medium transition-all group">
+            <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali ke Dashboard
+        </a>
+    </div>
+
     <!-- Header Section -->
     <div class="mb-6">
         <div class="bg-yellow-500 rounded-2xl p-4 md:p-6 shadow-lg">
@@ -63,7 +73,7 @@
         <div class="border-b-2 border-gray-100 overflow-x-auto">
             <!-- Tab Title -->
             <div class="bg-yellow-50 px-4 py-2 border-b border-yellow-200">
-                <h3 class="text-sm font-bold text-yellow-800">📚 Peminjaman Laboratorium</h3>
+                <h3 class="text-sm font-bold text-yellow-800">Peminjaman Laboratorium</h3>
             </div>
             <nav class="flex px-2 min-w-max" aria-label="Tabs">
                 <button onclick="showTab('pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700" data-tab="pending">
@@ -326,7 +336,7 @@
                     @endif
                     <div class="flex flex-wrap items-center gap-2">
                         @if($booking->document_path)
-                            <a href="{{ asset('storage/' . $booking->document_path) }}" target="_blank" class="flex items-center text-sm text-yellow-600 hover:text-yellow-800 font-medium transition-colors">
+                            <a href="{{ route('admin.secure-file', ['path' => $booking->document_path]) }}" target="_blank" class="flex items-center text-sm text-yellow-600 hover:text-yellow-800 font-medium transition-colors">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
@@ -541,7 +551,7 @@
         <div class="border-b-2 border-gray-100 overflow-x-auto">
             <!-- Tab Title -->
             <div class="bg-yellow-50 px-4 py-2 border-b border-yellow-200">
-                <h3 class="text-sm font-bold text-yellow-800">📦 Peminjaman Barang</h3>
+                <h3 class="text-sm font-bold text-yellow-800">Peminjaman Barang</h3>
             </div>
             <nav class="flex px-2 min-w-max" aria-label="Tabs">
                 <button onclick="showTab('asset-pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-purple-500 text-purple-700" data-tab="asset-pending">
@@ -1840,4 +1850,4 @@
     });
 </script>
 @endpush
-```
+

@@ -101,7 +101,7 @@ class AssetBorrowingController extends Controller
             'return_date' => 'required|date|after_or_equal:borrow_date',
             'borrow_time' => 'nullable|date_format:H:i',
             'return_time' => 'nullable|date_format:H:i',
-            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'document' => 'nullable|file|mimes:pdf|max:5120',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
             'items.*.lab_id' => 'nullable|exists:labs,id', // Add lab_id for aggregate items
@@ -165,9 +165,11 @@ class AssetBorrowingController extends Controller
                 'borrow_time' => $validated['borrow_time'] ?? null,
                 'return_time' => $validated['return_time'] ?? null,
                 'document_path' => $documentPath,
-                'status' => 'pending',
-                'tracking_token' => \Illuminate\Support\Str::random(10), // Ensure token is generated
             ]);
+            // Set admin-controlled fields via explicit assignment
+            $borrowing->status = 'pending';
+            $borrowing->tracking_token = \Illuminate\Support\Str::random(10);
+            $borrowing->save();
 
             // Pre-validate stock availability for ALL items before creating any records
             foreach ($validated['items'] as $itemData) {
@@ -382,7 +384,7 @@ class AssetBorrowingController extends Controller
                 Storage::disk('public')->delete($documentPath);
             }
 
-            return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan saat membuat permohonan. Silakan coba lagi.']);
         }
     }
 
@@ -626,7 +628,7 @@ class AssetBorrowingController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Update first party error: ' . $e->getMessage());
-            return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.']);
         }
     }
 
@@ -683,11 +685,15 @@ class AssetBorrowingController extends Controller
     {
         $borrowing = AssetBorrowing::findOrFail($id);
 
-        $borrowing->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
+        // State guard: only pending borrowings can be approved
+        if ($borrowing->status !== 'pending') {
+            return back()->with('error', 'Permohonan ini sudah diproses sebelumnya.');
+        }
+
+        $borrowing->status = 'approved';
+        $borrowing->approved_by = Auth::id();
+        $borrowing->approved_at = now();
+        $borrowing->save();
 
         return back()->with('success', 'Permohonan peminjaman telah disetujui!');
     }
@@ -699,16 +705,20 @@ class AssetBorrowingController extends Controller
     {
         $borrowing = AssetBorrowing::findOrFail($id);
 
+        // State guard: only pending borrowings can be rejected
+        if ($borrowing->status !== 'pending') {
+            return back()->with('error', 'Permohonan ini sudah diproses sebelumnya.');
+        }
+
         $validated = $request->validate([
             'rejection_reason' => 'required|string',
         ]);
 
-        $borrowing->update([
-            'status' => 'rejected',
-            'rejected_by' => Auth::id(),
-            'rejected_at' => now(),
-            'rejection_reason' => $validated['rejection_reason'],
-        ]);
+        $borrowing->status = 'rejected';
+        $borrowing->rejected_by = Auth::id();
+        $borrowing->rejected_at = now();
+        $borrowing->rejection_reason = $validated['rejection_reason'];
+        $borrowing->save();
 
         return back()->with('success', 'Permohonan peminjaman telah ditolak.');
     }
@@ -823,7 +833,7 @@ class AssetBorrowingController extends Controller
             return response()->json($result);
         } catch (\Exception $e) {
             Log::error('Error in getAvailableUnits: ' . $e->getMessage());
-            return response()->json(['error' => 'Terjadi kesalahan saat mengambil data unit: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Terjadi kesalahan saat mengambil data unit.'], 500);
         }
     }
 
@@ -863,12 +873,12 @@ class AssetBorrowingController extends Controller
             }
         }
 
-        $borrowing->update([
-            'status' => 'borrowed',
-            'handed_out_by' => Auth::id(),
-            'handed_out_at' => now(),
-            'borrow_condition_notes' => $validated['borrow_condition_notes'] ?? null,
-        ]);
+        // Explicit assignment for admin-controlled fields
+        $borrowing->status = 'borrowed';
+        $borrowing->handed_out_by = Auth::id();
+        $borrowing->handed_out_at = now();
+        $borrowing->borrow_condition_notes = $validated['borrow_condition_notes'] ?? null;
+        $borrowing->save();
 
         // Process aggregate units selection
         $aggregateUnitsInfo = [];
@@ -959,7 +969,7 @@ class AssetBorrowingController extends Controller
             return response()->json(array_values($grouped));
         } catch (\Exception $e) {
             Log::error('Error in getBorrowedUnits: ' . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Terjadi kesalahan saat mengambil data unit.'], 500);
         }
     }
 
@@ -1083,15 +1093,15 @@ class AssetBorrowingController extends Controller
             $replacementDeadline = now()->addDays(7)->toDateString();
         }
 
-        $borrowing->update([
-            'status' => 'returned',
-            'received_back_by' => Auth::id(),
-            'received_back_at' => now(),
-            'return_condition_notes' => $validated['return_condition_notes'] ?? null,
-            'is_damaged_on_return' => $isDamaged,
-            'damage_description' => $isDamaged ? implode("\n", $damageDescriptions) : null,
-            'replacement_deadline' => $replacementDeadline,
-        ]);
+        // Explicit assignment for admin-controlled fields
+        $borrowing->status = 'returned';
+        $borrowing->received_back_by = Auth::id();
+        $borrowing->received_back_at = now();
+        $borrowing->return_condition_notes = $validated['return_condition_notes'] ?? null;
+        $borrowing->is_damaged_on_return = $isDamaged;
+        $borrowing->damage_description = $isDamaged ? implode("\n", $damageDescriptions) : null;
+        $borrowing->replacement_deadline = $replacementDeadline;
+        $borrowing->save();
 
         $message = $isDamaged 
             ? 'Barang berhasil diterima kembali! Ada kerusakan/kehilangan terdeteksi. Durasi penggantian: 7 hari (sampai ' . \Carbon\Carbon::parse($replacementDeadline)->format('d M Y') . ').'
@@ -1119,12 +1129,12 @@ class AssetBorrowingController extends Controller
             'replacement_notes' => 'nullable|string',
         ]);
 
-        $borrowing->update([
-            'is_replaced' => true,
-            'replaced_by' => Auth::id(),
-            'replaced_at' => now(),
-            'replacement_notes' => $validated['replacement_notes'] ?? null,
-        ]);
+        // Explicit assignment for admin-controlled fields
+        $borrowing->is_replaced = true;
+        $borrowing->replaced_by = Auth::id();
+        $borrowing->replaced_at = now();
+        $borrowing->replacement_notes = $validated['replacement_notes'] ?? null;
+        $borrowing->save();
 
         return back()->with('success', 'Penggantian barang rusak telah dikonfirmasi!');
     }

@@ -30,7 +30,7 @@ class ProfileController extends Controller
                     $fail('Password lama tidak sesuai.');
                 }
             }],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ], [
             'current_password.required' => 'Password lama wajib diisi.',
             'password.required' => 'Password baru wajib diisi.',
