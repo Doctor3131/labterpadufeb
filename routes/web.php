@@ -65,16 +65,16 @@ Route::post('/refinitiv', [RefinitivRequestController::class, 'store'])
 Route::get('/refinitiv/success/{token}', [RefinitivRequestController::class, 'success'])->name('refinitiv.success');
 
 // Bloomberg Routes (Public)
-Route::get('/bloomberg', function () { return view('bloomberg.index'); })->name('bloomberg.index');
-Route::get('/bloomberg/reservasi', [BloombergRequestController::class, 'create'])->name('bloomberg.create');
-Route::get('/bloomberg/walk-in', [BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walk-in');
-Route::post('/bloomberg', [BloombergRequestController::class, 'store'])
-    ->middleware('throttle:10,1')
-    ->name('bloomberg.store');
-Route::get('/bloomberg/success/{token}', [BloombergRequestController::class, 'success'])->name('bloomberg.success');
-Route::get('/api/bloomberg/capacity', [BloombergRequestController::class, 'checkCapacity'])
-    ->middleware('throttle:60,1')
-    ->name('api.bloomberg.capacity');
+// Route::get('/bloomberg', function () { return view('bloomberg.index'); })->name('bloomberg.index');
+// Route::get('/bloomberg/reservasi', [BloombergRequestController::class, 'create'])->name('bloomberg.create');
+// Route::get('/bloomberg/walk-in', [BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walk-in');
+// Route::post('/bloomberg', [BloombergRequestController::class, 'store'])
+//     ->middleware('throttle:10,1')
+//     ->name('bloomberg.store');
+// Route::get('/bloomberg/success/{token}', [BloombergRequestController::class, 'success'])->name('bloomberg.success');
+// Route::get('/api/bloomberg/capacity', [BloombergRequestController::class, 'checkCapacity'])
+//     ->middleware('throttle:60,1')
+//     ->name('api.bloomberg.capacity');
 
 // Schedule Routes (Public)
 Route::get('/schedules', function () {
