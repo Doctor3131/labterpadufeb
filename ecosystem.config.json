@@ -1,7 +1,7 @@
 {
     "apps": [
         {
-            "name": "labterpadu-serve",
+            "name": "labterpadu",
             "script": "artisan",
             "args": [
                 "serve",
@@ -13,14 +13,6 @@
             "autorestart": false,
             "max_restarts": 1,
             "interpreter": "php"
-        },
-        {
-            "name": "labterpadu-dev",
-            "script": "npm",
-            "args": "run dev",
-            "interpreter": "none",
-            "cwd": "./",
-            "autorestart": true
         }
     ]
 }
