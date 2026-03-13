@@ -529,7 +529,7 @@ class ReportController extends Controller
 
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('LAPORAN PEMINJAMAN LABORATORIUM', 'Lab Digital FEB UNDIP', $dateRangeText, $combined->count() . ' peminjaman');
+        $html = $this->getWordHeader('LAPORAN PEMINJAMAN LABORATORIUM', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $combined->count() . ' peminjaman');
         
         $html .= '
             <table>
@@ -579,7 +579,7 @@ class ReportController extends Controller
         $requests = $this->buildBpsQuery($request)->orderBy('created_at', 'desc')->get();
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('REKAPITULASI PELAYANAN AKSES DATA BPS', 'Lab Digital FEB UNDIP', $dateRangeText, $requests->count() . ' permohonan');
+        $html = $this->getWordHeader('REKAPITULASI PELAYANAN AKSES DATA BPS', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count() . ' permohonan');
         
         $html .= '
             <table>
@@ -624,7 +624,7 @@ class ReportController extends Controller
         $requests = $this->buildRefinitivQuery($request)->orderBy('usage_date', 'desc')->get();
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('REKAPITULASI PELAYANAN DATA REFINITIV', 'Lab Digital FEB UNDIP', $dateRangeText, $requests->count() . ' permohonan');
+        $html = $this->getWordHeader('REKAPITULASI PELAYANAN DATA REFINITIV', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count() . ' permohonan');
         
         $html .= '
             <table>

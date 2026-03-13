@@ -33,11 +33,11 @@
             </div>
 
             <div class="space-y-3">
-                <a href="{{ route('bloomberg.create') }}" 
+                <a href="{{ route('bloomberg.index') }}" 
                    class="block w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors">
                     Buat Reservasi
                 </a>
-                <a href="{{ route('bloomberg.index') }}" 
+                <a href="{{ route('landing') }}" 
                    class="block w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
                     Kembali
                 </a>

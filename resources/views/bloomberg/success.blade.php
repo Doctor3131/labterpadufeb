@@ -93,7 +93,7 @@
                         </svg>
                         Kembali ke Beranda
                     </a>
-                    <a href="{{ route('bloomberg.index') }}" 
+                    <a href="{{ route('landing') }}" 
                        class="flex-1 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors text-center flex items-center justify-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>

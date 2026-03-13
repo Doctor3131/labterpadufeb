@@ -58,13 +58,14 @@ class ScheduleController extends Controller
             ]);
         
         } catch (\Exception $e) {
-            \Log::error('Error in getWeekSchedules: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
+            \Log::error('Error in getWeekSchedules: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             
             return response()->json([
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
+                'error' => 'Terjadi kesalahan saat memuat jadwal. Silakan coba lagi.',
             ], 500);
         }
     }

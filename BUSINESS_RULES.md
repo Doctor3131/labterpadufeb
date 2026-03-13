@@ -288,7 +288,7 @@ Detail:
 Silakan datang tepat waktu.
 Hubungi kami jika ada pertanyaan.
 
-Lab Digital FEB UNDIP
+Laboratorium dan Fasilitas Digital FEB UNDIP
 ```
 
 **Event: Booking Rejected**
@@ -303,7 +303,7 @@ Alasan: [Admin Notes]
 
 Silakan ajukan kembali dengan penyesuaian.
 
-Lab Digital FEB UNDIP
+Laboratorium dan Fasilitas Digital FEB UNDIP
 ```
 
 #### Reminder
@@ -321,7 +321,7 @@ Mengingatkan jadwal peminjaman lab Anda:
 
 Jangan lupa membawa dokumen pendukung.
 
-Lab Digital FEB UNDIP
+Laboratorium dan Fasilitas Digital FEB UNDIP
 ```
 
 ---

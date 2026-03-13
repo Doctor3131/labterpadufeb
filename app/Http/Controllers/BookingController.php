@@ -136,11 +136,10 @@ class BookingController extends Controller
 
                             if ($hasFile) {
                                 $file = $request->file('document');
-                                $allowedMimes = ['pdf'];
                                 $maxSize = 5120; // 5MB in KB
 
-                                if (!in_array($file->getClientOriginalExtension(), $allowedMimes) && 
-                                    !in_array($file->getMimeType(), ['application/pdf'])) {
+                                // Validate MIME type (server-side, not client extension)
+                                if (!in_array($file->getMimeType(), ['application/pdf'])) {
                                     $fail('Dokumen harus berformat PDF.');
                                     return;
                                 }
@@ -258,7 +257,7 @@ class BookingController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Terjadi kesalahan sistem. Silakan coba lagi.'])->withInput();
         }
     }
 

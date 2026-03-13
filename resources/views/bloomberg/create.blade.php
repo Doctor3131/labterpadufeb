@@ -756,7 +756,7 @@
             }
 
             // Fetch from API
-            fetch(`{{ route('api.bloomberg.capacity') }}?date=${dateVal}&session=${sessionEl.value}`)
+            fetch(`{{ route('bloomberg.capacity') }}?date=${dateVal}&session=${sessionEl.value}`)
                 .then(res => res.json())
                 .then(data => {
                     indicator.classList.remove('hidden');

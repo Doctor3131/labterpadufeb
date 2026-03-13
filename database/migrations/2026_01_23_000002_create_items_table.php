@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inventories', function (Blueprint $table) {
+        Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('item_code')->unique(); // ID Barang
-            $table->string('name'); // Nama Barang
-            $table->integer('quantity'); // Jumlah Barang
-            $table->string('condition'); // Kondisi: Baik, Rusak, Perbaikan
-            $table->decimal('price', 15, 2); // Harga
-            $table->string('source'); // Sumber Alat
+            $table->string('name'); // Nama Aset: Laptop Dell, PC AIO HP, dll
+            $table->foreignId('asset_type_code_id')->nullable()->constrained('asset_type_codes')->nullOnDelete();
+            $table->enum('tracking_mode', ['STRUCTURED_TAG', 'SEAT_NUMBER', 'AGGREGATE']);
             $table->text('description')->nullable();
             $table->timestamps();
         });
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('inventories');
+        Schema::dropIfExists('items');
     }
 };
