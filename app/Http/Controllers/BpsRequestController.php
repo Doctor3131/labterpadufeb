@@ -112,7 +112,7 @@ class BpsRequestController extends Controller
             'agreement_accepted.accepted' => 'Anda harus menyetujui peraturan penggunaan data',
         ];
 
-        $validator = Validator::make($request->all(), $rules, $messages);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules, $messages);
 
         if ($validator->fails()) {
             Log::warning('BPS Request validation failed', [

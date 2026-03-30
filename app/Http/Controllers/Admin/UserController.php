@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -35,7 +36,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'role' => 'required|in:admin,super_admin',
         ], [
             'name.required' => 'Nama wajib diisi.',
@@ -48,12 +49,15 @@ class UserController extends Controller
             'role.required' => 'Role wajib dipilih.',
         ]);
 
-        User::create([
+        // Create user without role (role is not mass assignable)
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
         ]);
+        // Set role via explicit assignment
+        $user->role = $validated['role'];
+        $user->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil dibuat.');
@@ -80,7 +84,10 @@ class UserController extends Controller
             'role.required' => 'Role wajib dipilih.',
         ]);
 
-        $user->update($validated);
+        // Explicit assignment (role is not mass assignable)
+        $user->name = $validated['name'];
+        $user->role = $validated['role'];
+        $user->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil diperbarui.');
@@ -92,15 +99,14 @@ class UserController extends Controller
     public function resetPassword(Request $request, User $user)
     {
         $request->validate([
-            'new_password' => 'required|string|min:8',
+            'new_password' => ['required', 'string', Password::min(8)->mixedCase()->numbers()],
         ], [
             'new_password.required' => 'Password baru wajib diisi.',
             'new_password.min' => 'Password minimal 8 karakter.',
         ]);
 
-        $user->update([
-            'password' => Hash::make($request->new_password)
-        ]);
+        $user->password = Hash::make($request->new_password);
+        $user->save();
 
         return redirect()->route('admin.users.index')
             ->with('success', "Password untuk {$user->name} berhasil direset.");

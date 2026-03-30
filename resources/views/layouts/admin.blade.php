@@ -82,7 +82,7 @@
                                 </svg>
                                 Kelola Ruang
                             </a>
-                            <a href="{{ route('admin.inventories.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 {{ request()->routeIs('admin.inventories.*') ? 'bg-purple-50 text-purple-700 font-semibold' : '' }}">
+                            <a href="{{ route('admin.inventory.index') }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 {{ request()->routeIs('admin.inventory.*') ? 'bg-purple-50 text-purple-700 font-semibold' : '' }}">
                                 <svg class="w-4 h-4 mr-2.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                                 </svg>
@@ -222,7 +222,7 @@
                     Kelola Ruang
                 </a>
 
-                 <a href="{{ route('admin.inventories.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.inventories.*') ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50' }}">
+                 <a href="{{ route('admin.inventory.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.inventory.*') ? 'text-purple-600 bg-purple-50' : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50' }}">
                     <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                     </svg>

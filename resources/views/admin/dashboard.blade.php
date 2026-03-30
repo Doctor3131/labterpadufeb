@@ -23,6 +23,7 @@
         .dashboard-card:nth-child(3) { animation-delay: 0.3s; }
         .dashboard-card:nth-child(4) { animation-delay: 0.4s; }
         .dashboard-card:nth-child(5) { animation-delay: 0.5s; }
+        .dashboard-card:nth-child(6) { animation-delay: 0.6s; }
     </style>
 @endpush
 
@@ -220,6 +221,40 @@
                 <a href="{{ route('admin.personal-borrowings.index') }}" class="block w-full text-center px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors">
                     <span class="flex items-center justify-center">
                         Lihat
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Asset Borrowing Card (NEW from inventory module) -->
+        <div class="dashboard-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-cyan-100 hover:border-cyan-300 transition-all hover:shadow-xl">
+            <div class="bg-gradient-to-r from-cyan-500 to-cyan-600 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="bg-white/20 p-3 rounded-xl">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <span class="text-white/90 text-sm font-medium">Inventaris</span>
+                </div>
+            </div>
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Peminjaman Aset</h3>
+                <p class="text-gray-500 text-sm mb-4">Kelola peminjaman aset inventaris</p>
+                
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-gray-600 text-sm">Pending:</span>
+                    <span class="px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-sm font-bold">
+                        {{ $assetBorrowingPendingCount }}
+                    </span>
+                </div>
+                
+                <a href="{{ route('admin.asset-borrowings.index') }}" class="block w-full text-center px-4 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors">
+                    <span class="flex items-center justify-center">
+                        Kelola
                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>

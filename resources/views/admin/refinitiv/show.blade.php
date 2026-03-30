@@ -156,11 +156,11 @@
                         @endphp
                         @if($isKtmImage)
                         <div class="mb-3 border rounded-lg overflow-hidden bg-gray-50">
-                            <img src="{{ Storage::url($request->ktm_file) }}" alt="KTM" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ Storage::url($request->ktm_file) }}', 'KTM')">
+                            <img src="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" alt="KTM" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}', 'KTM')">
                         </div>
                         @endif
                         <div class="flex gap-2">
-                            <a href="{{ Storage::url($request->ktm_file) }}" target="_blank"
+                            <a href="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" target="_blank"
                                class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -168,7 +168,7 @@
                                 </svg>
                                 Lihat
                             </a>
-                            <a href="{{ Storage::url($request->ktm_file) }}" download
+                            <a href="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" download
                                class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -197,11 +197,11 @@
                         @endphp
                         @if($isStatementImage)
                         <div class="mb-3 border rounded-lg overflow-hidden bg-gray-50">
-                            <img src="{{ Storage::url($request->statement_file) }}" alt="Surat Pernyataan" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ Storage::url($request->statement_file) }}', 'Surat Pernyataan')">
+                            <img src="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" alt="Surat Pernyataan" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ route('admin.secure-file', ['path' => $request->statement_file]) }}', 'Surat Pernyataan')">
                         </div>
                         @endif
                         <div class="flex gap-2">
-                            <a href="{{ Storage::url($request->statement_file) }}" target="_blank"
+                            <a href="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" target="_blank"
                                class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -209,7 +209,7 @@
                                 </svg>
                                 Lihat
                             </a>
-                            <a href="{{ Storage::url($request->statement_file) }}" download
+                            <a href="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" download
                                class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>

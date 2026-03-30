@@ -340,7 +340,7 @@
                                 <input type="file" name="ktm_file" id="ktm_file" accept=".jpg,.jpeg,.png,.pdf"
                                     class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
                                 @if($doc && $doc->ktm_path)
-                                    <a href="{{ Storage::url($doc->ktm_path) }}" target="_blank" 
+                                    <a href="{{ route('admin.secure-file', ['path' => $doc->ktm_path]) }}" target="_blank" 
                                        class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium whitespace-nowrap">
                                         Lihat KTM
                                     </a>

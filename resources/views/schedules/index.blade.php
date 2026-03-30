@@ -6,358 +6,394 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Jadwal Laboratorium - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Scrollbar styling */
+        .grid-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+        .grid-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+        .grid-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .grid-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Day tabs — hide scrollbar */
+        .day-tabs-scroll { scrollbar-width: none; }
+        .day-tabs-scroll::-webkit-scrollbar { display: none; }
+
+        /* Sticky room header inside scrollable timetable */
+        .room-header-row { position: sticky; top: 0; z-index: 20; }
+    </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Navbar -->
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- ── Navbar ─────────────────────────────────── -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-3 sm:px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
-                <!-- Logo -->
                 <div class="flex items-center space-x-2">
                     <a href="{{ route('landing') }}">
                         <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-10 sm:h-12 md:h-16 w-auto object-contain">
                     </a>
                 </div>
-                
-                <!-- Desktop Menu -->
+
+                <!-- Desktop menu -->
                 <div class="hidden md:flex items-center space-x-4">
                     <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-base">Beranda</a>
-                    @auth
+                    @if(auth()->check())
                         <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold transition-all duration-200 hover:scale-105 text-base">Dashboard</a>
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-base">
-                            Ajukan
-                        </a>
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-base">Ajukan</a>
                     @else
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-base">
-                            Ajukan
-                        </a>
-                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 hover:scale-105 hover:shadow-md text-base">
-                            Login
-                        </a>
-                    @endauth
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg text-base">Ajukan</a>
+                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-2 rounded-lg hover:bg-yellow-50 transition-all duration-200 text-base">Login</a>
+                    @endif
                 </div>
 
-                <!-- Mobile Hamburger Button -->
+                <!-- Mobile hamburger -->
                 <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500">
                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
             </div>
 
-            <!-- Mobile Menu Dropdown -->
+            <!-- Mobile dropdown -->
             <div id="mobileMenu" class="hidden md:hidden mt-4 pb-2 border-t border-gray-200 pt-4">
                 <div class="flex flex-col space-y-3">
-                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">
-                        Beranda
-                    </a>
-                    @auth
-                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">
-                            Dashboard
-                        </a>
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold text-center transition-all text-base">
-                            Ajukan Peminjaman
-                        </a>
+                    <a href="{{ route('landing') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">Beranda</a>
+                    @if(auth()->check())
+                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-yellow-600 font-semibold py-2 px-3 rounded-lg hover:bg-gray-50 transition-colors text-base">Dashboard</a>
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold text-center transition-all text-base">Ajukan Peminjaman</a>
                     @else
-                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold text-center transition-all text-base">
-                            Ajukan Peminjaman
-                        </a>
-                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-3 rounded-lg hover:bg-yellow-50 text-center transition-all text-base">
-                            Login
-                        </a>
-                    @endauth
+                        <a href="{{ route('booking.create') }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-lg font-semibold text-center transition-all text-base">Ajukan Peminjaman</a>
+                        <a href="{{ route('login') }}" class="text-yellow-600 hover:text-yellow-700 font-semibold border-2 border-yellow-500 px-4 py-3 rounded-lg hover:bg-yellow-50 text-center transition-all text-base">Login</a>
+                    @endif
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 md:px-6 py-6 md:py-12">
-        <!-- Header -->
-        <div class="text-center mb-6 md:mb-10">
-            <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Jadwal Laboratorium</h1>
-            <p class="text-sm md:text-base text-gray-600">Lihat jadwal penggunaan laboratorium</p>
+    <!-- ── Page Body ───────────────────────────────── -->
+    <div class="container mx-auto px-3 md:px-6 py-6">
+
+        <!-- Page title -->
+        <div class="text-center mb-5">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-1">Jadwal Laboratorium</h1>
+            <p class="text-sm text-gray-500">Lihat jadwal penggunaan laboratorium per ruangan</p>
         </div>
 
-        <!-- Week Navigation -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
-                <button id="prevWeek" class="w-full md:w-auto flex justify-center md:justify-start items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors order-2 md:order-1">
-                    <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        <!-- Week navigation -->
+        <div class="bg-white rounded-xl shadow p-4 mb-4">
+            <div class="flex items-center gap-4">
+                <button id="prevWeek" class="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
-                    <span class="pointer-events-none">Sebelumnya</span>
+                    <span class="hidden sm:inline">Sebelumnya</span>
                 </button>
 
-                <div class="text-center order-1 md:order-2">
-                    <div class="text-xs md:text-sm text-gray-500">Periode</div>
-                    <div id="weekLabel" class="text-lg md:text-xl font-bold text-gray-800">Loading...</div>
-                    <div class="text-[10px] md:text-xs text-gray-400 mt-1">WIB (Asia/Jakarta)</div>
+                <div class="flex-1 text-center">
+                    <div class="text-xs text-gray-400 mb-0.5">Periode</div>
+                    <div id="weekLabel" class="text-base md:text-lg font-bold text-gray-800">Memuat...</div>
                 </div>
 
-                <button id="nextWeek" class="w-full md:w-auto flex justify-center md:justify-end items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors order-3">
-                    <span class="pointer-events-none">Berikutnya</span>
-                    <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <button id="nextWeek" class="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors flex-shrink-0">
+                    <span class="hidden sm:inline">Berikutnya</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </button>
             </div>
 
-            <div class="flex justify-center mt-4" id="currentWeekButtonContainer">
-                <button id="currentWeek" class="px-4 py-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors">
+            <div id="currentWeekBtnWrap" class="hidden justify-center mt-3">
+                <button id="currentWeekBtn" class="px-4 py-1.5 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors">
                     Kembali ke Minggu Ini
                 </button>
             </div>
         </div>
 
-        <!-- Filter Ruangan -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Filter Ruangan</h3>
-                <button id="clearFilter" class="text-sm text-yellow-600 hover:text-yellow-700 font-semibold hidden">
-                    Hapus Filter
-                </button>
-            </div>
-            <div id="labFilterContainer" class="flex flex-wrap gap-2">
-                <div class="text-sm text-gray-500">Memuat...</div>
-            </div>
-        </div>
-
-        <!-- Schedule Table -->
+        <!-- Main card -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div id="scheduleContainer" class="p-6">
-                <div class="text-center py-12">
+
+            <!-- Day tabs -->
+            <div class="border-b border-gray-200">
+                <div id="dayTabs" class="flex w-full"></div>
+            </div>
+
+            <!-- Timetable container (x scroll only, full height) -->
+            <div id="timetableWrap" class="grid-scroll overflow-x-auto">
+                <div id="loadingState" class="text-center py-16">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
-                    <p class="text-gray-500 mt-4">Memuat jadwal...</p>
+                    <p class="text-gray-500 mt-4 text-sm">Memuat jadwal...</p>
+                </div>
+                <div id="timetableContent" class="hidden"></div>
+            </div>
+
+            <!-- Legend -->
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-600">
+                <div class="font-semibold text-gray-700 mb-1.5">Keterangan Warna:</div>
+                <div class="flex justify-between items-center">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-sm inline-block flex-shrink-0" style="background:#eab308;"></span>
+                        <span><strong>Kuning:</strong> Perkuliahan Tetap</span>
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-sm inline-block flex-shrink-0" style="background:#6366f1;"></span>
+                        <span><strong>Ungu:</strong> Perkuliahan Tidak Tetap</span>
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-sm inline-block flex-shrink-0" style="background:#10b981;"></span>
+                        <span><strong>Hijau:</strong> Non-Perkuliahan</span>
+                    </span>
                 </div>
             </div>
         </div>
-    </div>
 
+    </div><!-- end container -->
+
+    <!-- ── JavaScript ─────────────────────────────── -->
     <script>
-        let currentWeekOffset = 0;
-        let selectedLabs = []; // Array of selected lab IDs
-        let allLabs = []; // Store all labs from API
+    // ── Constants ──────────────────────────────────────────
+    const TIME_START   = 5;    // 05:00
+    const TIME_END     = 23;   // 23:00
+    const SLOT_MINS    = 10;   // minutes per slot
+    const PX_PER_SLOT  = 10;   // px per 10-min slot
+    const PX_PER_HOUR  = (60 / SLOT_MINS) * PX_PER_SLOT; // 60px/hour
+    const TIME_COL_W   = 64;   // px width of time label column
+    const LAB_MIN_W    = 140;  // min px per lab column
+    const TOTAL_H      = (TIME_END - TIME_START) * PX_PER_HOUR;
+    const DAYS         = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
-        function loadSchedules(weekOffset) {
-            const container = document.getElementById('scheduleContainer');
-            const weekLabel = document.getElementById('weekLabel');
+    const TYPE_COLORS = {
+        perkuliahan_tetap:       { bg:'#fef9c3', accent:'#ca8a04', text:'#713f12' },
+        perkuliahan_tidak_tetap: { bg:'#c7d2fe', accent:'#4338ca', text:'#1e1b4b' },
+        non_perkuliahan:         { bg:'#a7f3d0', accent:'#059669', text:'#064e3b' },
+        pribadi:                 { bg:'#fed7aa', accent:'#c2410c', text:'#431407' },
+    };
 
-            container.innerHTML = `
-                <div class="text-center py-12">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
-                    <p class="text-gray-500 mt-4">Memuat jadwal...</p>
-                </div>
-            `;
+    // ── State ──────────────────────────────────────────────
+    let weekOffset = 0;
+    let weekData   = null;
+    let activeDay  = null;
 
-            // Build query string with lab filter
-            let queryParams = `week_offset=${weekOffset}`;
-            if (selectedLabs.length > 0) {
-                queryParams += `&labs=${selectedLabs.join(',')}`;
-            }
+    // ── Utilities ──────────────────────────────────────────
+    const toMins = t => { const p = t.split(':'); return +p[0]*60 + +p[1]; };
+    const fmtT   = t => { const p = t.split(':'); return p[0]+':'+p[1]; };
+    const esc    = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-            fetch(`{{ route('schedules.week') }}?${queryParams}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Update week label and offset
-                    console.log('Week data:', data);
-                    console.log('Updating label from:', weekLabel.textContent, 'to:', data.week_label);
-                    console.log('Updating offset from:', currentWeekOffset, 'to:', weekOffset);
-                    weekLabel.textContent = data.week_label;
-                    currentWeekOffset = weekOffset;
+    function todayName() {
+        return ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][new Date().getDay()];
+    }
 
-                    // Store labs and render filter (only on first load)
-                    if (data.labs && allLabs.length === 0) {
-                        allLabs = data.labs;
-                        renderLabFilter();
-                    }
+    function buildDayMap(data) {
+        const ws  = new Date(data.week_start);
+        const map = {};
+        DAYS.forEach((day, i) => {
+            const d  = new Date(ws);
+            d.setDate(d.getDate() + i);
+            const dd = String(d.getDate()).padStart(2,'0');
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            map[day] = {
+                dateStr: dd+'/'+mm,
+                items:   data.schedules.filter(s => s.day === day),
+            };
+        });
+        return map;
+    }
 
-                    // Show/Hide "Kembali ke Minggu Ini" button
-                    const currentWeekButton = document.getElementById('currentWeekButtonContainer');
-                    if (weekOffset === 0) {
-                        currentWeekButton.style.display = 'none';
-                    } else {
-                        currentWeekButton.style.display = 'flex';
-                    }
+    // ── Render Tabs ────────────────────────────────────────
+    function renderTabs(dayMap) {
+        document.getElementById('dayTabs').innerHTML = DAYS.map(day => {
+            const active = day === activeDay;
+            return `
+            <button onclick="selectDay('${day}')" data-day="${day}"
+                class="day-tab flex-1 py-4 text-center border-b-2 transition-colors
+                       ${active ? 'border-yellow-500 text-yellow-700 bg-yellow-50'
+                                : 'border-transparent text-gray-600 hover:text-yellow-600 hover:bg-yellow-50/50'}">
+                <div class="font-semibold text-sm">${day}</div>
+                <div class="text-xs mt-0.5 ${active ? 'text-yellow-500' : 'text-gray-400'}">${dayMap[day].dateStr}</div>
+            </button>`;
+        }).join('');
+    }
 
-                    if (data.schedules.length === 0) {
-                        container.innerHTML = `
-                            <div class="text-center py-12">
-                                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <p class="text-gray-500 text-lg">Tidak ada jadwal untuk minggu ini</p>
-                            </div>
-                        `;
-                        return;
-                    }
+    function updateTabStyles() {
+        document.querySelectorAll('.day-tab').forEach(btn => {
+            const active = btn.dataset.day === activeDay;
+            btn.className = `day-tab flex-1 py-4 text-center border-b-2 transition-colors
+                ${active ? 'border-yellow-500 text-yellow-700 bg-yellow-50'
+                         : 'border-transparent text-gray-600 hover:text-yellow-600 hover:bg-yellow-50/50'}`;
+            btn.querySelectorAll('div')[1].className = `text-xs mt-0.5 ${active ? 'text-yellow-500' : 'text-gray-400'}`;
+        });
+    }
 
-                    // Group by date
-                    const groupedSchedules = {};
-                    data.schedules.forEach(schedule => {
-                        if (!groupedSchedules[schedule.date]) {
-                            groupedSchedules[schedule.date] = {
-                                date: schedule.date,
-                                date_formatted: schedule.date_formatted,
-                                schedules: []
-                            };
-                        }
-                        groupedSchedules[schedule.date].schedules.push(schedule);
-                    });
+    // ── Render Timetable ───────────────────────────────────
+    function renderTimetable(dayData, labs) {
+        const loading = document.getElementById('loadingState');
+        const content = document.getElementById('timetableContent');
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
 
-                    let html = '<div class="space-y-6">';
-                    
-                    Object.values(groupedSchedules).forEach(day => {
-                        html += `
-                            <div class="border-l-4 border-yellow-500 pl-4">
-                                <h3 class="text-xl font-bold text-gray-800 mb-3">${day.date_formatted}</h3>
-                                <div class="space-y-3">
-                        `;
-
-                        day.schedules.forEach(schedule => {
-                            // Format time to HH:MM
-                            const formatTime = (time) => {
-                                if (!time) return '';
-                                // If time is already in HH:MM format, return as is
-                                if (time.length <= 5) return time;
-                                // Parse datetime and extract time
-                                const date = new Date(time);
-                                return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
-                            };
-                            
-                            const startTime = formatTime(schedule.start_time);
-                            const endTime = formatTime(schedule.end_time);
-                            
-                            // Get lab badge color based on booking type
-                            const getLabBadgeColor = (type) => {
-                                const colors = {
-                                    'perkuliahan_tetap': 'bg-yellow-100 text-yellow-800',
-                                    'perkuliahan_tidak_tetap': 'bg-indigo-100 text-indigo-800',
-                                    'non_perkuliahan': 'bg-emerald-100 text-emerald-800',
-                                    'pribadi': 'bg-orange-100 text-orange-800'
-                                };
-                                return colors[type] || 'bg-yellow-100 text-yellow-800';
-                            };
-                            
-                            html += `
-                                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-3 mb-2">
-                                                <span class="inline-block px-3 py-1 ${getLabBadgeColor(schedule.booking_type)} text-sm font-semibold rounded">${schedule.lab}</span>
-                                                <span class="text-gray-600 font-medium">${startTime} - ${endTime}</span>
-                                            </div>
-                                            <h4 class="text-lg font-semibold text-gray-800">${schedule.course}</h4>
-                                            ${(schedule.booking_type === 'perkuliahan_tetap' || schedule.booking_type === 'perkuliahan_tidak_tetap') && schedule.lecturer ? `<p class="text-gray-600 text-sm mt-1">Dosen: ${schedule.lecturer}</p>` : ''}
-                                            ${schedule.komting ? `<p class="text-gray-500 text-sm">${(schedule.booking_type === 'non_perkuliahan') ? 'Peminjam' : 'Komting'}: ${schedule.komting}</p>` : ''}
-                                            ${schedule.student_count ? `<p class="text-gray-500 text-sm">Jumlah Mahasiswa: ${schedule.student_count} orang</p>` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-
-                        html += `
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    html += '</div>';
-                    container.innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error loading schedules:', error);
-                    container.innerHTML = `
-                        <div class="text-center py-12">
-                            <svg class="w-16 h-16 text-orange-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <p class="text-orange-600 text-lg font-semibold mb-2">Tidak ada jadwal di luar semester</p>
-                        </div>
-                    `;
-                });
+        if (!labs || labs.length === 0) {
+            content.innerHTML = '<div class="text-center py-16 text-gray-400 text-sm">Tidak ada data ruangan</div>';
+            return;
         }
 
-        function renderLabFilter() {
-            const container = document.getElementById('labFilterContainer');
-            const clearButton = document.getElementById('clearFilter');
-            
-            if (allLabs.length === 0) {
-                container.innerHTML = '<div class="text-sm text-gray-500">Tidak ada ruangan tersedia</div>';
-                return;
-            }
+        const items   = dayData.items || [];
+        const minW    = TIME_COL_W + labs.length * LAB_MIN_W;
 
-            let html = '';
-            allLabs.forEach(lab => {
-                const isSelected = selectedLabs.includes(lab.id);
-                html += `
-                    <button 
-                        data-lab-id="${lab.id}" 
-                        class="lab-filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            isSelected 
-                                ? 'bg-yellow-500 text-white shadow-md' 
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }"
-                    >
-                        ${lab.name}
-                    </button>
-                `;
-            });
-            
-            container.innerHTML = html;
+        // Time labels — every 30 min
+        let timeLabels = '';
+        for (let h = TIME_START; h < TIME_END; h++) {
+            const tH = ((h - TIME_START) * 60 / SLOT_MINS) * PX_PER_SLOT;
+            const tG = tH + (30 / SLOT_MINS) * PX_PER_SLOT;
+            timeLabels += `
+                <div style="position:absolute;top:${tH}px;right:6px;font-size:11px;font-weight:600;color:#64748b;line-height:${PX_PER_SLOT}px;">${String(h).padStart(2,'0')}:00</div>
+                <div style="position:absolute;top:${tG}px;right:6px;font-size:10px;color:#94a3b8;line-height:${PX_PER_SLOT}px;">${String(h).padStart(2,'0')}:30</div>`;
+        }
 
-            // Show/hide clear button
-            if (selectedLabs.length > 0) {
-                clearButton.classList.remove('hidden');
+        // Gridlines template (shared across all lab columns)
+        let gridlines = '';
+        const totalSlots = (TIME_END - TIME_START) * 60 / SLOT_MINS;
+        for (let slot = 0; slot <= totalSlots; slot++) {
+            const m   = slot * SLOT_MINS;
+            const top = slot * PX_PER_SLOT;
+            if (m % 60 === 0) {
+                gridlines += `<div style="position:absolute;top:${top}px;left:0;right:0;height:1px;background:#e2e8f0;"></div>`;
+            } else if (m % 30 === 0) {
+                gridlines += `<div style="position:absolute;top:${top}px;left:0;right:0;border-top:1px dashed #e2e8f0;"></div>`;
             } else {
-                clearButton.classList.add('hidden');
+                gridlines += `<div style="position:absolute;top:${top}px;left:0;right:0;height:1px;background:#f8fafc;"></div>`;
             }
-
-            // Add click listeners
-            document.querySelectorAll('.lab-filter-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const labId = parseInt(this.dataset.labId);
-                    
-                    if (selectedLabs.includes(labId)) {
-                        // Remove from selection
-                        selectedLabs = selectedLabs.filter(id => id !== labId);
-                    } else {
-                        // Add to selection
-                        selectedLabs.push(labId);
-                    }
-                    
-                    renderLabFilter();
-                    loadSchedules(currentWeekOffset);
-                });
-            });
         }
 
-        // Event listeners
-        document.getElementById('prevWeek').addEventListener('click', () => {
-            loadSchedules(currentWeekOffset - 1);
-        });
+        // Build lab columns
+        let labCols = labs.map(lab => {
+            const blocks = items
+                .filter(i => i.lab_id == lab.id)
+                .map(buildEventBlock)
+                .join('');
+            return `<div style="flex:1;min-width:${LAB_MIN_W}px;position:relative;height:${TOTAL_H}px;border-left:1px solid #f1f5f9;">
+                        ${gridlines}${blocks}
+                    </div>`;
+        }).join('');
 
-        document.getElementById('nextWeek').addEventListener('click', () => {
-            loadSchedules(currentWeekOffset + 1);
-        });
+        // Build header columns (room names)
+        const headerCols = [`<div style="width:${TIME_COL_W}px;flex-shrink:0;background:#1e293b;"></div>`]
+            .concat(labs.map(lab =>
+                `<div style="flex:1;min-width:${LAB_MIN_W}px;background:#1e293b;color:#fff;text-align:center;padding:12px 6px;font-weight:700;font-size:13px;border-left:1px solid #334155;">${esc(lab.name)}</div>`
+            )).join('');
 
-        document.getElementById('currentWeek').addEventListener('click', () => {
-            loadSchedules(0);
-        });
+        content.innerHTML = `
+            <div style="min-width:${minW}px;">
+                <div class="room-header-row" style="display:flex;">${headerCols}</div>
+                <div style="display:flex;height:${TOTAL_H}px;">
+                    <div style="width:${TIME_COL_W}px;flex-shrink:0;position:relative;height:${TOTAL_H}px;background:#f8fafc;border-right:1px solid #e2e8f0;">
+                        ${timeLabels}
+                    </div>
+                    ${labCols}
+                </div>
+            </div>`;
 
-        document.getElementById('clearFilter').addEventListener('click', () => {
-            selectedLabs = [];
-            renderLabFilter();
-            loadSchedules(currentWeekOffset);
-        });
+        // Scroll to 07:00
+        const wrap = document.getElementById('timetableWrap');
+        setTimeout(() => { wrap.scrollTop = ((7 - TIME_START) * 60 / SLOT_MINS) * PX_PER_SLOT; }, 60);
+    }
 
-        // Mobile menu toggle
-        document.getElementById('mobileMenuButton').addEventListener('click', function() {
-            document.getElementById('mobileMenu').classList.toggle('hidden');
-        });
+    function buildEventBlock(item) {
+        const startOffset = toMins(item.start_time) - TIME_START*60;
+        const duration    = toMins(item.end_time)   - toMins(item.start_time);
+        if (startOffset < 0 || duration <= 0) return '';
 
-        // Load current week on page load
-        loadSchedules(0);
+        const top    = (startOffset / SLOT_MINS) * PX_PER_SLOT;
+        const height = (duration    / SLOT_MINS) * PX_PER_SLOT;
+        const type   = item.booking_type || 'perkuliahan_tetap';
+        const c      = TYPE_COLORS[type] || TYPE_COLORS.perkuliahan_tetap;
+        const isKul  = ['perkuliahan_tetap','perkuliahan_tidak_tetap'].includes(type);
+        const course = esc(item.course || '-');
+        const lec    = isKul && item.lecturer ? esc(item.lecturer) : '';
+        const s      = fmtT(item.start_time);
+        const e      = fmtT(item.end_time);
+        const tip    = esc(`${item.course||''}${item.lecturer?'\n'+item.lecturer:''}\n${s} - ${e}`);
+
+        return `
+        <div title="${tip}"
+             style="position:absolute;top:${top}px;height:${height}px;left:3px;right:3px;
+                    background:${c.bg};border-radius:7px;overflow:hidden;z-index:5;
+                    box-shadow:0 1px 4px rgba(0,0,0,.1);">
+            <div style="position:absolute;top:0;bottom:0;left:0;width:5px;background:${c.accent};border-radius:7px 0 0 7px;"></div>
+            <div style="padding:3px 4px 3px 9px;height:100%;display:flex;flex-direction:column;gap:1px;overflow:hidden;">
+                <div style="font-size:11px;font-weight:700;color:${c.text};line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${course}</div>
+                ${height>36?`
+                <div style="font-size:10px;color:${c.text};opacity:.85;display:flex;align-items:center;gap:2px;white-space:nowrap;">
+                    <svg width="9" height="9" style="flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${s} - ${e}
+                </div>`:''}
+                ${height>52&&lec?`
+                <div style="font-size:10px;color:${c.text};opacity:.75;display:flex;align-items:center;gap:2px;overflow:hidden;">
+                    <svg width="9" height="9" style="flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lec}</span>
+                </div>`:''}
+            </div>
+        </div>`;
+    }
+
+    // ── Select Day ─────────────────────────────────────────
+    function selectDay(day) {
+        activeDay = day;
+        updateTabStyles();
+        const dayMap = buildDayMap(weekData);
+        renderTimetable(dayMap[day], weekData.labs);
+    }
+
+    // ── Load Week ──────────────────────────────────────────
+    function loadSchedules(offset) {
+        weekOffset = offset;
+        document.getElementById('weekLabel').textContent = 'Memuat...';
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('timetableContent').classList.add('hidden');
+
+        fetch(`{{ route('schedules.week') }}?week_offset=${offset}`)
+            .then(r => r.json())
+            .then(data => {
+                weekData = data;
+                document.getElementById('weekLabel').textContent = data.week_label;
+
+                // "Back to current week" button
+                const bw = document.getElementById('currentWeekBtnWrap');
+                offset === 0 ? bw.classList.add('hidden') : bw.classList.remove('hidden');
+                bw.style.display = offset !== 0 ? 'flex' : 'none';
+
+                // Pick active day
+                const today = todayName();
+                if (offset === 0 && DAYS.includes(today)) {
+                    activeDay = today;
+                } else if (!DAYS.includes(activeDay)) {
+                    activeDay = 'Senin';
+                }
+
+                const dayMap = buildDayMap(data);
+                renderTabs(dayMap);
+                renderTimetable(dayMap[activeDay], data.labs);
+            })
+            .catch(() => {
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('timetableContent').classList.remove('hidden');
+                document.getElementById('timetableContent').innerHTML = `
+                    <div class="text-center py-16">
+                        <svg class="w-14 h-14 text-orange-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-orange-600 font-semibold">Tidak ada jadwal di luar semester</p>
+                    </div>`;
+            });
+    }
+
+    // ── Event Listeners ────────────────────────────────────
+    document.getElementById('prevWeek').addEventListener('click', () => loadSchedules(weekOffset - 1));
+    document.getElementById('nextWeek').addEventListener('click', () => loadSchedules(weekOffset + 1));
+    document.getElementById('currentWeekBtn').addEventListener('click', () => loadSchedules(0));
+    document.getElementById('mobileMenuButton').addEventListener('click', () => {
+        document.getElementById('mobileMenu').classList.toggle('hidden');
+    });
+
+    // ── Init ───────────────────────────────────────────────
+    loadSchedules(0);
     </script>
+
 </body>
 </html>
