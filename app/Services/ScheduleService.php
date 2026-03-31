@@ -41,10 +41,11 @@ class ScheduleService
     {
         $schedules = collect();
 
-        // 1. Fetch Regular Schedules
-        $labsQuery = Lab::with(['schedules' => function ($query) use ($startOfWeek, $endOfWeek) {
-            $query->activeBetweenDates($startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d'));
-        }, 'schedules.booking']);
+        // 1. Fetch Regular Schedules (only from active labs)
+        $labsQuery = Lab::where('status', 'available')
+            ->with(['schedules' => function ($query) use ($startOfWeek, $endOfWeek) {
+                $query->activeBetweenDates($startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d'));
+            }, 'schedules.booking']);
         
         // Apply lab filter if provided
         if (!empty($labIds)) {

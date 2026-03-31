@@ -46,8 +46,8 @@ class ScheduleController extends Controller
             // Format week label
             $weekLabel = $this->scheduleService->getWeekLabel($startOfWeek, $endOfWeek);
             
-            // Get all labs for filter dropdown
-            $labs = Lab::orderBy('name')->get(['id', 'name']);
+            // Get all active labs for filter dropdown
+            $labs = Lab::where('status', 'available')->orderBy('name')->get(['id', 'name']);
             
             return response()->json([
                 'week_start' => $startOfWeek->format('Y-m-d'),
@@ -96,8 +96,8 @@ class ScheduleController extends Controller
         // Fix Senin date (it's the start of week)
         $schedules['Senin']['date'] = $startOfWeek->format('Y-m-d');
         
-        // Get all labs for grid columns
-        $labs = \App\Models\Lab::orderBy('name')->get(['id', 'name']);
+        // Get all active labs for grid columns
+        $labs = \App\Models\Lab::where('status', 'available')->orderBy('name')->get(['id', 'name']);
         
         return view('schedules.display', [
             'schedules' => $schedules,

@@ -21,8 +21,8 @@ class LandingController extends Controller
      */
     public function index()
     {
-        // Labs
-        $labs = Lab::orderBy('name')->get(['id', 'name']);
+        // Labs (only active ones)
+        $labs = Lab::where('status', 'available')->orderBy('name')->get(['id', 'name']);
 
         // Active announcements (max 3, newest first)
         $announcements = Announcement::active()->latest()->take(3)->get();
