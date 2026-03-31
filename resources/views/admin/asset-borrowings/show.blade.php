@@ -1099,6 +1099,7 @@ async function openHandoutModal() {
                 if (item.tracking_mode === 'AGGREGATE') {
                     // Show aggregate item with detailed unit list
                     const totalAvailable = item.inventory_units ? item.inventory_units.length : 0;
+                    const safeItemName = item.item_name.replace(/'/g, "\\'");
                     
                     html += `
                         <div class="border border-gray-200 rounded-lg p-4 bg-gradient-to-br from-orange-50 to-amber-50">
@@ -1111,6 +1112,26 @@ async function openHandoutModal() {
                                     </p>
                                 </div>
                                 <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded">Aggregate</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                                <p class="text-xs text-gray-500">Pilih unit satu per satu atau gunakan tombol di bawah</p>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="bulkSelectAggregateUnits('${safeItemName}', ${item.total_quantity})" 
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                        </svg>
+                                        Pilih Otomatis ${item.total_quantity} Unit
+                                    </button>
+                                    <button type="button" onclick="bulkDeselectAggregateUnits('${safeItemName}', ${item.total_quantity})" 
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded-lg transition-all">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                        </svg>
+                                        Reset Semua
+                                    </button>
+                                </div>
                             </div>
                             
                             <div class="mt-3 bg-white border border-orange-200 rounded-lg p-3 max-h-60 overflow-y-auto">
@@ -1192,10 +1213,13 @@ async function openHandoutModal() {
 function generateUnitSelects(item) {
     let selectsHtml = '';
     const unitOptions = item.units.map(unit => `<option value="${unit.id}">${unit.display}</option>`).join('');
+    const groupId = item.item_name.replace(/\s+/g, '-');
     
+    let selectIndex = 0;
     item.borrowing_items.forEach((bi, idx) => {
         for (let q = 0; q < bi.quantity; q++) {
-            const label = item.total_quantity === 1 ? 'Pilih Unit' : `Unit ${idx + q + 1}`;
+            selectIndex++;
+            const label = item.total_quantity === 1 ? 'Pilih Unit' : `Unit ${selectIndex}`;
             selectsHtml += `
                 <div class="flex items-center gap-3">
                     <span class="text-xs font-semibold text-gray-500 w-14 shrink-0">${label}</span>
@@ -1212,10 +1236,34 @@ function generateUnitSelects(item) {
     });
     
     return `
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <p class="text-xs text-gray-500">Pilih unit satu per satu atau gunakan tombol di bawah</p>
+            <div class="flex gap-2">
+                <button type="button" onclick="bulkAutoFillUnits('${item.item_name}')" 
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Pilih Otomatis Semua
+                </button>
+                <button type="button" onclick="bulkResetUnits('${item.item_name}')" 
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded-lg transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Reset Semua
+                </button>
+            </div>
+        </div>
         <div class="space-y-3">
             ${selectsHtml}
         </div>
-        <p class="text-xs text-gray-400 mt-3">Format: Kode UPK | Kode Universitas</p>
+        <div class="flex items-center justify-between mt-3">
+            <p class="text-xs text-gray-400">Format: Kode UPK | Kode Universitas</p>
+            <p class="text-xs font-medium" id="bulk-status-${groupId}">
+                <span class="text-orange-600">⚠️ Belum ada unit dipilih</span>
+            </p>
+        </div>
     `;
 }
 
@@ -1223,33 +1271,9 @@ function initUnitSelectListenersShow() {
     document.querySelectorAll('.unit-select-show').forEach(select => {
         select.addEventListener('change', function() {
             const group = this.dataset.unitGroup;
-            const selects = document.querySelectorAll(`.unit-select-show[data-unit-group="${group}"]`);
-            const selectedValues = [];
-            selects.forEach(s => { if (s.value) selectedValues.push(s.value); });
-            
-            selects.forEach(s => {
-                Array.from(s.options).forEach(opt => {
-                    if (opt.value && opt.value !== s.value) {
-                        opt.disabled = selectedValues.includes(opt.value);
-                    }
-                });
-            });
-            
-            // Trigger aggregate validation to update submit button
-            const firstAggregateCheckbox = document.querySelector('.aggregate-checkbox-show');
-            if (firstAggregateCheckbox) {
-                const itemName = firstAggregateCheckbox.dataset.itemName;
-                const required = parseInt(firstAggregateCheckbox.dataset.required);
-                validateAggregateSelectionShow(itemName, required);
-            } else {
-                // No aggregate items, just check if all selects are filled
-                const allSelects = document.querySelectorAll('.unit-select-show');
-                const allFilled = Array.from(allSelects).every(s => s.value);
-                const submitBtn = document.getElementById('submitHandoutBtn');
-                if (submitBtn) {
-                    submitBtn.disabled = !allFilled;
-                }
-            }
+            refreshUnitDisabledStates(group);
+            updateBulkStatus(group);
+            checkAllSelectionsValid();
         });
     });
 }
@@ -1299,6 +1323,128 @@ function validateAggregateSelectionShow(itemName, requiredCount) {
     if (submitBtn) {
         submitBtn.disabled = !allValid;
     }
+}
+
+function bulkAutoFillUnits(itemName) {
+    const selects = document.querySelectorAll(`.unit-select-show[data-unit-group="${itemName}"]`);
+    if (selects.length === 0) return;
+    
+    // Collect all available unit values from the first select's options
+    const firstSelect = selects[0];
+    const allOptions = Array.from(firstSelect.options)
+        .filter(opt => opt.value !== '')
+        .map(opt => opt.value);
+    
+    // Reset all selects first
+    selects.forEach(s => { s.value = ''; });
+    
+    // Auto-assign units sequentially
+    const usedValues = new Set();
+    selects.forEach((select) => {
+        for (const optValue of allOptions) {
+            if (!usedValues.has(optValue)) {
+                select.value = optValue;
+                usedValues.add(optValue);
+                break;
+            }
+        }
+    });
+    
+    // Refresh disabled states
+    refreshUnitDisabledStates(itemName);
+    updateBulkStatus(itemName);
+    checkAllSelectionsValid();
+}
+
+function bulkResetUnits(itemName) {
+    const selects = document.querySelectorAll(`.unit-select-show[data-unit-group="${itemName}"]`);
+    selects.forEach(s => {
+        s.value = '';
+        // Re-enable all options
+        Array.from(s.options).forEach(opt => { opt.disabled = false; });
+    });
+    updateBulkStatus(itemName);
+    checkAllSelectionsValid();
+}
+
+function refreshUnitDisabledStates(itemName) {
+    const selects = document.querySelectorAll(`.unit-select-show[data-unit-group="${itemName}"]`);
+    const selectedValues = [];
+    selects.forEach(s => { if (s.value) selectedValues.push(s.value); });
+    
+    selects.forEach(s => {
+        Array.from(s.options).forEach(opt => {
+            if (opt.value && opt.value !== s.value) {
+                opt.disabled = selectedValues.includes(opt.value);
+            }
+        });
+    });
+}
+
+function updateBulkStatus(itemName) {
+    const groupId = itemName.replace(/\s+/g, '-');
+    const statusEl = document.getElementById(`bulk-status-${groupId}`);
+    if (!statusEl) return;
+    
+    const selects = document.querySelectorAll(`.unit-select-show[data-unit-group="${itemName}"]`);
+    const total = selects.length;
+    const filled = Array.from(selects).filter(s => s.value).length;
+    
+    if (filled === total) {
+        statusEl.innerHTML = `<span class="text-green-600">✅ Semua ${total} unit sudah dipilih</span>`;
+    } else if (filled > 0) {
+        statusEl.innerHTML = `<span class="text-orange-600">⚠️ ${filled}/${total} unit dipilih</span>`;
+    } else {
+        statusEl.innerHTML = `<span class="text-orange-600">⚠️ Belum ada unit dipilih</span>`;
+    }
+}
+
+function checkAllSelectionsValid() {
+    const submitBtn = document.getElementById('submitHandoutBtn');
+    if (!submitBtn) return;
+    
+    let allValid = true;
+    
+    // Check structured selects
+    const structuredSelects = document.querySelectorAll('.unit-select-show');
+    if (structuredSelects.length > 0) {
+        allValid = Array.from(structuredSelects).every(s => s.value);
+    }
+    
+    // Check aggregate checkboxes
+    const allItemNames = new Set();
+    document.querySelectorAll('.aggregate-checkbox-show').forEach(cb => {
+        allItemNames.add(cb.dataset.itemName);
+    });
+    allItemNames.forEach(name => {
+        const cbs = document.querySelectorAll(`input[data-item-name="${name}"].aggregate-checkbox-show`);
+        const required = parseInt(cbs[0]?.dataset.required || 0);
+        const checked = Array.from(cbs).filter(c => c.checked).length;
+        if (checked !== required) allValid = false;
+    });
+    
+    submitBtn.disabled = !allValid;
+}
+
+function bulkSelectAggregateUnits(itemName, requiredCount) {
+    const checkboxes = document.querySelectorAll(`input[data-item-name="${itemName}"].aggregate-checkbox-show`);
+    // Uncheck all first
+    checkboxes.forEach(cb => { cb.checked = false; });
+    // Check the first N checkboxes
+    let checked = 0;
+    checkboxes.forEach(cb => {
+        if (checked < requiredCount) {
+            cb.checked = true;
+            checked++;
+        }
+    });
+    validateAggregateSelectionShow(itemName, requiredCount);
+}
+
+function bulkDeselectAggregateUnits(itemName, requiredCount) {
+    const checkboxes = document.querySelectorAll(`input[data-item-name="${itemName}"].aggregate-checkbox-show`);
+    checkboxes.forEach(cb => { cb.checked = false; });
+    validateAggregateSelectionShow(itemName, requiredCount);
 }
 
 function closeHandoutModal() {

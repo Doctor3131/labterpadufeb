@@ -200,18 +200,18 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 animate-fade-in-up animation-delay-500">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200" style="overflow:visible;">
 
                 <!-- Day Tabs -->
-                <div class="border-b border-slate-200 overflow-x-auto sticky top-16 lg:top-20 z-40 bg-white shadow-sm">
+                <div class="border-b border-slate-200 overflow-x-auto sticky top-16 lg:top-20 z-40 bg-white shadow-sm" style="border-radius: 1rem 1rem 0 0;">
                     <div id="dayTabsContainer" class="flex min-w-max lg:min-w-0 lg:justify-center">
                         <!-- Tabs rendered by JS -->
                     </div>
                 </div>
 
                 <!-- Desktop: Calendar Grid View -->
-                <div id="calendarGridContainer" class="hidden lg:block">
-                    <div id="calendarGrid" class="relative" style="min-width: 800px;">
+                <div id="calendarGridContainer" class="hidden lg:block" style="overflow:visible;">
+                    <div id="calendarGrid" class="relative" style="min-width: 800px; overflow:visible;">
                         <!-- Grid rendered by JS -->
                         <div class="text-center py-12">
                             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
@@ -249,6 +249,15 @@
             </div>
         </div>
     </section>
+
+    <!-- Fixed Lab Header Clone (positioned outside card to bypass overflow) -->
+    <div id="fixedLabHeaderWrapper" class="hidden fixed z-[45] left-0 right-0 shadow-md" style="top:0px;">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div id="fixedLabHeaderContent" class="flex border-b-2 border-slate-300 bg-slate-800 text-white">
+                <!-- Cloned by JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- Download PDF Section -->
     <section class="py-8 lg:py-16 bg-gradient-to-br from-gray-50 to-gray-100">
@@ -606,16 +615,15 @@
             let html = '';
 
             // ---- Header row: Time col + Lab cols ----
-            // Calculate sticky offset dynamically from actual element heights
-            const navEl = document.querySelector('nav.sticky');
-            const tabsEl = document.querySelector('#dayTabsContainer')?.closest('.sticky');
-            const stickyTop = (navEl ? navEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0);
-            html += `<div class="flex border-b-2 border-slate-300 bg-slate-800 text-white sticky z-30" style="top:${stickyTop}px">`;
+            html += `<div id="scheduleLabHeader" class="flex border-b-2 border-slate-300 bg-slate-800 text-white shadow-md">`;
             html += '<div class="flex-shrink-0" style="width:70px;"></div>';
             allLabs.forEach(lab => {
                 html += `<div class="flex-1 text-center py-3 px-2 font-bold text-sm border-l border-slate-600">${lab.name}</div>`;
             });
             html += '</div>';
+
+            // Populate the fixed clone
+            requestAnimationFrame(() => { setupFixedLabHeader(); });
 
             // ---- Grid body ----
             html += `<div class="flex relative" style="height:${totalHeight}px;">`;
@@ -833,6 +841,57 @@
             }
 
             grid.innerHTML = html;
+        }
+
+        // ==================== FIXED LAB HEADER (CLONE APPROACH) ====================
+        let _fixedHeaderScrollFn = null;
+
+        function setupFixedLabHeader() {
+            const original = document.getElementById('scheduleLabHeader');
+            const wrapper = document.getElementById('fixedLabHeaderWrapper');
+            const content = document.getElementById('fixedLabHeaderContent');
+            if (!original || !wrapper || !content) return;
+
+            // Clone the header content into the fixed container
+            content.innerHTML = original.innerHTML;
+
+            // Calculate the fixed top position (below nav + tabs)
+            function getFixedTop() {
+                const navEl = document.querySelector('nav.sticky');
+                const tabsEl = document.querySelector('#dayTabsContainer')?.closest('.sticky');
+                return (navEl ? navEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0);
+            }
+
+            // Remove previous scroll handler
+            if (_fixedHeaderScrollFn) {
+                window.removeEventListener('scroll', _fixedHeaderScrollFn);
+            }
+
+            function onScroll() {
+                const fixedTop = getFixedTop();
+                wrapper.style.top = fixedTop + 'px';
+
+                const originalRect = original.getBoundingClientRect();
+                const gridContainer = document.getElementById('calendarGridContainer');
+                if (!gridContainer) return;
+                const gridBottom = gridContainer.getBoundingClientRect().bottom;
+                const headerHeight = original.offsetHeight;
+
+                // Show fixed clone when original has scrolled past the fixed top
+                // AND the grid still has visible content below
+                if (originalRect.top < fixedTop && gridBottom > fixedTop + headerHeight + 20) {
+                    wrapper.classList.remove('hidden');
+                    wrapper.classList.add('flex');
+                } else {
+                    wrapper.classList.add('hidden');
+                    wrapper.classList.remove('flex');
+                }
+            }
+
+            _fixedHeaderScrollFn = onScroll;
+            window.addEventListener('scroll', onScroll, { passive: true });
+            window.addEventListener('resize', onScroll);
+            onScroll();
         }
 
         // ==================== INIT ====================

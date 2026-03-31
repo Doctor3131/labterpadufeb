@@ -81,6 +81,16 @@
             
             @if(count($todaySchedules) > 0)
             <div class="p-4">
+                {{-- Sticky Lab Header Row --}}
+                <div class="flex bg-slate-800 text-white sticky top-0 z-20 shadow-md" style="min-width: 800px;">
+                    <div class="flex-shrink-0" style="width: 70px;"></div>
+                    @foreach($labs as $lab)
+                        <div class="flex-1 text-center py-3 px-2 font-bold text-sm border-l border-slate-600">
+                            {{ $lab->name }}
+                        </div>
+                    @endforeach
+                </div>
+
                 <div class="flex" style="min-width: 800px;">
                     <!-- Time Labels Column -->
                     <div class="flex-shrink-0 relative bg-slate-50 border-r border-slate-300" style="width: 70px; height: {{ $totalHeight }}px;">
@@ -101,10 +111,6 @@
                     <!-- Lab Columns -->
                     @foreach($labs as $lab)
                     <div class="flex-1 relative border-l border-slate-200" style="height: {{ $totalHeight }}px;">
-                        <!-- Lab Header (sticky) -->
-                        <div class="sticky top-0 z-20 bg-slate-800 text-white text-center py-3 px-2 font-bold text-sm border-l border-slate-600">
-                            {{ $lab->name }}
-                        </div>
 
                         <!-- Gridlines -->
                         @for($slot = 0; $slot <= $totalSlots; $slot++)
