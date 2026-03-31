@@ -827,21 +827,33 @@
             sessionCards.forEach(radio => {
                 const card = radio.closest('.radio-card');
                 const blocked = getBlockedInfo(dateVal, radio.value);
+                const sessionName = radio.value === 'sesi_1' ? 'Sesi 1' : 'Sesi 2';
                 
                 if (blocked.isBlocked) {
-                    card.classList.add('opacity-50');
-                    // Add warning below the card
+                    card.classList.add('opacity-50', 'bg-gray-50', 'cursor-not-allowed');
+                    card.classList.remove('cursor-pointer', 'hover:border-indigo-300');
+                    radio.disabled = true;
+                    if (radio.checked) {
+                        radio.checked = false;
+                        // Avoid triggering full fetchCapacity loop to prevent infinite loop
+                        const indicator = document.getElementById('capacity-indicator');
+                        if (indicator) indicator.classList.add('hidden');
+                    }
+
+                    // Add warning below the grid
                     const warning = document.createElement('div');
-                    warning.className = 'session-blocked-warning text-red-600 text-xs mt-1 flex items-center';
+                    warning.className = 'session-blocked-warning col-span-1 sm:col-span-2 text-red-600 text-sm mt-1 flex items-center font-medium';
                     warning.innerHTML = `
-                        <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                        <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
                         </svg>
-                        <span>Tidak tersedia: ${blocked.reason || 'Sesi diblokir'}</span>
+                        <span>${sessionName} tidak tersedia: ${blocked.reason || 'Sesi diblokir'}</span>
                     `;
                     card.parentElement.appendChild(warning);
                 } else {
-                    card.classList.remove('opacity-50');
+                    card.classList.remove('opacity-50', 'bg-gray-50', 'cursor-not-allowed');
+                    card.classList.add('cursor-pointer', 'hover:border-indigo-300');
+                    radio.disabled = false;
                 }
             });
         }

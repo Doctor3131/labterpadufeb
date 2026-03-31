@@ -176,7 +176,7 @@ class BloombergRequestController extends Controller
             if ($isDosenUndip) {
                 $nimNip = $validated['nip'];
             } elseif ($isNonUndip) {
-                $nimNip = null; // Non Undip doesn't have NIM/NIP
+                $nimNip = '-'; // Non Undip doesn't have NIM/NIP, pass '-' to avoid DB null constraint error
             } else {
                 $nimNip = $validated['nim'];
             }

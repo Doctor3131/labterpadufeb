@@ -98,6 +98,14 @@
                         </svg>
                         Peminjaman Data
                     </a>
+                    
+                    <!-- Button Bloomberg -->
+                    <a href="{{ route('bloomberg.index') }}" class="inline-flex items-center px-8 py-3 lg:px-10 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110">
+                        <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5 transition-transform group-hover:rotate-90 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                        </svg>
+                        Bloomberg
+                    </a>
                 </div>
             </div>
         </div>
