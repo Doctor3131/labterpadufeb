@@ -1,0 +1,20 @@
+85a79df restore: main branch files take priority - feature/inventory-module only adds new files
+872f150 fix inventory,fix peminjaman aset
+39b0994 changed all phrases and diction to Laboratorium dan Fasilitas Digital
+42d80cf finalized design
+019bdf8 fix inventory,fix peminjaman aset
+9ebc682 add filter ruangan di beranda
+5200083 Merge branch 'main' of origin into main - Resolve conflicts
+d20bbaf small change
+41b410e Added rate limit, remove unused email codes, middleware to check role
+944a621 changed from komting to peminjam for non kuliah
+ea0ad7b fix some problems
+005ac22 refactor some code
+b133cb2 fix layout for mobile
+fbbeb10 regular gabung sama perkuliahan tetap
+1deabe0 add undip logo & fix layout mobile
+cfc44e8 fix bug booking non perkuliahan, ubah warna tipe peminjaman
+0e4ed5e fix crud jadwal dan fix layout mobile beberapa
+e178688 fix layout document dll
+fa7a6bd fix dashboard admin,fix tracking peminjaman
+d4be13a optimation controller, added service to avoid redudancy, forgor

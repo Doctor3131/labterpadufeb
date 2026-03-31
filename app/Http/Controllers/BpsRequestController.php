@@ -47,6 +47,23 @@ class BpsRequestController extends Controller
             return back()->withInput()->withErrors(['selected_data' => 'Pilih minimal satu dataset']);
         }
 
+        // Clean up variables: remove null/empty entries (form sends ALL textareas including unchecked ones)
+        $selectedDataIds = $request->input('selected_data', []);
+        $selectedMasterIds = $request->input('selected_master', []);
+
+        $cleanVariables = collect($request->input('variables', []))
+            ->filter(fn($value, $key) => in_array($key, $selectedDataIds) && !is_null($value) && $value !== '')
+            ->toArray();
+
+        $cleanMasterVariables = collect($request->input('master_variables', []))
+            ->filter(fn($value, $key) => in_array($key, $selectedMasterIds) && !is_null($value) && $value !== '')
+            ->toArray();
+
+        $request->merge([
+            'variables' => !empty($cleanVariables) ? $cleanVariables : null,
+            'master_variables' => !empty($cleanMasterVariables) ? $cleanMasterVariables : null,
+        ]);
+
         // Base validation rules
         $rules = [
             'applicant_type' => 'required|in:mahasiswa,dosen',
@@ -112,7 +129,7 @@ class BpsRequestController extends Controller
             'agreement_accepted.accepted' => 'Anda harus menyetujui peraturan penggunaan data',
         ];
 
-        $validator = Validator::make($request->only(array_keys($rules)), $rules, $messages);
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             Log::warning('BPS Request validation failed', [

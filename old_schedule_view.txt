@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Jadwal Laboratorium - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
+    <title>Jadwal Laboratorium - Lab Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50">
@@ -158,6 +158,10 @@
             fetch(`{{ route('schedules.week') }}?${queryParams}`)
                 .then(response => response.json())
                 .then(data => {
+                    // Update week label and offset
+                    console.log('Week data:', data);
+                    console.log('Updating label from:', weekLabel.textContent, 'to:', data.week_label);
+                    console.log('Updating offset from:', currentWeekOffset, 'to:', weekOffset);
                     weekLabel.textContent = data.week_label;
                     currentWeekOffset = weekOffset;
 

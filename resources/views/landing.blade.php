@@ -824,6 +824,17 @@
                 } else {
                     classes += 'hover:bg-slate-100 text-slate-700 ';
                 }
+
+                if (isSunday) {
+                    html += `<div class="${classes}">${d}</div>`;
+                } else {
+                    html += `<div class="${classes} cal-day-cell" data-date="${cellStr}">${d}</div>`;
+                }
+            }
+
+            grid.innerHTML = html;
+        }
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', function() {
             // Load current week
@@ -856,6 +867,15 @@
                 const btn = document.getElementById('btnOpenCalendar');
                 if (!popup.contains(e.target) && !btn.contains(e.target)) {
                     popup.classList.add('hidden');
+                }
+            });
+
+            // Calendar day cell click (event delegation)
+            document.getElementById('calDaysGrid').addEventListener('click', function(e) {
+                const cell = e.target.closest('.cal-day-cell');
+                if (cell && cell.dataset.date) {
+                    document.getElementById('miniCalendarPopup').classList.add('hidden');
+                    loadSchedules(cell.dataset.date);
                 }
             });
         });
