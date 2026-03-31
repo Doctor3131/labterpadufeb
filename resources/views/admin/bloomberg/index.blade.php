@@ -134,10 +134,16 @@
                             <span class="text-gray-400">{{ $req->isLecturer() ? 'NIP' : 'NIM' }}:</span>
                             <span class="font-medium">{{ $req->nim_nip }}</span>
                         </div>
+                        @if($req->university)
+                        <div>
+                            <span class="text-gray-400">Universitas:</span>
+                            <span class="font-medium truncate block">{{ $req->university }}</span>
+                        </div>
+                        @endif
                         @if($req->study_program)
                         <div>
                             <span class="text-gray-400">Prodi:</span>
-                            <span class="font-medium">{{ $req->study_program }}</span>
+                            <span class="font-medium truncate block">{{ $req->study_program }}</span>
                         </div>
                         @endif
                         <div>

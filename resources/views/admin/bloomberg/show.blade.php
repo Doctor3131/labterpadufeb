@@ -55,6 +55,12 @@
                         <p class="text-sm text-gray-500">Nomor HP</p>
                         <p class="font-semibold text-gray-800">{{ $request->phone }}</p>
                     </div>
+                    @if($request->university)
+                    <div class="md:col-span-2">
+                        <p class="text-sm text-gray-500">Universitas</p>
+                        <p class="font-semibold text-gray-800">{{ $request->university }}</p>
+                    </div>
+                    @endif
                     @if($request->study_program)
                     <div class="md:col-span-2">
                         <p class="text-sm text-gray-500">Program Studi</p>

@@ -79,11 +79,26 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="reason" class="block text-sm font-semibold text-gray-700 mb-2">Alasan <span class="text-gray-400">(opsional)</span></label>
-                        <input type="text" id="reason" name="reason"
+                        <label for="blocked_session" class="block text-sm font-semibold text-gray-700 mb-2">Sesi yang Diblokir</label>
+                        <select id="blocked_session" name="blocked_session"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            <option value="" {{ old('blocked_session') === null ? 'selected' : '' }}>Semua Sesi (Blokir 1 hari penuh)</option>
+                            <option value="sesi_1" {{ old('blocked_session') === 'sesi_1' ? 'selected' : '' }}>Sesi 1 saja (09.00 - 12.00)</option>
+                            <option value="sesi_2" {{ old('blocked_session') === 'sesi_2' ? 'selected' : '' }}>Sesi 2 saja (13.00 - 15.00)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Pilih "Semua Sesi" untuk memblokir satu hari penuh, atau pilih sesi tertentu.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="reason" class="block text-sm font-semibold text-gray-700 mb-2">Alasan <span class="text-red-500">*</span></label>
+                        <input type="text" id="reason" name="reason" required
                                value="{{ old('reason') }}"
-                               placeholder="Contoh: Libur Natal, Cuti Bersama"
+                               placeholder="Contoh: Pelatihan Bloomberg, Libur Natal"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        @error('reason')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-xs text-gray-500 mt-1">Alasan ini akan ditampilkan kepada peminjam saat memilih tanggal.</p>
                     </div>
 
                     <button type="submit" class="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center">
@@ -139,8 +154,17 @@
                                         <p class="font-semibold text-gray-800">
                                             {{ $blocked->blocked_date->locale('id')->isoFormat('dddd, D MMMM Y') }}
                                         </p>
+                                        @if($blocked->blocked_session)
+                                            <span class="inline-block px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-bold rounded mt-1">
+                                                {{ $blocked->blocked_session === 'sesi_1' ? 'Sesi 1 (09.00 - 12.00)' : 'Sesi 2 (13.00 - 15.00)' }}
+                                            </span>
+                                        @else
+                                            <span class="inline-block px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded mt-1">
+                                                Semua Sesi
+                                            </span>
+                                        @endif
                                         @if($blocked->reason)
-                                            <p class="text-sm text-gray-500">{{ $blocked->reason }}</p>
+                                            <p class="text-sm text-gray-500 mt-1">{{ $blocked->reason }}</p>
                                         @endif
                                         <p class="text-xs text-gray-400 mt-1">
                                             Ditambahkan oleh {{ $blocked->creator->name ?? 'System' }} · {{ $blocked->created_at->diffForHumans() }}

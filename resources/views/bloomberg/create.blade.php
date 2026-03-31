@@ -123,6 +123,7 @@
                         <li>Tidak memperjualbelikan atau menyebarluaskan data yang diperoleh dari Terminal Bloomberg.</li>
                         <li>Akun tidak boleh dipindahtangankan kepada orang lain.</li>
                         <li>Wajib melakukan citation (sitasi).</li>
+                        <li><strong>Wajib membawa surat izin penggunaan Lab dan KTM.</strong></li>
                     </ol>
                 </div>
             </div>
@@ -169,13 +170,21 @@
                         <p class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
                     </div>
 
-                    <!-- NIP Field (for Dosen) -->
+                    <!-- NIP Field (for Dosen Undip) -->
                     <div id="nip-field" class="mb-6 hidden">
                         <label for="nip_input" class="block text-sm font-semibold text-gray-700 mb-2">NIP <span class="text-red-500">*</span></label>
                         <input type="text" id="nip_input" name="nip" value="{{ old('nip') }}" maxlength="18"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                placeholder="Masukkan 18 digit NIP">
                         <p class="text-xs text-gray-500 mt-1">NIP harus 18 digit angka</p>
+                    </div>
+
+                    <!-- University Field (for Non Undip) -->
+                    <div id="university-field" class="mb-6 hidden">
+                        <label for="university_input" class="block text-sm font-semibold text-gray-700 mb-2">Universitas <span class="text-red-500">*</span></label>
+                        <input type="text" id="university_input" name="university" value="{{ old('university') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="Masukkan nama universitas">
                     </div>
 
                     <!-- Phone -->
@@ -187,7 +196,7 @@
                         <p class="text-xs text-gray-500 mt-1">Contoh: 081234567890</p>
                     </div>
 
-                    <!-- Study Program (only for Mahasiswa) -->
+                    <!-- Study Program (for Mahasiswa - radio list) -->
                     <div id="study-program-field" class="mb-6">
                         <label class="block text-sm font-semibold text-gray-700 mb-3">Program Studi <span class="text-red-500">*</span></label>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -204,12 +213,20 @@
                         </div>
                     </div>
 
-                    <!-- Study Program Other -->
+                    <!-- Study Program Other (for Mahasiswa - Lainnya) -->
                     <div id="study-program-other-field" class="mb-6 hidden">
                         <label for="study_program_other_input" class="block text-sm font-semibold text-gray-700 mb-2">Program Studi Lainnya <span class="text-red-500">*</span></label>
                         <input type="text" id="study_program_other_input" name="study_program_other" value="{{ old('study_program_other') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                placeholder="Masukkan nama program studi">
+                    </div>
+
+                    <!-- Study Program Text (for Non Undip - free text) -->
+                    <div id="study-program-text-field" class="mb-6 hidden">
+                        <label for="study_program_text_input" class="block text-sm font-semibold text-gray-700 mb-2">Program Studi <span class="text-red-500">*</span></label>
+                        <input type="text" id="study_program_text_input" name="study_program" value="{{ old('study_program') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                               placeholder="Masukkan program studi Anda">
                     </div>
 
                     <!-- Next Button -->
@@ -494,7 +511,7 @@
     </div>
 
     <script>
-        // === Blocked Dates from server ===
+        // === Blocked Dates from server (now array of objects with date, reason, blocked_session) ===
         const blockedDates = @json($blockedDates ?? []);
         const isWalkIn = @json($isWalkIn ?? false);
         const totalCapacity = @json($capacity ?? 12);
@@ -553,12 +570,20 @@
             if (!applicantType) { alert('Status wajib dipilih.'); return false; }
             if (!phone || !/^08[0-9]{8,13}$/.test(phone)) { alert('Nomor HP wajib diisi dan harus diawali 08 (10-15 digit).'); return false; }
 
-            const isLecturer = ['dosen_undip', 'dosen_non_undip'].includes(applicantType.value);
+            const type = applicantType.value;
             
-            if (isLecturer) {
+            if (type === 'dosen_undip') {
+                // Dosen Undip: needs NIP
                 const nip = document.getElementById('nip_input').value.trim();
                 if (!nip || !/^[0-9]{18}$/.test(nip)) { alert('NIP wajib diisi dan harus 18 digit angka.'); return false; }
+            } else if (type === 'dosen_non_undip') {
+                // Non Undip: needs university + study program (text)
+                const university = document.getElementById('university_input').value.trim();
+                if (!university) { alert('Universitas wajib diisi.'); return false; }
+                const studyProgramText = document.getElementById('study_program_text_input').value.trim();
+                if (!studyProgramText) { alert('Program Studi wajib diisi.'); return false; }
             } else {
+                // Mahasiswa: needs NIM + study program (radio)
                 const nim = document.getElementById('nim_input').value.trim();
                 if (!nim || !/^[0-9]{14}$/.test(nim)) { alert('NIM wajib diisi dan harus 14 digit angka.'); return false; }
 
@@ -583,10 +608,26 @@
             
             const date = new Date(usageDate);
             if (date.getDay() === 0) { alert('Reservasi tidak tersedia pada hari Minggu.'); return false; }
-            if (blockedDates.includes(usageDate)) { alert('Tanggal ini tidak tersedia untuk reservasi Bloomberg.'); return false; }
-            if (!isWalkIn && capacityFull) { alert('Sesi yang dipilih sudah penuh untuk tanggal tersebut.'); return false; }
+            
+            // Check if entire day is blocked
+            const fullDayBlock = blockedDates.find(b => b.date === usageDate && b.blocked_session === null);
+            if (fullDayBlock) { 
+                alert('Tanggal ini tidak tersedia: ' + (fullDayBlock.reason || 'Tanggal diblokir')); 
+                return false; 
+            }
 
             if (!session) { alert('Sesi penggunaan wajib dipilih.'); return false; }
+
+            // Check if selected session is blocked
+            const sessionBlock = blockedDates.find(b => b.date === usageDate && b.blocked_session === session.value);
+            if (sessionBlock) {
+                const sessionLabel = session.value === 'sesi_1' ? 'Sesi 1' : 'Sesi 2';
+                alert(sessionLabel + ' tidak tersedia pada tanggal ini: ' + (sessionBlock.reason || 'Sesi diblokir'));
+                return false;
+            }
+
+            if (!isWalkIn && capacityFull) { alert('Sesi yang dipilih sudah penuh untuk tanggal tersebut.'); return false; }
+
             if (!purpose) { alert('Keperluan kunjungan wajib dipilih.'); return false; }
 
             // Validate conditional fields
@@ -615,29 +656,45 @@
         const applicantRadios = document.querySelectorAll('input[name="applicant_type"]');
         const nimField = document.getElementById('nim-field');
         const nipField = document.getElementById('nip-field');
+        const universityField = document.getElementById('university-field');
         const nimInput = document.getElementById('nim_input');
         const nipInput = document.getElementById('nip_input');
+        const universityInput = document.getElementById('university_input');
         const studyProgramField = document.getElementById('study-program-field');
+        const studyProgramTextField = document.getElementById('study-program-text-field');
+        const studyProgramTextInput = document.getElementById('study_program_text_input');
 
         function updateFormForApplicantType() {
             const selected = document.querySelector('input[name="applicant_type"]:checked');
             if (!selected) return;
 
-            const isLecturer = ['dosen_undip', 'dosen_non_undip'].includes(selected.value);
+            const type = selected.value;
+            const isDosenUndip = type === 'dosen_undip';
+            const isNonUndip = type === 'dosen_non_undip';
+            const isMahasiswa = type === 'mahasiswa';
 
-            if (isLecturer) {
-                nimField.classList.add('hidden');
-                nipField.classList.remove('hidden');
-                nimInput.removeAttribute('required');
-                nipInput.setAttribute('required', 'required');
-                studyProgramField.classList.add('hidden');
+            // NIM: only for mahasiswa
+            nimField.classList.toggle('hidden', !isMahasiswa);
+            nimInput.toggleAttribute('required', isMahasiswa);
+
+            // NIP: only for dosen_undip
+            nipField.classList.toggle('hidden', !isDosenUndip);
+            nipInput.toggleAttribute('required', isDosenUndip);
+
+            // University: only for Non Undip
+            universityField.classList.toggle('hidden', !isNonUndip);
+            universityInput.toggleAttribute('required', isNonUndip);
+
+            // Study Program radio list: only for mahasiswa
+            studyProgramField.classList.toggle('hidden', !isMahasiswa);
+            
+            // Study Program text field: only for Non Undip
+            studyProgramTextField.classList.toggle('hidden', !isNonUndip);
+            studyProgramTextInput.toggleAttribute('required', isNonUndip);
+
+            // Hide "Lainnya" field if not mahasiswa
+            if (!isMahasiswa) {
                 document.getElementById('study-program-other-field').classList.add('hidden');
-            } else {
-                nimField.classList.remove('hidden');
-                nipField.classList.add('hidden');
-                nimInput.setAttribute('required', 'required');
-                nipInput.removeAttribute('required');
-                studyProgramField.classList.remove('hidden');
             }
         }
 
@@ -646,7 +703,7 @@
         });
         updateFormForApplicantType();
 
-        // === Study Program "Lainnya" Toggle ===
+        // === Study Program "Lainnya" Toggle (Mahasiswa only) ===
         const studyProgramRadios = document.querySelectorAll('input[name="study_program"]');
         const studyProgramOtherField = document.getElementById('study-program-other-field');
 
@@ -673,6 +730,28 @@
         const fridayNotice = document.getElementById('friday-notice');
         const session2Label = document.getElementById('session2-label');
 
+        /**
+         * Check blocked status for a given date and optionally a specific session.
+         * Returns: { isBlocked: bool, reason: string|null, type: 'full'|'session'|null }
+         */
+        function getBlockedInfo(dateStr, sessionValue) {
+            // Check full day block first
+            const fullBlock = blockedDates.find(b => b.date === dateStr && b.blocked_session === null);
+            if (fullBlock) {
+                return { isBlocked: true, reason: fullBlock.reason, type: 'full' };
+            }
+
+            // Check session-specific block
+            if (sessionValue) {
+                const sessionBlock = blockedDates.find(b => b.date === dateStr && b.blocked_session === sessionValue);
+                if (sessionBlock) {
+                    return { isBlocked: true, reason: sessionBlock.reason, type: 'session' };
+                }
+            }
+
+            return { isBlocked: false, reason: null, type: null };
+        }
+
         function validateDate() {
             if (!usageDateInput.value) {
                 sundayWarning.classList.add('hidden');
@@ -680,13 +759,17 @@
                 fridayNotice.classList.add('hidden');
                 usageDateInput.classList.remove('border-red-500');
                 session2Label.textContent = 'Sesi 2: 13.00 - 15.00 WIB';
+                updateSessionBlockedState();
                 return;
             }
 
             const date = new Date(usageDateInput.value);
             const isSunday = date.getDay() === 0;
             const isFriday = date.getDay() === 5;
-            const isBlocked = blockedDates.includes(usageDateInput.value);
+            
+            // Get selected session for block checking
+            const selectedSession = document.querySelector('input[name="session"]:checked');
+            const blockedInfo = getBlockedInfo(usageDateInput.value, selectedSession?.value);
 
             // Sunday check
             if (isSunday) {
@@ -696,16 +779,22 @@
                 sundayWarning.classList.add('hidden');
             }
 
-            // Blocked date check
-            if (isBlocked) {
+            // Blocked date check (full day)
+            if (blockedInfo.type === 'full') {
                 blockedDateWarning.classList.remove('hidden');
+                blockedDateWarning.innerHTML = `
+                    <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Tanggal ini tidak tersedia untuk reservasi Bloomberg. <strong>Alasan: ${blockedInfo.reason || '-'}</strong></span>
+                `;
                 usageDateInput.classList.add('border-red-500');
             } else {
                 blockedDateWarning.classList.add('hidden');
             }
 
             // Remove red border only if neither Sunday nor blocked
-            if (!isSunday && !isBlocked) {
+            if (!isSunday && blockedInfo.type !== 'full') {
                 usageDateInput.classList.remove('border-red-500');
             }
 
@@ -717,6 +806,44 @@
                 fridayNotice.classList.add('hidden');
                 session2Label.textContent = 'Sesi 2: 13.00 - 15.00 WIB';
             }
+
+            // Update per-session blocked indicators
+            updateSessionBlockedState();
+        }
+
+        /**
+         * Update visual state of session radio buttons based on blocked dates.
+         * Shows warning per session if that specific session is blocked.
+         */
+        function updateSessionBlockedState() {
+            const dateVal = usageDateInput.value;
+            if (!dateVal) return;
+
+            const sessionCards = document.querySelectorAll('input[name="session"]');
+            
+            // Remove any existing session-blocked warnings
+            document.querySelectorAll('.session-blocked-warning').forEach(el => el.remove());
+
+            sessionCards.forEach(radio => {
+                const card = radio.closest('.radio-card');
+                const blocked = getBlockedInfo(dateVal, radio.value);
+                
+                if (blocked.isBlocked) {
+                    card.classList.add('opacity-50');
+                    // Add warning below the card
+                    const warning = document.createElement('div');
+                    warning.className = 'session-blocked-warning text-red-600 text-xs mt-1 flex items-center';
+                    warning.innerHTML = `
+                        <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Tidak tersedia: ${blocked.reason || 'Sesi diblokir'}</span>
+                    `;
+                    card.parentElement.appendChild(warning);
+                } else {
+                    card.classList.remove('opacity-50');
+                }
+            });
         }
 
         if (usageDateInput) {
@@ -727,10 +854,13 @@
             validateDate(); // Run on load
         }
 
-        // === Session Radio - Trigger capacity fetch ===
+        // === Session Radio - Trigger capacity fetch and update blocked state ===
         const sessionRadios = document.querySelectorAll('input[name="session"]');
         sessionRadios.forEach(radio => {
-            radio.addEventListener('change', fetchCapacity);
+            radio.addEventListener('change', function() {
+                fetchCapacity();
+                validateDate(); // Re-validate to update blocked warnings
+            });
         });
 
         // === AJAX Capacity Check (reservation only) ===
@@ -759,6 +889,13 @@
             fetch(`{{ route('bloomberg.capacity') }}?date=${dateVal}&session=${sessionEl.value}`)
                 .then(res => res.json())
                 .then(data => {
+                    // If session is blocked, hide capacity and show as blocked
+                    if (data.blocked) {
+                        indicator.classList.add('hidden');
+                        capacityFull = true;
+                        return;
+                    }
+
                     indicator.classList.remove('hidden');
                     const remaining = data.remaining;
                     const total = data.capacity;
@@ -878,6 +1015,12 @@
                 e.preventDefault();
                 alert('Anda harus menyetujui kedua pernyataan persetujuan.');
                 return;
+            }
+
+            // Disable Non Undip study_program text input if not Non Undip, to avoid conflict with radio study_program
+            const applicantType = document.querySelector('input[name="applicant_type"]:checked');
+            if (applicantType && applicantType.value !== 'dosen_non_undip') {
+                studyProgramTextInput.disabled = true;
             }
 
             // Double submit prevention

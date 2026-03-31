@@ -45,15 +45,15 @@ Route::get("/refinitiv/success/{token}", [
     "success",
 ])->name("refinitiv.success");
 
-// Bloomberg Reservation Routes (Public) - disabled sementara
-// Route::get('/bloomberg', fn() => view('bloomberg.index'))->name('bloomberg.index');
-// Route::get('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'create'])->name('bloomberg.create');
-// Route::post('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'store'])
-//     ->middleware('throttle:10,1')
-//     ->name('bloomberg.store');
-// Route::get('/bloomberg/walkin', [App\Http\Controllers\BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walkin');
-// Route::get('/bloomberg/capacity', [App\Http\Controllers\BloombergRequestController::class, 'checkCapacity'])->name('bloomberg.capacity');
-// Route::get('/bloomberg/success/{token}', [App\Http\Controllers\BloombergRequestController::class, 'success'])->name('bloomberg.success');
+// Bloomberg Reservation Routes (Public)
+Route::get('/bloomberg', fn() => view('bloomberg.index'))->name('bloomberg.index');
+Route::get('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'create'])->name('bloomberg.create');
+Route::post('/bloomberg/reservasi', [App\Http\Controllers\BloombergRequestController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('bloomberg.store');
+Route::get('/bloomberg/walkin', [App\Http\Controllers\BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walkin');
+Route::get('/bloomberg/capacity', [App\Http\Controllers\BloombergRequestController::class, 'checkCapacity'])->name('bloomberg.capacity');
+Route::get('/bloomberg/success/{token}', [App\Http\Controllers\BloombergRequestController::class, 'success'])->name('bloomberg.success');
 
 // Personal Borrowing Routes (Public - NIM Validation)
 Route::post("/personal-borrowing/validate-nim", [
@@ -126,17 +126,6 @@ Route::get("/refinitiv/success/{token}", [
     "success",
 ])->name("refinitiv.success");
 
-// Bloomberg Routes (Public)
-// Route::get('/bloomberg', function () { return view('bloomberg.index'); })->name('bloomberg.index');
-// Route::get('/bloomberg/reservasi', [BloombergRequestController::class, 'create'])->name('bloomberg.create');
-// Route::get('/bloomberg/walk-in', [BloombergRequestController::class, 'createWalkIn'])->name('bloomberg.walk-in');
-// Route::post('/bloomberg', [BloombergRequestController::class, 'store'])
-//     ->middleware('throttle:10,1')
-//     ->name('bloomberg.store');
-// Route::get('/bloomberg/success/{token}', [BloombergRequestController::class, 'success'])->name('bloomberg.success');
-// Route::get('/api/bloomberg/capacity', [BloombergRequestController::class, 'checkCapacity'])
-//     ->middleware('throttle:60,1')
-//     ->name('api.bloomberg.capacity');
 // Asset Borrowing Routes (Public - No Authentication Required)
 Route::get("/asset-borrowing", [
     AssetBorrowingController::class,

@@ -67,24 +67,53 @@ class BloombergRequestController extends Controller
     {
         $validated = $request->validate([
             'blocked_date' => 'required|date|after_or_equal:today',
-            'reason' => 'nullable|string|max:255',
+            'reason' => 'required|string|max:255',
+            'blocked_session' => 'nullable|in:sesi_1,sesi_2',
         ], [
             'blocked_date.required' => 'Tanggal wajib diisi.',
             'blocked_date.after_or_equal' => 'Tanggal harus hari ini atau setelahnya.',
+            'reason.required' => 'Alasan blokir wajib diisi.',
         ]);
 
-        if (BlockedDate::isBlocked('bloomberg', $validated['blocked_date'])) {
-            return redirect()->back()->with('error', 'Tanggal tersebut sudah diblokir.');
+        $blockedSession = $validated['blocked_session'] ?? null;
+
+        // Check for duplicate: same date + same session (or null which means all)
+        $exists = BlockedDate::where('service_type', 'bloomberg')
+            ->where('blocked_date', $validated['blocked_date'])
+            ->where(function ($q) use ($blockedSession) {
+                if ($blockedSession) {
+                    // Check if entire day is already blocked, or this specific session
+                    $q->whereNull('blocked_session')
+                      ->orWhere('blocked_session', $blockedSession);
+                } else {
+                    // Blocking all sessions: check if any block exists for this date
+                    $q->whereNull('blocked_session');
+                }
+            })
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()->with('error', 'Tanggal/sesi tersebut sudah diblokir.');
+        }
+
+        // If blocking all sessions (null), remove any session-specific blocks for this date
+        if (!$blockedSession) {
+            BlockedDate::where('service_type', 'bloomberg')
+                ->where('blocked_date', $validated['blocked_date'])
+                ->whereNotNull('blocked_session')
+                ->delete();
         }
 
         BlockedDate::create([
             'service_type' => 'bloomberg',
             'blocked_date' => $validated['blocked_date'],
             'reason' => $validated['reason'],
+            'blocked_session' => $blockedSession,
             'created_by' => Auth::id(),
         ]);
 
-        return redirect()->back()->with('success', 'Tanggal berhasil diblokir.');
+        $sessionLabel = $blockedSession ? ($blockedSession === 'sesi_1' ? ' (Sesi 1)' : ' (Sesi 2)') : ' (Semua Sesi)';
+        return redirect()->back()->with('success', 'Tanggal berhasil diblokir' . $sessionLabel . '.');
     }
 
     /**

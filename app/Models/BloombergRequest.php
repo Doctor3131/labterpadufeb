@@ -17,6 +17,7 @@ class BloombergRequest extends Model
         'phone',
         'applicant_type',
         'study_program',
+        'university', // For 'dosen_non_undip' (Non Undip) applicant type
         'usage_date',
         'session',
         'purpose',
@@ -42,10 +43,13 @@ class BloombergRequest extends Model
     ];
 
     // Constants for applicant types
+    // Note: 'dosen_non_undip' key is kept for backward compatibility,
+    // but the label was changed to 'Non Undip' (covers both dosen and non-dosen external users).
+    // Non Undip users provide: university (text), study_program (text) instead of NIP.
     const APPLICANT_TYPES = [
         'mahasiswa' => 'Mahasiswa',
         'dosen_undip' => 'Dosen Undip',
-        'dosen_non_undip' => 'Dosen Non Undip',
+        'dosen_non_undip' => 'Non Undip',
     ];
 
     // Constants for study programs (only for mahasiswa)
@@ -99,11 +103,20 @@ class BloombergRequest extends Model
     }
 
     /**
-     * Check if applicant is a lecturer
+     * Check if applicant is a lecturer (Undip only)
      */
     public function isLecturer(): bool
     {
-        return in_array($this->applicant_type, ['dosen_undip', 'dosen_non_undip']);
+        return $this->applicant_type === 'dosen_undip';
+    }
+
+    /**
+     * Check if applicant is Non Undip (external user)
+     * They provide university + study_program (text) instead of NIP.
+     */
+    public function isNonUndip(): bool
+    {
+        return $this->applicant_type === 'dosen_non_undip';
     }
 
     /**

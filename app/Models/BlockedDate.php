@@ -11,6 +11,7 @@ class BlockedDate extends Model
         'service_type',
         'blocked_date',
         'reason',
+        'blocked_session', // null = all sessions, 'sesi_1' or 'sesi_2' = specific session
         'created_by',
     ];
 
@@ -35,25 +36,43 @@ class BlockedDate extends Model
     }
 
     /**
-     * Check if a specific date is blocked for a service.
+     * Check if a specific date (and optionally session) is blocked for a service.
+     * 
+     * A date+session is blocked if:
+     * - There's a record with blocked_session = null (blocks ALL sessions), OR
+     * - There's a record with blocked_session = $session (blocks that specific session)
      */
-    public static function isBlocked(string $serviceType, string $date): bool
+    public static function isBlocked(string $serviceType, string $date, ?string $session = null): bool
     {
-        return static::where('service_type', $serviceType)
-            ->where('blocked_date', $date)
-            ->exists();
+        $query = static::where('service_type', $serviceType)
+            ->where('blocked_date', $date);
+
+        if ($session) {
+            // Check if entire day is blocked OR specific session is blocked
+            $query->where(function ($q) use ($session) {
+                $q->whereNull('blocked_session')
+                  ->orWhere('blocked_session', $session);
+            });
+        }
+
+        return $query->exists();
     }
 
     /**
-     * Get all blocked dates for a service as a simple array of date strings.
+     * Get all blocked dates for a service as array of objects with date, reason, and session info.
+     * Returns: [{ date: 'Y-m-d', reason: '...', blocked_session: null|'sesi_1'|'sesi_2' }, ...]
      */
     public static function getBlockedDatesArray(string $serviceType): array
     {
         return static::forService($serviceType)
             ->upcoming()
             ->orderBy('blocked_date')
-            ->pluck('blocked_date')
-            ->map(fn ($date) => $date->format('Y-m-d'))
+            ->get()
+            ->map(fn ($item) => [
+                'date' => $item->blocked_date->format('Y-m-d'),
+                'reason' => $item->reason,
+                'blocked_session' => $item->blocked_session,
+            ])
             ->toArray();
     }
 

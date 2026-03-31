@@ -695,15 +695,16 @@ class ReportController extends Controller
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet()->setTitle('Bloomberg');
 
-        $cols = ['A'=>'No','B'=>'Timestamp','C'=>'Tipe','D'=>'Nama','E'=>'Status Pemohon','F'=>'NIM/NIP','G'=>'Program Studi','H'=>'No. HP','I'=>'Tanggal Penggunaan','J'=>'Sesi','K'=>'Keperluan','L'=>'Judul Penelitian / Mata Kuliah / Dosen'];
+        $cols = ['A'=>'No','B'=>'Timestamp','C'=>'Tipe','D'=>'Nama','E'=>'Status Pemohon','F'=>'Universitas','G'=>'NIM/NIP','H'=>'Program Studi','I'=>'No. HP','J'=>'Tanggal Penggunaan','K'=>'Sesi','L'=>'Keperluan','M'=>'Judul Penelitian / Mata Kuliah / Dosen'];
         foreach ($cols as $c => $label) $sheet->setCellValue($c.'1', $label);
-        $this->applyHeaderStyle($sheet, 'A1:L1', '4338CA');
+        $this->applyHeaderStyle($sheet, 'A1:M1', '4338CA');
 
         $row = 2;
         foreach ($requests as $no => $req) {
             $typeLabel = BloombergRequest::TYPES[$req->type] ?? $req->type;
             $purposeLabel = $req->purpose_label;
             $sessionLabel = $req->session_label;
+            $univDisplay = $req->university ?? ($req->applicant_type === 'dosen_non_undip' ? '-' : 'Universitas Diponegoro');
 
             $detail = '';
             if ($req->research_title) {
@@ -719,17 +720,18 @@ class ReportController extends Controller
             $sheet->setCellValue('C'.$row, $typeLabel);
             $sheet->setCellValue('D'.$row, $req->name);
             $sheet->setCellValue('E'.$row, $req->applicant_type_label);
-            $sheet->setCellValueExplicit('F'.$row, $req->nim_nip, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $sheet->setCellValue('G'.$row, $req->study_program ?? '-');
-            $sheet->setCellValueExplicit('H'.$row, $req->phone, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $sheet->setCellValue('I'.$row, Carbon::parse($req->usage_date)->format('d/m/Y'));
-            $sheet->setCellValue('J'.$row, $sessionLabel);
-            $sheet->setCellValue('K'.$row, $purposeLabel);
-            $sheet->setCellValue('L'.$row, $detail ?: '-');
+            $sheet->setCellValue('F'.$row, $univDisplay);
+            $sheet->setCellValueExplicit('G'.$row, $req->nim_nip ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('H'.$row, $req->study_program ?? '-');
+            $sheet->setCellValueExplicit('I'.$row, $req->phone, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('J'.$row, Carbon::parse($req->usage_date)->format('d/m/Y'));
+            $sheet->setCellValue('K'.$row, $sessionLabel);
+            $sheet->setCellValue('L'.$row, $purposeLabel);
+            $sheet->setCellValue('M'.$row, $detail ?: '-');
             $row++;
         }
 
-        $this->applyDataStyle($sheet, 'L', $row-1);
+        $this->applyDataStyle($sheet, 'M', $row-1);
         foreach (array_keys($cols) as $c) $sheet->getColumnDimension($c)->setAutoSize(true);
 
         return $this->downloadExcel($spreadsheet, 'bloomberg', $request);
@@ -754,6 +756,7 @@ class ReportController extends Controller
                         <th>Tipe</th>
                         <th>Nama</th>
                         <th>Status</th>
+                        <th>Universitas</th>
                         <th>NIM/NIP</th>
                         <th>Prodi</th>
                         <th>No. HP</th>
@@ -770,6 +773,7 @@ class ReportController extends Controller
             $typeLabel = BloombergRequest::TYPES[$req->type] ?? $req->type;
             $purposeLabel = $req->purpose_label;
             $sessionLabel = $req->session_label;
+            $univDisplay = $req->university ?? ($req->applicant_type === 'dosen_non_undip' ? '-' : 'Universitas Diponegoro');
 
             $detail = '';
             if ($req->research_title) {
@@ -787,7 +791,8 @@ class ReportController extends Controller
                         <td class="center">' . htmlspecialchars($typeLabel) . '</td>
                         <td>' . htmlspecialchars($req->name) . '</td>
                         <td>' . htmlspecialchars($req->applicant_type_label) . '</td>
-                        <td>' . htmlspecialchars($req->nim_nip) . '</td>
+                        <td>' . htmlspecialchars($univDisplay) . '</td>
+                        <td>' . htmlspecialchars($req->nim_nip ?? '-') . '</td>
                         <td>' . htmlspecialchars($req->study_program ?? '-') . '</td>
                         <td>' . htmlspecialchars($req->phone) . '</td>
                         <td class="center">' . Carbon::parse($req->usage_date)->format('d/m/Y') . '</td>
