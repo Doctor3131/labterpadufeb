@@ -464,6 +464,8 @@
 </div>
 
 @push('scripts')
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 // ---- Batch Brand Edit ----
 let _batchBrandId = null;
@@ -593,6 +595,7 @@ async function submitPrefixForm(event, form) {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData,
         });
+        const data = await res.json();
         if (data.success) {
             btn.textContent = '✓ Tersimpan';
             btn.classList.replace('bg-blue-600', 'bg-green-600');
@@ -647,7 +650,10 @@ async function saveCodeEdit(balId, gIdx, oldCode) {
         
         const res = await fetch(`/admin/inventory/balance/${balId}/individual-code`, {
             method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
             body: formData,
         });
         const data = await res.json();
@@ -663,10 +669,19 @@ async function saveCodeEdit(balId, gIdx, oldCode) {
             // Re-render approach is cleaner since the whole system is stateful
             window.location.reload();
         } else {
-            Swal.fire('Gagal!', data.message || 'Gagal mengubah kode.', 'error');
+            const errorMsg = data.message || 'Gagal mengubah kode.';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Gagal!', errorMsg, 'error');
+            } else {
+                alert('Gagal: ' + errorMsg);
+            }
         }
     } catch(e) {
-        Swal.fire('Gagal!', 'Terjadi kesalahan sistem.', 'error');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('Gagal!', 'Terjadi kesalahan sistem: ' + e.message, 'error');
+        } else {
+            alert('Gagal: Terjadi kesalahan sistem.');
+        }
     }
 }
 </script>

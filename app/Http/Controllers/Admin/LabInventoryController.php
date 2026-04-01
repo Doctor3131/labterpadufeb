@@ -807,7 +807,7 @@ class LabInventoryController extends Controller
         }
 
         // Validity check: ensure the new code isn't in another custom_codes
-        if (InventoryBalance::whereJsonContains('custom_codes', $newCode)->exists()) {
+        if (InventoryBalance::whereJsonContains('custom_codes', $newCode)->where('id', '!=', $balance->id)->exists()) {
             return response()->json(['success' => false, 'message' => 'Kode sudah digunakan oleh barang agregat lain!'], 422);
         }
 
@@ -816,6 +816,11 @@ class LabInventoryController extends Controller
 
         if ($index === false) {
             return response()->json(['success' => false, 'message' => 'Kode lama tidak ditemukan di saldo ini!'], 422);
+        }
+
+        // Validity check: ensure the new code isn't already used inside this balance's own codes
+        if (in_array($newCode, $codes)) {
+            return response()->json(['success' => false, 'message' => 'Kode sudah digunakan dalam list barang ini!'], 422);
         }
 
         $codes[$index] = $newCode;
