@@ -337,6 +337,10 @@ Route::middleware(["auth", "admin"])->group(function () {
         App\Http\Controllers\Admin\LabInventoryController::class,
         "updateUniversityCodeBalance",
     ])->name("admin.inventory.balance.update-university-code");
+    Route::patch("/admin/inventory/balance/{balance}/individual-code", [
+        App\Http\Controllers\Admin\LabInventoryController::class,
+        "updateAggregateItemCode",
+    ])->name("admin.inventory.balance.update-aggregate-item-code");
 
     // Transfer inventory (e.g. to Gudang) routes
     Route::post("/admin/inventory/bulk-transfer-units", [

@@ -364,11 +364,8 @@ class InventoryService
         InventoryBalance $toBalance,
         string $itemCode
     ): void {
-        $fromPrefix = $fromBalance->university_asset_code_prefix;
-        $fromQty = $fromBalance->quantity;
-        
         // Generate the current list of codes for the source balance
-        $fromCodes = $this->generateCodesFromPrefix($fromPrefix, $fromQty);
+        $fromCodes = $fromBalance->calculated_codes;
         
         // Find the index of the specific item being transferred
         $codeIndex = array_search($itemCode, $fromCodes);
@@ -381,31 +378,30 @@ class InventoryService
         // Remove the transferred code from the source list
         array_splice($fromCodes, $codeIndex, 1);
         
-        // If there are remaining codes, update the source prefix to generate them correctly
+        // Ensure source balance accurately reflects the remaining codes
+        $fromBalance->custom_codes = count($fromCodes) > 0 ? array_values($fromCodes) : null;
+        
+        // If it still falls back to prefix gracefully, we try to preserve prefix
         if (count($fromCodes) > 0) {
-            // The new prefix should be the first code in the remaining list
+            // Setup an appropriate prefix (first code) in case it's used as fallback
             $fromBalance->university_asset_code_prefix = $fromCodes[0];
+        } else {
+            // If empty, clearing out prefix
+             $fromBalance->university_asset_code_prefix = null;
         }
-        // If no codes remain, the prefix stays (quantity will be 0 anyway)
         
         $fromBalance->save();
         
         // Handle the target balance's university code
-        $toPrefix = $toBalance->university_asset_code_prefix;
-        $toQty = $toBalance->quantity; // current qty before increment
+        $toCodes = $toBalance->calculated_codes;
+        $toCodes[] = $itemCode;
         
-        if (!$toPrefix) {
-            // Target has no prefix yet, set it to the transferred item code
-            $toBalance->university_asset_code_prefix = $itemCode;
-        } else {
-            // Target already has codes, we need to integrate the new code
-            $toCodes = $this->generateCodesFromPrefix($toPrefix, $toQty);
-            $toCodes[] = $itemCode;
-            
-            // Sort codes to keep them ordered
-            sort($toCodes);
-            
-            // Set prefix to the first code so generation starts from there
+        // Sort codes conceptually if they are string comparable
+        sort($toCodes);
+        
+        $toBalance->custom_codes = array_values($toCodes);
+        
+        if (count($toCodes) > 0) {
             $toBalance->university_asset_code_prefix = $toCodes[0];
         }
         
