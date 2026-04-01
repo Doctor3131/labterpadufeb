@@ -535,7 +535,8 @@ class LabInventoryController extends Controller
                 $fromCondition,
                 $toCondition,
                 $validated['quantity'],
-                $validated['notes'] ?? null
+                $validated['notes'] ?? null,
+                $validated['item_code'] ?? null
             );
 
             return redirect()

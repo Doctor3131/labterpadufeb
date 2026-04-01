@@ -20,6 +20,7 @@ class TransferBalanceRequest extends FormRequest
             'from_condition' => ['required', Rule::enum(ConditionEnum::class)],
             'to_condition' => ['required', Rule::enum(ConditionEnum::class), 'different:from_condition'],
             'quantity' => ['required', 'integer', 'min:1'],
+            'item_code' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
     }

@@ -251,7 +251,8 @@
                                 <span class="text-sm font-bold text-gray-700">{{ $qty }} unit</span>
                             </div>
 
-                            {{-- Prefix form --}}
+                            {{-- Prefix form: only show when no prefix is set --}}
+                            @if(!$pfx)
                             <div class="px-4 py-3 border-b border-gray-100">
                                 <form action="{{ route('admin.inventory.balance.update-university-code', $bal->id) }}" method="POST"
                                       class="flex items-center gap-2"
@@ -276,17 +277,26 @@
                                     </div>
                                 </form>
                             </div>
+                            @else
+                            {{-- Show current prefix info --}}
+                            <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-medium text-gray-500">Prefix:</span>
+                                    <span class="font-mono text-sm font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded">{{ $pfx }}</span>
+                                </div>
+                            </div>
+                            @endif
 
                             {{-- Generated code list --}}
                             <div id="codelist-{{ $bal->id }}" class="divide-y divide-gray-50 max-h-64 overflow-y-auto">
                                 @if(count($generated) > 0)
                                     @foreach($generated as $gIdx => $gCode)
-                                    <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group">
+                                    <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
                                         <span class="text-xs text-gray-400 w-6 text-right shrink-0">{{ $gIdx + 1 }}.</span>
                                         <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-0.5 rounded flex-1">{{ $gCode }}</span>
                                         <button
                                             onclick="openSingleConditionModal('{{ $batchId }}', '{{ $cond->value }}', '{{ $cond->label() }}', {{ $qty }}, {{ json_encode($gCode) }})"
-                                            class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-semibold rounded-lg border border-orange-200 whitespace-nowrap">
+                                            class="flex items-center gap-1 px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-semibold rounded-lg border border-orange-200 whitespace-nowrap transition-colors">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                             </svg>
@@ -340,6 +350,7 @@
             @csrf
             <input type="hidden" name="batch_id" id="modal_batch_id">
             <input type="hidden" name="from_condition" id="modal_from_condition">
+            <input type="hidden" name="item_code" id="modal_item_code_hidden" value="">
 
             <!-- From -->
             <div class="mb-4">
@@ -500,36 +511,6 @@ document.getElementById('batchBrandModal').addEventListener('click', function(e)
     if (e.target === this) closeBatchBrandModal();
 });
 // ---- End Batch Brand Edit ----
-function generateCodes(prefix, qty) {
-    const codes = [];
-    if (!prefix) return codes;
-    const m = prefix.match(/^(.+\.)([A-Za-z]*)(\d+)$/);
-    if (m) {
-        for (let i = 0; i < qty; i++) {
-            codes.push(m[1] + m[2] + (parseInt(m[3]) + i));
-        }
-    } else {
-        for (let i = 1; i <= qty; i++) {
-            codes.push(prefix + '-' + i);
-        }
-    }
-    return codes;
-}
-
-function renderCodeList(containerId, codes) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    if (codes.length === 0) {
-        el.innerHTML = '<div class="px-4 py-4 text-center text-sm text-gray-400">Belum ada kode — isi prefix di atas lalu simpan.</div>';
-        return;
-    }
-    el.innerHTML = codes.map((code, i) =>
-        `<div class="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors">
-            <span class="text-xs text-gray-400 w-6 text-right shrink-0">${i + 1}.</span>
-            <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-0.5 rounded">${code}</span>
-        </div>`
-    ).join('');
-}
 
 function _setupConditionModal(batchId, fromCondition, fromLabel, maxQty) {
     document.getElementById('modal_batch_id').value = batchId;
@@ -551,7 +532,8 @@ function _setupConditionModal(batchId, fromCondition, fromLabel, maxQty) {
 
 function openConditionModal(batchId, fromCondition, fromLabel, maxQty) {
     _setupConditionModal(batchId, fromCondition, fromLabel, maxQty);
-    // Bulk mode: show qty input freely
+    // Bulk mode: show qty input freely, clear item_code
+    document.getElementById('modal_item_code_hidden').value = '';
     const qtyInput = document.getElementById('modal_quantity');
     qtyInput.value = '';
     qtyInput.readOnly = false;
@@ -563,7 +545,8 @@ function openConditionModal(batchId, fromCondition, fromLabel, maxQty) {
 
 function openSingleConditionModal(batchId, fromCondition, fromLabel, maxQty, itemCode) {
     _setupConditionModal(batchId, fromCondition, fromLabel, maxQty);
-    // Single-item mode: lock qty=1, show item code
+    // Single-item mode: lock qty=1, show item code, pass item_code to form
+    document.getElementById('modal_item_code_hidden').value = itemCode;
     const qtyInput = document.getElementById('modal_quantity');
     qtyInput.value = 1;
     qtyInput.readOnly = true;
@@ -600,19 +583,13 @@ async function submitPrefixForm(event, form) {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData,
         });
-        const data = await res.json();
         if (data.success) {
-            const codes = generateCodes(prefix, qty);
-            renderCodeList(codelistId, codes);
             btn.textContent = '✓ Tersimpan';
             btn.classList.replace('bg-blue-600', 'bg-green-600');
             btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
             setTimeout(() => {
-                btn.textContent = 'Simpan';
-                btn.classList.replace('bg-green-600', 'bg-blue-600');
-                btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
-                btn.disabled = false;
-            }, 2000);
+                window.location.reload();
+            }, 500);
         } else {
             alert('Gagal menyimpan.');
             btn.textContent = 'Simpan';
