@@ -229,18 +229,7 @@
                             $qty = $bal ? $bal->quantity : 0;
                             if ($qty <= 0) continue;
                             $pfx = $bal->university_asset_code_prefix ?? '';
-                            $generated = [];
-                            if ($pfx) {
-                                if (preg_match('/^(.+\.)([A-Za-z]*)(\d+)$/', $pfx, $pm)) {
-                                    for ($pi = 0; $pi < $qty; $pi++) {
-                                        $generated[] = $pm[1] . $pm[2] . ((int)$pm[3] + $pi);
-                                    }
-                                } else {
-                                    for ($pi = 1; $pi <= $qty; $pi++) {
-                                        $generated[] = $pfx . '-' . $pi;
-                                    }
-                                }
-                            }
+                            $generated = $bal->calculated_codes;
                         @endphp
                         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             {{-- Kondisi Header --}}
@@ -251,7 +240,8 @@
                                 <span class="text-sm font-bold text-gray-700">{{ $qty }} unit</span>
                             </div>
 
-                            {{-- Prefix form --}}
+                            {{-- Prefix form: only show when no prefix is set --}}
+                            @if(!$pfx)
                             <div class="px-4 py-3 border-b border-gray-100">
                                 <form action="{{ route('admin.inventory.balance.update-university-code', $bal->id) }}" method="POST"
                                       class="flex items-center gap-2"
@@ -276,17 +266,47 @@
                                     </div>
                                 </form>
                             </div>
+                            @else
+                            {{-- Show current prefix info --}}
+                            <div class="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-medium text-gray-500">Prefix:</span>
+                                    <span class="font-mono text-sm font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded">{{ $pfx }}</span>
+                                </div>
+                            </div>
+                            @endif
 
                             {{-- Generated code list --}}
                             <div id="codelist-{{ $bal->id }}" class="divide-y divide-gray-50 max-h-64 overflow-y-auto">
                                 @if(count($generated) > 0)
                                     @foreach($generated as $gIdx => $gCode)
-                                    <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group">
+                                    <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors" id="code-row-{{ $bal->id }}-{{ $gIdx }}">
                                         <span class="text-xs text-gray-400 w-6 text-right shrink-0">{{ $gIdx + 1 }}.</span>
-                                        <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-0.5 rounded flex-1">{{ $gCode }}</span>
-                                        <button
+                                        <div class="flex-1 flex items-center pr-2" id="code-display-{{ $bal->id }}-{{ $gIdx }}">
+                                            <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-0.5 rounded">{{ $gCode }}</span>
+                                            <button type="button" onclick="enableEditCode('{{ $bal->id }}', {{ $gIdx }}, '{{ $gCode }}')" class="ml-2 text-gray-400 hover:text-blue-600 transition-colors" title="Edit Kode Spesifik">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        
+                                        {{-- Inline Edit Form (Hidden) --}}
+                                        <div class="flex-1 hidden" id="code-edit-{{ $bal->id }}-{{ $gIdx }}">
+                                            <div class="flex items-center gap-2">
+                                                <input type="text" id="input-{{ $bal->id }}-{{ $gIdx }}" value="{{ $gCode }}" class="w-full max-w-sm px-2 py-1 border border-gray-300 rounded font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+                                                <button type="button" onclick="saveCodeEdit('{{ $bal->id }}', {{ $gIdx }}, '{{ $gCode }}')" class="p-1 bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors" title="Simpan">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                </button>
+                                                <button type="button" onclick="cancelEditCode('{{ $bal->id }}', {{ $gIdx }})" class="p-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors" title="Batal">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <button id="btn-ubah-kondisi-{{ $bal->id }}-{{ $gIdx }}"
                                             onclick="openSingleConditionModal('{{ $batchId }}', '{{ $cond->value }}', '{{ $cond->label() }}', {{ $qty }}, {{ json_encode($gCode) }})"
-                                            class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-semibold rounded-lg border border-orange-200 whitespace-nowrap">
+                                            class="flex items-center gap-1 px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-semibold rounded-lg border border-orange-200 whitespace-nowrap transition-colors shrink-0">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                             </svg>
@@ -340,6 +360,7 @@
             @csrf
             <input type="hidden" name="batch_id" id="modal_batch_id">
             <input type="hidden" name="from_condition" id="modal_from_condition">
+            <input type="hidden" name="item_code" id="modal_item_code_hidden" value="">
 
             <!-- From -->
             <div class="mb-4">
@@ -443,6 +464,8 @@
 </div>
 
 @push('scripts')
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 // ---- Batch Brand Edit ----
 let _batchBrandId = null;
@@ -500,36 +523,6 @@ document.getElementById('batchBrandModal').addEventListener('click', function(e)
     if (e.target === this) closeBatchBrandModal();
 });
 // ---- End Batch Brand Edit ----
-function generateCodes(prefix, qty) {
-    const codes = [];
-    if (!prefix) return codes;
-    const m = prefix.match(/^(.+\.)([A-Za-z]*)(\d+)$/);
-    if (m) {
-        for (let i = 0; i < qty; i++) {
-            codes.push(m[1] + m[2] + (parseInt(m[3]) + i));
-        }
-    } else {
-        for (let i = 1; i <= qty; i++) {
-            codes.push(prefix + '-' + i);
-        }
-    }
-    return codes;
-}
-
-function renderCodeList(containerId, codes) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    if (codes.length === 0) {
-        el.innerHTML = '<div class="px-4 py-4 text-center text-sm text-gray-400">Belum ada kode — isi prefix di atas lalu simpan.</div>';
-        return;
-    }
-    el.innerHTML = codes.map((code, i) =>
-        `<div class="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors">
-            <span class="text-xs text-gray-400 w-6 text-right shrink-0">${i + 1}.</span>
-            <span class="font-mono text-sm font-medium text-blue-900 bg-blue-50 px-2 py-0.5 rounded">${code}</span>
-        </div>`
-    ).join('');
-}
 
 function _setupConditionModal(batchId, fromCondition, fromLabel, maxQty) {
     document.getElementById('modal_batch_id').value = batchId;
@@ -551,7 +544,8 @@ function _setupConditionModal(batchId, fromCondition, fromLabel, maxQty) {
 
 function openConditionModal(batchId, fromCondition, fromLabel, maxQty) {
     _setupConditionModal(batchId, fromCondition, fromLabel, maxQty);
-    // Bulk mode: show qty input freely
+    // Bulk mode: show qty input freely, clear item_code
+    document.getElementById('modal_item_code_hidden').value = '';
     const qtyInput = document.getElementById('modal_quantity');
     qtyInput.value = '';
     qtyInput.readOnly = false;
@@ -563,7 +557,8 @@ function openConditionModal(batchId, fromCondition, fromLabel, maxQty) {
 
 function openSingleConditionModal(batchId, fromCondition, fromLabel, maxQty, itemCode) {
     _setupConditionModal(batchId, fromCondition, fromLabel, maxQty);
-    // Single-item mode: lock qty=1, show item code
+    // Single-item mode: lock qty=1, show item code, pass item_code to form
+    document.getElementById('modal_item_code_hidden').value = itemCode;
     const qtyInput = document.getElementById('modal_quantity');
     qtyInput.value = 1;
     qtyInput.readOnly = true;
@@ -602,26 +597,91 @@ async function submitPrefixForm(event, form) {
         });
         const data = await res.json();
         if (data.success) {
-            const codes = generateCodes(prefix, qty);
-            renderCodeList(codelistId, codes);
             btn.textContent = '✓ Tersimpan';
             btn.classList.replace('bg-blue-600', 'bg-green-600');
             btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
             setTimeout(() => {
-                btn.textContent = 'Simpan';
-                btn.classList.replace('bg-green-600', 'bg-blue-600');
-                btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
-                btn.disabled = false;
-            }, 2000);
+                window.location.reload();
+            }, 500);
         } else {
             alert('Gagal menyimpan.');
             btn.textContent = 'Simpan';
             btn.disabled = false;
         }
-    } catch (e) {
+} catch (e) {
         alert('Terjadi kesalahan.');
         btn.textContent = 'Simpan';
         btn.disabled = false;
+    }
+}
+
+// Inline edit spesifik per kode barang
+function enableEditCode(balId, gIdx, gCode) {
+    document.getElementById(`code-display-${balId}-${gIdx}`).classList.add('hidden');
+    document.getElementById(`btn-ubah-kondisi-${balId}-${gIdx}`).classList.add('hidden');
+    document.getElementById(`code-edit-${balId}-${gIdx}`).classList.remove('hidden');
+    
+    const input = document.getElementById(`input-${balId}-${gIdx}`);
+    input.value = gCode;
+    input.focus();
+}
+
+function cancelEditCode(balId, gIdx) {
+    document.getElementById(`code-edit-${balId}-${gIdx}`).classList.add('hidden');
+    document.getElementById(`code-display-${balId}-${gIdx}`).classList.remove('hidden');
+    document.getElementById(`btn-ubah-kondisi-${balId}-${gIdx}`).classList.remove('hidden');
+}
+
+async function saveCodeEdit(balId, gIdx, oldCode) {
+    const input = document.getElementById(`input-${balId}-${gIdx}`);
+    const newCode = input.value.trim();
+    
+    if (!newCode || newCode === oldCode) {
+        cancelEditCode(balId, gIdx);
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : document.querySelector('input[name="_token"]').value);
+        formData.append('_method', 'PATCH');
+        formData.append('old_code', oldCode);
+        formData.append('new_code', newCode);
+        
+        const res = await fetch(`/admin/inventory/balance/${balId}/individual-code`, {
+            method: 'POST',
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: formData,
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            // Update UI
+            document.querySelector(`#code-display-${balId}-${gIdx} span`).textContent = newCode;
+            // Update onclick params for ubah kondisi
+            const btnUbah = document.getElementById(`btn-ubah-kondisi-${balId}-${gIdx}`);
+            const oldOnclick = btnUbah.getAttribute('onclick');
+            // replace oldCode strings with newCode strings carefully
+            // simple hack: reload page if it gets messy instead of manually replacing strings
+            // Re-render approach is cleaner since the whole system is stateful
+            window.location.reload();
+        } else {
+            const errorMsg = data.message || 'Gagal mengubah kode.';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Gagal!', errorMsg, 'error');
+            } else {
+                alert('Gagal: ' + errorMsg);
+            }
+        }
+    } catch(e) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire('Gagal!', 'Terjadi kesalahan sistem: ' + e.message, 'error');
+        } else {
+            alert('Gagal: Terjadi kesalahan sistem.');
+        }
     }
 }
 </script>

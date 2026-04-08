@@ -535,7 +535,8 @@ class LabInventoryController extends Controller
                 $fromCondition,
                 $toCondition,
                 $validated['quantity'],
-                $validated['notes'] ?? null
+                $validated['notes'] ?? null,
+                $validated['item_code'] ?? null
             );
 
             return redirect()
@@ -782,6 +783,58 @@ class LabInventoryController extends Controller
         ]);
     }
 
+    /**
+     * Edit a specific generated item code in an aggregate balance
+     */
+    public function updateAggregateItemCode(Request $request, InventoryBalance $balance)
+    {
+        $request->validate([
+            'old_code' => 'required|string',
+            'new_code' => 'required|string|max:255',
+        ]);
+
+        $oldCode = $request->old_code;
+        $newCode = $request->new_code;
+
+        // Skip if same
+        if ($oldCode === $newCode) {
+            return response()->json(['success' => true, 'message' => 'Tidak ada perubahan']);
+        }
+
+        // Validity check: ensure the new code isn't used by an asset unit
+        if (AssetUnit::where('university_asset_code', $newCode)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Kode sudah digunakan oleh unit lain!'], 422);
+        }
+
+        // Validity check: ensure the new code isn't in another custom_codes
+        if (InventoryBalance::whereJsonContains('custom_codes', $newCode)->where('id', '!=', $balance->id)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Kode sudah digunakan oleh barang agregat lain!'], 422);
+        }
+
+        $codes = $balance->calculated_codes;
+        $index = array_search($oldCode, $codes);
+
+        if ($index === false) {
+            return response()->json(['success' => false, 'message' => 'Kode lama tidak ditemukan di saldo ini!'], 422);
+        }
+
+        // Validity check: ensure the new code isn't already used inside this balance's own codes
+        if (in_array($newCode, $codes)) {
+            return response()->json(['success' => false, 'message' => 'Kode sudah digunakan dalam list barang ini!'], 422);
+        }
+
+        $codes[$index] = $newCode;
+        
+        // Save back full array to custom_codes
+        $balance->custom_codes = array_values($codes);
+        $balance->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kode spesifik berhasil diubah',
+            'new_code' => $newCode
+        ]);
+    }
 
     /**
      * Update asset tag (UPK code) for a specific unit

@@ -294,9 +294,10 @@ class InventoryService
         ConditionEnum $fromCondition,
         ConditionEnum $toCondition,
         int $qty,
-        ?string $notes = null
+        ?string $notes = null,
+        ?string $itemCode = null
     ): array {
-        return DB::transaction(function () use ($labId, $batchId, $fromCondition, $toCondition, $qty, $notes) {
+        return DB::transaction(function () use ($labId, $batchId, $fromCondition, $toCondition, $qty, $notes, $itemCode) {
             // Get source balance with lock to prevent race condition
             $fromBalance = InventoryBalance::where([
                 'batch_id' => $batchId,
@@ -318,6 +319,15 @@ class InventoryService
                 ['quantity' => 0]
             );
             
+            // Handle university code prefix adjustment for single-item transfer
+            if ($itemCode && $qty === 1 && $fromBalance->university_asset_code_prefix) {
+                $this->adjustUniversityCodesForSingleTransfer(
+                    $fromBalance,
+                    $toBalance,
+                    $itemCode
+                );
+            }
+            
             // Update quantities
             $fromBalance->decrement('quantity', $qty);
             $toBalance->increment('quantity', $qty);
@@ -327,7 +337,7 @@ class InventoryService
                 'type' => TransactionTypeEnum::CONDITION_CHANGE,
                 'lab_id' => $labId,
                 'user_id' => Auth::id(),
-                'notes' => $notes ?? "Transfer {$qty} unit dari {$fromCondition->label()} ke {$toCondition->label()}",
+                'notes' => $notes ?? "Transfer {$qty} unit dari {$fromCondition->label()} ke {$toCondition->label()}" . ($itemCode ? " (kode: {$itemCode})" : ''),
             ]);
             
             TransactionLine::create([
@@ -340,6 +350,87 @@ class InventoryService
             
             return [$fromBalance->fresh(), $toBalance->fresh()];
         });
+    }
+
+    /**
+     * Adjust university asset code prefixes when transferring a single specific item.
+     * 
+     * When a specific code (e.g., .X73) is transferred from one condition to another,
+     * the source balance's codes need to be reorganized to fill the gap,
+     * and the target balance needs to accommodate the new code.
+     */
+    private function adjustUniversityCodesForSingleTransfer(
+        InventoryBalance $fromBalance,
+        InventoryBalance $toBalance,
+        string $itemCode
+    ): void {
+        // Generate the current list of codes for the source balance
+        $fromCodes = $fromBalance->calculated_codes;
+        
+        // Find the index of the specific item being transferred
+        $codeIndex = array_search($itemCode, $fromCodes);
+        
+        if ($codeIndex === false) {
+            // Item code not found in generated list, skip adjustment
+            return;
+        }
+        
+        // Remove the transferred code from the source list
+        array_splice($fromCodes, $codeIndex, 1);
+        
+        // Ensure source balance accurately reflects the remaining codes
+        $fromBalance->custom_codes = count($fromCodes) > 0 ? array_values($fromCodes) : null;
+        
+        // If it still falls back to prefix gracefully, we try to preserve prefix
+        if (count($fromCodes) > 0) {
+            // Setup an appropriate prefix (first code) in case it's used as fallback
+            $fromBalance->university_asset_code_prefix = $fromCodes[0];
+        } else {
+            // If empty, clearing out prefix
+             $fromBalance->university_asset_code_prefix = null;
+        }
+        
+        $fromBalance->save();
+        
+        // Handle the target balance's university code
+        $toCodes = $toBalance->calculated_codes;
+        $toCodes[] = $itemCode;
+        
+        // Sort codes conceptually if they are string comparable
+        sort($toCodes);
+        
+        $toBalance->custom_codes = array_values($toCodes);
+        
+        if (count($toCodes) > 0) {
+            $toBalance->university_asset_code_prefix = $toCodes[0];
+        }
+        
+        $toBalance->save();
+    }
+
+    /**
+     * Generate a list of codes from a prefix and quantity.
+     * Mirrors the Blade template logic for code generation.
+     */
+    private function generateCodesFromPrefix(string $prefix, int $qty): array
+    {
+        $codes = [];
+        
+        if (preg_match('/^(.+\.)([A-Za-z]*)(\d+)$/', $prefix, $matches)) {
+            $base = $matches[1];
+            $letters = $matches[2];
+            $startNum = (int)$matches[3];
+            
+            for ($i = 0; $i < $qty; $i++) {
+                $codes[] = $base . $letters . ($startNum + $i);
+            }
+        } else {
+            for ($i = 1; $i <= $qty; $i++) {
+                $codes[] = $prefix . '-' . $i;
+            }
+        }
+        
+        return $codes;
     }
 
     /**
