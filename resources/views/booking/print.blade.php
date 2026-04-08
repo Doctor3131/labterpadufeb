@@ -79,7 +79,7 @@
             <tr>
                 <td class="py-1">DOSEN PENGAMPU/ INSTRUKTUR</td>
                 <td class="py-1">:</td>
-                <td class="py-1">{{ $booking->lecturer_name ?: '-' }}</td>
+                <td class="py-1">{{ ($booking->isBimbinganDosen() ? $booking->lecturer_name : $booking->lecturer_name) ?: '-' }}</td>
             </tr>
             <tr>
                 <td class="py-1">KOORDINATOR</td>
@@ -151,14 +151,19 @@
     <div class="flex justify-between px-4 text-[11pt]">
         <div class="text-center w-[280px]">
             <div class="border-b border-black font-bold pb-1">
-                @if($booking->booking_type === 'non_perkuliahan')
+                @if($booking->isBimbinganDosen())
+                    {{ $booking->lecturer_name }}
+                @elseif($booking->booking_type === 'non_perkuliahan')
                     {{ $booking->pic_name }}
                 @else
                     {{ $booking->lecturer_name ?: '____________________' }}
                 @endif
             </div>
             <div class="mt-1 flex gap-1">
-                @if($booking->booking_type === 'non_perkuliahan' || $booking->booking_type === 'pribadi')
+                @if($booking->isBimbinganDosen())
+                    <span>NIP.</span>
+                    <span>{{ $booking->lecturer_nip ?: '....................' }}</span>
+                @elseif($booking->booking_type === 'non_perkuliahan' || $booking->booking_type === 'pribadi')
                     @if($booking->nip)
                         <span>NIP.</span>
                         <span>{{ $booking->nip }}</span>

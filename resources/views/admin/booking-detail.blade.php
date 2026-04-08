@@ -203,6 +203,25 @@
                                     <dt class="text-xs font-semibold text-gray-500 mb-1">Nama Kegiatan</dt>
                                     <dd class="text-lg font-medium text-gray-900">{{ $booking->activity_name }}</dd>
                                 </div>
+                                @if($booking->isBimbinganDosen())
+                                <div class="col-span-2 md:col-span-1">
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Kategori</dt>
+                                    <dd>
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                                            Bimbingan Dosen
+                                        </span>
+                                    </dd>
+                                </div>
+                                <div class="col-span-2 md:col-span-1">
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">Nama Dosen</dt>
+                                    <dd class="text-base font-medium text-gray-900">{{ $booking->lecturer_name }}</dd>
+                                </div>
+                                <div class="col-span-2 md:col-span-1">
+                                    <dt class="text-xs font-semibold text-gray-500 mb-1">NIP Dosen</dt>
+                                    <dd class="text-base text-gray-600 font-mono">{{ $booking->lecturer_nip }}</dd>
+                                </div>
+                                @else
                                 <div class="col-span-2 md:col-span-1">
                                     <dt class="text-xs font-semibold text-gray-500 mb-1">Jenis Kegiatan</dt>
                                     <dd class="text-base text-gray-800">{{ $booking->activity_type }}</dd>
@@ -212,6 +231,7 @@
                                     <dt class="text-xs font-semibold text-gray-500 mb-1">Posisi Peminjam</dt>
                                     <dd class="text-base text-gray-800">{{ $booking->position }}</dd>
                                 </div>
+                                @endif
                                 @endif
                                 @if($booking->equipment_needs)
                                 <div class="col-span-2">

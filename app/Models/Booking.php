@@ -60,6 +60,7 @@ class Booking extends Model
         'position',
         'equipment_needs',
         'activity_name',
+        'is_bimbingan_dosen',
         'course_name',
         'lecturer_name',
         'lecturer_nip',
@@ -80,6 +81,7 @@ class Booking extends Model
         'handled_at' => 'datetime',
         'participant_count' => 'integer',
         'is_recurring' => 'boolean',
+        'is_bimbingan_dosen' => 'boolean',
     ];
 
     /**
@@ -144,6 +146,14 @@ class Booking extends Model
     public function isPribadi()
     {
         return $this->booking_type === 'pribadi';
+    }
+
+    /**
+     * Check if this is a non-perkuliahan booking with lecturer guidance (bimbingan dosen)
+     */
+    public function isBimbinganDosen()
+    {
+        return $this->booking_type === 'non_perkuliahan' && $this->is_bimbingan_dosen;
     }
 
     /**

@@ -368,25 +368,67 @@
                                 <input type="text" name="activity_name" id="activity_name" value="{{ old('activity_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan <span class="text-red-500">*</span></label>
-                                <select name="activity_type" id="activity_type"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                                    <option value="">-- Pilih Jenis Kegiatan --</option>
-                                    <option value="Seminar" {{ old('activity_type') == 'Seminar' ? 'selected' : '' }}>Seminar</option>
-                                    <option value="Workshop" {{ old('activity_type') == 'Workshop' ? 'selected' : '' }}>Workshop</option>
-                                    <option value="Pelatihan" {{ old('activity_type') == 'Pelatihan' ? 'selected' : '' }}>Pelatihan</option>
-                                    <option value="Rapat" {{ old('activity_type') == 'Rapat' ? 'selected' : '' }}>Rapat</option>
-                                    <option value="Ujian" {{ old('activity_type') == 'Ujian' ? 'selected' : '' }}>Ujian</option>
-                                    <option value="Lainnya" {{ old('activity_type') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Posisi Peminjam <span class="text-red-500">*</span></label>
-                                <input type="text" name="position" id="position" value="{{ old('position') }}"
 
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            {{-- Bimbingan Dosen Checkbox --}}
+                            <div class="md:col-span-2">
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group {{ old('is_bimbingan_dosen') ? 'bg-blue-50 border-blue-400' : '' }}">
+                                    <input type="hidden" name="is_bimbingan_dosen" value="0">
+                                    <input type="checkbox" name="is_bimbingan_dosen" id="is_bimbingan_dosen" value="1"
+                                        class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                                        {{ old('is_bimbingan_dosen') ? 'checked' : '' }}>
+                                    <div class="ml-3">
+                                        <span class="text-gray-800 font-semibold group-hover:text-blue-700">Bimbingan bersama Dosen?</span>
+                                        <p class="text-xs text-gray-500 mt-0.5">Centang jika kegiatan ini merupakan bimbingan skripsi atau kegiatan bersama dosen</p>
+                                    </div>
+                                </label>
                             </div>
+
+                            {{-- Fields yang tampil jika BUKAN bimbingan (default) --}}
+                            <div id="non-bimbingan-fields" class="md:col-span-2">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan <span class="text-red-500">*</span></label>
+                                        <select name="activity_type" id="activity_type"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                            <option value="">-- Pilih Jenis Kegiatan --</option>
+                                            <option value="Seminar" {{ old('activity_type') == 'Seminar' ? 'selected' : '' }}>Seminar</option>
+                                            <option value="Workshop" {{ old('activity_type') == 'Workshop' ? 'selected' : '' }}>Workshop</option>
+                                            <option value="Pelatihan" {{ old('activity_type') == 'Pelatihan' ? 'selected' : '' }}>Pelatihan</option>
+                                            <option value="Rapat" {{ old('activity_type') == 'Rapat' ? 'selected' : '' }}>Rapat</option>
+                                            <option value="Ujian" {{ old('activity_type') == 'Ujian' ? 'selected' : '' }}>Ujian</option>
+                                            <option value="Lainnya" {{ old('activity_type') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-semibold mb-2">Posisi Peminjam <span class="text-red-500">*</span></label>
+                                        <input type="text" name="position" id="position" value="{{ old('position') }}"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Fields yang tampil jika bimbingan dosen --}}
+                            <div id="bimbingan-dosen-fields" class="hidden md:col-span-2">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Dosen <span class="text-red-500">*</span></label>
+                                        <input type="text" id="bimbingan_lecturer_name" value="{{ old('lecturer_name') }}"
+                                            placeholder="Nama lengkap dosen pembimbing"
+                                            oninput="this.value = this.value.replace(/[^a-zA-Z\s\.']/g, '')"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen <span class="text-red-500">*</span></label>
+                                        <input type="text" id="bimbingan_lecturer_nip" value="{{ old('lecturer_nip') }}"
+                                            maxlength="18" pattern="[0-9]{18}"
+                                            placeholder="18 digit angka"
+                                            inputmode="numeric"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18)"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Kebutuhan Peralatan</label>
                                 <textarea name="equipment_needs" id="equipment_needs" rows="3"
@@ -828,10 +870,73 @@
             setupFileUpload();
             setupApplicantStatusListener();
             setupStudyProgramListener();
+            setupBimbinganDosenToggle();
 
             setupRealtimeValidation();
             preventEnterSubmit();
         });
+
+        // Bimbingan Dosen Toggle
+        function setupBimbinganDosenToggle() {
+            const checkbox = document.getElementById('is_bimbingan_dosen');
+            if (!checkbox) return;
+
+            function toggleBimbinganFields() {
+                const isChecked = checkbox.checked;
+                const nonBimbinganFields = document.getElementById('non-bimbingan-fields');
+                const bimbinganFields = document.getElementById('bimbingan-dosen-fields');
+                const activityTypeSelect = document.getElementById('activity_type');
+                const positionInput = document.getElementById('position');
+                const lecturerNameInput = document.getElementById('bimbingan_lecturer_name');
+                const lecturerNipInput = document.getElementById('bimbingan_lecturer_nip');
+                const checkboxLabel = checkbox.closest('label');
+
+                if (isChecked) {
+                    // Hide jenis kegiatan & posisi, show nama dosen & nip
+                    nonBimbinganFields.classList.add('hidden');
+                    bimbinganFields.classList.remove('hidden');
+                    // Disable hidden fields so they don't submit
+                    activityTypeSelect.removeAttribute('required');
+                    activityTypeSelect.value = '';
+                    positionInput.removeAttribute('required');
+                    positionInput.value = '';
+                    // Enable bimbingan fields with name attributes
+                    lecturerNameInput.setAttribute('name', 'lecturer_name');
+                    lecturerNameInput.setAttribute('required', 'required');
+                    lecturerNipInput.setAttribute('name', 'lecturer_nip');
+                    lecturerNipInput.setAttribute('required', 'required');
+                    // Visual feedback
+                    checkboxLabel.classList.add('bg-blue-50', 'border-blue-400');
+                    checkboxLabel.classList.remove('border-gray-200');
+                } else {
+                    // Show jenis kegiatan & posisi, hide nama dosen & nip
+                    nonBimbinganFields.classList.remove('hidden');
+                    bimbinganFields.classList.add('hidden');
+                    // Re-enable regular fields
+                    activityTypeSelect.setAttribute('required', 'required');
+                    positionInput.setAttribute('required', 'required');
+                    // Remove names from bimbingan fields so they don't submit
+                    lecturerNameInput.removeAttribute('name');
+                    lecturerNameInput.removeAttribute('required');
+                    lecturerNipInput.removeAttribute('name');
+                    lecturerNipInput.removeAttribute('required');
+                    // Visual feedback
+                    checkboxLabel.classList.remove('bg-blue-50', 'border-blue-400');
+                    checkboxLabel.classList.add('border-gray-200');
+                }
+                // Re-validate step 2
+                validateStep2();
+            }
+
+            checkbox.addEventListener('change', toggleBimbinganFields);
+            // Also listen to bimbingan dosen input fields for validation
+            const lecturerNameInput = document.getElementById('bimbingan_lecturer_name');
+            const lecturerNipInput = document.getElementById('bimbingan_lecturer_nip');
+            if (lecturerNameInput) lecturerNameInput.addEventListener('input', validateStep2);
+            if (lecturerNipInput) lecturerNipInput.addEventListener('input', validateStep2);
+            // Run on load for old() values
+            toggleBimbinganFields();
+        }
 
         // Prevent Enter key from submitting form, use it for navigation instead
         function preventEnterSubmit() {
@@ -1100,7 +1205,7 @@
         function setRequiredFields(containerId, required) {
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
-            const optionalFields = ['software_needs', 'equipment_needs']; // Fields that are always optional
+            const optionalFields = ['software_needs', 'equipment_needs', 'is_bimbingan_dosen']; // Fields that are always optional
             const conditionalFields = ['class_year', 'custom_status', 'applicant_status', 'nip', 'nim', 'study_program']; // Fields handled by toggleFields() or conditional logic
             
             inputs.forEach(input => {
@@ -1186,8 +1291,7 @@
                 const prodi = document.getElementById('study_program').value.trim();
                 const nim = document.getElementById('nim').value.trim();
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
-                const jenisKegiatan = document.getElementById('activity_type').value.trim();
-                const jabatan = document.getElementById('position').value.trim();
+                const isBimbingan = document.getElementById('is_bimbingan_dosen') && document.getElementById('is_bimbingan_dosen').checked;
                 
                 // Check custom study program if 'Lainnya' is selected
                 if (prodi === 'Lainnya') {
@@ -1195,7 +1299,17 @@
                     isValid = isValid && customProdi && customProdi.value.trim();
                 }
                 
-                isValid = isValid && prodi && nim.length === 14 && namaKegiatan && jenisKegiatan && jabatan;
+                if (isBimbingan) {
+                    // Bimbingan dosen: need lecturer name & nip instead of activity_type & position
+                    const dosenName = document.getElementById('bimbingan_lecturer_name').value.trim();
+                    const dosenNip = document.getElementById('bimbingan_lecturer_nip').value.trim();
+                    isValid = isValid && prodi && nim.length === 14 && namaKegiatan && dosenName && dosenNip;
+                } else {
+                    // Regular non-perkuliahan
+                    const jenisKegiatan = document.getElementById('activity_type').value.trim();
+                    const jabatan = document.getElementById('position').value.trim();
+                    isValid = isValid && prodi && nim.length === 14 && namaKegiatan && jenisKegiatan && jabatan;
+                }
             } else if (selectedBookingType === 'pribadi') {
                  const status = document.getElementById('applicant_status').value.trim();
                  const keperluan = document.getElementById('purpose').value.trim();
@@ -1604,6 +1718,12 @@
                 summary.push(`<div><strong>Keperluan:</strong> ${document.getElementById('purpose').value}</div>`);
             } else if (selectedBookingType === 'non_perkuliahan') {
                 summary.push(`<div><strong>Kegiatan:</strong> ${document.getElementById('activity_name').value}</div>`);
+                const isBimbingan = document.getElementById('is_bimbingan_dosen') && document.getElementById('is_bimbingan_dosen').checked;
+                if (isBimbingan) {
+                    summary.push(`<div><strong>Bimbingan Dosen:</strong> Ya</div>`);
+                    summary.push(`<div><strong>Nama Dosen:</strong> ${document.getElementById('bimbingan_lecturer_name').value}</div>`);
+                    summary.push(`<div><strong>NIP Dosen:</strong> ${document.getElementById('bimbingan_lecturer_nip').value}</div>`);
+                }
             } else {
                  summary.push(`<div><strong>Mata Kuliah:</strong> ${document.getElementById('course_name').value}</div>`);
             }

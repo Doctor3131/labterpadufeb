@@ -151,13 +151,22 @@ class BookingController extends Controller
                         },
                     ],
                     'custom_study_program' => 'nullable|required_if:study_program,Lainnya|string|max:255|regex:/^[a-zA-Z0-9\s\.\-]+$/',
-                    'activity_type' => $activityTypesRule,
-                    'position' => 'required_if:booking_type,non_perkuliahan|string|max:255',
+                    'is_bimbingan_dosen' => 'nullable|boolean',
+                    'activity_type' => $request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen
+                        ? 'nullable|in:' . implode(',', Booking::ACTIVITY_TYPES)
+                        : $activityTypesRule,
+                    'position' => $request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen
+                        ? 'nullable|string|max:255'
+                        : 'required_if:booking_type,non_perkuliahan|string|max:255',
                     'equipment_needs' => 'nullable|string',
                     'activity_name' => 'required_if:booking_type,non_perkuliahan|string|max:255',
                     'course_name' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
-                    'lecturer_name' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
-                    'lecturer_nip' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:18|regex:/^[0-9]+$/',
+                    'lecturer_name' => ($request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen)
+                        ? ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\']+$/']
+                        : 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
+                    'lecturer_nip' => ($request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen)
+                        ? ['required', 'string', 'max:18', 'regex:/^[0-9]+$/']
+                        : 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:18|regex:/^[0-9]+$/',
                     'software_needs' => 'nullable|string|max:255',
                 ]);
             }
