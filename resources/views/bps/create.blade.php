@@ -454,7 +454,7 @@
                     <p class="text-sm text-gray-600 mb-4">
                         Pilih dataset yang Anda perlukan, lalu masukkan kode variabel untuk masing-masing dataset.
                     </p>
-                    
+
                     <div id="step-2-error" class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start">
                         <svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -485,7 +485,7 @@
                                             @foreach($master->activeSubData as $subData)
                                             <div class="sub-data-item">
                                                 <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
-                                                    <input type="checkbox" name="selected_data[]" value="{{ $subData->id }}" 
+                                                    <input type="checkbox" name="selected_data[]" value="{{ $subData->id }}"
                                                         class="dataset-checkbox mt-1 mr-3 text-blue-600 focus:ring-blue-500 rounded"
                                                         data-subdata-id="{{ $subData->id }}"
                                                         data-subdata-name="{{ $subData->name }}"
@@ -512,7 +512,7 @@
                                     {{-- Single-level master data: direct variable input --}}
                                     <div class="sub-data-item">
                                         <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
-                                            <input type="checkbox" name="selected_master[]" value="{{ $master->id }}" 
+                                            <input type="checkbox" name="selected_master[]" value="{{ $master->id }}"
                                                 class="master-checkbox mt-1 mr-3 text-blue-600 focus:ring-blue-500 rounded"
                                                 data-master-id="{{ $master->id }}"
                                                 data-master-name="{{ $master->name }}"
@@ -611,7 +611,7 @@
                         <label class="flex items-start cursor-pointer">
                             <input type="checkbox" name="agreement_accepted" value="1" class="mt-1 mr-3 text-blue-600 focus:ring-blue-500 rounded" required>
                             <span class="text-sm text-gray-700">
-                                <strong>Dengan ini saya bersedia untuk mematuhi aturan penggunaan data BPS Laboratorium Komputer FEB Universitas Diponegoro.</strong> 
+                                <strong>Dengan ini saya bersedia untuk mematuhi aturan penggunaan data BPS Laboratorium Komputer FEB Universitas Diponegoro.</strong>
                                 Bahwa saya tidak akan memperjualbelikan atau menyebarluaskan data yang saya peroleh dari Laboratorium Komputer FEB Universitas Diponegoro.
                             </span>
                         </label>
@@ -679,7 +679,7 @@
         ['study_program'].forEach(id => {
             document.getElementById(id)?.addEventListener('change', () => clearFieldError(id));
         });
-        
+
         // Clear checkbox errors
         document.querySelector('input[name="agreement_accepted"]')?.addEventListener('change', () => clearFieldError('agreement_accepted'));
         document.getElementById('ktm')?.addEventListener('change', () => clearFieldError('ktm'));
@@ -718,7 +718,7 @@
 
         function validateStep(step) {
             let isValid = true;
-            
+
             if (step === 1) {
                 const applicantType = document.querySelector('input[name="applicant_type"]:checked');
                 const name = document.getElementById('name').value.trim();
@@ -817,7 +817,7 @@
                 const selectedMaster = document.querySelectorAll('input[name="selected_master[]"]:checked');
                 const errorBox = document.getElementById('step-2-error');
                 const errorText = document.getElementById('step-2-error-text');
-                
+
                 // Reset error
                 errorBox.classList.add('hidden');
 
@@ -868,7 +868,7 @@
         document.querySelectorAll('input[name="applicant_type"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const isMahasiswa = this.value === 'mahasiswa';
-                
+
                 document.getElementById('nim-field').classList.toggle('hidden', !isMahasiswa);
                 document.getElementById('nip-field').classList.toggle('hidden', isMahasiswa);
                 document.getElementById('study-program-field').classList.toggle('hidden', !isMahasiswa);
@@ -934,7 +934,7 @@
             btn.addEventListener('click', function() {
                 const content = this.nextElementSibling;
                 const arrow = this.querySelector('.accordion-arrow');
-                
+
                 content.classList.toggle('hidden');
                 arrow.classList.toggle('rotate-180');
             });
@@ -945,7 +945,7 @@
             checkbox.addEventListener('change', function() {
                 const subDataId = this.dataset.subdataId;
                 const container = document.getElementById('var-container-' + subDataId);
-                
+
                 if (this.checked) {
                     container.classList.add('show');
                 } else {
@@ -966,7 +966,7 @@
             checkbox.addEventListener('change', function() {
                 const masterId = this.dataset.masterId;
                 const container = document.getElementById('master-var-container-' + masterId);
-                
+
                 if (this.checked) {
                     container.classList.add('show');
                 } else {
@@ -987,18 +987,18 @@
             const selectedMaster = document.querySelectorAll('.master-checkbox:checked');
             const summary = document.getElementById('selected-data-summary');
             const list = document.getElementById('selected-data-list');
-            
+
             if (selectedSubData.length > 0 || selectedMaster.length > 0) {
                 summary.classList.remove('hidden');
                 list.innerHTML = '';
-                
+
                 // Add sub-data items
                 selectedSubData.forEach(cb => {
                     const li = document.createElement('li');
                     li.textContent = '• ' + cb.dataset.subdataName;
                     list.appendChild(li);
                 });
-                
+
                 // Add single-level master items
                 selectedMaster.forEach(cb => {
                     const li = document.createElement('li');
@@ -1014,25 +1014,25 @@
         function updateFileLabel(fieldId, input) {
             const filename = document.getElementById(fieldId + '-filename');
             const uploadBox = input.closest('.border-dashed');
-            
+
             // Remove previous validation error
             const existingError = uploadBox.parentElement.querySelector('.file-validation-error');
             if (existingError) existingError.remove();
             uploadBox.classList.remove('border-red-400', 'bg-red-50', 'border-green-400', 'bg-green-50');
-            
+
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 const maxSize = 5 * 1024 * 1024; // 5MB
                 const allowedExt = file.name.toLowerCase().endsWith('.pdf');
                 const allowedType = file.type === 'application/pdf';
                 let errorMsg = '';
-                
+
                 if (!allowedType && !allowedExt) {
                     errorMsg = '⚠️ Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
                 } else if (file.size > maxSize) {
                     errorMsg = '⚠️ Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
                 }
-                
+
                 if (errorMsg) {
                     // Show custom error modal
                     showFileErrorModal(errorMsg);
@@ -1042,12 +1042,12 @@
                     errorDiv.innerHTML = '<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' + errorMsg;
                     uploadBox.parentElement.appendChild(errorDiv);
                     uploadBox.classList.add('border-red-400', 'bg-red-50');
-                    
+
                     input.value = '';
                     filename.classList.add('hidden');
                     return;
                 }
-                
+
                 const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
                 filename.textContent = '✓ ' + file.name + ' (' + fileSizeMB + ' MB)';
                 filename.classList.remove('hidden');
@@ -1065,14 +1065,14 @@
                 // Validate step 3 before submission
                 const isMahasiswa = document.querySelector('input[name="applicant_type"]:checked')?.value === 'mahasiswa';
                 let isValid = true;
-                
+
                 // Check required file uploads
                 const statementLetter = document.getElementById('statement_letter');
                 if (!statementLetter.files || statementLetter.files.length === 0) {
                     showFieldError('statement_letter', 'Silakan upload Surat Pernyataan Kesanggupan');
                     isValid = false;
                 }
-                
+
                 // KTM is required for mahasiswa
                 if (isMahasiswa) {
                     const ktm = document.getElementById('ktm');
@@ -1081,19 +1081,19 @@
                         isValid = false;
                     }
                 }
-                
+
                 // Check agreement checkbox
                 const agreement = document.querySelector('input[name="agreement_accepted"]');
                 if (!agreement.checked) {
                      showFieldError('agreement_accepted', 'Anda harus menyetujui pernyataan kesanggupan menjaga informasi');
                      isValid = false;
                 }
-                
+
                 if (!isValid) {
                      e.preventDefault();
                      return false;
                 }
-                
+
                 // Disable submit button to prevent double submission
                 const submitBtn = e.target.querySelector('button[type="submit"]');
                 if (submitBtn) {
@@ -1108,10 +1108,10 @@
                 const step1Fields = ['applicant_type', 'name', 'email', 'phone', 'nim', 'nip', 'study_program', 'study_program_other', 'purpose', 'purpose_other', 'has_lecturer_collaboration', 'collaborating_lecturer_name'];
                 const step2Fields = ['selected_data', 'selected_master', 'variables', 'master_variables'];
                 const step3Fields = ['ktm', 'statement_letter', 'agreement_accepted'];
-                
+
                 const errors = @json($errors->keys());
                 let targetStep = 1;
-                
+
                 for (const field of errors) {
                     if (step3Fields.some(f => field.startsWith(f))) {
                         targetStep = Math.max(targetStep, 3);
@@ -1119,7 +1119,7 @@
                         targetStep = Math.max(targetStep, 2);
                     }
                 }
-                
+
                 if (targetStep > 1) {
                     showStep(targetStep);
                 }

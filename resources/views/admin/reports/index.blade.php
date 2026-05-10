@@ -23,7 +23,7 @@
     <!-- Report Type Tabs -->
     <div class="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
         <div class="flex border-b border-gray-200">
-            <button type="button" data-report-type="lab" 
+            <button type="button" data-report-type="lab"
                class="report-tab flex-1 px-4 py-4 text-center font-semibold transition-all {{ $reportType === 'lab' ? 'text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }}">
                 <div class="flex items-center justify-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@
                     <span class="sm:hidden">Lab</span>
                 </div>
             </button>
-            <button type="button" data-report-type="bps" 
+            <button type="button" data-report-type="bps"
                class="report-tab flex-1 px-4 py-4 text-center font-semibold transition-all {{ $reportType === 'bps' ? 'text-teal-600 border-b-2 border-teal-500 bg-teal-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }}">
                 <div class="flex items-center justify-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,7 +43,7 @@
                     <span class="sm:hidden">BPS</span>
                 </div>
             </button>
-            <button type="button" data-report-type="refinitiv" 
+            <button type="button" data-report-type="refinitiv"
                class="report-tab flex-1 px-4 py-4 text-center font-semibold transition-all {{ $reportType === 'refinitiv' ? 'text-blue-600 border-b-2 border-blue-500 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }}">
                 <div class="flex items-center justify-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,7 +53,7 @@
                     <span class="sm:hidden">Refinitiv</span>
                 </div>
             </button>
-            <button type="button" data-report-type="bloomberg" 
+            <button type="button" data-report-type="bloomberg"
                class="report-tab flex-1 px-4 py-4 text-center font-semibold transition-all {{ $reportType === 'bloomberg' ? 'text-indigo-600 border-b-2 border-indigo-500 bg-indigo-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }}">
                 <div class="flex items-center justify-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,11 +76,11 @@
                 Filter Laporan <span id="filter-title"> {{ $reportTypes[$reportType] ?? '' }}</span>
             </h2>
         </div>
-        
+
         <form id="filter-form" class="p-4 md:p-6">
             <input type="hidden" name="report_type" id="report_type" value="{{ $reportType }}">
-            
-            <div id="filter-fields" class="grid grid-cols-1 md:grid-cols-2 {{ $reportType === 'lab' ? 'lg:grid-cols-4' : 'lg:grid-cols-2' }} gap-4 mb-4">
+
+            <div id="filter-fields" class="grid grid-cols-1 md:grid-cols-2 {{ $reportType === 'lab' ? 'lg:grid-cols-8' : 'lg:grid-cols-3' }} gap-4 mb-4">
                 <!-- Start Month -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Bulan Mulai</label>
@@ -95,6 +95,40 @@
                     <input type="month" name="end_month" id="end_month" value="{{ request('end_month') }}"
                         min="2000-01" max="2099-12"
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- Lab Booking Date Start (only for lab report) -->
+                <div id="booking-date-start-container" class="{{ $reportType !== 'lab' ? 'hidden' : '' }}">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Peminjaman Mulai</label>
+                    <input type="date" name="booking_date_start" id="booking_date_start" value="{{ request('booking_date_start') }}"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- Lab Booking Date End (only for lab report) -->
+                <div id="booking-date-end-container" class="{{ $reportType !== 'lab' ? 'hidden' : '' }}">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Peminjaman Akhir</label>
+                    <input type="date" name="booking_date_end" id="booking_date_end" value="{{ request('booking_date_end') }}"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- Urut tanggal dibuat (lab, bps, bloomberg)-->
+                <div id="urut-tanggal-dibuat" class="{{ $reportType === 'refinitiv' ? 'hidden' : '' }}">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Urut Tanggal Dibuat</label>
+                    <select name="sort_created_at" id="sort_created_at" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="none" {{ request('sort_created_at') === 'none' ? 'selected' : '' }}>None</option>
+                        <option value="desc" {{ request('sort_created_at', 'desc') === 'desc' ? 'selected' : '' }}>Terbaru</option>
+                        <option value="asc" {{ request('sort_created_at') === 'asc' ? 'selected' : '' }}>Terlama</option>
+                    </select>
+                </div>
+
+                <!-- Booking Date Sort (lab and refinitiv report) -->
+                <div id="sort-booking-date-container" class="{{ !in_array($reportType, ['lab', 'refinitiv']) ? 'hidden' : '' }}">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Urut Tanggal Pelaksanaan</label>
+                    <select name="sort_booking_date" id="sort_booking_date" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="none" {{ request('sort_booking_date') === 'none' ? 'selected' : '' }}>None</option>
+                        <option value="desc" {{ request('sort_booking_date', 'desc') === 'desc' ? 'selected' : '' }}>Terbaru</option>
+                        <option value="asc" {{ request('sort_booking_date') === 'asc' ? 'selected' : '' }}>Terlama</option>
+                    </select>
                 </div>
 
                 <!-- Lab Filter (only for lab report) -->
@@ -190,6 +224,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const endMonthInput = document.getElementById('end_month');
     const labIdInput = document.getElementById('lab_id');
     const typeInput = document.getElementById('type');
+    const sortCreatedAtInput = document.getElementById('sort_created_at');
+    const bookingDateStartInput = document.getElementById('booking_date_start');
+    const bookingDateEndInput = document.getElementById('booking_date_end');
+    const sortBookingDateInput = document.getElementById('sort_booking_date');
+    const sortCreatedAtContainer = document.getElementById('urut-tanggal-dibuat');
     const dataContainer = document.getElementById('data-container');
     const loadingOverlay = document.getElementById('loading-overlay');
     const btnFilterText = document.getElementById('btn-filter-text');
@@ -200,16 +239,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const labFilterContainer = document.getElementById('lab-filter-container');
     const typeFilterContainer = document.getElementById('type-filter-container');
     const filterFields = document.getElementById('filter-fields');
-    
+
     const reportTabs = document.querySelectorAll('.report-tab');
-    
+
     const reportTypeNames = {
         'lab': 'Peminjaman Lab',
         'bps': 'Permohonan Data BPS',
         'refinitiv': 'Permohonan Data Refinitiv',
         'bloomberg': 'Reservasi Bloomberg'
     };
-    
+
     const tabColors = {
         'lab': { active: 'text-yellow-600 border-b-2 border-yellow-500 bg-yellow-50', inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' },
         'bps': { active: 'text-teal-600 border-b-2 border-teal-500 bg-teal-50', inactive: 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' },
@@ -221,14 +260,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function getFilterParams() {
         const params = new URLSearchParams();
         params.set('report_type', reportTypeInput.value);
-        
+
         if (startMonthInput.value) params.set('start_month', startMonthInput.value);
         if (endMonthInput.value) params.set('end_month', endMonthInput.value);
-        
+        if (reportTypeInput.value !== 'refinitiv' && sortCreatedAtInput.value) {
+            params.set('sort_created_at', sortCreatedAtInput.value);
+        }
+
         // Only include lab filters for lab report type
         if (reportTypeInput.value === 'lab') {
             if (labIdInput.value) params.set('lab_id', labIdInput.value);
             if (typeInput.value) params.set('type', typeInput.value);
+            if (bookingDateStartInput.value) params.set('booking_date_start', bookingDateStartInput.value);
+            if (bookingDateEndInput.value) params.set('booking_date_end', bookingDateEndInput.value);
+            if (sortBookingDateInput.value) params.set('sort_booking_date', sortBookingDateInput.value);
+        }
+
+        if (reportTypeInput.value === 'refinitiv') {
+            if (sortBookingDateInput.value) params.set('sort_booking_date', sortBookingDateInput.value);
         }
 
         // Include bloomberg type filter
@@ -236,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const bloombergType = document.getElementById('bloomberg_type');
             if (bloombergType && bloombergType.value) params.set('bloomberg_type', bloombergType.value);
         }
-        
+
         return params;
     }
 
@@ -252,10 +301,10 @@ document.addEventListener('DOMContentLoaded', function() {
         reportTabs.forEach(tab => {
             const tabType = tab.dataset.reportType;
             const colors = tabColors[tabType];
-            
+
             // Remove all possible classes
             tab.classList.remove(...colors.active.split(' '), ...colors.inactive.split(' '));
-            
+
             // Add appropriate classes
             if (tabType === activeType) {
                 tab.classList.add(...colors.active.split(' '));
@@ -268,6 +317,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update filter visibility based on report type
     function updateFilterVisibility(reportType) {
         const bloombergTypeContainer = document.getElementById('bloomberg-type-filter-container');
+        const bookingDateStartContainer = document.getElementById('booking-date-start-container');
+        const bookingDateEndContainer = document.getElementById('booking-date-end-container');
+        const sortBookingDateContainer = document.getElementById('sort-booking-date-container');
 
         // Toggle Export Word button visibility
         if (reportType === 'bloomberg') {
@@ -279,31 +331,62 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (reportType === 'lab') {
+            sortCreatedAtContainer.classList.remove('hidden');
             labFilterContainer.classList.remove('hidden');
             typeFilterContainer.classList.remove('hidden');
+            bookingDateStartContainer.classList.remove('hidden');
+            bookingDateEndContainer.classList.remove('hidden');
+            sortBookingDateContainer.classList.remove('hidden');
             bloombergTypeContainer.classList.add('hidden');
-            filterFields.classList.remove('lg:grid-cols-2');
-            filterFields.classList.add('lg:grid-cols-4');
+            filterFields.classList.remove('lg:grid-cols-2', 'lg:grid-cols-3');
+            filterFields.classList.add('lg:grid-cols-8');
         } else if (reportType === 'bloomberg') {
+            sortCreatedAtContainer.classList.remove('hidden');
             labFilterContainer.classList.add('hidden');
             typeFilterContainer.classList.add('hidden');
+            bookingDateStartContainer.classList.add('hidden');
+            bookingDateEndContainer.classList.add('hidden');
+            sortBookingDateContainer.classList.add('hidden');
             bloombergTypeContainer.classList.remove('hidden');
-            filterFields.classList.remove('lg:grid-cols-4');
-            filterFields.classList.add('lg:grid-cols-2');
-            filterFields.classList.remove('lg:grid-cols-2');
+            filterFields.classList.remove('lg:grid-cols-8', 'lg:grid-cols-2');
             filterFields.classList.add('lg:grid-cols-3');
             labIdInput.value = '';
             typeInput.value = '';
-        } else {
+            bookingDateStartInput.value = '';
+            bookingDateEndInput.value = '';
+            sortBookingDateInput.value = 'desc';
+        } else if (reportType === 'refinitiv') {
+            sortCreatedAtContainer.classList.add('hidden');
             labFilterContainer.classList.add('hidden');
             typeFilterContainer.classList.add('hidden');
+            bookingDateStartContainer.classList.add('hidden');
+            bookingDateEndContainer.classList.add('hidden');
+            sortBookingDateContainer.classList.remove('hidden');
             bloombergTypeContainer.classList.add('hidden');
-            filterFields.classList.remove('lg:grid-cols-4', 'lg:grid-cols-3');
-            filterFields.classList.add('lg:grid-cols-2');
+            filterFields.classList.remove('lg:grid-cols-8', 'lg:grid-cols-2');
+            filterFields.classList.add('lg:grid-cols-3');
             labIdInput.value = '';
             typeInput.value = '';
+            bookingDateStartInput.value = '';
+            bookingDateEndInput.value = '';
+            sortBookingDateInput.value = 'desc';
+        } else {
+            sortCreatedAtContainer.classList.remove('hidden');
+            labFilterContainer.classList.add('hidden');
+            typeFilterContainer.classList.add('hidden');
+            bookingDateStartContainer.classList.add('hidden');
+            bookingDateEndContainer.classList.add('hidden');
+            sortBookingDateContainer.classList.add('hidden');
+            bloombergTypeContainer.classList.add('hidden');
+            filterFields.classList.remove('lg:grid-cols-8', 'lg:grid-cols-2');
+            filterFields.classList.add('lg:grid-cols-3');
+            labIdInput.value = '';
+            typeInput.value = '';
+            bookingDateStartInput.value = '';
+            bookingDateEndInput.value = '';
+            sortBookingDateInput.value = 'desc';
         }
-        
+
         // Update filter title
         filterTitle.textContent = reportTypeNames[reportType] || '';
     }
@@ -317,10 +400,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         loadingOverlay.classList.remove('hidden');
         btnFilterText.textContent = 'Memuat...';
-        
+
         const params = getFilterParams();
         if (page) params.set('page', page);
-        
+
         fetch('{{ route("admin.reports.index") }}?' + params.toString(), {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -330,11 +413,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             dataContainer.innerHTML = data.html;
-            
+
             // Update browser URL without reload
             const newUrl = '{{ route("admin.reports.index") }}?' + params.toString();
             window.history.pushState({}, '', newUrl);
-            
+
             // Re-attach pagination click handlers
             attachPaginationHandlers();
         })
@@ -377,6 +460,10 @@ document.addEventListener('DOMContentLoaded', function() {
         endMonthInput.value = '';
         labIdInput.value = '';
         typeInput.value = '';
+        bookingDateStartInput.value = '';
+        bookingDateEndInput.value = '';
+        sortBookingDateInput.value = 'desc';
+        sortCreatedAtInput.value = 'desc';
         fetchData();
     });
 
@@ -385,13 +472,13 @@ document.addEventListener('DOMContentLoaded', function() {
         tab.addEventListener('click', function() {
             const newReportType = this.dataset.reportType;
             reportTypeInput.value = newReportType;
-            
+
             // Update tab styles
             updateTabStyles(newReportType);
-            
+
             // Update filter visibility
             updateFilterVisibility(newReportType);
-            
+
             // Fetch data for new report type
             fetchData();
         });
@@ -401,16 +488,32 @@ document.addEventListener('DOMContentLoaded', function() {
     startMonthInput.addEventListener('change', function() {
         fetchData();
     });
-    
+
     endMonthInput.addEventListener('change', function() {
         fetchData();
     });
-    
+
     labIdInput.addEventListener('change', function() {
         fetchData();
     });
-    
+
     typeInput.addEventListener('change', function() {
+        fetchData();
+    });
+
+    bookingDateStartInput.addEventListener('change', function() {
+        fetchData();
+    });
+
+    bookingDateEndInput.addEventListener('change', function() {
+        fetchData();
+    });
+
+    sortBookingDateInput.addEventListener('change', function() {
+        fetchData();
+    });
+
+    sortCreatedAtInput.addEventListener('change', function() {
         fetchData();
     });
 

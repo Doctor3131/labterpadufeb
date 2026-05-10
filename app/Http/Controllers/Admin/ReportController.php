@@ -3,16 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BloombergRequest;
 use App\Models\Booking;
 use App\Models\BpsRequest;
-use App\Models\RefinitivRequest;
-use App\Models\BloombergRequest;
-use App\Models\Schedule;
 use App\Models\Lab;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\RefinitivRequest;
+use App\Models\Schedule;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Response;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ReportController extends Controller
 {
@@ -57,12 +63,12 @@ class ReportController extends Controller
             ->whereIn('status', ['approved']);
 
         if ($request->filled('start_month')) {
-            $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
+            $startDate = Carbon::parse($request->start_month.'-01')->startOfMonth();
             $bookingsQuery->where('created_at', '>=', $startDate);
         }
 
         if ($request->filled('end_month')) {
-            $endDate = Carbon::parse($request->end_month . '-01')->endOfMonth();
+            $endDate = Carbon::parse($request->end_month.'-01')->endOfMonth();
             $bookingsQuery->where('created_at', '<=', $endDate);
         }
 
@@ -72,6 +78,14 @@ class ReportController extends Controller
 
         if ($request->filled('type')) {
             $bookingsQuery->where('booking_type', $request->type);
+        }
+
+        if ($request->filled('booking_date_start')) {
+            $bookingsQuery->whereRaw('DATE(COALESCE(booking_date, created_at)) >= ?', [$request->booking_date_start]);
+        }
+
+        if ($request->filled('booking_date_end')) {
+            $bookingsQuery->whereRaw('DATE(COALESCE(booking_date, created_at)) <= ?', [$request->booking_date_end]);
         }
 
         return $bookingsQuery;
@@ -86,12 +100,12 @@ class ReportController extends Controller
             ->whereNull('booking_id'); // Only schedules added manually by admin
 
         if ($request->filled('start_month')) {
-            $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
+            $startDate = Carbon::parse($request->start_month.'-01')->startOfMonth();
             $schedulesQuery->where('created_at', '>=', $startDate);
         }
 
         if ($request->filled('end_month')) {
-            $endDate = Carbon::parse($request->end_month . '-01')->endOfMonth();
+            $endDate = Carbon::parse($request->end_month.'-01')->endOfMonth();
             $schedulesQuery->where('created_at', '<=', $endDate);
         }
 
@@ -103,12 +117,20 @@ class ReportController extends Controller
             $schedulesQuery->where('type', $request->type);
         }
 
+        if ($request->filled('booking_date_start')) {
+            $schedulesQuery->whereRaw('DATE(COALESCE(start_date, created_at)) >= ?', [$request->booking_date_start]);
+        }
+
+        if ($request->filled('booking_date_end')) {
+            $schedulesQuery->whereRaw('DATE(COALESCE(start_date, created_at)) <= ?', [$request->booking_date_end]);
+        }
+
         $schedules = $schedulesQuery->get();
 
         // Transform schedules to booking-like format
         return $schedules->map(function ($schedule) {
             return (object) [
-                'id' => 'schedule_' . $schedule->id,
+                'id' => 'schedule_'.$schedule->id,
                 'created_at' => $schedule->created_at,
                 'pic_name' => $schedule->komting ?? $schedule->lecturer ?? 'Admin',
                 'booking_type' => $schedule->type,
@@ -130,19 +152,22 @@ class ReportController extends Controller
      */
     private function getCombinedLabData(Request $request, $perPage = 50)
     {
+        $createdSortDirection = $this->getSortDirection($request);
+        $bookingDateSortDirection = $this->getBookingDateSortDirection($request);
+
         // Get bookings
         $bookings = $this->buildLabQuery($request)->get()->map(function ($booking) {
             $booking->is_manual_schedule = false;
+
             return $booking;
         });
 
         // Get manual schedules
         $manualSchedules = $this->getManualSchedules($request);
 
-        // Merge and sort by created_at desc
-        $combined = $bookings->concat($manualSchedules)
-            ->sortByDesc('created_at')
-            ->values();
+        // Merge and sort by effective booking date first, then created_at
+        $combined = $bookings->concat($manualSchedules);
+        $combined = $this->sortLabCollection($combined, $bookingDateSortDirection, $createdSortDirection)->values();
 
         // Manual pagination
         $page = request()->get('page', 1);
@@ -159,6 +184,62 @@ class ReportController extends Controller
     }
 
     /**
+     * Get created_at sort direction from request.
+     */
+    private function getSortDirection(Request $request): ?string
+    {
+        $direction = $request->get('sort_created_at', 'desc');
+
+        return in_array($direction, ['asc', 'desc'], true) ? $direction : null;
+    }
+
+    /**
+     * Get effective booking date sort direction from request.
+     */
+    private function getBookingDateSortDirection(Request $request): ?string
+    {
+        $direction = $request->get('sort_booking_date', 'desc');
+
+        return in_array($direction, ['asc', 'desc'], true) ? $direction : null;
+    }
+
+    /**
+     * Resolve effective lab execution date with fallback to created_at.
+     */
+    private function getEffectiveLabExecutionDate($item): Carbon
+    {
+        return Carbon::parse($item->booking_date ?? $item->created_at)->startOfDay();
+    }
+
+    /**
+     * Sort lab collection by execution date, then created_at.
+     */
+    private function sortLabCollection($collection, ?string $bookingDateDirection, ?string $createdAtDirection)
+    {
+        return $collection->sort(function ($a, $b) use ($bookingDateDirection, $createdAtDirection) {
+            $executionA = $this->getEffectiveLabExecutionDate($a)->timestamp;
+            $executionB = $this->getEffectiveLabExecutionDate($b)->timestamp;
+
+            if ($bookingDateDirection !== null && $executionA !== $executionB) {
+                return $bookingDateDirection === 'asc'
+                    ? $executionA <=> $executionB
+                    : $executionB <=> $executionA;
+            }
+
+            $createdA = Carbon::parse($a->created_at)->timestamp;
+            $createdB = Carbon::parse($b->created_at)->timestamp;
+
+            if ($createdAtDirection === null) {
+                return 0;
+            }
+
+            return $createdAtDirection === 'asc'
+                ? $createdA <=> $createdB
+                : $createdB <=> $createdA;
+        });
+    }
+
+    /**
      * Build base query for BPS requests
      * Only includes completed/sent requests
      */
@@ -167,12 +248,12 @@ class ReportController extends Controller
         $query = BpsRequest::where('status', 'completed'); // Only completed/sent
 
         if ($request->filled('start_month')) {
-            $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
+            $startDate = Carbon::parse($request->start_month.'-01')->startOfMonth();
             $query->where('created_at', '>=', $startDate);
         }
 
         if ($request->filled('end_month')) {
-            $endDate = Carbon::parse($request->end_month . '-01')->endOfMonth();
+            $endDate = Carbon::parse($request->end_month.'-01')->endOfMonth();
             $query->where('created_at', '<=', $endDate);
         }
 
@@ -188,12 +269,12 @@ class ReportController extends Controller
         $query = RefinitivRequest::where('attendance_status', 'hadir'); // Only attended
 
         if ($request->filled('start_month')) {
-            $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
+            $startDate = Carbon::parse($request->start_month.'-01')->startOfMonth();
             $query->where('created_at', '>=', $startDate);
         }
 
         if ($request->filled('end_month')) {
-            $endDate = Carbon::parse($request->end_month . '-01')->endOfMonth();
+            $endDate = Carbon::parse($request->end_month.'-01')->endOfMonth();
             $query->where('created_at', '<=', $endDate);
         }
 
@@ -213,18 +294,18 @@ class ReportController extends Controller
         ];
 
         $filename = $typeNames[$reportType] ?? 'laporan';
-        
+
         if ($startMonth && $endMonth) {
-            $filename .= '_' . $startMonth . '_sd_' . $endMonth;
+            $filename .= '_'.$startMonth.'_sd_'.$endMonth;
         } elseif ($startMonth) {
-            $filename .= '_dari_' . $startMonth;
+            $filename .= '_dari_'.$startMonth;
         } elseif ($endMonth) {
-            $filename .= '_sampai_' . $endMonth;
+            $filename .= '_sampai_'.$endMonth;
         } else {
             $filename .= '_semua';
         }
-        
-        return $filename . '.' . $extension;
+
+        return $filename.'.'.$extension;
     }
 
     /**
@@ -239,23 +320,45 @@ class ReportController extends Controller
             'lab_id' => 'nullable|exists:labs,id',
             'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'bloomberg_type' => 'nullable|in:reservasi,walk_in',
+            'sort_created_at' => 'nullable|in:asc,desc,none',
+            'booking_date_start' => 'nullable|date',
+            'booking_date_end' => 'nullable|date|after_or_equal:booking_date_start',
+            'sort_booking_date' => 'nullable|in:asc,desc,none',
         ]);
 
         $reportType = $request->get('report_type', 'lab');
+        $sortDirection = $this->getSortDirection($request);
         $data = collect();
-        
+
         if ($reportType === 'lab') {
             // Use combined data (bookings + manual schedules)
             $data = $this->getCombinedLabData($request);
         } elseif ($reportType === 'bps') {
             $query = $this->buildBpsQuery($request);
-            $data = $query->orderBy('created_at', 'desc')->paginate(50)->withQueryString();
+            if ($sortDirection) {
+                $query->orderBy('created_at', $sortDirection);
+            }
+
+            $data = $query->paginate(50)->withQueryString();
         } elseif ($reportType === 'refinitiv') {
             $query = $this->buildRefinitivQuery($request);
-            $data = $query->orderBy('created_at', 'desc')->paginate(50)->withQueryString();
+
+            $bookingDateSortDirection = $this->getBookingDateSortDirection($request);
+            if ($bookingDateSortDirection) {
+                $query->orderBy('usage_date', $bookingDateSortDirection)
+                    ->orderBy('created_at', 'desc');
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+
+            $data = $query->paginate(50)->withQueryString();
         } elseif ($reportType === 'bloomberg') {
             $query = $this->buildBloombergQuery($request);
-            $data = $query->orderBy('usage_date', 'desc')->paginate(50)->withQueryString();
+            if ($sortDirection) {
+                $query->orderBy('created_at', $sortDirection);
+            }
+
+            $data = $query->paginate(50)->withQueryString();
         }
 
         $labs = Lab::orderBy('name')->get();
@@ -285,6 +388,10 @@ class ReportController extends Controller
             'lab_id' => 'nullable|exists:labs,id',
             'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'bloomberg_type' => 'nullable|in:reservasi,walk_in',
+            'sort_created_at' => 'nullable|in:asc,desc,none',
+            'booking_date_start' => 'nullable|date',
+            'booking_date_end' => 'nullable|date|after_or_equal:booking_date_start',
+            'sort_booking_date' => 'nullable|in:asc,desc,none',
         ]);
 
         $reportType = $request->get('report_type', 'lab');
@@ -306,8 +413,8 @@ class ReportController extends Controller
     private function downloadExcel($spreadsheet, $reportType, Request $request)
     {
         $filename = $this->generateFilename($reportType, $request->start_month, $request->end_month, 'xlsx');
-        $tempFile = tempnam(sys_get_temp_dir(), $reportType . '_');
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $tempFile = tempnam(sys_get_temp_dir(), $reportType.'_');
+        $writer = new Xlsx($spreadsheet);
         $writer->save($tempFile);
         $spreadsheet->disconnectWorksheets();
         unset($spreadsheet);
@@ -324,12 +431,12 @@ class ReportController extends Controller
     {
         $sheet->getStyle($range)->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 11],
-            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => $colorRgb]],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $colorRgb]],
             'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
             ],
-            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
         $sheet->getRowDimension(1)->setRowHeight(25);
     }
@@ -339,13 +446,15 @@ class ReportController extends Controller
      */
     private function applyDataStyle($sheet, $lastCol, $lastRow)
     {
-        if ($lastRow < 2) return;
-        $sheet->getStyle('A2:' . $lastCol . $lastRow)->getBorders()->getAllBorders()
-            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        if ($lastRow < 2) {
+            return;
+        }
+        $sheet->getStyle('A2:'.$lastCol.$lastRow)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
         for ($r = 2; $r <= $lastRow; $r++) {
             if ($r % 2 === 1) {
-                $sheet->getStyle('A' . $r . ':' . $lastCol . $r)->getFill()
-                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                $sheet->getStyle('A'.$r.':'.$lastCol.$r)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
                     ->getStartColor()->setRGB('F3F4F6');
             }
         }
@@ -356,23 +465,32 @@ class ReportController extends Controller
      */
     private function exportLabExcel(Request $request)
     {
-        $bookings = $this->buildLabQuery($request)->orderBy('created_at', 'desc')->get()->map(function ($b) {
+        $createdSortDirection = $this->getSortDirection($request);
+        $bookingDateSortDirection = $this->getBookingDateSortDirection($request);
+
+        $bookings = $this->buildLabQuery($request)->get()->map(function ($b) {
             $b->is_manual_schedule = false;
+
             return $b;
         });
         $manualSchedules = $this->getManualSchedules($request);
-        $combined = $bookings->concat($manualSchedules)->sortByDesc('created_at');
+        $combined = $bookings->concat($manualSchedules);
+        if ($bookingDateSortDirection !== null || $createdSortDirection !== null) {
+            $combined = $this->sortLabCollection($combined, $bookingDateSortDirection, $createdSortDirection);
+        }
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet()->setTitle('Peminjaman Lab');
 
-        $cols = ['A'=>'No','B'=>'Tanggal Dibuat','C'=>'Nama Peminjam','D'=>'Tipe Peminjaman','E'=>'Laboratorium','F'=>'Hari','G'=>'Tanggal Peminjaman','H'=>'Jam Mulai','I'=>'Jam Selesai','J'=>'Jumlah Peserta','K'=>'Status','L'=>'Sumber'];
-        foreach ($cols as $c => $label) $sheet->setCellValue($c.'1', $label);
+        $cols = ['A' => 'No', 'B' => 'Tanggal Dibuat', 'C' => 'Nama Peminjam', 'D' => 'Tipe Peminjaman', 'E' => 'Laboratorium', 'F' => 'Hari', 'G' => 'Tanggal Peminjaman', 'H' => 'Jam Mulai', 'I' => 'Jam Selesai', 'J' => 'Jumlah Peserta', 'K' => 'Status', 'L' => 'Sumber'];
+        foreach ($cols as $c => $label) {
+            $sheet->setCellValue($c.'1', $label);
+        }
         $this->applyHeaderStyle($sheet, 'A1:L1', 'D97706'); // yellow/amber
 
         $row = 2;
         foreach ($combined as $no => $item) {
-            $sheet->setCellValue('A'.$row, $no+1);
+            $sheet->setCellValue('A'.$row, $no + 1);
             $sheet->setCellValue('B'.$row, Carbon::parse($item->created_at)->format('d/m/Y H:i'));
             $sheet->setCellValue('C'.$row, $item->pic_name);
             $sheet->setCellValue('D'.$row, $this->typeLabels[$item->booking_type] ?? $item->booking_type);
@@ -387,8 +505,10 @@ class ReportController extends Controller
             $row++;
         }
 
-        $this->applyDataStyle($sheet, 'L', $row-1);
-        foreach (array_keys($cols) as $c) $sheet->getColumnDimension($c)->setAutoSize(true);
+        $this->applyDataStyle($sheet, 'L', $row - 1);
+        foreach (array_keys($cols) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
 
         return $this->downloadExcel($spreadsheet, 'lab', $request);
     }
@@ -398,13 +518,22 @@ class ReportController extends Controller
      */
     private function exportBpsExcel(Request $request)
     {
-        $requests = $this->buildBpsQuery($request)->orderBy('created_at', 'desc')->get();
+        $query = $this->buildBpsQuery($request);
+        $sortDirection = $this->getSortDirection($request);
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        if ($sortDirection) {
+            $query->orderBy('created_at', $sortDirection);
+        }
+
+        $requests = $query->get();
+
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet()->setTitle('BPS');
 
-        $cols = ['A'=>'No','B'=>'Timestamp','C'=>'Nama','D'=>'NIM/NIP','E'=>'Program Studi','F'=>'Keperluan Penggunaan Data'];
-        foreach ($cols as $c => $label) $sheet->setCellValue($c.'1', $label);
+        $cols = ['A' => 'No', 'B' => 'Timestamp', 'C' => 'Nama', 'D' => 'NIM/NIP', 'E' => 'Program Studi', 'F' => 'Keperluan Penggunaan Data'];
+        foreach ($cols as $c => $label) {
+            $sheet->setCellValue($c.'1', $label);
+        }
         $this->applyHeaderStyle($sheet, 'A1:F1', '0D9488'); // teal
 
         $row = 2;
@@ -412,17 +541,19 @@ class ReportController extends Controller
             $identifier = $req->applicant_type === 'mahasiswa' ? $req->nim : $req->nip;
             $purpose = $req->purpose === 'Lainnya' ? $req->purpose_other : $req->purpose;
 
-            $sheet->setCellValue('A'.$row, $no+1);
+            $sheet->setCellValue('A'.$row, $no + 1);
             $sheet->setCellValue('B'.$row, Carbon::parse($req->created_at)->format('d/m/Y H:i:s'));
             $sheet->setCellValue('C'.$row, $req->name);
-            $sheet->setCellValueExplicit('D'.$row, $identifier ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit('D'.$row, $identifier ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValue('E'.$row, $req->study_program ?? '-');
             $sheet->setCellValue('F'.$row, $purpose);
             $row++;
         }
 
-        $this->applyDataStyle($sheet, 'F', $row-1);
-        foreach (array_keys($cols) as $c) $sheet->getColumnDimension($c)->setAutoSize(true);
+        $this->applyDataStyle($sheet, 'F', $row - 1);
+        foreach (array_keys($cols) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
 
         return $this->downloadExcel($spreadsheet, 'bps', $request);
     }
@@ -432,13 +563,25 @@ class ReportController extends Controller
      */
     private function exportRefinitivExcel(Request $request)
     {
-        $requests = $this->buildRefinitivQuery($request)->orderBy('created_at', 'desc')->get();
+        $query = $this->buildRefinitivQuery($request);
+        $bookingDateSortDirection = $this->getBookingDateSortDirection($request);
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        if ($bookingDateSortDirection) {
+            $query->orderBy('usage_date', $bookingDateSortDirection)
+                ->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $requests = $query->get();
+
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet()->setTitle('Refinitiv');
 
-        $cols = ['A'=>'No','B'=>'Nama','C'=>'NIM/NIP','D'=>'Program Studi','E'=>'Keperluan Penggunaan Data','F'=>'Tanggal Pemakaian'];
-        foreach ($cols as $c => $label) $sheet->setCellValue($c.'1', $label);
+        $cols = ['A' => 'No', 'B' => 'Nama', 'C' => 'NIM/NIP', 'D' => 'Program Studi', 'E' => 'Keperluan Penggunaan Data', 'F' => 'Tanggal Pemakaian'];
+        foreach ($cols as $c => $label) {
+            $sheet->setCellValue($c.'1', $label);
+        }
         $this->applyHeaderStyle($sheet, 'A1:F1', '2563EB'); // blue
 
         $row = 2;
@@ -446,17 +589,19 @@ class ReportController extends Controller
             $purpose = $req->purpose === 'lainnya' ? $req->purpose_other : (RefinitivRequest::PURPOSES[$req->purpose] ?? $req->purpose);
             $session = RefinitivRequest::SESSIONS[$req->session] ?? $req->session;
 
-            $sheet->setCellValue('A'.$row, $no+1);
+            $sheet->setCellValue('A'.$row, $no + 1);
             $sheet->setCellValue('B'.$row, $req->name);
-            $sheet->setCellValueExplicit('C'.$row, $req->nim_nip ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit('C'.$row, $req->nim_nip ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValue('D'.$row, $req->study_program ?? '-');
             $sheet->setCellValue('E'.$row, $purpose);
-            $sheet->setCellValue('F'.$row, Carbon::parse($req->usage_date)->format('d/m/Y') . ' (' . $session . ')');
+            $sheet->setCellValue('F'.$row, Carbon::parse($req->usage_date)->format('d/m/Y').' ('.$session.')');
             $row++;
         }
 
-        $this->applyDataStyle($sheet, 'F', $row-1);
-        foreach (array_keys($cols) as $c) $sheet->getColumnDimension($c)->setAutoSize(true);
+        $this->applyDataStyle($sheet, 'F', $row - 1);
+        foreach (array_keys($cols) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
 
         return $this->downloadExcel($spreadsheet, 'refinitiv', $request);
     }
@@ -473,6 +618,10 @@ class ReportController extends Controller
             'lab_id' => 'nullable|exists:labs,id',
             'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan,pribadi',
             'bloomberg_type' => 'nullable|in:reservasi,walk_in',
+            'sort_created_at' => 'nullable|in:asc,desc,none',
+            'booking_date_start' => 'nullable|date',
+            'booking_date_end' => 'nullable|date|after_or_equal:booking_date_start',
+            'sort_booking_date' => 'nullable|in:asc,desc,none',
         ]);
 
         $reportType = $request->get('report_type', 'lab');
@@ -480,7 +629,7 @@ class ReportController extends Controller
 
         $headers = [
             'Content-Type' => 'application/msword',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
         if ($reportType === 'lab') {
@@ -500,12 +649,13 @@ class ReportController extends Controller
     private function getDateRangeText($startMonth, $endMonth)
     {
         if ($startMonth && $endMonth) {
-            return Carbon::parse($startMonth)->locale('id')->isoFormat('MMMM Y') . ' - ' . Carbon::parse($endMonth)->locale('id')->isoFormat('MMMM Y');
+            return Carbon::parse($startMonth)->locale('id')->isoFormat('MMMM Y').' - '.Carbon::parse($endMonth)->locale('id')->isoFormat('MMMM Y');
         } elseif ($startMonth) {
-            return 'Dari ' . Carbon::parse($startMonth)->locale('id')->isoFormat('MMMM Y');
+            return 'Dari '.Carbon::parse($startMonth)->locale('id')->isoFormat('MMMM Y');
         } elseif ($endMonth) {
-            return 'Sampai ' . Carbon::parse($endMonth)->locale('id')->isoFormat('MMMM Y');
+            return 'Sampai '.Carbon::parse($endMonth)->locale('id')->isoFormat('MMMM Y');
         }
+
         return 'Semua Data';
     }
 
@@ -515,9 +665,13 @@ class ReportController extends Controller
      */
     private function exportLabWord(Request $request, $headers)
     {
+        $createdSortDirection = $this->getSortDirection($request);
+        $bookingDateSortDirection = $this->getBookingDateSortDirection($request);
+
         // Get bookings
-        $bookings = $this->buildLabQuery($request)->orderBy('created_at', 'desc')->get()->map(function ($booking) {
+        $bookings = $this->buildLabQuery($request)->get()->map(function ($booking) {
             $booking->is_manual_schedule = false;
+
             return $booking;
         });
 
@@ -525,12 +679,15 @@ class ReportController extends Controller
         $manualSchedules = $this->getManualSchedules($request);
 
         // Merge and sort
-        $combined = $bookings->concat($manualSchedules)->sortByDesc('created_at');
+        $combined = $bookings->concat($manualSchedules);
+        if ($bookingDateSortDirection !== null || $createdSortDirection !== null) {
+            $combined = $this->sortLabCollection($combined, $bookingDateSortDirection, $createdSortDirection);
+        }
 
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('LAPORAN PEMINJAMAN LABORATORIUM', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $combined->count() . ' peminjaman');
-        
+        $html = $this->getWordHeader('LAPORAN PEMINJAMAN LABORATORIUM', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $combined->count().' peminjaman');
+
         $html .= '
             <table>
                 <thead>
@@ -553,16 +710,16 @@ class ReportController extends Controller
         foreach ($combined as $item) {
             $html .= '
                     <tr>
-                        <td class="center">' . $no++ . '</td>
-                        <td>' . Carbon::parse($item->created_at)->format('d/m/Y H:i') . '</td>
-                        <td>' . htmlspecialchars($item->pic_name) . '</td>
-                        <td>' . htmlspecialchars($this->typeLabels[$item->booking_type] ?? $item->booking_type) . '</td>
-                        <td>' . htmlspecialchars($item->lab->name ?? '-') . '</td>
-                        <td class="center">' . htmlspecialchars($item->day) . '</td>
-                        <td class="center">' . ($item->booking_date ? Carbon::parse($item->booking_date)->format('d/m/Y') : '-') . '</td>
-                        <td class="center">' . Carbon::parse($item->start_time)->format('H:i') . '-' . Carbon::parse($item->end_time)->format('H:i') . '</td>
-                        <td class="center">' . $item->participant_count . '</td>
-                        <td class="center">' . htmlspecialchars($this->statusLabels[$item->status] ?? $item->status) . '</td>
+                        <td class="center">'.$no++.'</td>
+                        <td>'.Carbon::parse($item->created_at)->format('d/m/Y H:i').'</td>
+                        <td>'.htmlspecialchars($item->pic_name).'</td>
+                        <td>'.htmlspecialchars($this->typeLabels[$item->booking_type] ?? $item->booking_type).'</td>
+                        <td>'.htmlspecialchars($item->lab->name ?? '-').'</td>
+                        <td class="center">'.htmlspecialchars($item->day).'</td>
+                        <td class="center">'.($item->booking_date ? Carbon::parse($item->booking_date)->format('d/m/Y') : '-').'</td>
+                        <td class="center">'.Carbon::parse($item->start_time)->format('H:i').'-'.Carbon::parse($item->end_time)->format('H:i').'</td>
+                        <td class="center">'.$item->participant_count.'</td>
+                        <td class="center">'.htmlspecialchars($this->statusLabels[$item->status] ?? $item->status).'</td>
                     </tr>';
         }
 
@@ -576,11 +733,18 @@ class ReportController extends Controller
      */
     private function exportBpsWord(Request $request, $headers)
     {
-        $requests = $this->buildBpsQuery($request)->orderBy('created_at', 'desc')->get();
+        $query = $this->buildBpsQuery($request);
+        $sortDirection = $this->getSortDirection($request);
+
+        if ($sortDirection) {
+            $query->orderBy('created_at', $sortDirection);
+        }
+
+        $requests = $query->get();
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('REKAPITULASI PELAYANAN AKSES DATA BPS', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count() . ' permohonan');
-        
+        $html = $this->getWordHeader('REKAPITULASI PELAYANAN AKSES DATA BPS', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count().' permohonan');
+
         $html .= '
             <table>
                 <thead>
@@ -599,15 +763,15 @@ class ReportController extends Controller
         foreach ($requests as $req) {
             $identifier = $req->applicant_type === 'mahasiswa' ? $req->nim : $req->nip;
             $purpose = $req->purpose === 'Lainnya' ? $req->purpose_other : $req->purpose;
-            
+
             $html .= '
                     <tr>
-                        <td class="center">' . $no++ . '</td>
-                        <td>' . Carbon::parse($req->created_at)->format('d/m/Y H:i:s') . '</td>
-                        <td>' . htmlspecialchars($req->name) . '</td>
-                        <td>' . htmlspecialchars($identifier ?? '-') . '</td>
-                        <td>' . htmlspecialchars($req->study_program ?? '-') . '</td>
-                        <td>' . htmlspecialchars($purpose) . '</td>
+                        <td class="center">'.$no++.'</td>
+                        <td>'.Carbon::parse($req->created_at)->format('d/m/Y H:i:s').'</td>
+                        <td>'.htmlspecialchars($req->name).'</td>
+                        <td>'.htmlspecialchars($identifier ?? '-').'</td>
+                        <td>'.htmlspecialchars($req->study_program ?? '-').'</td>
+                        <td>'.htmlspecialchars($purpose).'</td>
                     </tr>';
         }
 
@@ -621,11 +785,21 @@ class ReportController extends Controller
      */
     private function exportRefinitivWord(Request $request, $headers)
     {
-        $requests = $this->buildRefinitivQuery($request)->orderBy('usage_date', 'desc')->get();
+        $query = $this->buildRefinitivQuery($request);
+        $bookingDateSortDirection = $this->getBookingDateSortDirection($request);
+
+        if ($bookingDateSortDirection) {
+            $query->orderBy('usage_date', $bookingDateSortDirection)
+                ->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $requests = $query->get();
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('REKAPITULASI PELAYANAN DATA REFINITIV', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count() . ' permohonan');
-        
+        $html = $this->getWordHeader('REKAPITULASI PELAYANAN DATA REFINITIV', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count().' permohonan');
+
         $html .= '
             <table>
                 <thead>
@@ -644,15 +818,15 @@ class ReportController extends Controller
         foreach ($requests as $req) {
             $purpose = $req->purpose === 'lainnya' ? $req->purpose_other : (RefinitivRequest::PURPOSES[$req->purpose] ?? $req->purpose);
             $session = RefinitivRequest::SESSIONS[$req->session] ?? $req->session;
-            
+
             $html .= '
                     <tr>
-                        <td class="center">' . $no++ . '</td>
-                        <td>' . htmlspecialchars($req->name) . '</td>
-                        <td>' . htmlspecialchars($req->nim_nip ?? '-') . '</td>
-                        <td>' . htmlspecialchars($req->study_program ?? '-') . '</td>
-                        <td>' . htmlspecialchars($purpose) . '</td>
-                        <td class="center">' . Carbon::parse($req->usage_date)->format('d/m/Y') . ' (' . $session . ')</td>
+                        <td class="center">'.$no++.'</td>
+                        <td>'.htmlspecialchars($req->name).'</td>
+                        <td>'.htmlspecialchars($req->nim_nip ?? '-').'</td>
+                        <td>'.htmlspecialchars($req->study_program ?? '-').'</td>
+                        <td>'.htmlspecialchars($purpose).'</td>
+                        <td class="center">'.Carbon::parse($req->usage_date)->format('d/m/Y').' ('.$session.')</td>
                     </tr>';
         }
 
@@ -669,12 +843,12 @@ class ReportController extends Controller
         $query = BloombergRequest::query();
 
         if ($request->filled('start_month')) {
-            $startDate = Carbon::parse($request->start_month . '-01')->startOfMonth();
+            $startDate = Carbon::parse($request->start_month.'-01')->startOfMonth();
             $query->where('usage_date', '>=', $startDate);
         }
 
         if ($request->filled('end_month')) {
-            $endDate = Carbon::parse($request->end_month . '-01')->endOfMonth();
+            $endDate = Carbon::parse($request->end_month.'-01')->endOfMonth();
             $query->where('usage_date', '<=', $endDate);
         }
 
@@ -690,13 +864,22 @@ class ReportController extends Controller
      */
     private function exportBloombergExcel(Request $request)
     {
-        $requests = $this->buildBloombergQuery($request)->orderBy('usage_date', 'desc')->get();
+        $query = $this->buildBloombergQuery($request);
+        $sortDirection = $this->getSortDirection($request);
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        if ($sortDirection) {
+            $query->orderBy('created_at', $sortDirection);
+        }
+
+        $requests = $query->get();
+
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet()->setTitle('Bloomberg');
 
-        $cols = ['A'=>'No','B'=>'Timestamp','C'=>'Tipe','D'=>'Nama','E'=>'Status Pemohon','F'=>'Universitas','G'=>'NIM/NIP','H'=>'Program Studi','I'=>'No. HP','J'=>'Tanggal Penggunaan','K'=>'Sesi','L'=>'Keperluan','M'=>'Judul Penelitian / Mata Kuliah / Dosen'];
-        foreach ($cols as $c => $label) $sheet->setCellValue($c.'1', $label);
+        $cols = ['A' => 'No', 'B' => 'Timestamp', 'C' => 'Tipe', 'D' => 'Nama', 'E' => 'Status Pemohon', 'F' => 'Universitas', 'G' => 'NIM/NIP', 'H' => 'Program Studi', 'I' => 'No. HP', 'J' => 'Tanggal Penggunaan', 'K' => 'Sesi', 'L' => 'Keperluan', 'M' => 'Judul Penelitian / Mata Kuliah / Dosen'];
+        foreach ($cols as $c => $label) {
+            $sheet->setCellValue($c.'1', $label);
+        }
         $this->applyHeaderStyle($sheet, 'A1:M1', '4338CA');
 
         $row = 2;
@@ -721,9 +904,9 @@ class ReportController extends Controller
             $sheet->setCellValue('D'.$row, $req->name);
             $sheet->setCellValue('E'.$row, $req->applicant_type_label);
             $sheet->setCellValue('F'.$row, $univDisplay);
-            $sheet->setCellValueExplicit('G'.$row, $req->nim_nip ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit('G'.$row, $req->nim_nip ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValue('H'.$row, $req->study_program ?? '-');
-            $sheet->setCellValueExplicit('I'.$row, $req->phone, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit('I'.$row, $req->phone, DataType::TYPE_STRING);
             $sheet->setCellValue('J'.$row, Carbon::parse($req->usage_date)->format('d/m/Y'));
             $sheet->setCellValue('K'.$row, $sessionLabel);
             $sheet->setCellValue('L'.$row, $purposeLabel);
@@ -731,8 +914,10 @@ class ReportController extends Controller
             $row++;
         }
 
-        $this->applyDataStyle($sheet, 'M', $row-1);
-        foreach (array_keys($cols) as $c) $sheet->getColumnDimension($c)->setAutoSize(true);
+        $this->applyDataStyle($sheet, 'M', $row - 1);
+        foreach (array_keys($cols) as $c) {
+            $sheet->getColumnDimension($c)->setAutoSize(true);
+        }
 
         return $this->downloadExcel($spreadsheet, 'bloomberg', $request);
     }
@@ -742,11 +927,18 @@ class ReportController extends Controller
      */
     private function exportBloombergWord(Request $request, $headers)
     {
-        $requests = $this->buildBloombergQuery($request)->orderBy('usage_date', 'desc')->get();
+        $query = $this->buildBloombergQuery($request);
+        $sortDirection = $this->getSortDirection($request);
+
+        if ($sortDirection) {
+            $query->orderBy('created_at', $sortDirection);
+        }
+
+        $requests = $query->get();
         $dateRangeText = $this->getDateRangeText($request->start_month, $request->end_month);
 
-        $html = $this->getWordHeader('REKAPITULASI PELAYANAN BLOOMBERG TERMINAL', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count() . ' reservasi');
-        
+        $html = $this->getWordHeader('REKAPITULASI PELAYANAN BLOOMBERG TERMINAL', 'Laboratorium dan Fasilitas Digital FEB UNDIP', $dateRangeText, $requests->count().' reservasi');
+
         $html .= '
             <table>
                 <thead>
@@ -786,19 +978,19 @@ class ReportController extends Controller
 
             $html .= '
                     <tr>
-                        <td class="center">' . $no++ . '</td>
-                        <td>' . Carbon::parse($req->created_at)->format('d/m/Y H:i') . '</td>
-                        <td class="center">' . htmlspecialchars($typeLabel) . '</td>
-                        <td>' . htmlspecialchars($req->name) . '</td>
-                        <td>' . htmlspecialchars($req->applicant_type_label) . '</td>
-                        <td>' . htmlspecialchars($univDisplay) . '</td>
-                        <td>' . htmlspecialchars($req->nim_nip ?? '-') . '</td>
-                        <td>' . htmlspecialchars($req->study_program ?? '-') . '</td>
-                        <td>' . htmlspecialchars($req->phone) . '</td>
-                        <td class="center">' . Carbon::parse($req->usage_date)->format('d/m/Y') . '</td>
-                        <td>' . htmlspecialchars($sessionLabel) . '</td>
-                        <td>' . htmlspecialchars($purposeLabel) . '</td>
-                        <td>' . htmlspecialchars($detail ?: '-') . '</td>
+                        <td class="center">'.$no++.'</td>
+                        <td>'.Carbon::parse($req->created_at)->format('d/m/Y H:i').'</td>
+                        <td class="center">'.htmlspecialchars($typeLabel).'</td>
+                        <td>'.htmlspecialchars($req->name).'</td>
+                        <td>'.htmlspecialchars($req->applicant_type_label).'</td>
+                        <td>'.htmlspecialchars($univDisplay).'</td>
+                        <td>'.htmlspecialchars($req->nim_nip ?? '-').'</td>
+                        <td>'.htmlspecialchars($req->study_program ?? '-').'</td>
+                        <td>'.htmlspecialchars($req->phone).'</td>
+                        <td class="center">'.Carbon::parse($req->usage_date)->format('d/m/Y').'</td>
+                        <td>'.htmlspecialchars($sessionLabel).'</td>
+                        <td>'.htmlspecialchars($purposeLabel).'</td>
+                        <td>'.htmlspecialchars($detail ?: '-').'</td>
                     </tr>';
         }
 
@@ -829,10 +1021,10 @@ class ReportController extends Controller
             </style>
         </head>
         <body>
-            <h1>' . htmlspecialchars($title) . '</h1>
-            <h2>' . htmlspecialchars($subtitle) . '</h2>
-            <p class="info"><strong>Periode:</strong> ' . htmlspecialchars($dateRange) . '</p>
-            <p class="info"><strong>Tanggal Cetak:</strong> ' . Carbon::now()->locale('id')->isoFormat('D MMMM Y, HH:mm') . ' WIB</p>
-            <p class="info"><strong>Total Data:</strong> ' . htmlspecialchars($totalData) . '</p>';
+            <h1>'.htmlspecialchars($title).'</h1>
+            <h2>'.htmlspecialchars($subtitle).'</h2>
+            <p class="info"><strong>Periode:</strong> '.htmlspecialchars($dateRange).'</p>
+            <p class="info"><strong>Tanggal Cetak:</strong> '.Carbon::now()->locale('id')->isoFormat('D MMMM Y, HH:mm').' WIB</p>
+            <p class="info"><strong>Total Data:</strong> '.htmlspecialchars($totalData).'</p>';
     }
 }

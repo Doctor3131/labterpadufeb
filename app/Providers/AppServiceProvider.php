@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,12 +22,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Set Carbon locale to Indonesian
-        \Carbon\Carbon::setLocale('id');
+        Carbon::setLocale('id');
 
-        // Force HTTPS only if explicitly enabled via env variable
-        // This prevents issues on internal servers that use HTTP
-        if (env('FORCE_HTTPS', false) || str_starts_with(config('app.url'), 'https://')) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+        // Force HTTPS only outside local/testing to avoid broken Vite assets
+        // when running local dev over HTTP.
+        if (
+            ! app()->environment(['local', 'testing'])
+            && (env('FORCE_HTTPS', false) || str_starts_with(config('app.url'), 'https://'))
+        ) {
+            URL::forceScheme('https');
         }
     }
 }

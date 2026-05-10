@@ -133,7 +133,7 @@
                     </ul>
                 </div>
             @endif
-            
+
             <!-- Step Indicator -->
             <div class="step-indicator mb-6 md:mb-8 px-2 md:px-0">
                 <div class="step-item active" id="step-indicator-1">
@@ -167,7 +167,7 @@
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">1</span>
                         Pilih Tipe Peminjaman
                     </h3>
-                    
+
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
                         <label class="booking-type-card cursor-pointer">
                             <input type="radio" name="booking_type" value="perkuliahan_tetap" class="hidden peer" required {{ old('booking_type') == 'perkuliahan_tetap' ? 'checked' : '' }}>
@@ -226,7 +226,7 @@
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">2</span>
                         Data Pribadi
                     </h3>
-                    
+
                     <!-- Status Fields for Pribadi (shown first for pribadi booking) -->
                     <div id="pribadi-status-fields" class="hidden mb-6">
                         <h4 class="font-bold text-gray-800 mb-4">Pilih Status Terlebih Dahulu</h4>
@@ -250,7 +250,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
@@ -268,7 +268,7 @@
                             <select name="study_program" id="study_program" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                 <option value="" disabled selected>Pilih Program Studi</option>
-                                
+
                                 <option value="S1- Ekonomi" {{ old('study_program') == 'S1- Ekonomi' ? 'selected' : '' }}>S1- Ekonomi</option>
                                 <option value="S1- Manajemen" {{ old('study_program') == 'S1- Manajemen' ? 'selected' : '' }}>S1- Manajemen</option>
                                 <option value="S1- Akuntansi" {{ old('study_program') == 'S1- Akuntansi' ? 'selected' : '' }}>S1- Akuntansi</option>
@@ -294,7 +294,7 @@
                         <div id="nim-field">
                             <label class="block text-gray-700 text-sm font-semibold mb-2">NIM <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(14 digit)</span></label>
                             <input type="text" name="nim" id="nim" value="{{ old('nim') }}" required
-                                maxlength="14" pattern="[0-9]{14}" 
+                                maxlength="14" pattern="[0-9]{14}"
                                 placeholder="Contoh: 12010120130001"
                                 inputmode="numeric"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
@@ -306,7 +306,7 @@
                         <div id="nip-field" style="display: none;">
                             <label class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(18 digit)</span></label>
                             <input type="text" data-name="nip" id="nip" value="{{ old('nip') }}"
-                                maxlength="18" pattern="[0-9]{18}" 
+                                maxlength="18" pattern="[0-9]{18}"
                                 placeholder="Contoh: 198505102010121001"
                                 inputmode="numeric"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18)"
@@ -471,7 +471,7 @@
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">3</span>
                         Detail Peminjaman Laboratorium
                     </h3>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Peminjaman <span class="text-red-500">*</span></label>
@@ -531,7 +531,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <!-- Time Validation Error -->
                         <div class="md:col-span-2">
                             <p id="time-error" class="text-sm text-red-500 hidden"><strong>* Jam Selesai harus setelah Jam Mulai</strong></p>
@@ -545,10 +545,10 @@
                                 <option value="">Isi data di atas untuk melihat lab yang tersedia</option>
                             </select>
                             <p class="text-sm text-gray-500 mt-2">
-                                Lab akan muncul setelah Anda mengisi tanggal, waktu, dan jumlah peserta. 
+                                Lab akan muncul setelah Anda mengisi tanggal, waktu, dan jumlah peserta.
                                 <span class="text-red-500 font-medium">Jika lab tidak tersedia maka lab sedang dibooking.</span>
                             </p>
-                            
+
                             <!-- Conflict Warning Box (Hidden by default) -->
                             <div id="conflictWarning" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
                                 <div class="flex items-start">
@@ -606,8 +606,8 @@
                             <div>
                                 <p class="font-bold text-blue-800">ℹ️ Peminjaman Berulang</p>
                                 <p class="text-sm text-blue-700 mt-1">
-                                    Peminjaman akan berulang setiap hari <span id="recurring-day-name" class="font-semibold"></span> 
-                                    di jam <span id="recurring-time-range" class="font-semibold"></span> 
+                                    Peminjaman akan berulang setiap hari <span id="recurring-day-name" class="font-semibold"></span>
+                                    di jam <span id="recurring-time-range" class="font-semibold"></span>
                                     di lab <span id="recurring-lab-name" class="font-semibold"></span>.
                                 </p>
                             </div>
@@ -630,7 +630,7 @@
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">4</span>
                         Upload Dokumen & Konfirmasi
                     </h3>
-                    
+
                     <div class="mb-6" id="upload-document-section">
                         <label class="block text-gray-700 text-sm font-semibold mb-2">
                             Upload Dokumen Pendukung (KTM, Surat Lainnya) <span class="text-red-500">*</span>
@@ -660,9 +660,9 @@
                             <div class="flex-1">
                                 <h3 class="text-red-900 font-bold text-lg mb-2">⚠️ PERINGATAN KAPASITAS!</h3>
                                 <p class="text-red-800 font-semibold mb-2">
-                                    Jumlah peserta (<span id="warning-participant-count" class="font-bold"></span> orang) 
-                                    <span class="text-red-900">MELEBIHI</span> 
-                                    kapasitas lab (<span id="warning-lab-capacity" class="font-bold"></span> orang) 
+                                    Jumlah peserta (<span id="warning-participant-count" class="font-bold"></span> orang)
+                                    <span class="text-red-900">MELEBIHI</span>
+                                    kapasitas lab (<span id="warning-lab-capacity" class="font-bold"></span> orang)
                                     sebanyak <span id="warning-overflow" class="font-bold text-red-900"></span> orang.
                                 </p>
                                 <div class="bg-red-100 border-l-4 border-red-700 p-3 mt-3">
@@ -736,7 +736,7 @@
                     @csrf
                     <input type="hidden" name="booking_type" value="pribadi">
                     <input type="hidden" name="pribadi_sub_type" value="mahasiswa">
-                    
+
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
                         <h4 class="font-bold text-blue-800 mb-4">Masukkan NIM Anda</h4>
                         <div class="mb-4">
@@ -777,7 +777,7 @@
                     @csrf
                     <input type="hidden" name="booking_type" value="pribadi">
                     <input type="hidden" name="pribadi_sub_type" value="non_mahasiswa">
-                    
+
                     <div class="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-6">
                         <h4 class="font-bold text-purple-800 mb-4">Data Non-Mahasiswa</h4>
                         <div class="grid grid-cols-1 gap-4">
@@ -944,7 +944,7 @@
             form.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && e.target.type !== 'submit' && e.target.type !== 'textarea') {
                     e.preventDefault();
-                    
+
                     // Navigate to next step if current step button is enabled
                     if (currentStep === 1 && !document.getElementById('btn-next-1').disabled) {
                         goToStep(2);
@@ -963,11 +963,11 @@
         function setupBookingTypeListener() {
             const bookingTypeInputs = document.querySelectorAll('input[name="booking_type"]');
             const unitTypeInputs = document.querySelectorAll('input[name="unit_type"]');
-            
+
             function checkStep1Validity() {
                 const bookingType = document.querySelector('input[name="booking_type"]:checked');
                 const unitType = document.querySelector('input[name="unit_type"]:checked');
-                
+
                 if (bookingType && bookingType.value === 'pribadi') {
                     // For pribadi, unit type is not required
                      document.getElementById('btn-next-1').disabled = false;
@@ -979,7 +979,7 @@
                      });
                      // Hide entire step indicator bar since pribadi goes to separate section
                      document.querySelector('.step-indicator').classList.add('hidden');
-                     
+
                 } else {
                      // For others, unit type is required
                      document.getElementById('unit-selection').classList.remove('hidden');
@@ -988,34 +988,34 @@
                      // Show step indicator bar
                      document.querySelector('.step-indicator').classList.remove('hidden');
                 }
-                
+
                 if (bookingType) {
                     selectedBookingType = bookingType.value;
                     // Show/hide appropriate fields for step 2
                     if (selectedBookingType === 'non_perkuliahan') {
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.remove('hidden');
-                        
+
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', true);
                     } else if (selectedBookingType === 'pribadi') {
                         // Pribadi uses a separate section, hide regular step 2 fields
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
-                        
+
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', false);
                     } else {
                         document.getElementById('perkuliahan-fields').classList.remove('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
-                        
+
                         setRequiredFields('perkuliahan-fields', true);
                         setRequiredFields('non-perkuliahan-fields', false);
                     }
-                    
+
                     // Toggle lab selection based on booking type
                     toggleLabSelection();
-                    
+
                     // Update recurring booking notice based on booking type
                     updateRecurringBookingNotice();
                 }
@@ -1023,7 +1023,7 @@
 
             bookingTypeInputs.forEach(input => input.addEventListener('change', checkStep1Validity));
             unitTypeInputs.forEach(input => input.addEventListener('change', checkStep1Validity));
-            
+
             // Run on load to set initial state (e.g. from old inputs)
             checkStep1Validity();
         }
@@ -1035,12 +1035,12 @@
             const studyProgramField = document.getElementById('study-program-field');
             const customStudyProgramField = document.getElementById('custom-study-program-field');
             const customStudyProgramInput = document.getElementById('custom_study_program');
-            
+
             if (studyProgramSelect && customStudyProgramField) {
                 studyProgramToggleCustomField = function() {
                     // Only show custom field if parent study program field is visible AND value is 'Lainnya'
                     const isStudyProgramVisible = studyProgramField && studyProgramField.style.display !== 'none';
-                    
+
                     if (isStudyProgramVisible && studyProgramSelect.value === 'Lainnya') {
                         customStudyProgramField.style.display = 'block';
                         customStudyProgramInput.setAttribute('name', 'custom_study_program');
@@ -1052,7 +1052,7 @@
                         customStudyProgramInput.value = '';
                     }
                 };
-                
+
                 studyProgramSelect.addEventListener('change', studyProgramToggleCustomField);
                 studyProgramToggleCustomField(); // Run on load
             }
@@ -1073,12 +1073,12 @@
             const nimInput = document.getElementById('nim');
             const nipField = document.getElementById('nip-field');
             const nipInput = document.getElementById('nip');
-            
+
             if (statusSelect && classYearField) {
                 // Function to toggle class year field and custom status field visibility
                 function toggleFields() {
                     const status = statusSelect.value;
-                    
+
                     // Toggle custom status field
                     if (status === 'Lainnya') {
                         customStatusField.style.display = 'block';
@@ -1090,7 +1090,7 @@
                         customStatusInput.removeAttribute('required');
                         customStatusInput.value = ''; // Clear value
                     }
-                    
+
                     // Toggle class year field (only for Mahasiswa)
                     if (status === 'Mahasiswa') {
                         // Show angkatan field and make it required
@@ -1104,7 +1104,7 @@
                         classYearInput.removeAttribute('required');
                         classYearInput.value = ''; // Clear value
                     }
-                    
+
                     // Toggle Program Studi, NIM, and NIP fields based on status
                     if (status === 'Dosen' || status === 'Pegawai') {
                         // Hide Program Studi and NIM
@@ -1174,27 +1174,27 @@
                             nipInput.value = '';
                         }
                     }
-                    
+
                     // Re-validate step 2
                     validateStep2();
-                    
+
                     // Also trigger custom study program toggle to hide it when program studi is hidden
                     if (typeof studyProgramToggleCustomField === 'function') {
                         studyProgramToggleCustomField();
                     }
                 }
-                
+
                 // Initial check on page load
                 toggleFields();
-                
+
                 // Listen to status changes
                 statusSelect.addEventListener('change', toggleFields);
-                
+
                 // Also listen to custom status input
                 if (customStatusInput) {
                     customStatusInput.addEventListener('input', validateStep2);
                 }
-                
+
                 // Also listen to NIP input
                 if (nipInput) {
                     nipInput.addEventListener('input', validateStep2);
@@ -1207,18 +1207,18 @@
             const inputs = container.querySelectorAll('input, textarea, select');
             const optionalFields = ['software_needs', 'equipment_needs', 'is_bimbingan_dosen']; // Fields that are always optional
             const conditionalFields = ['class_year', 'custom_status', 'applicant_status', 'nip', 'nim', 'study_program']; // Fields handled by toggleFields() or conditional logic
-            
+
             inputs.forEach(input => {
                 // Skip fields yang tidak punya name attribute (conditional fields)
                 if (!input.name && !input.getAttribute('data-name')) {
                     return;
                 }
-                
+
                 // Skip conditional fields (dihandle oleh toggleFields)
                 if (conditionalFields.includes(input.name) || conditionalFields.includes(input.getAttribute('data-name'))) {
                     return;
                 }
-                
+
                 // Skip optional fields
                 if (optionalFields.includes(input.name)) {
                     input.removeAttribute('required');
@@ -1229,7 +1229,7 @@
                     }
                     return;
                 }
-                
+
                 // Handle required/optional based on booking type
                 if (required) {
                     input.setAttribute('required', 'required');
@@ -1250,7 +1250,7 @@
                     field.addEventListener('input', validateStep2);
                 }
             });
-            
+
             // Also listen to conditional fields
             ['course_name', 'lecturer_name', 'lecturer_nip', 'activity_name', 'activity_type', 'position', 'applicant_status', 'class_year', 'purpose', 'custom_status', 'custom_study_program'].forEach(fieldId => {
                 const field = document.getElementById(fieldId);
@@ -1265,7 +1265,7 @@
         function validateStep2() {
             const nama = document.getElementById('pic_name').value.trim();
             const telpon = document.getElementById('phone_number').value.trim();
-            
+
             // Phone validation: must start with 08 and be 10-15 digits
             const phonePattern = /^08[0-9]{8,13}$/;
             const phoneValid = phonePattern.test(telpon);
@@ -1279,26 +1279,26 @@
                 const mataKuliah = document.getElementById('course_name').value.trim();
                 const dosen = document.getElementById('lecturer_name').value.trim();
                 const nip = document.getElementById('lecturer_nip').value.trim();
-                
+
                 // Check custom study program if 'Lainnya' is selected
                 if (prodi === 'Lainnya') {
                     const customProdi = document.getElementById('custom_study_program');
                     isValid = isValid && customProdi && customProdi.value.trim();
                 }
-                
+
                 isValid = isValid && prodi && nim.length === 14 && mataKuliah && dosen && nip;
             } else if (selectedBookingType === 'non_perkuliahan') {
                 const prodi = document.getElementById('study_program').value.trim();
                 const nim = document.getElementById('nim').value.trim();
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
                 const isBimbingan = document.getElementById('is_bimbingan_dosen') && document.getElementById('is_bimbingan_dosen').checked;
-                
+
                 // Check custom study program if 'Lainnya' is selected
                 if (prodi === 'Lainnya') {
                     const customProdi = document.getElementById('custom_study_program');
                     isValid = isValid && customProdi && customProdi.value.trim();
                 }
-                
+
                 if (isBimbingan) {
                     // Bimbingan dosen: need lecturer name & nip instead of activity_type & position
                     const dosenName = document.getElementById('bimbingan_lecturer_name').value.trim();
@@ -1314,19 +1314,19 @@
                  const status = document.getElementById('applicant_status').value.trim();
                  const keperluan = document.getElementById('purpose').value.trim();
                  isValid = isValid && status && keperluan;
-                 
+
                  // Check based on status
                  if (status === 'Mahasiswa') {
                      // Mahasiswa need Program Studi and NIM
                      const prodi = document.getElementById('study_program').value.trim();
                      const nim = document.getElementById('nim').value.trim();
-                     
+
                      // Check custom study program if 'Lainnya' is selected
                      if (prodi === 'Lainnya') {
                          const customProdi = document.getElementById('custom_study_program');
                          isValid = isValid && customProdi && customProdi.value.trim();
                      }
-                     
+
                      isValid = isValid && prodi && nim.length === 14;
                  } else if (status === 'Dosen' || status === 'Pegawai') {
                      // Dosen and Pegawai need NIP (18 digits)
@@ -1334,13 +1334,13 @@
                      isValid = isValid && nip.length === 18;
                  }
                  // Lainnya does not need Program Studi, NIM, or NIP
-                 
+
                  // Status custom wajib jika pilih Lainnya
                  if (status === 'Lainnya') {
                      const customStatus = document.getElementById('custom_status').value.trim();
                      isValid = isValid && customStatus;
                  }
-                 
+
                  // Angkatan hanya wajib untuk mahasiswa
                  if (status === 'Mahasiswa') {
                      const angkatan = document.getElementById('class_year').value.trim();
@@ -1359,13 +1359,13 @@
             const recurringDayName = document.getElementById('recurring-day-name');
             const recurringTimeRange = document.getElementById('recurring-time-range');
             const recurringLabName = document.getElementById('recurring-lab-name');
-            
+
             const bookingDate = document.getElementById('booking_date').value;
             const startTime = document.getElementById('start_time').value;
             const endTime = document.getElementById('end_time').value;
             const labSelect = document.getElementById('labSelect');
             const selectedLabOption = labSelect.options[labSelect.selectedIndex];
-            
+
             // Only show for perkuliahan_tetap
             if (selectedBookingType === 'perkuliahan_tetap') {
                 // Check if all fields are filled
@@ -1374,15 +1374,15 @@
                     const date = new Date(bookingDate);
                     const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                     const dayName = dayNames[date.getDay()];
-                    
+
                     // Get lab name from selected option text (e.g. "EL. 309 (Kap: 30)" -> "EL. 309")
                     const labFullText = selectedLabOption.textContent;
                     const labName = labFullText.split(' (')[0];
-                    
+
                     recurringDayName.textContent = dayName;
                     recurringTimeRange.textContent = startTime + ' - ' + endTime;
                     recurringLabName.textContent = labName;
-                    
+
                     recurringNoticeGeneric.classList.add('hidden');
                     recurringNoticeSpecific.classList.remove('hidden');
                 } else {
@@ -1438,7 +1438,7 @@
             if (bookingDate) {
                 const date = new Date(bookingDate);
                 isSunday = date.getDay() === 0; // 0 = Sunday
-                
+
                 if (isSunday) {
                     sundayWarning.classList.remove('hidden');
                 } else {
@@ -1455,7 +1455,7 @@
                 const [endH, endM] = endTime.split(':').map(Number);
                 const startMinutes = startH * 60 + startM;
                 const endMinutes = endH * 60 + endM;
-                
+
                 if (endMinutes <= startMinutes) {
                     isTimeValid = false;
                     timeError.classList.remove('hidden');
@@ -1476,7 +1476,7 @@
         function toggleLabSelection() {
             const labContainer = document.getElementById('lab-selection-container');
             const labSelect = document.getElementById('labSelect');
-            
+
             if (selectedBookingType === 'pribadi') {
                 // Hide lab selection for pribadi
                 labContainer.classList.add('hidden');
@@ -1497,7 +1497,7 @@
             if (selectedBookingType === 'pribadi') {
                 return;
             }
-            
+
             const bookingDate = document.getElementById('booking_date').value;
             const participantCount = document.getElementById('participant_count').value;
             const startTime = document.getElementById('start_time').value;
@@ -1539,11 +1539,11 @@
                         option.value = lab.id;
                         // Store capacity in data attribute
                         option.dataset.capacity = lab.capacity;
-                        
+
                         const isUnderCapacity = lab.capacity < parseInt(participantCount);
                         const warningIcon = isUnderCapacity ? '⚠️ ' : '';
                         const warningText = isUnderCapacity ? ' (Kapasitas Kurang)' : '';
-                        
+
                         option.textContent = `${warningIcon}${lab.name} (Kap: ${lab.capacity})${warningText}`;
                         labSelect.appendChild(option);
                     });
@@ -1563,7 +1563,7 @@
             const labSelect = document.getElementById('labSelect');
             const participantCount = parseInt(document.getElementById('participant_count').value);
             const warningBox = document.getElementById('capacityWarning');
-            
+
             if (!labSelect.value || !participantCount) {
                 warningBox.classList.add('hidden');
                 return;
@@ -1601,7 +1601,7 @@
                 generateSummary();
                 goToStep(4);
             });
-            
+
             document.getElementById('btn-prev-2').addEventListener('click', () => goToStep(1));
             document.getElementById('btn-prev-3').addEventListener('click', () => goToStep(2));
             document.getElementById('btn-prev-4').addEventListener('click', () => goToStep(3));
@@ -1610,17 +1610,17 @@
         function updateUploadVisibility() {
             const uploadSection = document.getElementById('upload-document-section');
             const fileInput = document.getElementById('document');
-            
+
             // Default: Show and Required
             let showUpload = true;
             let requiredUpload = true;
-            
+
             if (selectedBookingType === 'pribadi') {
                  // Pribadi: Hide and Not Required for all
                  showUpload = false;
                  requiredUpload = false;
             }
-            
+
             if (showUpload) {
                 uploadSection.classList.remove('hidden');
                 fileInput.setAttribute('required', 'required');
@@ -1642,11 +1642,11 @@
 
             // Hide current step
             document.getElementById(`step-${currentStep}`).classList.add('hidden');
-            
+
             // Show new step
             document.getElementById(`step-${step}`).classList.remove('hidden');
             document.getElementById(`step-${step}`).classList.remove('step-disabled');
-            
+
             currentStep = step;
             updateStepIndicator();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1678,7 +1678,7 @@
 
             const summary = [];
             summary.push(`<div><strong>Tipe:</strong> ${bookingTypeLabels[selectedBookingType]}</div>`);
-            
+
             // Add Unit if not pribadi
              if (selectedBookingType !== 'pribadi') {
                  const unitLabels = {
@@ -1688,29 +1688,29 @@
                  const unit = document.querySelector('input[name="unit_type"]:checked').value;
                  summary.push(`<div><strong>Unit:</strong> ${unitLabels[unit]}</div>`);
              }
-            
+
             summary.push(`<div><strong>Nama:</strong> ${document.getElementById('pic_name').value}</div>`);
-            
+
             // Display NIP or NIM based on what's filled
             const nimValue = document.getElementById('nim').value;
             const nipValue = document.getElementById('nip').value;
-            
+
             if (nipValue) {
                 summary.push(`<div><strong>NIP:</strong> ${nipValue}</div>`);
             } else if (nimValue) {
                 summary.push(`<div><strong>NIM:</strong> ${nimValue}</div>`);
             }
-            
+
             // Specific fields based on type
              if (selectedBookingType === 'pribadi') {
                 const status = document.getElementById('applicant_status').value;
                 let statusDisplay = status;
-                
+
                 // Jika status adalah Lainnya, gunakan custom status
                 if (status === 'Lainnya') {
                     statusDisplay = document.getElementById('custom_status').value;
                 }
-                
+
                 summary.push(`<div><strong>Status:</strong> ${statusDisplay}</div>`);
                 if (status === 'Mahasiswa') {
                     summary.push(`<div><strong>Angkatan:</strong> ${document.getElementById('class_year').value}</div>`);
@@ -1727,18 +1727,18 @@
             } else {
                  summary.push(`<div><strong>Mata Kuliah:</strong> ${document.getElementById('course_name').value}</div>`);
             }
-            
+
             summary.push(`<div><strong>Tanggal:</strong> ${document.getElementById('booking_date').value}</div>`);
             summary.push(`<div><strong>Waktu:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</div>`);
             summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('participant_count').value} orang</div>`);
-            
+
             // Lab and capacity warning only shown for non-pribadi bookings
             const warningBox = document.getElementById('capacity-warning-text');
             if (selectedBookingType !== 'pribadi') {
                 const labSelect = document.getElementById('labSelect');
                 const labName = labSelect.options[labSelect.selectedIndex].text;
                 summary.push(`<div><strong>Lab:</strong> ${labName}</div>`);
-                
+
                 document.getElementById('booking-summary').innerHTML = summary.join('');
 
                 // Check and display capacity warning
@@ -1772,24 +1772,24 @@
                 const file = e.target.files[0];
                 const fileNameDisplay = document.getElementById('file-name');
                 const uploadBox = this.closest('.border-dashed');
-                
+
                 // Remove previous error
                 const existingError = uploadBox.parentElement.querySelector('.file-validation-error');
                 if (existingError) existingError.remove();
                 uploadBox.classList.remove('border-red-400', 'bg-red-50');
-                
+
                 if (file) {
                     const maxSize = 5 * 1024 * 1024; // 5MB in bytes
                     const allowedType = 'application/pdf';
                     const allowedExt = file.name.toLowerCase().endsWith('.pdf');
                     let errorMsg = '';
-                    
+
                     if (file.type !== allowedType && !allowedExt) {
                         errorMsg = '⚠️ Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
                     } else if (file.size > maxSize) {
                         errorMsg = '⚠️ Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
                     }
-                    
+
                     if (errorMsg) {
                         // Show custom error modal
                         showFileErrorModal(errorMsg);
@@ -1800,14 +1800,14 @@
                         errorDiv.innerHTML = '<svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>' + errorMsg;
                         uploadBox.parentElement.appendChild(errorDiv);
                         uploadBox.classList.add('border-red-400', 'bg-red-50');
-                        
+
                         this.value = '';
                         fileNameDisplay.textContent = '';
                         fileNameDisplay.classList.remove('text-green-600');
                         validateStep4();
                         return;
                     }
-                    
+
                     const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
                     fileNameDisplay.textContent = `✓ Terpilih: ${file.name} (${fileSizeMB} MB)`;
                     fileNameDisplay.classList.add('text-green-600');
@@ -1825,13 +1825,13 @@
              const documentInput = document.getElementById('document');
              const submitBtn = document.getElementById('btn-submit');
              const docSection = document.getElementById('upload-document-section');
-             
+
              // If section is hidden, it's valid (no upload needed)
              if (docSection.classList.contains('hidden')) {
                  submitBtn.disabled = false;
                  return;
              }
-             
+
              // If visible, check if file is selected
              if (documentInput.files.length > 0) {
                  submitBtn.disabled = false;
@@ -1861,30 +1861,30 @@
         // Time Dropdown Logic
         function setupTimeDropdowns() {
             const timeInputs = ['start', 'end'];
-            
+
             timeInputs.forEach(prefix => {
                 const hourSelect = document.getElementById(prefix + '_hour');
                 const minuteSelect = document.getElementById(prefix + '_minute');
                 const hiddenInput = document.getElementById(prefix + '_time');
-                
+
                 function updateHiddenInput() {
                     if (hourSelect.value && minuteSelect.value) {
                         hiddenInput.value = `${hourSelect.value}:${minuteSelect.value}`;
-                        
+
                         // Trigger change event manually for fetchAvailableLabs and validation
                         hiddenInput.dispatchEvent(new Event('change'));
                     } else {
                         hiddenInput.value = '';
                     }
                 }
-                
+
                 // Initialize from hidden input (e.g. old value)
                 if (hiddenInput.value) {
                     const [h, m] = hiddenInput.value.split(':');
                     if (h) hourSelect.value = h;
                     if (m) minuteSelect.value = m;
                 }
-                
+
                 hourSelect.addEventListener('change', updateHiddenInput);
                 minuteSelect.addEventListener('change', updateHiddenInput);
             });
@@ -1909,13 +1909,13 @@
         // Realtime Validation Logic
         function setupRealtimeValidation() {
             const inputs = document.querySelectorAll('input, select, textarea');
-            
+
             inputs.forEach(input => {
                 // Validate on blur
                 input.addEventListener('blur', () => {
                     validateSingleField(input);
                 });
-                
+
                 // Clear error on input if valid
                 input.addEventListener('input', () => {
                     if (input.classList.contains('border-red-500')) {
@@ -1933,7 +1933,7 @@
         function validateSingleField(input) {
             // Skip fields that are functionally hidden or disabled
             if (input.disabled || input.offsetParent === null) return;
-            
+
             // Skip optional fields that are empty (valid)
             if (!input.required && input.value.trim() === '') {
                 clearError(input);
@@ -1945,7 +1945,7 @@
                 if (input.validity.valueMissing) msg = 'Field ini wajib diisi';
                 if (input.validity.patternMismatch) msg = 'Format input tidak sesuai';
                 if (input.validity.tooShort) msg = `Minimal ${input.minLength} karakter`;
-                
+
                 showError(input, msg);
             } else {
                 clearError(input);
@@ -1956,11 +1956,11 @@
             // Add red border
             input.classList.remove('border-gray-300', 'focus:ring-yellow-500', 'focus:border-transparent');
             input.classList.add('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
-            
+
             // Add error message text
             let parent = input.parentElement;
             let errorText = parent.querySelector('.validation-error-msg');
-            
+
             if (!errorText) {
                 errorText = document.createElement('p');
                 errorText.className = 'validation-error-msg text-red-500 text-xs mt-1 italic';
@@ -1973,7 +1973,7 @@
             // Restore normal border
             input.classList.remove('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
             input.classList.add('border-gray-300', 'focus:ring-yellow-500', 'focus:border-transparent');
-            
+
             // Remove error message
             let parent = input.parentElement;
             let errorText = parent.querySelector('.validation-error-msg');
@@ -1988,23 +1988,23 @@
             constructor(originalSelect) {
                 this.originalSelect = originalSelect;
                 this.originalSelect.style.display = 'none'; // Hide original
-                
+
                 // Create wrapper
                 this.wrapper = document.createElement('div');
                 this.wrapper.className = 'relative custom-select-wrapper w-full';
                 this.originalSelect.parentNode.insertBefore(this.wrapper, this.originalSelect);
                 this.wrapper.appendChild(this.originalSelect); // Move original inside
-                
+
                 // Create Trigger Element
                 this.trigger = document.createElement('button');
                 this.trigger.type = 'button';
                 // Match the style of existing inputs in create.blade.php (px-4 py-3 border border-gray-300 rounded-lg)
                 this.trigger.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base text-left bg-white flex justify-between items-center transition-shadow duration-200';
-                
+
                 // Content span
                 this.triggerLabel = document.createElement('span');
                 this.triggerLabel.className = 'block truncate text-gray-700';
-                
+
                 // Chevron icon
                 const chevron = document.createElement('div');
                 chevron.innerHTML = `<svg class="w-5 h-5 text-gray-400 pointer-events-none transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
@@ -2061,10 +2061,10 @@
                     if (shouldInitOptions) this.initOptions();
                     if (shouldUpdateTrigger) this.updateTrigger();
                 });
-                
-                this.observer.observe(this.originalSelect, { 
-                    attributes: true, 
-                    childList: true, 
+
+                this.observer.observe(this.originalSelect, {
+                    attributes: true,
+                    childList: true,
                     subtree: true // needed for option text changes if any
                 });
             }
@@ -2072,7 +2072,7 @@
             initOptions() {
                 this.optionsContainer.innerHTML = '';
                 const options = Array.from(this.originalSelect.options);
-                
+
                 if (options.length === 0) {
                     // No options
                     return;
@@ -2080,16 +2080,16 @@
 
                 options.forEach(option => {
                     // Skip hidden placeholders if desired, but here usually show all that are not hidden
-                    if (option.hidden) return; 
+                    if (option.hidden) return;
 
                     const optionDiv = document.createElement('div');
                     optionDiv.className = `text-gray-900 cursor-pointer select-none relative py-3 pl-4 pr-9 hover:bg-yellow-50 transition-colors duration-150 border-b border-gray-50 last:border-0`;
-                    
+
                     // Allow html content for warnings (lab capacity icons)
-                    // But usually option.text is plain. 
+                    // But usually option.text is plain.
                     // In fetchAvailableLabs, we put emoji in textContent. So textContent is safe.
                     optionDiv.textContent = option.text;
-                    
+
                     // Handle disabled options (like headers "Pilih ...")
                     if (option.disabled && option.value === "") {
                         optionDiv.className = 'text-gray-400 select-none relative py-2 pl-4 pr-4 bg-gray-50 cursor-default font-semibold text-sm';
@@ -2119,7 +2119,7 @@
             updateTrigger() {
                 const selectedOption = this.originalSelect.options[this.originalSelect.selectedIndex];
                 this.triggerLabel.textContent = selectedOption ? selectedOption.text : 'Pilih...';
-                
+
                 if (this.originalSelect.disabled) {
                     this.trigger.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
                     this.trigger.setAttribute('disabled', 'disabled');
@@ -2158,7 +2158,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Target selects
             const selects = ['activity_type', 'applicant_status', 'labSelect'];
-            
+
             selects.forEach(id => {
                 const selectElement = document.getElementById(id) || document.querySelector(`select[name="${id}"]`);
                 if (selectElement) {
