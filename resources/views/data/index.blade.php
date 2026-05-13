@@ -28,7 +28,7 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen flex flex-col">
-    
+
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div class="container mx-auto px-4 lg:px-8">
@@ -74,7 +74,7 @@
         <div class="container mx-auto px-4 lg:px-8">
             <div class="max-w-5xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
-                    
+
                     <!-- Card Refinitiv -->
                     <div class="animate-fade-in-up animation-delay-300">
                         <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200">
@@ -88,7 +88,7 @@
                                 <h2 class="text-2xl lg:text-3xl font-bold text-white">Refinitiv</h2>
                                 <p class="text-blue-100 mt-2">Data Pasar Keuangan</p>
                             </div>
-                            
+
                             <!-- Button -->
                             <div class="p-4">
                                 <a href="{{ route('refinitiv.create') }}" class="group block px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors">
@@ -119,7 +119,7 @@
                                 <h2 class="text-2xl lg:text-3xl font-bold text-white">Data BPS</h2>
                                 <p class="text-teal-100 mt-2">Badan Pusat Statistik</p>
                             </div>
-                            
+
                             <!-- Button -->
                             <div class="p-4">
                                 <a href="{{ route('bps.create') }}" class="group block px-4 py-3 bg-teal-50 hover:bg-teal-100 rounded-xl transition-colors">

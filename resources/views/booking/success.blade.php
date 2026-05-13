@@ -180,6 +180,12 @@
                     @endif
                 </div>
             </div>
+
+            @if($showRecontactNotice)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
+                Waktu peminjaman Anda masih lebih dari 3 hari dari hari acara. Mohon hubungi kembali pihak UPK dalam kurun waktu H-3 hari acara.
+            </div>
+            @endif
         </div>
     </div>
 

@@ -227,6 +227,35 @@
                         Data Pribadi
                     </h3>
 
+
+                    <div class="md:col-span-2">
+                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-green-50 hover:border-green-300 transition-colors group {{ old('is_on_behalf_lecturer') ? 'bg-green-50 border-green-400' : '' }}">
+                            <input type="hidden" name="is_on_behalf_lecturer" value="0">
+                            <input type="checkbox" name="is_on_behalf_lecturer" id="is_on_behalf_lecturer" value="1"
+                                class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300"
+                                {{ old('is_on_behalf_lecturer') ? 'checked' : '' }}>
+                            <div class="ml-3">
+                                <span class="text-gray-800 font-semibold group-hover:text-green-700">Peminjaman atas nama dosen</span>
+                                <p class="text-xs text-gray-500 mt-0.5">Centang jika pengajuan dilakukan atas nama dosen (gunakan NIP, bukan NIM)</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    {{-- Bimbingan Dosen Checkbox --}}
+                    <div class="md:col-span-2">
+                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group {{ old('is_bimbingan_dosen') ? 'bg-blue-50 border-blue-400' : '' }}">
+                            <input type="hidden" name="is_bimbingan_dosen" value="0">
+                            <input type="checkbox" name="is_bimbingan_dosen" id="is_bimbingan_dosen" value="1"
+                                class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                                {{ old('is_bimbingan_dosen') ? 'checked' : '' }}>
+                            <div class="ml-3">
+                                <span class="text-gray-800 font-semibold group-hover:text-blue-700">Bimbingan bersama Dosen?</span>
+                                <p class="text-xs text-gray-500 mt-0.5">Centang jika kegiatan ini merupakan bimbingan skripsi atau kegiatan bersama dosen</p>
+                            </div>
+                        </label>
+                    </div>
+                    <br>
+
                     <!-- Status Fields for Pribadi (shown first for pribadi booking) -->
                     <div id="pribadi-status-fields" class="hidden mb-6">
                         <h4 class="font-bold text-gray-800 mb-4">Pilih Status Terlebih Dahulu</h4>
@@ -292,26 +321,26 @@
                         </div>
 
                         <div id="nim-field">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIM <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(14 digit)</span></label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2"><span id="nim-label-text">NIM</span> <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(14 digit)</span></label>
                             <input type="text" name="nim" id="nim" value="{{ old('nim') }}" required
                                 maxlength="14" pattern="[0-9]{14}"
                                 placeholder="Contoh: 12010120130001"
                                 inputmode="numeric"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 14)"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            <p class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
+                            <p id="nim-hint" class="text-xs text-gray-500 mt-1">NIM harus 14 digit angka</p>
                             <p id="nim-error" class="text-xs text-red-500 mt-1 hidden"></p>
                         </div>
 
                         <div id="nip-field" style="display: none;">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(18 digit)</span></label>
+                            <label class="block text-gray-700 text-sm font-semibold mb-2"><span id="nip-label-text">NIP</span> <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(18 digit)</span></label>
                             <input type="text" data-name="nip" id="nip" value="{{ old('nip') }}"
                                 maxlength="18" pattern="[0-9]{18}"
                                 placeholder="Contoh: 198505102010121001"
                                 inputmode="numeric"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18)"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            <p class="text-xs text-gray-500 mt-1">NIP harus 18 digit angka</p>
+                            <p id="nip-hint" class="text-xs text-gray-500 mt-1">NIP harus 18 digit angka</p>
                             <p id="nip-error" class="text-xs text-red-500 mt-1 hidden"></p>
                         </div>
 
@@ -363,24 +392,11 @@
                     <div id="non-perkuliahan-fields" class="hidden mb-6">
                         <h4 class="font-bold text-gray-800 mb-4">Data Kegiatan Non-Perkuliahan</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                             <div class="md:col-span-2">
                                 <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Kegiatan <span class="text-red-500">*</span></label>
                                 <input type="text" name="activity_name" id="activity_name" value="{{ old('activity_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            </div>
-
-                            {{-- Bimbingan Dosen Checkbox --}}
-                            <div class="md:col-span-2">
-                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group {{ old('is_bimbingan_dosen') ? 'bg-blue-50 border-blue-400' : '' }}">
-                                    <input type="hidden" name="is_bimbingan_dosen" value="0">
-                                    <input type="checkbox" name="is_bimbingan_dosen" id="is_bimbingan_dosen" value="1"
-                                        class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
-                                        {{ old('is_bimbingan_dosen') ? 'checked' : '' }}>
-                                    <div class="ml-3">
-                                        <span class="text-gray-800 font-semibold group-hover:text-blue-700">Bimbingan bersama Dosen?</span>
-                                        <p class="text-xs text-gray-500 mt-0.5">Centang jika kegiatan ini merupakan bimbingan skripsi atau kegiatan bersama dosen</p>
-                                    </div>
-                                </label>
                             </div>
 
                             {{-- Fields yang tampil jika BUKAN bimbingan (default) --}}
@@ -871,6 +887,7 @@
             setupApplicantStatusListener();
             setupStudyProgramListener();
             setupBimbinganDosenToggle();
+            setupOnBehalfLecturerToggle();
 
             setupRealtimeValidation();
             preventEnterSubmit();
@@ -879,7 +896,8 @@
         // Bimbingan Dosen Toggle
         function setupBimbinganDosenToggle() {
             const checkbox = document.getElementById('is_bimbingan_dosen');
-            if (!checkbox) return;
+            if (!checkbox || checkbox._bimbinganToggleBound) return;
+            checkbox._bimbinganToggleBound = true;
 
             function toggleBimbinganFields() {
                 const isChecked = checkbox.checked;
@@ -936,6 +954,69 @@
             if (lecturerNipInput) lecturerNipInput.addEventListener('input', validateStep2);
             // Run on load for old() values
             toggleBimbinganFields();
+        }
+
+        function setupOnBehalfLecturerToggle() {
+            const checkbox = document.getElementById('is_on_behalf_lecturer');
+            if (!checkbox || checkbox._onBehalfLecturerBound) return;
+            checkbox._onBehalfLecturerBound = true;
+
+            const nimField = document.getElementById('nim-field');
+            const nimInput = document.getElementById('nim');
+            const nipField = document.getElementById('nip-field');
+            const nipInput = document.getElementById('nip');
+            const nimLabel = document.getElementById('nim-label-text');
+            const nimHint = document.getElementById('nim-hint');
+            const nipLabel = document.getElementById('nip-label-text');
+            const nipHint = document.getElementById('nip-hint');
+            const checkboxLabel = checkbox.closest('label');
+
+            function toggleOnBehalfLecturer() {
+                const isOnBehalfLecturer = selectedBookingType === 'non_perkuliahan' && checkbox.checked;
+
+                if (isOnBehalfLecturer) {
+                    nimField.style.display = 'none';
+                    nimInput.removeAttribute('required');
+                    nimInput.value = '';
+
+                    nipField.style.display = 'block';
+                    nipInput.setAttribute('name', 'nip');
+                    nipInput.setAttribute('required', 'required');
+
+                    if (nimLabel) nimLabel.textContent = 'NIM Mahasiswa';
+                    if (nimHint) nimHint.textContent = 'NIM tidak diperlukan saat peminjaman atas nama dosen.';
+                    if (nipLabel) nipLabel.textContent = 'NIP Dosen Pengaju';
+                    if (nipHint) nipHint.textContent = 'Masukkan NIP dosen (18 digit angka).';
+
+                    checkboxLabel.classList.add('bg-green-50', 'border-green-400');
+                    checkboxLabel.classList.remove('border-gray-200');
+                } else {
+                    nimField.style.display = 'block';
+                    nimInput.setAttribute('required', 'required');
+
+                    nipField.style.display = 'none';
+                    nipInput.removeAttribute('name');
+                    nipInput.removeAttribute('required');
+                    nipInput.value = '';
+
+                    if (nimLabel) nimLabel.textContent = 'NIM';
+                    if (nimHint) nimHint.textContent = 'NIM harus 14 digit angka';
+                    if (nipLabel) nipLabel.textContent = 'NIP';
+                    if (nipHint) nipHint.textContent = 'NIP harus 18 digit angka';
+
+                    checkboxLabel.classList.remove('bg-green-50', 'border-green-400');
+                    checkboxLabel.classList.add('border-gray-200');
+                }
+
+                validateStep2();
+            }
+
+            checkbox.addEventListener('change', toggleOnBehalfLecturer);
+            if (nimInput) nimInput.addEventListener('input', validateStep2);
+            if (nipInput) nipInput.addEventListener('input', validateStep2);
+
+            toggleOnBehalfLecturer();
+            window.applyOnBehalfLecturerState = toggleOnBehalfLecturer;
         }
 
         // Prevent Enter key from submitting form, use it for navigation instead
@@ -998,6 +1079,9 @@
 
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', true);
+                        if (typeof window.applyOnBehalfLecturerState === 'function') {
+                            window.applyOnBehalfLecturerState();
+                        }
                     } else if (selectedBookingType === 'pribadi') {
                         // Pribadi uses a separate section, hide regular step 2 fields
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
@@ -1005,12 +1089,18 @@
 
                         setRequiredFields('perkuliahan-fields', false);
                         setRequiredFields('non-perkuliahan-fields', false);
+                        if (typeof window.applyOnBehalfLecturerState === 'function') {
+                            window.applyOnBehalfLecturerState();
+                        }
                     } else {
                         document.getElementById('perkuliahan-fields').classList.remove('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
 
                         setRequiredFields('perkuliahan-fields', true);
                         setRequiredFields('non-perkuliahan-fields', false);
+                        if (typeof window.applyOnBehalfLecturerState === 'function') {
+                            window.applyOnBehalfLecturerState();
+                        }
                     }
 
                     // Toggle lab selection based on booking type
@@ -1205,7 +1295,7 @@
         function setRequiredFields(containerId, required) {
             const container = document.getElementById(containerId);
             const inputs = container.querySelectorAll('input, textarea, select');
-            const optionalFields = ['software_needs', 'equipment_needs', 'is_bimbingan_dosen']; // Fields that are always optional
+            const optionalFields = ['software_needs', 'equipment_needs', 'is_bimbingan_dosen', 'is_on_behalf_lecturer']; // Fields that are always optional
             const conditionalFields = ['class_year', 'custom_status', 'applicant_status', 'nip', 'nim', 'study_program']; // Fields handled by toggleFields() or conditional logic
 
             inputs.forEach(input => {
@@ -1290,8 +1380,10 @@
             } else if (selectedBookingType === 'non_perkuliahan') {
                 const prodi = document.getElementById('study_program').value.trim();
                 const nim = document.getElementById('nim').value.trim();
+                const nip = document.getElementById('nip').value.trim();
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
                 const isBimbingan = document.getElementById('is_bimbingan_dosen') && document.getElementById('is_bimbingan_dosen').checked;
+                const isOnBehalfLecturer = document.getElementById('is_on_behalf_lecturer') && document.getElementById('is_on_behalf_lecturer').checked;
 
                 // Check custom study program if 'Lainnya' is selected
                 if (prodi === 'Lainnya') {
@@ -1303,12 +1395,14 @@
                     // Bimbingan dosen: need lecturer name & nip instead of activity_type & position
                     const dosenName = document.getElementById('bimbingan_lecturer_name').value.trim();
                     const dosenNip = document.getElementById('bimbingan_lecturer_nip').value.trim();
-                    isValid = isValid && prodi && nim.length === 14 && namaKegiatan && dosenName && dosenNip;
+                    const identityValid = isOnBehalfLecturer ? nip.length === 18 : nim.length === 14;
+                    isValid = isValid && prodi && identityValid && namaKegiatan && dosenName && dosenNip;
                 } else {
                     // Regular non-perkuliahan
                     const jenisKegiatan = document.getElementById('activity_type').value.trim();
                     const jabatan = document.getElementById('position').value.trim();
-                    isValid = isValid && prodi && nim.length === 14 && namaKegiatan && jenisKegiatan && jabatan;
+                    const identityValid = isOnBehalfLecturer ? nip.length === 18 : nim.length === 14;
+                    isValid = isValid && prodi && identityValid && namaKegiatan && jenisKegiatan && jabatan;
                 }
             } else if (selectedBookingType === 'pribadi') {
                  const status = document.getElementById('applicant_status').value.trim();
@@ -1694,8 +1788,14 @@
             // Display NIP or NIM based on what's filled
             const nimValue = document.getElementById('nim').value;
             const nipValue = document.getElementById('nip').value;
+            const isOnBehalfLecturer = selectedBookingType === 'non_perkuliahan'
+                && document.getElementById('is_on_behalf_lecturer')
+                && document.getElementById('is_on_behalf_lecturer').checked;
 
-            if (nipValue) {
+            if (isOnBehalfLecturer) {
+                summary.push(`<div><strong>Atas Nama Dosen:</strong> Ya</div>`);
+                summary.push(`<div><strong>NIP:</strong> ${nipValue}</div>`);
+            } else if (nipValue) {
                 summary.push(`<div><strong>NIP:</strong> ${nipValue}</div>`);
             } else if (nimValue) {
                 summary.push(`<div><strong>NIM:</strong> ${nimValue}</div>`);
@@ -1901,6 +2001,8 @@
             setupFileUpload();
             setupApplicantStatusListener();
             setupStudyProgramListener();
+            setupBimbinganDosenToggle();
+            setupOnBehalfLecturerToggle();
 
             setupRealtimeValidation();
             preventEnterSubmit();
