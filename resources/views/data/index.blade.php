@@ -73,7 +73,7 @@
         <section class="pb-12 pt-0 lg:pb-16 lg:pt-0">
         <div class="container mx-auto px-4 lg:px-8">
             <div class="max-w-5xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
 
                     <!-- Card Refinitiv -->
                     <div class="animate-fade-in-up animation-delay-300">
@@ -129,6 +129,37 @@
                                             <p class="text-xs text-teal-500">Isi form permohonan data</p>
                                         </div>
                                         <svg class="w-5 h-5 text-teal-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Bloomberg -->
+                    <div class="animate-fade-in-up animation-delay-700">
+                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-indigo-200">
+                            <!-- Header with Icon -->
+                            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 lg:p-8">
+                                <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                                    <svg class="w-8 h-8 lg:w-10 lg:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <h2 class="text-2xl lg:text-3xl font-bold text-white">Bloomberg</h2>
+                                <p class="text-indigo-100 mt-2">Bloomberg Terminal</p>
+                            </div>
+
+                            <!-- Button -->
+                            <div class="p-4">
+                                <a href="{{ route('bloomberg.index') }}" class="group block px-4 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="font-semibold text-indigo-700">Buka Layanan</span>
+                                            <p class="text-xs text-indigo-500">Reservasi atau kunjungan langsung</p>
+                                        </div>
+                                        <svg class="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                         </svg>
                                     </div>

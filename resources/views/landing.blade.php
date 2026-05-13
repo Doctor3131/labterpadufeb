@@ -95,45 +95,44 @@
                     class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-300">
                     <!-- Button Peminjaman Lab -->
                     <a href="{{ route('booking.create') }}"
-                        class="inline-flex items-center px-8 py-3 lg:px-10 lg:py-4 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110">
+                        class="inline-flex w-full sm:w-[260px] lg:w-[290px] min-h-[86px] lg:min-h-[96px] items-center justify-center px-8 py-3 lg:px-10 lg:py-4 bg-white text-yellow-600 font-bold rounded-full hover:bg-yellow-50 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110 text-center leading-tight">
                         <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5 transition-transform group-hover:rotate-90 duration-300"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
-                        Peminjaman Lab
+                        <span>Peminjaman<br>Lab</span>
                     </a>
 
                     <!-- Button Pinjam Barang -->
                     <a href="{{ route('asset-borrowing.create') }}"
-                        class="inline-flex items-center px-8 py-3 lg:px-10 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110">
+                        class="inline-flex w-full sm:w-[260px] lg:w-[290px] min-h-[86px] lg:min-h-[96px] items-center justify-center px-8 py-3 lg:px-10 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110 text-center leading-tight">
                         <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
-                        Pinjam Barang
+                        <span>Pinjam<br>Barang</span>
                     </a>
                     <!-- Button Peminjaman Data -->
                     <a href="{{ route('data.index') }}"
-                        class="inline-flex items-center px-8 py-3 lg:px-10 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110">
+                        class="inline-flex w-full sm:w-[260px] lg:w-[290px] min-h-[86px] lg:min-h-[96px] items-center justify-center px-8 py-3 lg:px-10 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110 text-center leading-tight">
                         <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5 transition-transform group-hover:rotate-90 duration-300"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                         </svg>
-                        Peminjaman Data
+                        <span>Peminjaman<br>Data</span>
                     </a>
 
-                    {{-- Button Bloomberg - Sementara disembunyikan, route tetap aktif untuk akses via URL langsung --}}
-                    {{-- <a href="{{ route('bloomberg.index') }}"
-                        class="inline-flex items-center px-8 py-3 lg:px-10 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110">
+                    <a href="{{ route('bloomberg.index') }}"
+                        class="inline-flex w-full sm:w-[260px] lg:w-[290px] min-h-[86px] lg:min-h-[96px] items-center justify-center px-8 py-3 lg:px-10 lg:py-4 bg-white/20 backdrop-blur-sm text-white border-2 border-white font-bold rounded-full hover:bg-white hover:text-yellow-600 hover:shadow-2xl transition-all duration-300 shadow-xl text-sm lg:text-lg hover:scale-110 text-center leading-tight">
                         <svg class="w-5 h-5 lg:w-6 lg:h-6 mr-2.5 transition-transform group-hover:rotate-90 duration-300"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                         </svg>
-                        Bloomberg
-                    </a> --}}
+                        <span>Bloomberg<br>Terminal</span>
+                    </a>
                 </div>
             </div>
         </div>
