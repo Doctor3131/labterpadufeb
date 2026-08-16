@@ -1,6 +1,13 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
+
+// PHP 8.5 moved the MySQL driver constants from PDO to Pdo\Mysql. Accessing
+// the old alias emits a deprecation notice which, when written to output
+// before headers flush, silently drops Set-Cookie/Location headers. Pick the
+// constant that exists on the running PHP version.
+$mysqlSslCa = defined('Pdo\Mysql::ATTR_SSL_CA') ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA;
 
 return [
 
@@ -59,7 +66,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                $mysqlSslCa => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -79,7 +86,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                $mysqlSslCa => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 

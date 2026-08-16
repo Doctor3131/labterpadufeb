@@ -31,7 +31,9 @@ mkdir -p \
 # queue worker) without writing a .env file.
 if [ -z "${APP_KEY}" ]; then
     echo ">> Generating application key"
-    export APP_KEY="$(php artisan key:generate --show)"
+    # PHP 8.5 prints PDO-deprecation notices to stdout, so filter out
+    # everything except the base64:key line before exporting.
+    export APP_KEY="$(php artisan key:generate --show 2>/dev/null | grep '^base64:' | tail -n 1)"
 fi
 
 # Storage + public symlink
