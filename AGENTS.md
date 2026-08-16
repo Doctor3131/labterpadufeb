@@ -25,6 +25,11 @@ make app / tinker / artisan CMD=route:list / db-shell
 make migrate / fresh / seed
 make import FILE=labterpadu-10-05-2026.sql   # restore a SQL dump into the db container
 ./db-import.sh <file.sql> [--force]          # standalone import (interactive creds)
+
+# Ops (backup / restore / deploy) on a server
+./scripts/backup.sh [--dev] [--keep N]       # DB dump (gzip) + storage volume tar -> backups/
+./scripts/restore.sh [--dev] [--yes] <db.sql[.gz]> [storage.tar.gz]   # DESTRUCTIVE overwrite
+./scripts/deploy-prod.sh [/path/to/repo]     # pull + build prod image + up + health-check
 ```
 
 ## Architecture
@@ -72,11 +77,17 @@ PHPUnit 11 (`tests/TestCase.php`), **not** Pest despite the pest allow-entry in 
 ## Deployment
 Deployment is the **Docker compose stack** (prod target). `rsync-deploy.sh` + `ecosystem.config.json` (PM2, `artisan serve` on 3333) remain in the tree as a legacy bare-metal path but are not the active deployment.
 
+- `scripts/deploy-prod.sh` is the standard path on a VPS: `git pull --ff-only` (aborts on a dirty worktree) → build prod image → `up -d` → HTTP health-check on `APP_PORT`. It refuses `MODE=dev` and will never run a `down -v`.
+- `scripts/backup.sh` dumps the DB (mysqldump via the `db` container, root@localhost, single-transaction) to gzip + tars the `labterpadu_storage` volume via a throwaway `alpine` container, with count-based retention (`--keep N`). `scripts/restore.sh` is the inverse (behaviour mirrors `db-import.sh`, with a destructive-overwrite confirmation unless `--yes`). Add `scripts/backup.sh` to cron on the host (DB_ROOT_PASSWORD is read from `.env.docker`).
+- **Git history was rewritten to purge `mahasiswa_feb.csv`** (student PII; gitignored + dockerignored now). Anyone with an older clone must re-fetch/reset. The file ships **out-of-band** to the server — the boot `import:mahasiswa` guard runs when `mahasiswa_feb` is empty and the file exists.
+- The prod app bakes config (`config:cache`); to run ad-hoc commands against another DB, `php artisan config:clear` first (or use `docker compose exec -e DB_DATABASE=...`).
+
 ## Gotchas
 - **README.md has stale planning notes appended below the License section** (in Indonesian, leftover feature-planning scratch). Trust AGENTS.md/CLAUDE.md over README prose.
-- `backups/` and `labterpadu-*.sql` dumps live in the repo root — never commit fresh dumps or treat them as source of truth.
+- `backups/` and `labterpadu-*.sql` dumps live in the repo root — never commit fresh dumps or treat them as source of truth. (`backups/` may already contain old `backup_labterpadu_*.sql` files from an earlier scheme — ignore/rotate them, don't commit.)
+- **`mahasiswa_feb.csv` is not in the repo** (purged from history; never re-add). It ships to the server out-of-band; for local dev, regenerate it from the DB (`SELECT nim,nama,prodi INTO OUTFILE ...`) or restore it from a DB backup.
 - **`config:cache` ignores `-e DB_*` overrides.** The prod app caches config at boot, so `docker compose exec -e DB_DATABASE=... app artisan migrate` silently hits the cached DB. Run `php artisan config:clear` first for ad-hoc runs against other databases.
-- **Restart fragility (pre-existing):** the entrypoint re-runs `migrate --force` on every boot; it currently re-runs all migrations and fails at `2026_02_03_215614` with a `renderThrowable()` crash (no durable change). The `labterpadu-10-05-2026.sql` dump predates current migrations (`2026_08_04/08_05`), so dump-import + boot will hit this too.
+- **`migrate --force` on boot is idempotent on the real compose path** ("Nothing to migrate" on redeploy; verified) — the old "restart fragility" crash (`2026_02_03_215614`) was a **stale-dump artifact**: `labterpadu-10-05-2026.sql` predates the `2026_08_04/08_05` migrations, so dump-import + boot hits it in throwaway `docker run` containers. `db-import.sh` warns when a dump's migration timestamp is older than the repo's; it does not re-authorize an old dump.
 - **MySQL `root` is `root@localhost` only** — TCP root auth is denied; the app connects as `labterpadu@'%'` (granted only on `labterpadu`). Creating a scratch DB requires `GRANT ALL ON <db>.* TO 'labterpadu'@'%'`.
 - **`docker compose run` hangs** (entrypoint `exec`s supervisord, which never exits). For one-off boot checks use `docker run -d` + `docker logs` + `docker rm`.
 - **PHP 8.5 prints PDO deprecations to stdout** (entrypoint filters them when generating APP_KEY).
