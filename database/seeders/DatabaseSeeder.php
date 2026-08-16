@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Lab;
-use App\Models\Schedule;
-use App\Helpers\DayHelper;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -16,65 +14,53 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Idempotent: safe to run on every container boot (docker entrypoint runs
+     * `db:seed --force` unconditionally). Admin credentials come from env
+     * (ADMIN_NAME / ADMIN_EMAIL / ADMIN_PASSWORD) and fall back to demo values.
      */
     public function run(): void
     {
+        $adminName = env('ADMIN_NAME', 'Super Admin');
+        $adminEmail = env('ADMIN_EMAIL', 'superadmin@feb.ac.id');
+        $adminPassword = env('ADMIN_PASSWORD', 'password');
+
         // Create Super Admin User
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@feb.ac.id',
-            'password' => Hash::make('password'),
-            'role' => 'super_admin',
-        ]);
+        $superAdmin = User::updateOrCreate(
+            ['email' => $adminEmail],
+            ['name' => $adminName, 'password' => Hash::make($adminPassword)]
+        );
+        $superAdmin->role = 'super_admin';
+        $superAdmin->save();
 
         // Create Admin/Aslab Users
-        User::create([
-            'name' => 'Admin Aslab 1',
-            'email' => 'admin@feb.ac.id',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-        ]);
-        
-        User::create([
-            'name' => 'Admin Aslab 2',
-            'email' => 'aslab@feb.ac.id',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-        ]);
+        $adminOne = User::updateOrCreate(
+            ['email' => 'admin@feb.ac.id'],
+            ['name' => 'Admin Aslab 1', 'password' => Hash::make('password')]
+        );
+        $adminOne->role = 'admin';
+        $adminOne->save();
+
+        $adminTwo = User::updateOrCreate(
+            ['email' => 'aslab@feb.ac.id'],
+            ['name' => 'Admin Aslab 2', 'password' => Hash::make('password')]
+        );
+        $adminTwo->role = 'admin';
+        $adminTwo->save();
 
         // Create Labs
-        Lab::create([
-            'name' => 'EL. 301',
-            'description' => 'Laboratorium komputer lantai 3',
-            'capacity' => 50,
-            'status' => 'available',
-        ]);
+        $labs = [
+            ['name' => 'EL. 301', 'description' => 'Laboratorium komputer lantai 3', 'capacity' => 50, 'status' => 'available'],
+            ['name' => 'EL. 306', 'description' => 'Laboratorium komputer lantai 3', 'capacity' => 45, 'status' => 'available'],
+            ['name' => 'EL. 307', 'description' => 'Laboratorium komputer lantai 3', 'capacity' => 40, 'status' => 'available'],
+            ['name' => 'EL. 309', 'description' => 'Laboratorium komputer lantai 3', 'capacity' => 30, 'status' => 'available'],
+        ];
 
-        Lab::create([
-            'name' => 'EL. 306',
-            'description' => 'Laboratorium komputer lantai 3',
-            'capacity' => 45,
-            'status' => 'available',
-        ]);
+        foreach ($labs as $lab) {
+            Lab::updateOrCreate(['name' => $lab['name']], $lab);
+        }
 
-        Lab::create([
-            'name' => 'EL. 307',
-            'description' => 'Laboratorium komputer lantai 3',
-            'capacity' => 40,
-            'status' => 'available',
-        ]);
-
-        Lab::create([
-            'name' => 'EL. 309',
-            'description' => 'Laboratorium komputer lantai 3',
-            'capacity' => 30,
-            'status' => 'available',
-        ]);
-
-        // Remove EL. 3 01 creation as requested
-        
-        // Seed Approved Bookings WITH corresponding Schedules
-        // Using fixed weekday dates to avoid Sunday (not in schedules ENUM)
-        
+        // Seed asset type codes for structured-tag inventory tracking
+        $this->call(AssetTypeCodeSeeder::class);
     }
 }
