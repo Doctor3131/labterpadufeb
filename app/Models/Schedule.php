@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class Schedule extends Model
@@ -41,7 +42,7 @@ class Schedule extends Model
             if ($schedule->document && $schedule->document->ktm_path) {
                 Storage::disk('public')->delete($schedule->document->ktm_path);
             }
-            
+
             // Delete the document record itself (handled by database cascade usually, but good to be explicit/safe)
             if ($schedule->document) {
                 $schedule->document->delete();
@@ -53,7 +54,6 @@ class Schedule extends Model
      * NOTE: Removed $with = ['booking'] for performance optimization.
      * Use ->with('booking') explicitly where needed.
      */
-
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
@@ -86,17 +86,43 @@ class Schedule extends Model
     }
 
     /**
+     * Per-occurrence overrides/cancellations for this recurring schedule.
+     */
+    public function occurrences()
+    {
+        return $this->hasMany(ScheduleOccurrence::class);
+    }
+
+    /**
+     * Get the occurrence override for a given date, if any.
+     */
+    public function occurrenceFor($date)
+    {
+        if (! $this->relationLoaded('occurrences')) {
+            return $this->occurrences()->where('occurrence_date', $date)->first();
+        }
+
+        $date = $date instanceof Carbon ? $date->format('Y-m-d') : $date;
+
+        return $this->occurrences->first(
+            fn ($o) => optional($o->occurrence_date)->format('Y-m-d') === $date
+        );
+    }
+
+    /**
      * Get effective course/activity name
      * Fallback to booking if not locally set
      */
     public function getCourseAttribute($value)
     {
-        if (!empty($value)) return $value;
-        
+        if (! empty($value)) {
+            return $value;
+        }
+
         if ($this->booking) {
             return $this->booking->course_name ?? $this->booking->activity_name;
         }
-        
+
         return null;
     }
 
@@ -106,12 +132,14 @@ class Schedule extends Model
      */
     public function getLecturerAttribute($value)
     {
-        if (!empty($value)) return $value;
-        
+        if (! empty($value)) {
+            return $value;
+        }
+
         if ($this->booking) {
             return $this->booking->lecturer_name ?? $this->booking->pic_name;
         }
-        
+
         return null;
     }
 
@@ -121,15 +149,15 @@ class Schedule extends Model
     public function getKomtingAttribute()
     {
         // Priority 1: Check if komting column has value (for regular schedules)
-        if (isset($this->attributes['komting']) && !empty($this->attributes['komting'])) {
+        if (isset($this->attributes['komting']) && ! empty($this->attributes['komting'])) {
             return $this->attributes['komting'];
         }
-        
+
         // Priority 2: Get from booking relationship (for booking schedules)
         if ($this->booking) {
             return $this->booking->pic_name;
         }
-        
+
         return null;
     }
 
@@ -141,6 +169,7 @@ class Schedule extends Model
         if ($this->booking) {
             return $this->booking->phone_number;
         }
+
         return null;
     }
 
@@ -150,15 +179,15 @@ class Schedule extends Model
     public function getStudentCountAttribute()
     {
         // Priority 1: Check if student_count column has value (for regular schedules)
-        if (isset($this->attributes['student_count']) && !empty($this->attributes['student_count'])) {
+        if (isset($this->attributes['student_count']) && ! empty($this->attributes['student_count'])) {
             return $this->attributes['student_count'];
         }
-        
+
         // Priority 2: Get from booking relationship (for booking schedules)
         if ($this->booking) {
             return $this->booking->participant_count;
         }
-        
+
         return null;
     }
 
@@ -171,15 +200,15 @@ class Schedule extends Model
         return $query->where(function ($q) use ($startDate, $endDate) {
             // Case 1: Schedule has no start_date (always active from beginning)
             $q->whereNull('start_date')
-              ->orWhere(function ($q2) use ($endDate, $startDate) {
-                  // Case 2: Schedule starts before or on the end date of the requested range
-                  $q2->where('start_date', '<=', $endDate)
-                     ->where(function ($q3) use ($startDate) {
-                         // AND it has no end_date or ends after or on the start date of the requested range
-                         $q3->whereNull('end_date')
-                            ->orWhere('end_date', '>=', $startDate);
-                     });
-              });
+                ->orWhere(function ($q2) use ($endDate, $startDate) {
+                    // Case 2: Schedule starts before or on the end date of the requested range
+                    $q2->where('start_date', '<=', $endDate)
+                        ->where(function ($q3) use ($startDate) {
+                            // AND it has no end_date or ends after or on the start date of the requested range
+                            $q3->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $startDate);
+                        });
+                });
         });
     }
 
@@ -190,28 +219,29 @@ class Schedule extends Model
     {
         return $query->where(function ($q) use ($startTime, $endTime) {
             // New booking starts during existing schedule
-            $q->where(function ($sub) use ($startTime, $endTime) {
+            $q->where(function ($sub) use ($startTime) {
                 $sub->where('start_time', '<=', $startTime)
                     ->where('end_time', '>', $startTime);
             })
             // New booking ends during existing schedule
-            ->orWhere(function ($sub) use ($startTime, $endTime) {
-                $sub->where('start_time', '<', $endTime)
-                    ->where('end_time', '>=', $endTime);
-            })
+                ->orWhere(function ($sub) use ($endTime) {
+                    $sub->where('start_time', '<', $endTime)
+                        ->where('end_time', '>=', $endTime);
+                })
             // New booking completely covers existing schedule
-            ->orWhere(function ($sub) use ($startTime, $endTime) {
-                $sub->where('start_time', '>=', $startTime)
-                    ->where('end_time', '<=', $endTime);
-            });
+                ->orWhere(function ($sub) use ($startTime, $endTime) {
+                    $sub->where('start_time', '>=', $startTime)
+                        ->where('end_time', '<=', $endTime);
+                });
         });
     }
+
     /**
      * Get formatted start time (H:i)
      */
     public function getFormattedStartTimeAttribute(): string
     {
-        return \Carbon\Carbon::parse($this->start_time)->format('H:i');
+        return Carbon::parse($this->start_time)->format('H:i');
     }
 
     /**
@@ -219,7 +249,7 @@ class Schedule extends Model
      */
     public function getFormattedEndTimeAttribute(): string
     {
-        return \Carbon\Carbon::parse($this->end_time)->format('H:i');
+        return Carbon::parse($this->end_time)->format('H:i');
     }
 
     /**
@@ -227,6 +257,6 @@ class Schedule extends Model
      */
     public function getTimeRangeAttribute()
     {
-        return $this->formatted_start_time . ' - ' . $this->formatted_end_time;
+        return $this->formatted_start_time.' - '.$this->formatted_end_time;
     }
 }

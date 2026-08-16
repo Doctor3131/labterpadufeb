@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
@@ -68,6 +68,7 @@ class Booking extends Model
         'is_recurring',
         'day',
         'booking_date',
+        'end_date',
         'start_time',
         'end_time',
         'participant_count',
@@ -78,6 +79,7 @@ class Booking extends Model
 
     protected $casts = [
         'booking_date' => 'date',
+        'end_date' => 'date',
         'handled_at' => 'datetime',
         'participant_count' => 'integer',
         'is_recurring' => 'boolean',
@@ -164,20 +166,20 @@ class Booking extends Model
     {
         return $query->where(function ($q) use ($startTime, $endTime) {
             // New booking starts during existing booking
-            $q->where(function ($sub) use ($startTime, $endTime) {
+            $q->where(function ($sub) use ($startTime) {
                 $sub->where('start_time', '<=', $startTime)
                     ->where('end_time', '>', $startTime);
             })
             // New booking ends during existing booking
-            ->orWhere(function ($sub) use ($startTime, $endTime) {
-                $sub->where('start_time', '<', $endTime)
-                    ->where('end_time', '>=', $endTime);
-            })
+                ->orWhere(function ($sub) use ($endTime) {
+                    $sub->where('start_time', '<', $endTime)
+                        ->where('end_time', '>=', $endTime);
+                })
             // New booking completely covers existing booking
-            ->orWhere(function ($sub) use ($startTime, $endTime) {
-                $sub->where('start_time', '>=', $startTime)
-                    ->where('end_time', '<=', $endTime);
-            });
+                ->orWhere(function ($sub) use ($startTime, $endTime) {
+                    $sub->where('start_time', '>=', $startTime)
+                        ->where('end_time', '<=', $endTime);
+                });
         });
     }
 }

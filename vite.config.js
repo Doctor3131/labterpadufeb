@@ -26,6 +26,10 @@ const localIp = getLocalIpAddress();
 // [DITAMBAHKAN] Tampilkan IP yang akan digunakan saat dev server berjalan
 console.log(`🌐 Vite akan menggunakan IP: ${localIp}`);
 
+// [DITAMBAHKAN] Allow an explicit HMR host for containerized dev (Docker),
+// e.g. VITE_HMR_HOST=localhost when the host browser reaches Vite on :5173.
+const hmrHost = process.env.VITE_HMR_HOST || localIp;
+
 export default defineConfig({
     plugins: [
         laravel({
@@ -45,7 +49,7 @@ export default defineConfig({
             // [DITAMBAHKAN] Hot Module Replacement configuration
             // HMR menggunakan IP yang terdeteksi otomatis agar CSS/JS reload
             // berfungsi dengan baik saat diakses dari mobile device
-            host: localIp, // [DITAMBAHKAN] Auto-detect IP address
+            host: hmrHost, // [DITAMBAHKAN] Auto-detect IP, or VITE_HMR_HOST in Docker
             protocol: "ws", // [DITAMBAHKAN] WebSocket protocol untuk HMR
             port: 5173, // [DITAMBAHKAN] Port untuk HMR WebSocket
             clientPort: 5173, // [DITAMBAHKAN] Port yang digunakan client untuk connect

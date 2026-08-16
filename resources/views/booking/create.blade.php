@@ -630,6 +630,35 @@
                         </div>
                     </div>
 
+                    <!-- Akhir Pengulangan untuk Perkuliahan Tetap -->
+                    <div id="recurring-end-section" class="hidden mb-6 bg-white border border-yellow-200 rounded-xl p-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-3">Berakhir ...</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="repeat_type" id="repeat_never" value="never" checked
+                                       class="w-4 h-4 text-yellow-500 focus:ring-yellow-500">
+                                <label for="repeat_never" class="text-sm text-gray-700">Tidak pernah berakhir</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="repeat_type" id="repeat_count" value="count"
+                                       class="w-4 h-4 text-yellow-500 focus:ring-yellow-500">
+                                <label for="repeat_count" class="text-sm text-gray-700">Setelah</label>
+                                <input type="number" name="repeat_count" id="repeat_count" min="2" max="52"
+                                       placeholder="N"
+                                       class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm">
+                                <span class="text-sm text-gray-600">kali pertemuan</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="radio" name="repeat_type" id="repeat_date" value="date"
+                                       class="w-4 h-4 text-yellow-500 focus:ring-yellow-500">
+                                <label for="repeat_date" class="text-sm text-gray-700">Hingga tanggal</label>
+                                <input type="date" name="repeat_end_date" id="repeat_end_date" min="{{ date('Y-m-d') }}"
+                                       class="px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm">
+                            </div>
+                        </div>
+                        <p id="recurring-end-hint" class="text-xs text-gray-500 mt-2"></p>
+                    </div>
+
                     <div class="flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0 mt-8">
                         <button type="button" id="btn-prev-3" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
                             ← Kembali
@@ -1108,6 +1137,7 @@
 
                     // Update recurring booking notice based on booking type
                     updateRecurringBookingNotice();
+                    updateRecurringEndSection();
                 }
             }
 
@@ -1491,6 +1521,63 @@
             }
         }
 
+        // Show/hide the recurrence-end selector and compute its summary hint
+        function updateRecurringEndSection() {
+            const section = document.getElementById('recurring-end-section');
+            if (!section) return;
+
+            const bookingDate = document.getElementById('booking_date').value;
+            const hint = document.getElementById('recurring-end-hint');
+            const repeatType = document.querySelector('input[name="repeat_type"]:checked');
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+            if (selectedBookingType !== 'perkuliahan_tetap') {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+
+            if (!bookingDate || !repeatType) {
+                hint.textContent = '';
+                return;
+            }
+
+            const start = new Date(bookingDate + 'T00:00:00');
+            const dayName = dayNames[start.getDay()];
+
+            if (repeatType.value === 'count') {
+                const count = parseInt(document.getElementById('repeat_count').value);
+                hint.textContent = count > 1
+                    ? `Pertemuan setiap hari ${dayName}, ${count} kali (terakhir ${formatIndoDate(addWeeks(start, count - 1))}).`
+                    : 'Masukkan jumlah pertemuan (minimal 2).';
+            } else if (repeatType.value === 'date') {
+                const endDate = document.getElementById('repeat_end_date').value;
+                if (endDate) {
+                    const end = new Date(endDate + 'T00:00:00');
+                    if (end < start) {
+                        hint.textContent = 'Tanggal akhir harus setelah tanggal mulai.';
+                    } else {
+                        hint.textContent = `Pertemuan setiap hari ${dayName}, hingga ${formatIndoDate(end)}.`;
+                    }
+                } else {
+                    hint.textContent = 'Pilih tanggal akhir pengulangan.';
+                }
+            } else {
+                hint.textContent = `Pertemuan setiap hari ${dayName} tanpa batas waktu.`;
+            }
+        }
+
+        function addWeeks(date, weeks) {
+            const d = new Date(date);
+            d.setDate(d.getDate() + weeks * 7);
+            return d;
+        }
+
+        function formatIndoDate(date) {
+            const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            return date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear();
+        }
+
         function setupStep3Validation() {
             const bookingDate = document.getElementById('booking_date');
             const participantCount = document.getElementById('participant_count');
@@ -1513,6 +1600,20 @@
                 validateStep3();
                 checkCapacityWarning();
                 updateRecurringBookingNotice();
+                updateRecurringEndSection();
+            });
+
+            // Recurrence-end controls update hint + validation
+            const repeatControls = document.querySelectorAll('#recurring-end-section input');
+            repeatControls.forEach(input => {
+                input.addEventListener('change', function() {
+                    updateRecurringEndSection();
+                    validateStep3();
+                });
+                input.addEventListener('input', function() {
+                    updateRecurringEndSection();
+                    validateStep3();
+                });
             });
 
             // No need to check conflict when date/time changes
@@ -1562,7 +1663,21 @@
 
             // For pribadi bookings, lab is not required
             const isPribadi = selectedBookingType === 'pribadi';
-            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab) && !isSunday && isTimeValid;
+
+            // Recurrence-end validation for perkuliahan_tetap
+            let repeatValid = true;
+            if (selectedBookingType === 'perkuliahan_tetap') {
+                const repeatType = document.querySelector('input[name="repeat_type"]:checked');
+                const repeatCount = document.getElementById('repeat_count').value;
+                const repeatEndDate = document.getElementById('repeat_end_date').value;
+                if (repeatType && repeatType.value === 'count') {
+                    repeatValid = parseInt(repeatCount) >= 2;
+                } else if (repeatType && repeatType.value === 'date') {
+                    repeatValid = !!repeatEndDate && repeatEndDate >= bookingDate;
+                }
+            }
+
+            const isValid = bookingDate && participantCount && startTime && endTime && (isPribadi || lab) && !isSunday && isTimeValid && repeatValid;
             document.getElementById('btn-next-3').disabled = !isValid;
         }
 
@@ -1831,6 +1946,21 @@
             summary.push(`<div><strong>Tanggal:</strong> ${document.getElementById('booking_date').value}</div>`);
             summary.push(`<div><strong>Waktu:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</div>`);
             summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('participant_count').value} orang</div>`);
+
+            // Recurrence-end display for perkuliahan_tetap
+            if (selectedBookingType === 'perkuliahan_tetap') {
+                const repeatType = document.querySelector('input[name="repeat_type"]:checked');
+                if (repeatType) {
+                    let endText = 'Berulang tanpa batas';
+                    if (repeatType.value === 'count') {
+                        const count = parseInt(document.getElementById('repeat_count').value);
+                        endText = `Berulang, ${count} kali pertemuan`;
+                    } else if (repeatType.value === 'date') {
+                        endText = `Berulang hingga ${document.getElementById('repeat_end_date').value}`;
+                    }
+                    summary.push(`<div><strong>Pengulangan:</strong> ${endText}</div>`);
+                }
+            }
 
             // Lab and capacity warning only shown for non-pribadi bookings
             const warningBox = document.getElementById('capacity-warning-text');

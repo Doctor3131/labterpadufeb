@@ -40,6 +40,7 @@ class ReportController extends Controller
         'pending' => 'Menunggu',
         'rejected' => 'Ditolak',
         'completed' => 'Selesai',
+        'deleted' => 'Dibatalkan',
     ];
 
     /**
@@ -58,9 +59,9 @@ class ReportController extends Controller
      */
     private function buildLabQuery(Request $request)
     {
-        // Get approved bookings
+        // Get approved bookings (deleted bookings are kept for historical reports)
         $bookingsQuery = Booking::with('lab')
-            ->whereIn('status', ['approved']);
+            ->whereIn('status', ['approved', 'deleted']);
 
         if ($request->filled('start_month')) {
             $startDate = Carbon::parse($request->start_month.'-01')->startOfMonth();

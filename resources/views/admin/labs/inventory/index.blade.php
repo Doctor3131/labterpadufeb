@@ -126,13 +126,25 @@
                 @foreach($summary as $item)
                     <div class="bg-white border rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
                         <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h3 class="font-bold text-gray-800 text-lg">{{ $item['name'] }}</h3>
-                                @if($item['category'])
-                                    <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
-                                        {{ $item['category'] }}
-                                    </span>
+                            <div class="flex items-start gap-3">
+                                @if(!empty($item['image_path']))
+                                    <img src="{{ route('admin.secure-file', ['path' => $item['image_path']]) }}" alt="{{ $item['name'] }}" class="w-12 h-12 object-cover rounded-lg border border-gray-200 shrink-0">
+                                @else
+                                    <div class="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </div>
                                 @endif
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-lg">{{ $item['name'] }}</h3>
+                                    @if($item['category'])
+                                        <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                            {{ $item['category'] }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                             <span class="text-xs font-medium px-2 py-1 rounded-full 
                                 {{ $item['tracking_mode'] === 'STRUCTURED_TAG' ? 'bg-purple-100 text-purple-800' : 
@@ -215,7 +227,21 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($summary as $item)
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-900">{{ $item['name'] }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @if(!empty($item['image_path']))
+                                            <img src="{{ route('admin.secure-file', ['path' => $item['image_path']]) }}" alt="{{ $item['name'] }}" class="w-10 h-10 object-cover rounded-lg border border-gray-200 shrink-0">
+                                        @else
+                                            <div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        <span class="font-medium text-gray-900">{{ $item['name'] }}</span>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 text-center">
                                     @if($item['category'])
                                         <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-green-100 text-green-800">

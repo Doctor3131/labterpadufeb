@@ -37,7 +37,7 @@
 
     <!-- Form -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-        <form action="{{ route('admin.labs.inventory.store', $lab) }}" method="POST" class="p-6" x-data="inventoryForm()">
+        <form action="{{ route('admin.labs.inventory.store', $lab) }}" method="POST" enctype="multipart/form-data" class="p-6" x-data="inventoryForm()">
             @csrf
 
             <!-- Step 1: Select Tracking Mode -->
@@ -117,6 +117,17 @@
                     <input type="hidden" id="category-hidden" name="category" value="{{ old('category') }}">
                     
                     <p class="text-xs text-gray-500 mt-1">Pilih dari daftar atau buat kategori baru</p>
+                </div>
+
+                <!-- Item Image -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Foto Barang (Opsional)</label>
+                    <input type="file" name="image" accept="image/jpeg,image/png,image/webp" onchange="previewItemImage(this)"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-yellow-500 file:text-white file:font-semibold hover:file:bg-yellow-600 cursor-pointer">
+                    <div class="mt-3 hidden" id="item-image-preview-wrap">
+                        <img id="item-image-preview" class="w-32 h-32 object-cover rounded-lg border border-gray-200" alt="Pratinjau foto barang">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">JPG, PNG, atau WebP (maks 5MB). Resolusi besar akan otomatis diperkecil menjadi maks 1280px.</p>
                 </div>
             </div>
 
@@ -389,6 +400,18 @@
             document.getElementById('atc-kosong').style.display = mode === 'kosong' ? '' : 'none';
             document.getElementById('atc-pilih').style.display  = mode === 'pilih'  ? '' : 'none';
             document.getElementById('atc-manual').style.display = mode === 'manual' ? '' : 'none';
+        }
+
+        function previewItemImage(input) {
+            var wrap = document.getElementById('item-image-preview-wrap');
+            var img = document.getElementById('item-image-preview');
+            if (input.files && input.files[0]) {
+                img.src = URL.createObjectURL(input.files[0]);
+                wrap.classList.remove('hidden');
+            } else {
+                wrap.classList.add('hidden');
+                img.src = '';
+            }
         }
 
         // Init on page load (handles old() re-render after validation error)

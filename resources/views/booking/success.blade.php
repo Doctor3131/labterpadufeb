@@ -151,6 +151,13 @@
                             <span class="font-semibold text-gray-800 text-right">{{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}</span>
                         </div>
 
+                        @if($booking->booking_type === 'perkuliahan_tetap' && $booking->end_date)
+                            <div class="flex justify-between items-start border-b pb-2 gap-4">
+                                <span class="text-gray-600 shrink-0">Berulang sampai:</span>
+                                <span class="font-semibold text-gray-800 text-right">{{ $booking->end_date->translatedFormat('d F Y') }} ({{ $booking->day }})</span>
+                            </div>
+                        @endif
+
                         <div class="flex justify-between items-start border-b pb-2 gap-4">
                             <span class="text-gray-600 shrink-0">Jumlah Peserta:</span>
                             <span class="font-semibold text-gray-800 text-right">{{ $booking->participant_count }} orang</span>

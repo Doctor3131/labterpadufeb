@@ -67,16 +67,13 @@
                             </a>
                             <a href="{{ route('admin.schedules.edit', $schedule->id) }}" 
                                class="px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium">
-                                Edit
+                                Edit / Pindah
                             </a>
-                            <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Yakin ingin menghapus jadwal ini?{{ $schedule->booking ? ' Booking terkait akan ditandai sebagai Deleted.' : '' }}')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
-                                    Hapus
-                                </button>
-                            </form>
+                            <button type="button"
+                                    onclick="openDeleteModal({{ $schedule->id }}, {{ json_encode($schedule->course) }}, {{ in_array($schedule->type, ['perkuliahan_tetap']) ? 'true' : 'false' }}, {{ json_encode($schedule->day) }}, null)"
+                                    class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
+                                Hapus
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -137,16 +134,13 @@
                 </a>
                 <a href="{{ route('admin.schedules.edit', $schedule->id) }}" 
                    class="flex-1 px-4 py-2.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg text-sm font-medium text-center">
-                    Edit
+                    Edit / Pindah
                 </a>
-                <form action="{{ route('admin.schedules.destroy', $schedule->id) }}" method="POST" class="flex-1"
-                      onsubmit="return confirm('Yakin ingin menghapus jadwal ini?{{ $schedule->booking ? ' Booking terkait akan ditandai sebagai Deleted.' : '' }}')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="w-full px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
-                        Hapus
-                    </button>
-                </form>
+                <button type="button"
+                        onclick="openDeleteModal({{ $schedule->id }}, {{ json_encode($schedule->course) }}, {{ in_array($schedule->type, ['perkuliahan_tetap']) ? 'true' : 'false' }}, {{ json_encode($schedule->day) }}, null)"
+                        class="flex-1 px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
+                    Hapus
+                </button>
             </div>
         </div>
     @empty

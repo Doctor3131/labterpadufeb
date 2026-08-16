@@ -19,6 +19,7 @@ class Item extends Model
         'asset_type_code_id',
         'tracking_mode',
         'description',
+        'image_path',
     ];
 
     protected $casts = [
@@ -63,9 +64,10 @@ class Item extends Model
     public function getTotalUnitsAttribute(): int
     {
         if ($this->hasIndividualUnits()) {
-            return $this->batches->sum(fn($batch) => $batch->assetUnits->count());
+            return $this->batches->sum(fn ($batch) => $batch->assetUnits->count());
         }
-        return $this->batches->sum(fn($batch) => $batch->inventoryBalances->sum('quantity'));
+
+        return $this->batches->sum(fn ($batch) => $batch->inventoryBalances->sum('quantity'));
     }
 
     /**
@@ -76,12 +78,12 @@ class Item extends Model
     {
         // Calculate total stock available in inventory
         $totalStock = 0;
-        
+
         // Check if batches are loaded
         if ($this->relationLoaded('batches')) {
             // Use eager loaded data for better performance
             if ($this->hasIndividualUnits()) {
-                $totalStock = $this->batches->sum(function($batch) {
+                $totalStock = $this->batches->sum(function ($batch) {
                     if ($batch->relationLoaded('assetUnits')) {
                         // assetUnits already filtered in eager loading
                         return $batch->assetUnits->count();
@@ -94,7 +96,7 @@ class Item extends Model
                     }
                 });
             } else {
-                $totalStock = $this->batches->sum(function($batch) {
+                $totalStock = $this->batches->sum(function ($batch) {
                     if ($batch->relationLoaded('inventoryBalances')) {
                         // inventoryBalances already filtered in eager loading
                         return $batch->inventoryBalances->sum('quantity');
@@ -110,37 +112,37 @@ class Item extends Model
         } else {
             // Batches not loaded, query directly
             if ($this->hasIndividualUnits()) {
-                $totalStock = \App\Models\AssetUnit::whereHas('batch', function($query) {
-                        $query->where('item_id', $this->id);
-                    })
+                $totalStock = AssetUnit::whereHas('batch', function ($query) {
+                    $query->where('item_id', $this->id);
+                })
                     ->where('is_available', true)
                     ->where('condition', 'BAIK')
                     ->count();
             } else {
-                $totalStock = \App\Models\InventoryBalance::whereHas('batch', function($query) {
-                        $query->where('item_id', $this->id);
-                    })
+                $totalStock = InventoryBalance::whereHas('batch', function ($query) {
+                    $query->where('item_id', $this->id);
+                })
                     ->where('condition', 'BAIK')
                     ->where('quantity', '>', 0)
                     ->sum('quantity');
             }
         }
-        
+
         // Subtract reserved items (status = approved) for aggregate items.
         // NOTE: Items with status 'borrowed' are already deducted from inventory_balances
         //       during the handout process, so we MUST NOT subtract them again here.
         // Items with status 'pending' are not yet reserved, so not subtracted.
-        if (!$this->hasIndividualUnits()) {
-            $reservedQuantity = \App\Models\AssetBorrowingItem::where('item_id', $this->id)
-                ->whereHas('borrowing', function($query) {
+        if (! $this->hasIndividualUnits()) {
+            $reservedQuantity = AssetBorrowingItem::where('item_id', $this->id)
+                ->whereHas('borrowing', function ($query) {
                     // Only 'approved' (reserved but not yet handed out) - inventory not yet reduced
                     $query->where('status', 'approved');
                 })
                 ->sum('quantity');
-            
+
             $totalStock -= $reservedQuantity;
         }
-        
+
         return max(0, $totalStock); // Ensure we never return negative
     }
 }

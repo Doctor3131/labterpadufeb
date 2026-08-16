@@ -178,6 +178,11 @@ class BookingController extends Controller
                         ? ['required', 'string', 'max:18', 'regex:/^[0-9]+$/']
                         : 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:18|regex:/^[0-9]+$/',
                     'software_needs' => 'nullable|string|max:255',
+
+                    // Recurrence end for perkuliahan_tetap (Google Calendar style)
+                    'repeat_type' => 'nullable|required_if:booking_type,perkuliahan_tetap|in:never,count,date',
+                    'repeat_count' => 'nullable|required_if:repeat_type,count|integer|min:2|max:52',
+                    'repeat_end_date' => 'nullable|required_if:repeat_type,date|date',
                 ]);
             }
 
@@ -232,11 +237,17 @@ class BookingController extends Controller
                     $date = Carbon::parse($validated['booking_date']);
                     $day = DayHelper::fromIndex($date->dayOfWeek);
 
+                    // Compute recurrence end for perkuliahan_tetap
+                    $isTetap = $request->booking_type === 'perkuliahan_tetap';
+                    $recurringEnd = $isTetap
+                        ? $this->computeRecurringEndDate($date->copy(), $request->repeat_type, $request->repeat_count, $request->repeat_end_date)
+                        : null;
+
                     // Lock the lab row to prevent concurrent bookings
                     $lab = Lab::lockForUpdate()->findOrFail($validated['lab_id']);
 
-                    // Check availability inside the transaction (after lock)
-                    if (! $lab->isAvailable($day, $validated['start_time'], $validated['end_time'], $validated['booking_date'])) {
+                    // Check availability inside the transaction (after lock), across the whole range
+                    if (! $this->isLabAvailableForRange($lab, $day, $validated['start_time'], $validated['end_time'], $date, $recurringEnd)) {
                         return back()->withErrors([
                             'time_conflict' => 'Ruangan '.$lab->name.' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda ('.$validated['start_time'].' - '.$validated['end_time'].'). Silakan pilih waktu atau ruangan lain.',
                         ])->withInput();
@@ -256,6 +267,11 @@ class BookingController extends Controller
 
                     // Set day for booking
                     $validated['day'] = $day;
+
+                    // Set end date for recurring perkuliahan_tetap series
+                    if ($isTetap) {
+                        $validated['end_date'] = $recurringEnd;
+                    }
 
                     // Create booking
                     $booking = Booking::create($validated);
@@ -285,6 +301,43 @@ class BookingController extends Controller
 
             return back()->withErrors(['error' => 'Terjadi kesalahan sistem. Silakan coba lagi.'])->withInput();
         }
+    }
+
+    /**
+     * Compute the end date of a recurring series based on the repeat selection.
+     */
+    private function computeRecurringEndDate(Carbon $startDate, $repeatType, $repeatCount, $repeatEndDate): ?string
+    {
+        if ($repeatType === 'count' && (int) $repeatCount > 1) {
+            return $startDate->copy()->addWeeks((int) $repeatCount - 1)->toDateString();
+        }
+
+        if ($repeatType === 'date' && $repeatEndDate) {
+            return Carbon::parse($repeatEndDate)->toDateString();
+        }
+
+        return null;
+    }
+
+    /**
+     * Check lab availability across every occurrence of a recurring series.
+     * Falls back to a single-date check when the series has no end date.
+     */
+    private function isLabAvailableForRange(Lab $lab, $day, $startTime, $endTime, Carbon $startDate, $endDate = null): bool
+    {
+        $current = $startDate->copy();
+        $guard = 0;
+
+        do {
+            if (! $lab->isAvailable($day, $startTime, $endTime, $current->toDateString())) {
+                return false;
+            }
+
+            $current->addWeek();
+            $guard++;
+        } while ($endDate && $current->lte(Carbon::parse($endDate)) && $guard < 60);
+
+        return true;
     }
 
     /**

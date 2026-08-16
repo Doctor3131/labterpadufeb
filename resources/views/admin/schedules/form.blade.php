@@ -51,6 +51,38 @@
             </div>
         @endif
 
+        @php $isRecurringEdit = $isEdit && in_array($schedule->type, ['perkuliahan_tetap']); @endphp
+        @if($isRecurringEdit)
+            <!-- Lingkup Perubahan (for recurring series only) -->
+            <div class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Lingkup Perubahan *</label>
+                <div class="space-y-3">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="radio" name="scope" value="all" checked
+                               class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
+                        <span class="text-sm text-gray-700"><span class="font-medium">Seluruh rangkaian</span> — ubah semua pertemuan kelas ini</span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="radio" name="scope" value="single"
+                               class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
+                        <span class="text-sm text-gray-700"><span class="font-medium">Hanya tanggal ini</span> — ubah lab/jam hanya pada satu pertemuan</span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="radio" name="scope" value="future"
+                               class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
+                        <span class="text-sm text-gray-700"><span class="font-medium">Tanggal ini &amp; selanjutnya</span> — ubah mulai satu pertemuan hingga akhir rangkaian</span>
+                    </label>
+
+                    <div id="occurrence-date-field" class="hidden pl-7">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Kemunculan <span class="text-red-500">*</span></label>
+                        <input type="date" name="occurrence_date" id="occurrence_date"
+                               class="w-full md:w-80 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Hari pertemuan: <span class="font-medium">{{ $schedule->day }}</span>.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Form -->
         <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6">
             <form id="scheduleForm" action="{{ $isEdit ? route('admin.schedules.update', $schedule->id) : route('admin.schedules.store') }}" method="POST" enctype="multipart/form-data">
@@ -1084,6 +1116,41 @@
                     new CustomSelect(selectElement);
                 }
             });
+        });
+
+        // Lingkup Perubahan (recurring edit) - toggle occurrence date field
+        document.addEventListener('DOMContentLoaded', function() {
+            const scopeInputs = document.querySelectorAll('input[name="scope"]');
+            const occurrenceField = document.getElementById('occurrence-date-field');
+            const occurrenceInput = document.getElementById('occurrence_date');
+            const scheduleDay = @json($schedule->day ?? null);
+
+            if (!scopeInputs.length || !occurrenceField) return;
+
+            function updateScopeUI() {
+                const selected = document.querySelector('input[name="scope"]:checked');
+                const isScoped = selected && (selected.value === 'single' || selected.value === 'future');
+                occurrenceField.classList.toggle('hidden', !isScoped);
+
+                if (selected && selected.value === 'single' && scheduleDay) {
+                    const d = document.getElementById('daySelect');
+                    if (d) d.value = scheduleDay;
+                }
+            }
+
+            // Default the occurrence date to the schedule's next upcoming weekday
+            if (occurrenceInput && scheduleDay) {
+                const dayMap = {'Senin':1,'Selasa':2,'Rabu':3,'Kamis':4,'Jumat':5,'Sabtu':6};
+                const target = dayMap[scheduleDay];
+                const now = new Date();
+                const daysAhead = (target - now.getDay() + 7) % 7 || 7;
+                const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysAhead);
+                const pad = n => String(n).padStart(2, '0');
+                occurrenceInput.value = `${next.getFullYear()}-${pad(next.getMonth()+1)}-${pad(next.getDate())}`;
+            }
+
+            scopeInputs.forEach(input => input.addEventListener('change', updateScopeUI));
+            updateScopeUI();
         });
     </script>
 </body>

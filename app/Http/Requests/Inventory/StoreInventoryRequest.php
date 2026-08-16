@@ -25,7 +25,7 @@ class StoreInventoryRequest extends FormRequest
         // Handle split input (from other modes)
         elseif ($this->has(['arrival_month', 'arrival_year'])) {
             $this->merge([
-                'arrival_mmyy' => $this->input('arrival_month') . substr($this->input('arrival_year'), -2),
+                'arrival_mmyy' => $this->input('arrival_month').substr($this->input('arrival_year'), -2),
             ]);
         }
     }
@@ -40,10 +40,12 @@ class StoreInventoryRequest extends FormRequest
             'category' => ['nullable', 'string', 'max:100'],
             'batch_id' => ['nullable', 'string'], // null/'new' = create new batch, or valid ID
             'condition' => ['required', Rule::enum(ConditionEnum::class)],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'item_description' => ['nullable', 'string', 'max:255'],
         ];
-        
+
         // Validate batch_id exists only when it is a real ID (not null and not 'new')
-        if (!empty($this->input('batch_id')) && $this->input('batch_id') !== 'new') {
+        if (! empty($this->input('batch_id')) && $this->input('batch_id') !== 'new') {
             $rules['batch_id'][] = 'exists:batches,id';
         }
 

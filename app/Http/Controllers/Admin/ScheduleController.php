@@ -1,18 +1,19 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Schedule;
-use App\Models\ScheduleDocument;
-use App\Models\Lab;
-use App\Models\Booking;
 use App\Helpers\DayHelper;
+use App\Http\Controllers\Controller;
+use App\Models\Booking;
+use App\Models\Lab;
+use App\Models\Schedule;
+use App\Models\ScheduleOccurrence;
+use App\Services\ScheduleService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Services\ScheduleService;
-use Carbon\Carbon;
 
 class ScheduleController extends Controller
 {
@@ -25,6 +26,7 @@ class ScheduleController extends Controller
         'perkuliahan_tidak_tetap' => 'Perkuliahan Tidak Tetap',
         'non_perkuliahan' => 'Non Perkuliahan',
     ];
+
     /**
      * Display a listing of schedules
      */
@@ -98,7 +100,7 @@ class ScheduleController extends Controller
         $excludeScheduleId = $request->exclude_schedule_id;
 
         // Validate required fields
-        if (!$day || !$startTime || !$endTime) {
+        if (! $day || ! $startTime || ! $endTime) {
             return response()->json([]);
         }
 
@@ -136,7 +138,7 @@ class ScheduleController extends Controller
             ->where(function ($q) use ($startTime, $endTime) {
                 // Time overlap check
                 $q->whereTime('start_time', '<', $endTime)
-                  ->whereTime('end_time', '>', $startTime);
+                    ->whereTime('end_time', '>', $startTime);
             });
 
         // Exclude current schedule if editing
@@ -151,18 +153,18 @@ class ScheduleController extends Controller
                 $q->where(function ($q2) use ($startDate, $endDate) {
                     // Existing schedule has no end_date (permanent)
                     $q2->whereNull('end_date')
-                       ->where(function ($q3) use ($endDate, $startDate) {
-                           $q3->whereNull('start_date')
-                              ->orWhere('start_date', '<=', $endDate ?? $startDate);
-                       });
+                        ->where(function ($q3) use ($endDate, $startDate) {
+                            $q3->whereNull('start_date')
+                                ->orWhere('start_date', '<=', $endDate ?? $startDate);
+                        });
                 })->orWhere(function ($q2) use ($startDate, $endDate) {
                     // Existing schedule has date range
                     $q2->whereNotNull('start_date')
-                       ->where('start_date', '<=', $endDate ?? $startDate)
-                       ->where(function ($q3) use ($startDate) {
-                           $q3->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $startDate);
-                       });
+                        ->where('start_date', '<=', $endDate ?? $startDate)
+                        ->where(function ($q3) use ($startDate) {
+                            $q3->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $startDate);
+                        });
                 });
             });
         } else {
@@ -183,7 +185,7 @@ class ScheduleController extends Controller
                 ->where('status', 'pending')
                 ->where(function ($q) use ($startTime, $endTime) {
                     $q->whereTime('start_time', '<', $endTime)
-                      ->whereTime('end_time', '>', $startTime);
+                        ->whereTime('end_time', '>', $startTime);
                 });
 
             // Filter by date range
@@ -241,7 +243,7 @@ class ScheduleController extends Controller
 
         if ($conflict) {
             return back()
-                ->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: ' . $conflict])
+                ->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: '.$conflict])
                 ->withInput();
         }
 
@@ -295,12 +297,24 @@ class ScheduleController extends Controller
     public function update(Request $request, $id)
     {
         $schedule = Schedule::with('booking')->findOrFail($id);
-        
+
         // Get validation rules using helper method (DRY)
         $rules = $this->getScheduleValidationRules($request);
         $validated = $request->validate($rules);
 
-        // Map data using Service (DRY)
+        $scope = $request->input('scope', 'all');
+        $isRecurring = in_array($schedule->type, ['perkuliahan_tetap']);
+
+        // Scoped updates only apply to recurring day-based series
+        if ($scope === 'single' && $isRecurring) {
+            return $this->updateSingleOccurrence($schedule, $request, $validated);
+        }
+
+        if ($scope === 'future' && $isRecurring) {
+            return $this->updateFutureOccurrences($schedule, $request, $validated);
+        }
+
+        // Scope 'all' (default) - full series update
         $scheduleData = ScheduleService::mapFromRequest($validated, $request->type);
 
         // Validate day exists in date range
@@ -329,7 +343,7 @@ class ScheduleController extends Controller
 
         if ($conflict) {
             return back()
-                ->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: ' . $conflict])
+                ->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: '.$conflict])
                 ->withInput();
         }
 
@@ -370,9 +384,9 @@ class ScheduleController extends Controller
                     $bookingData['course_name'] = $validated['course_name'];
                     $bookingData['lecturer_name'] = $validated['lecturer_name'];
                     if (isset($validated['komting'])) {
-                         $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
+                        $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
                     }
-                    
+
                 } elseif ($request->type === 'non_perkuliahan') {
                     $bookingData['activity_name'] = $validated['activity_name'];
                     $bookingData['activity_type'] = $validated['activity_type'];
@@ -394,46 +408,241 @@ class ScheduleController extends Controller
     }
 
     /**
-     * Remove the specified schedule
+     * Remove the specified schedule.
+     *
+     * Accepts an optional scope:
+     *  - all    (default): remove the entire series + mark booking deleted.
+     *  - single          : cancel a single occurrence on the given date.
+     *  - future          : cancel the given occurrence and everything after it.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $schedule = Schedule::with('booking')->findOrFail($id);
-        
-        $info = $schedule->course . ' (' . $schedule->day . ')';
-        
-        DB::transaction(function () use ($schedule) {
-            // If schedule has booking, mark booking as deleted
+
+        $scope = $request->input('scope', 'all');
+        $occurrenceDate = $request->input('occurrence_date');
+        $isRecurring = in_array($schedule->type, ['perkuliahan_tetap']);
+
+        $info = $schedule->course.' ('.$schedule->day.')';
+
+        DB::transaction(function () use ($schedule, $scope, $occurrenceDate, $isRecurring) {
+            // Scoped deletions apply to recurring day-based series
+            if ($isRecurring && in_array($scope, ['single', 'future'])) {
+                $date = $occurrenceDate ? Carbon::parse($occurrenceDate) : null;
+                if (! $date) {
+                    abort(422, 'Tanggal kemunculan wajib diisi.');
+                }
+
+                if ($scope === 'single') {
+                    // Cancel just this occurrence; the rest of the series stays
+                    $schedule->occurrences()->updateOrCreate(
+                        ['occurrence_date' => $date->toDateString()],
+                        [
+                            'type' => ScheduleOccurrence::TYPE_CANCELLED,
+                            'lab_id' => null,
+                            'start_time' => null,
+                            'end_time' => null,
+                        ]
+                    );
+
+                    return;
+                }
+
+                // future: truncate the series to the week before the chosen date
+                $schedule->update([
+                    'end_date' => $date->copy()->subWeek()->toDateString(),
+                ]);
+
+                return;
+            }
+
+            // Default 'all' (or non-recurring): full deletion
             if ($schedule->booking) {
                 $bookingUpdate = [
                     'status' => 'deleted',
                     'handled_at' => now(),
                 ];
-                
+
                 if (Auth::check()) {
                     $bookingUpdate['handled_by'] = Auth::id();
                 }
-                
+
                 $schedule->booking->update($bookingUpdate);
             }
-            
-            // Delete the schedule
+
             $schedule->delete();
         });
 
+        $message = match ($scope) {
+            'single' => 'Kemunculan tanggal '.Carbon::parse($occurrenceDate)->format('d/m/Y').' dari jadwal "'.$info.'" berhasil dihapus!',
+            'future' => 'Jadwal "'.$info.'" dibatalkan mulai tanggal '.Carbon::parse($occurrenceDate)->format('d/m/Y').' dan seterusnya!',
+            default => 'Jadwal "'.$info.'" berhasil dihapus!',
+        };
+
         return redirect()->route('admin.schedules.index')
-            ->with('success', 'Jadwal "' . $info . '" berhasil dihapus!');
+            ->with('success', $message);
     }
 
+    /**
+     * Move a single occurrence to a different lab/time on a specific date.
+     */
+    private function updateSingleOccurrence(Schedule $schedule, Request $request, array $validated)
+    {
+        $occurrenceDate = $request->input('occurrence_date');
+        if (! $occurrenceDate) {
+            return back()->withErrors(['occurrence_date' => 'Tanggal kemunculan wajib diisi.'])->withInput();
+        }
 
+        $date = Carbon::parse($occurrenceDate);
+        if (DayHelper::fromDate($date) !== $schedule->day) {
+            return back()->withErrors(['occurrence_date' => 'Tanggal harus jatuh pada hari '.$schedule->day.'.'])->withInput();
+        }
+
+        // Conflict on the target date/lab/time (exclude the source series)
+        $conflict = ScheduleService::checkConflict(
+            $validated['lab_id'],
+            $schedule->day,
+            $validated['start_time'],
+            $validated['end_time'],
+            $date->toDateString(),
+            $date->toDateString(),
+            $schedule->id
+        );
+
+        if ($conflict) {
+            return back()->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: '.$conflict])->withInput();
+        }
+
+        $pendingConflict = $this->checkPendingBookings(
+            $validated['lab_id'],
+            $schedule->day,
+            $validated['start_time'],
+            $validated['end_time'],
+            $date->toDateString(),
+            $date->toDateString(),
+            $schedule->booking_id
+        );
+
+        if ($pendingConflict) {
+            return back()->withErrors(['conflict' => $pendingConflict])->withInput();
+        }
+
+        DB::transaction(function () use ($schedule, $validated, $date) {
+            $schedule->occurrences()->updateOrCreate(
+                ['occurrence_date' => $date->toDateString()],
+                [
+                    'type' => ScheduleOccurrence::TYPE_MOVED,
+                    'lab_id' => $validated['lab_id'],
+                    'start_time' => $validated['start_time'],
+                    'end_time' => $validated['end_time'],
+                ]
+            );
+        });
+
+        return redirect()->route('admin.schedules.index')
+            ->with('success', 'Kemunculan tanggal '.$date->format('d/m/Y').' berhasil dipindah!');
+    }
 
     /**
-     * Validate that the selected day exists within the date range
+     * Apply the edited values starting from a given occurrence onward:
+     * truncates the current series and opens a new one at the occurrence date.
      */
+    private function updateFutureOccurrences(Schedule $schedule, Request $request, array $validated)
+    {
+        $occurrenceDate = $request->input('occurrence_date');
+        if (! $occurrenceDate) {
+            return back()->withErrors(['occurrence_date' => 'Tanggal kemunculan wajib diisi.'])->withInput();
+        }
+
+        $date = Carbon::parse($occurrenceDate);
+        $occurrenceDay = DayHelper::fromDate($date);
+        if ($validated['day'] !== $occurrenceDay) {
+            return back()->withErrors(['day' => 'Hari baru harus sama dengan hari tanggal mulai ('.$occurrenceDay.').'])->withInput();
+        }
+
+        $originalEnd = $schedule->end_date ? $schedule->end_date->toDateString() : null;
+
+        $conflict = ScheduleService::checkConflict(
+            $validated['lab_id'],
+            $validated['day'],
+            $validated['start_time'],
+            $validated['end_time'],
+            $date->toDateString(),
+            $originalEnd,
+            $schedule->id
+        );
+
+        if ($conflict) {
+            return back()->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: '.$conflict])->withInput();
+        }
+
+        $pendingConflict = $this->checkPendingBookings(
+            $validated['lab_id'],
+            $validated['day'],
+            $validated['start_time'],
+            $validated['end_time'],
+            $date->toDateString(),
+            $originalEnd,
+            $schedule->booking_id
+        );
+
+        if ($pendingConflict) {
+            return back()->withErrors(['conflict' => $pendingConflict])->withInput();
+        }
+
+        DB::transaction(function () use ($schedule, $validated, $date, $originalEnd) {
+            // Truncate the old series up to the week before the chosen date
+            $schedule->update(['end_date' => $date->copy()->subWeek()->toDateString()]);
+
+            $newData = ScheduleService::mapFromRequest($validated, $schedule->type);
+            $newData['start_date'] = $date->toDateString();
+            $newData['end_date'] = $originalEnd;
+            $newData['booking_id'] = $schedule->booking_id;
+
+            $newSchedule = Schedule::create($newData);
+
+            // Migrate later occurrences to the new series
+            $schedule->occurrences()
+                ->where('occurrence_date', '>=', $date->toDateString())
+                ->update(['schedule_id' => $newSchedule->id]);
+
+            // Move the document record so the active series keeps it
+            if ($schedule->document) {
+                $schedule->document->update(['schedule_id' => $newSchedule->id]);
+            }
+
+            // Sync the source booking to the new (active) values for reporting
+            if ($schedule->booking) {
+                $bookingData = [
+                    'lab_id' => $validated['lab_id'],
+                    'day' => $validated['day'],
+                    'booking_date' => $schedule->booking->booking_date,
+                    'start_time' => $validated['start_time'],
+                    'end_time' => $validated['end_time'],
+                    'participant_count' => $validated['student_count'] ?? $schedule->booking->participant_count,
+                    'booking_type' => $schedule->type,
+                ];
+
+                if ($schedule->type === 'perkuliahan_tetap' || $schedule->type === 'perkuliahan_tidak_tetap') {
+                    $bookingData['course_name'] = $validated['course_name'];
+                    $bookingData['lecturer_name'] = $validated['lecturer_name'];
+                    if (isset($validated['komting'])) {
+                        $bookingData['pic_name'] = $validated['komting'];
+                    }
+                }
+
+                $schedule->booking->update($bookingData);
+            }
+        });
+
+        return redirect()->route('admin.schedules.index')
+            ->with('success', 'Rangkaian jadwal diubah mulai tanggal '.$date->format('d/m/Y').' dan seterusnya!');
+    }
+
     private function validateDayInDateRange($selectedDay, $startDate, $endDate)
     {
         // If no date range specified, validation passes (schedule berlaku selamanya)
-        if (!$startDate && !$endDate) {
+        if (! $startDate && ! $endDate) {
             return true;
         }
 
@@ -445,6 +654,7 @@ class ScheduleController extends Controller
         $startDayName = DayHelper::fromDate($start);
         if ($startDayName !== $selectedDay) {
             $formattedStart = $start->format('d/m/Y');
+
             return "Tanggal mulai ({$formattedStart}) adalah hari {$startDayName}, tetapi hari yang dipilih adalah {$selectedDay}. Silakan pilih tanggal mulai yang jatuh pada hari {$selectedDay}.";
         }
 
@@ -460,16 +670,15 @@ class ScheduleController extends Controller
             $currentDate->addDay();
         }
 
-        if (!$dayFound) {
+        if (! $dayFound) {
             $formattedStart = $start->format('d/m/Y');
             $formattedEnd = $end->format('d/m/Y');
+
             return "Hari {$selectedDay} tidak ditemukan dalam rentang tanggal {$formattedStart} - {$formattedEnd}. Silakan pilih rentang tanggal yang mengandung hari {$selectedDay} atau ubah pilihan hari.";
         }
 
         return true;
     }
-
-
 
     /**
      * Check for pending bookings that conflict with the schedule
@@ -482,7 +691,7 @@ class ScheduleController extends Controller
             ->where('status', 'pending')
             ->where(function ($q) use ($startTime, $endTime) {
                 $q->whereTime('start_time', '<', $endTime)
-                  ->whereTime('end_time', '>', $startTime);
+                    ->whereTime('end_time', '>', $startTime);
             });
 
         // Exclude specific booking if needed (for update scenario)
@@ -509,7 +718,8 @@ class ScheduleController extends Controller
             $bookingList = $pendingBookings->map(function ($booking) {
                 $name = $booking->course_name ?? $booking->activity_name ?? 'Peminjaman';
                 $date = Carbon::parse($booking->booking_date)->format('d/m/Y');
-                $time = Carbon::parse($booking->start_time)->format('H:i') . ' - ' . Carbon::parse($booking->end_time)->format('H:i');
+                $time = Carbon::parse($booking->start_time)->format('H:i').' - '.Carbon::parse($booking->end_time)->format('H:i');
+
                 return "{$name} ({$date}, {$time})";
             })->join(', ');
 
@@ -545,7 +755,7 @@ class ScheduleController extends Controller
             $rules['komting_phone'] = 'nullable|string|max:20';
         } elseif ($request->type === 'non_perkuliahan') {
             $rules['activity_name'] = 'required|string|max:255';
-            $rules['activity_type'] = 'required|in:' . implode(',', Booking::ACTIVITY_TYPES);
+            $rules['activity_type'] = 'required|in:'.implode(',', Booking::ACTIVITY_TYPES);
             $rules['position'] = 'nullable|string|max:255';
             $rules['equipment_needs'] = 'nullable|string|max:1000';
             $rules['pic_name_non_perkuliahan'] = 'required|string|max:255';
@@ -562,10 +772,6 @@ class ScheduleController extends Controller
 
         return $rules;
     }
-
-
-
-
 
     /**
      * Apply filters to the schedule query
@@ -589,11 +795,11 @@ class ScheduleController extends Controller
 
         // Filter by Search (course/activity name or lecturer)
         if ($request->filled('search')) {
-            $searchTerm = '%' . $request->search . '%';
+            $searchTerm = '%'.$request->search.'%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('course', 'like', $searchTerm)
-                  ->orWhere('lecturer', 'like', $searchTerm)
-                  ->orWhere('komting', 'like', $searchTerm);
+                    ->orWhere('lecturer', 'like', $searchTerm)
+                    ->orWhere('komting', 'like', $searchTerm);
             });
         }
 
@@ -603,51 +809,51 @@ class ScheduleController extends Controller
             try {
                 $date = Carbon::parse($request->date);
                 $dayName = DayHelper::fromDate($date);
-                
+
                 $query->where('day', $dayName)
-                      ->where(function ($q) use ($request) {
-                          $q->where(function ($q2) use ($request) {
-                              // Has start_date, check range
-                              $q2->whereNotNull('start_date')
-                                 ->where('start_date', '<=', $request->date)
-                                 ->where(function ($q3) use ($request) {
-                                     $q3->whereNull('end_date')
+                    ->where(function ($q) use ($request) {
+                        $q->where(function ($q2) use ($request) {
+                            // Has start_date, check range
+                            $q2->whereNotNull('start_date')
+                                ->where('start_date', '<=', $request->date)
+                                ->where(function ($q3) use ($request) {
+                                    $q3->whereNull('end_date')
                                         ->orWhere('end_date', '>=', $request->date);
-                                 });
-                          })->orWhere(function ($q2) use ($request) {
-                              // No start_date (recurring), check end_date only
-                              $q2->whereNull('start_date')
-                                 ->where(function ($q3) use ($request) {
-                                     $q3->whereNull('end_date')
+                                });
+                        })->orWhere(function ($q2) use ($request) {
+                            // No start_date (recurring), check end_date only
+                            $q2->whereNull('start_date')
+                                ->where(function ($q3) use ($request) {
+                                    $q3->whereNull('end_date')
                                         ->orWhere('end_date', '>=', $request->date);
-                                 });
-                          });
-                      });
+                                });
+                        });
+                    });
             } catch (\Exception $e) {
                 // Ignore parser error here as it's handled in index
             }
         } elseif ($request->filled('month')) {
             // Filter by Month (broader than date) - SECOND PRIORITY
             $yearMonth = $request->month; // Format: "2026-01"
-            $firstDayOfMonth = Carbon::parse($yearMonth . '-01');
+            $firstDayOfMonth = Carbon::parse($yearMonth.'-01');
             $lastDayOfMonth = $firstDayOfMonth->copy()->endOfMonth();
-            
+
             $query->where(function ($q) use ($firstDayOfMonth, $lastDayOfMonth) {
                 $q->where(function ($q2) use ($firstDayOfMonth, $lastDayOfMonth) {
                     // Has start_date, check if schedule is active during this month
                     $q2->whereNotNull('start_date')
-                       ->where('start_date', '<=', $lastDayOfMonth->format('Y-m-d'))
-                       ->where(function ($q3) use ($firstDayOfMonth) {
-                           $q3->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
-                       });
+                        ->where('start_date', '<=', $lastDayOfMonth->format('Y-m-d'))
+                        ->where(function ($q3) use ($firstDayOfMonth) {
+                            $q3->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
+                        });
                 })->orWhere(function ($q2) use ($firstDayOfMonth) {
                     // No start_date (recurring), check if still active in this month
                     $q2->whereNull('start_date')
-                       ->where(function ($q3) use ($firstDayOfMonth) {
-                           $q3->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
-                       });
+                        ->where(function ($q3) use ($firstDayOfMonth) {
+                            $q3->whereNull('end_date')
+                                ->orWhere('end_date', '>=', $firstDayOfMonth->format('Y-m-d'));
+                        });
                 });
             });
         } else {
@@ -656,7 +862,7 @@ class ScheduleController extends Controller
                 $q->where(function ($q2) {
                     // Has end_date in the future
                     $q2->whereNotNull('end_date')
-                       ->where('end_date', '>=', now()->format('Y-m-d'));
+                        ->where('end_date', '>=', now()->format('Y-m-d'));
                 })->orWhere(function ($q2) {
                     // No end_date (permanent/recurring)
                     $q2->whereNull('end_date');
@@ -730,4 +936,3 @@ class ScheduleController extends Controller
         return back()->with('success', 'File KTM berhasil dihapus.');
     }
 }
-

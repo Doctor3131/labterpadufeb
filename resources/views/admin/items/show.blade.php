@@ -16,17 +16,29 @@
 
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ $item->name }}</h1>
-            <div class="flex flex-wrap items-center gap-2">
-                @if($item->category)
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
-                        {{ $item->category }}
+        <div class="flex items-start gap-4">
+            @if($item->image_path)
+                <img src="{{ route('admin.secure-file', ['path' => $item->image_path]) }}" alt="{{ $item->name }}" class="w-20 h-20 object-cover rounded-xl border border-gray-200 shadow-sm shrink-0">
+            @else
+                <div class="w-20 h-20 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+            @endif
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ $item->name }}</h1>
+                <div class="flex flex-wrap items-center gap-2">
+                    @if($item->category)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                            {{ $item->category }}
+                        </span>
+                    @endif
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                        {{ $item->tracking_mode->label() }}
                     </span>
-                @endif
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                    {{ $item->tracking_mode->label() }}
-                </span>
+                </div>
             </div>
         </div>
         <div class="bg-blue-50 border border-blue-100 rounded-xl px-6 py-4 text-center min-w-[150px]">
@@ -48,6 +60,38 @@
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 md:col-span-1 lg:col-span-4">
                 <div class="text-sm font-medium text-gray-500 mb-1">Spesifikasi</div>
                 <div class="font-semibold text-gray-900">{{ $item->description ?: '-' }}</div>
+            </div>
+        </div>
+
+        <div class="mt-6 border-t border-gray-100 pt-4">
+            <div class="text-sm font-medium text-gray-500 mb-3">Foto Barang</div>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                @if($item->image_path)
+                    <img src="{{ route('admin.secure-file', ['path' => $item->image_path]) }}" alt="{{ $item->name }}" class="w-40 h-40 object-cover rounded-xl border border-gray-200 shadow-sm shrink-0">
+                @else
+                    <div class="w-40 h-40 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-sm shrink-0">Belum ada foto</div>
+                @endif
+                <div class="flex-1 space-y-3">
+                    <form action="{{ route('admin.items.update-image', $item) }}" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row gap-2">
+                        @csrf
+                        @method('PATCH')
+                        <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required
+                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-yellow-500 file:text-white file:font-semibold hover:file:bg-yellow-600 cursor-pointer">
+                        <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-lg transition-colors">
+                            Unggah / Ganti
+                        </button>
+                    </form>
+                    @if($item->image_path)
+                        <form action="{{ route('admin.items.destroy-image', $item) }}" method="POST" onsubmit="return confirm('Hapus foto barang ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold rounded-lg border border-red-200 transition-colors">
+                                Hapus Foto
+                            </button>
+                        </form>
+                    @endif
+                    <p class="text-xs text-gray-500">JPG, PNG, atau WebP (maks 5MB). Resolusi besar akan otomatis diperkecil menjadi maks 1280px.</p>
+                </div>
             </div>
         </div>
     </div>

@@ -54,6 +54,10 @@ Routes are grouped into three access tiers:
 
 `User::role` is a plain string column: `'admin'` | `'super_admin'`.
 
+### Controller Namespacing
+
+Controllers are split by audience. Top-level `App\Http\Controllers\*` handle **public-facing** flows (booking, BPS/Refinitiv/Bloomberg request submission, landing, feedback, personal borrowing). `App\Http\Controllers\Admin\*` handle the **admin CRUD/management** side of the same modules (e.g. there is both a public `BloombergRequestController` and an `Admin\BloombergRequestController`). When adding a feature, match the audience to the correct namespace rather than overloading one controller.
+
 ### Domain Modules
 
 **Booking** (`Booking` model, `BookingController`): Four booking types defined in `Booking::BOOKING_TYPES`:
@@ -96,6 +100,14 @@ Blade templates with Tailwind CSS 4. No JS framework — vanilla JS for interact
 - `DayHelper::fromEnglish()` — converts English day names to Indonesian (used for schedule conflict checks)
 - `CategoryEnum` — hardcoded asset categories (PC, Monitor, Laptop, etc.)
 - `Booking::BOOKING_TYPES`, `Booking::ACTIVITY_TYPES`, `Booking::APPLICANT_STATUSES` — used in both validation rules and blade form rendering; always use these constants to avoid duplication
+
+### Reports & Exports
+
+Excel exports use `phpoffice/phpspreadsheet` directly (no Laravel-Excel wrapper). Report generation lives in `Admin\ReportController`.
+
+### Testing
+
+Tests run on PHPUnit 11 (configured in `tests/TestCase.php`), not Pest — despite the `pestphp/pest-plugin` allow-entry in `composer.json`. Only example scaffolding exists in `tests/Feature` and `tests/Unit`; there is no established test suite yet. `composer run test` clears config before running.
 
 ### Deployment
 
