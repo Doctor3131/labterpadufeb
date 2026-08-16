@@ -73,5 +73,8 @@ fresh: ## Drop all tables and re-migrate (destructive)
 seed: ## Run database seeders (idempotent)
 	@$(COMPOSE) $(COMPOSE_FILES) exec app php artisan db:seed --force
 
+import: ## Import a SQL dump into the db via db-import.sh (interactive)
+	@./db-import.sh $(FILE) $$([ "${MODE}" = "dev" ] && printf -- "-f docker-compose.dev.yml")
+
 db-shell: ## Open a MySQL shell inside the db container
 	@$(COMPOSE) $(COMPOSE_FILES) exec db sh -c 'mysql -u"$$MYSQL_USER" -p"$$MYSQL_PASSWORD" "$$MYSQL_DATABASE"'

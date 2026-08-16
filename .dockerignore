@@ -38,6 +38,9 @@ labterpadu-*.sql
 log
 composer_output.txt
 
+# Student PII — never bake into an image even if present on disk
+mahasiswa_feb.csv
+
 # Editor / OS
 .DS_Store
 .idea

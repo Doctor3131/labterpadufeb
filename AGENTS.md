@@ -5,20 +5,27 @@ Guidance for working in **LabDigitalFEB**, a Laravel 12 app managing the FEB int
 ## Commands
 
 ```bash
-composer install && npm install   # install everything
-composer run dev                  # full dev env: php serve + queue + pail logs + vite HMR (concurrent)
+# Native (non-docker) dev
+composer install && npm install
+composer run dev                  # php serve + queue + pail + vite (concurrent)
 composer run test                 # config:clear then php artisan test (sqlite :memory:)
-php artisan test --filter=TestClassName   # single test
+php artisan test --filter=TestClassName
 ./vendor/bin/pint                 # PHP lint/format (do not run --fix unless intended)
-php artisan migrate
-php artisan import:mahasiswa      # reads mahasiswa_feb.csv from project root; {file?} arg to override
+php artisan import:mahasiswa      # reads mahasiswa_feb.csv from project root; {file?} arg overrides
 php artisan bps:sync-catalog [--dry-run] [--keep-missing]
 php artisan items:update-categories [--force]
 npm run build
-./rsync-deploy.sh <user@host> <remote_path> [ssh_port]   # set POST_DEPLOY_CMD for post-deploy steps
-```
 
-Vite auto-detects the local IP and binds `0.0.0.0:5173` (strict port) so HMR works from phones on the LAN.
+# Docker (compose) — preferred workflow
+make env                          # create .env.docker from example (fails if it exists)
+make up-d MODE=dev                # background; MODE=prod is default
+make logs / ps / down
+make clean                        # down -v — destructive, wipes DB volume
+make app / tinker / artisan CMD=route:list / db-shell
+make migrate / fresh / seed
+make import FILE=labterpadu-10-05-2026.sql   # restore a SQL dump into the db container
+./db-import.sh <file.sql> [--force]          # standalone import (interactive creds)
+```
 
 ## Architecture
 
@@ -51,12 +58,26 @@ Blade + Tailwind CSS 4. No JS framework — vanilla JS for interactive forms (mu
 ### Reports & exports
 Excel uses `phpoffice/phpspreadsheet` directly (no Laravel-Excel wrapper). Reports live in `Admin\ReportController` (also exports Word).
 
+## Docker stack (compose)
+
+- Config lives in `.env.docker` (gitignored; `make env` copies `.env.docker.example`). All DB/session/queue/cache settings flow from it; the `db` service creates DB+user from `DB_*` and fails fast if vars are missing. Defaults: `DB_DATABASE/DB_USERNAME/DB_PASSWORD=labterpadu`, `DB_ROOT_PASSWORD=root`.
+- Two compose files: `docker-compose.yml` (prod) + `docker-compose.dev.yml` overlay. Dev (`MODE=dev`) bind-mounts source, adds a Vite HMR service on `5173`, forces `APP_ENV=local`. Prod bakes source/assets (`Dockerfile` target `prod`), no bind mounts. Ports: app `3333`, MySQL `127.0.0.1:3307`.
+- **Boot order** (`docker/entrypoint.sh`): composer deps (dev) → APP_KEY → `storage:link` → `migrate --force` → **seed guard** → prod `config:cache`/`route:cache` → **mahasiswa import guard** → supervisord (`php artisan serve --host=0.0.0.0 --port=3333 --no-reload` + `queue:work`). Session/queue/cache are **database-backed** — no Redis.
+- **Seed guard:** `db:seed` runs only when `bookings` is empty; prod `import:mahasiswa` runs only when `mahasiswa_feb` is empty. This keeps dump-restored data authoritative across container restarts — the DatabaseSeeder would otherwise overwrite it.
+- **Restoring a dump:** `make import FILE=<dump>.sql` → `db-import.sh`. Interactive credential prompts (host/user/db/password), a destructive-import confirmation (`--force` bypasses), dump piped to the `db` container via **stdin** (no temp file), creds passed as `-e` env (never argv). Non-interactive/CI: set `DB_USER/DB_PASS/DB_NAME/DB_HOST` and `--force`.
+
 ## Testing
 PHPUnit 11 (`tests/TestCase.php`), **not** Pest despite the pest allow-entry in composer.json. phpunit.xml runs sqlite `:memory:`, sync queue, array cache/session. Only example scaffolding exists — no established suite yet.
 
 ## Deployment
-Production runs PHP's built-in server via PM2 (`ecosystem.config.json`) on port 3333. `rsync-deploy.sh` syncs the tree (excludes vendor/, node_modules/, .env, sql/log/backup files, public/build); set `POST_DEPLOY_CMD` env (e.g. `php artisan optimize`) for post-deploy steps.
+Deployment is the **Docker compose stack** (prod target). `rsync-deploy.sh` + `ecosystem.config.json` (PM2, `artisan serve` on 3333) remain in the tree as a legacy bare-metal path but are not the active deployment.
 
 ## Gotchas
-- **README.md has stale planning notes appended below the License section** (in Indonesian, leftover feature-planning scratch from a past session). Trust this file / CLAUDE.md over README prose.
-- `backups/` and `labterpadu-*.sql` DB dumps live in the repo root — never commit fresh dumps or treat them as source of truth.
+- **README.md has stale planning notes appended below the License section** (in Indonesian, leftover feature-planning scratch). Trust AGENTS.md/CLAUDE.md over README prose.
+- `backups/` and `labterpadu-*.sql` dumps live in the repo root — never commit fresh dumps or treat them as source of truth.
+- **`config:cache` ignores `-e DB_*` overrides.** The prod app caches config at boot, so `docker compose exec -e DB_DATABASE=... app artisan migrate` silently hits the cached DB. Run `php artisan config:clear` first for ad-hoc runs against other databases.
+- **Restart fragility (pre-existing):** the entrypoint re-runs `migrate --force` on every boot; it currently re-runs all migrations and fails at `2026_02_03_215614` with a `renderThrowable()` crash (no durable change). The `labterpadu-10-05-2026.sql` dump predates current migrations (`2026_08_04/08_05`), so dump-import + boot will hit this too.
+- **MySQL `root` is `root@localhost` only** — TCP root auth is denied; the app connects as `labterpadu@'%'` (granted only on `labterpadu`). Creating a scratch DB requires `GRANT ALL ON <db>.* TO 'labterpadu'@'%'`.
+- **`docker compose run` hangs** (entrypoint `exec`s supervisord, which never exits). For one-off boot checks use `docker run -d` + `docker logs` + `docker rm`.
+- **PHP 8.5 prints PDO deprecations to stdout** (entrypoint filters them when generating APP_KEY).
+- **The Bash tool shell is zsh**, which does not word-split variables (`$VAR cmd` fails). Write multi-command docker tests as `bash file.sh`.

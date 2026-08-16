@@ -43,9 +43,16 @@ php artisan storage:link --force 2>/dev/null || true
 echo ">> Running migrations"
 php artisan migrate --force
 
-# --- Seed unconditionally (DatabaseSeeder is idempotent) --------------------
-echo ">> Seeding database"
-php artisan db:seed --force
+# --- Seed only when no real data present (dump/seed idempotency guard) ------
+# DatabaseSeeder only creates users, labs and asset_type_codes; it never writes
+# bookings/inventories. If bookings is non-empty, real (dump-imported) data is
+# present, so skip seeding to keep that data authoritative across restarts.
+if [ "$(php -r '$p=new PDO("mysql:host=".getenv("DB_HOST").";dbname=".getenv("DB_DATABASE"),getenv("DB_USERNAME"),getenv("DB_PASSWORD"));echo $p->query("SELECT COUNT(*) FROM bookings")->fetchColumn();' 2>/dev/null || echo 0)" -gt 0 ]; then
+    echo ">> Existing data detected; skipping seed"
+else
+    echo ">> Seeding database"
+    php artisan db:seed --force
+fi
 
 # --- Prod-only optimizations (seed reads env(), so cache after seeding) -----
 if [ "$APP_ENV" = "production" ]; then
@@ -53,7 +60,7 @@ if [ "$APP_ENV" = "production" ]; then
     php artisan config:cache
     php artisan route:cache
 
-    if [ -f mahasiswa_feb.csv ]; then
+    if [ -f mahasiswa_feb.csv ] && [ "$(php -r '$p=new PDO("mysql:host=".getenv("DB_HOST").";dbname=".getenv("DB_DATABASE"),getenv("DB_USERNAME"),getenv("DB_PASSWORD"));echo $p->query("SELECT COUNT(*) FROM mahasiswa_feb")->fetchColumn();' 2>/dev/null || echo 0)" -eq 0 ]; then
         echo ">> Importing mahasiswa data"
         php artisan import:mahasiswa
     fi
