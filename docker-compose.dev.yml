@@ -1,0 +1,37 @@
+# LabDigitalFEB — Docker Compose dev overlay (extends docker-compose.yml)
+#   docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# Overrides the app service to run from bind-mounted source (live HMR/reload)
+# and adds the node (Vite) service. APP_ENV/APP_DEBUG are forced to safe dev
+# values, overriding the production defaults from .env.docker.
+###############################################################################
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+    volumes:
+      - ./:/var/www/html
+      - vendor_data:/var/www/html/vendor
+      - node_modules:/var/www/html/node_modules
+
+  node:
+    image: node:22-alpine
+    working_dir: /var/www/html
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ./:/var/www/html
+      - node_modules:/var/www/html/node_modules
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    networks:
+      - labnet
+    restart: unless-stopped
+
+volumes:
+  vendor_data:
+  node_modules:
