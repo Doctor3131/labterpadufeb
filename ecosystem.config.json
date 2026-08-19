@@ -12,6 +12,20 @@
             "instances": 1,
             "autorestart": true,
             "interpreter": "php"
+        },
+        {
+            "name": "labterpadu-vite",
+            "script": "bun",
+            "args": [
+                "run",
+                "dev"
+            ],
+            "instances": 1,
+            "autorestart": true,
+            "interpreter": "none",
+            "env": {
+                "NODE_ENV": "development"
+            }
         }
     ]
 }
