@@ -5,7 +5,7 @@ Guidance for working in **LabDigitalFEB**, a Laravel 12 app managing the FEB int
 ## Commands
 
 ```bash
-# Native (non-docker) dev
+# Dev
 composer install && npm install
 composer run dev                  # php serve + queue + pail + vite (concurrent)
 composer run test                 # config:clear then php artisan test (sqlite :memory:)
@@ -16,20 +16,14 @@ php artisan bps:sync-catalog [--dry-run] [--keep-missing]
 php artisan items:update-categories [--force]
 npm run build
 
-# Docker (compose) — preferred workflow
-make env                          # create .env.docker from example (fails if it exists)
-make up-d MODE=dev                # background; MODE=prod is default
-make logs / ps / down
-make clean                        # down -v — destructive, wipes DB volume
-make app / tinker / artisan CMD=route:list / db-shell
-make migrate / fresh / seed
-make import FILE=labterpadu-10-05-2026.sql   # restore a SQL dump into the db container
-./db-import.sh <file.sql> [--force]          # standalone import (interactive creds)
+# Server lifecycle (PM2, port 3333)
+pm2 startOrReload ecosystem.config.json --update-env
+pm2 status / logs / restart labterpadu / stop labterpadu
 
-# Ops (backup / restore / deploy) on a server
-./scripts/backup.sh [--dev] [--keep N]       # DB dump (gzip) + storage volume tar -> backups/
-./scripts/restore.sh [--dev] [--yes] <db.sql[.gz]> [storage.tar.gz]   # DESTRUCTIVE overwrite
-./scripts/deploy-prod.sh [/path/to/repo]     # pull + build prod image + up + health-check
+# Ops (manual — no scripts)
+mysqldump -u labterpadu -p labterpadu | gzip > backups/backup_labterpadu_$(date +%Y%m%d-%H%M%S).sql.gz
+gunzip -c backups/<dump>.sql.gz | mysql -u labterpadu -p labterpadu   # DESTRUCTIVE overwrite
+php artisan migrate / fresh / seed
 ```
 
 ## Architecture
@@ -63,32 +57,32 @@ Blade + Tailwind CSS 4. No JS framework — vanilla JS for interactive forms (mu
 ### Reports & exports
 Excel uses `phpoffice/phpspreadsheet` directly (no Laravel-Excel wrapper). Reports live in `Admin\ReportController` (also exports Word).
 
-## Docker stack (compose)
-
-- Config lives in `.env.docker` (gitignored; `make env` copies `.env.docker.example`). All DB/session/queue/cache settings flow from it; the `db` service creates DB+user from `DB_*` and fails fast if vars are missing. Defaults: `DB_DATABASE/DB_USERNAME/DB_PASSWORD=labterpadu`, `DB_ROOT_PASSWORD=root`.
-- Two compose files: `docker-compose.yml` (prod) + `docker-compose.dev.yml` overlay. Dev (`MODE=dev`) bind-mounts source, adds a Vite HMR service on `5173`, forces `APP_ENV=local`. Prod bakes source/assets (`Dockerfile` target `prod`), no bind mounts. Ports: app `3333`, MySQL `127.0.0.1:3307`.
-- **Boot order** (`docker/entrypoint.sh`): composer deps (dev) → APP_KEY → `storage:link` → `migrate --force` → **seed guard** → prod `config:cache`/`route:cache` → **mahasiswa import guard** → supervisord (`php artisan serve --host=0.0.0.0 --port=3333 --no-reload` + `queue:work`). Session/queue/cache are **database-backed** — no Redis.
-- **Seed guard:** `db:seed` runs only when `bookings` is empty; prod `import:mahasiswa` runs only when `mahasiswa_feb` is empty. This keeps dump-restored data authoritative across container restarts — the DatabaseSeeder would otherwise overwrite it.
-- **Restoring a dump:** `make import FILE=<dump>.sql` → `db-import.sh`. Interactive credential prompts (host/user/db/password), a destructive-import confirmation (`--force` bypasses), dump piped to the `db` container via **stdin** (no temp file), creds passed as `-e` env (never argv). Non-interactive/CI: set `DB_USER/DB_PASS/DB_NAME/DB_HOST` and `--force`.
-
 ## Testing
 PHPUnit 11 (`tests/TestCase.php`), **not** Pest despite the pest allow-entry in composer.json. phpunit.xml runs sqlite `:memory:`, sync queue, array cache/session. Only example scaffolding exists — no established suite yet.
 
 ## Deployment
-Deployment is the **Docker compose stack** (prod target). `rsync-deploy.sh` + `ecosystem.config.json` (PM2, `artisan serve` on 3333) remain in the tree as a legacy bare-metal path but are not the active deployment.
 
-- `scripts/deploy-prod.sh` is the standard path on a VPS: `git pull --ff-only` (aborts on a dirty worktree) → build prod image → `up -d` → HTTP health-check on `APP_PORT`. It refuses `MODE=dev` and will never run a `down -v`.
-- `scripts/backup.sh` dumps the DB (mysqldump via the `db` container, root@localhost, single-transaction) to gzip + tars the `labterpadu_storage` volume via a throwaway `alpine` container, with count-based retention (`--keep N`). `scripts/restore.sh` is the inverse (behaviour mirrors `db-import.sh`, with a destructive-overwrite confirmation unless `--yes`). Add `scripts/backup.sh` to cron on the host (DB_ROOT_PASSWORD is read from `.env.docker`).
-- **Git history was rewritten to purge `mahasiswa_feb.csv`** (student PII; gitignored + dockerignored now). Anyone with an older clone must re-fetch/reset. The file ships **out-of-band** to the server — the boot `import:mahasiswa` guard runs when `mahasiswa_feb` is empty and the file exists.
-- The prod app bakes config (`config:cache`); to run ad-hoc commands against another DB, `php artisan config:clear` first (or use `docker compose exec -e DB_DATABASE=...`).
+Bare-metal server. PHP's built-in server is managed by **PM2** (`ecosystem.config.json`) on port 3333; no Docker, no shell scripts. Nothing dispatches jobs, so there is no queue worker — `artisan serve` with `--no-reload` (carries the env-filtering fix so APP_KEY/DB creds reach the `php -S` worker) is all PM2 runs.
+
+```bash
+cd /path/to/repo
+git pull --ff-only
+composer install --no-dev --prefer-dist --optimize-autoloader
+npm ci && npm run build
+php artisan migrate --force
+pm2 startOrReload ecosystem.config.json --update-env
+```
+
+- **Seeding:** `db:seed` runs only when `bookings` is empty (same guard that used to live in the Docker entrypoint) — run it manually on a fresh DB so dump-restored data stays authoritative. Similarly, `import:mahasiswa` should only run when `mahasiswa_feb` is empty.
+- **Backup / restore:** plain `mysqldump` / `mysql` against MySQL (see Commands). `backups/` holds the gzip dumps; add the mysqldump line to cron. Restoring a dump is a destructive overwrite of the current DB.
+- **`mahasiswa_feb.csv`** ships out-of-band to the server (student PII — never in the repo). On a fresh server, copy it into the project root and run `php artisan import:mahasiswa` once.
 
 ## Gotchas
 - **README.md has stale planning notes appended below the License section** (in Indonesian, leftover feature-planning scratch). Trust AGENTS.md/CLAUDE.md over README prose.
 - `backups/` and `labterpadu-*.sql` dumps live in the repo root — never commit fresh dumps or treat them as source of truth. (`backups/` may already contain old `backup_labterpadu_*.sql` files from an earlier scheme — ignore/rotate them, don't commit.)
-- **`mahasiswa_feb.csv` is not in the repo** (purged from history; never re-add). It ships to the server out-of-band; for local dev, regenerate it from the DB (`SELECT nim,nama,prodi INTO OUTFILE ...`) or restore it from a DB backup.
-- **`config:cache` ignores `-e DB_*` overrides.** The prod app caches config at boot, so `docker compose exec -e DB_DATABASE=... app artisan migrate` silently hits the cached DB. Run `php artisan config:clear` first for ad-hoc runs against other databases.
-- **`migrate --force` on boot is idempotent on the real compose path** ("Nothing to migrate" on redeploy; verified) — the old "restart fragility" crash (`2026_02_03_215614`) was a **stale-dump artifact**: `labterpadu-10-05-2026.sql` predates the `2026_08_04/08_05` migrations, so dump-import + boot hits it in throwaway `docker run` containers. `db-import.sh` warns when a dump's migration timestamp is older than the repo's; it does not re-authorize an old dump.
+- **`mahasiswa_feb.csv` is not in the repo** (purged from history; never re-add). For local dev, regenerate it from the DB (`SELECT nim,nama,prodi INTO OUTFILE ...`) or restore it from a DB backup.
+- **`config:cache` freezes DB settings.** On the server the app runs with `config:cache`; ad-hoc artisan commands against another database silently hit the cached config. Run `php artisan config:clear` first (or re-cache after).
+- **`migrate --force` is idempotent** ("Nothing to migrate" on redeploy). The old "restart fragility" crash (`2026_02_03_215614`) was a stale-dump artifact: `labterpadu-10-05-2026.sql` predates the `2026_08_04/08_05` migrations, so dump-import + boot hit it. Check a dump's migration timestamp against the repo's before importing.
 - **MySQL `root` is `root@localhost` only** — TCP root auth is denied; the app connects as `labterpadu@'%'` (granted only on `labterpadu`). Creating a scratch DB requires `GRANT ALL ON <db>.* TO 'labterpadu'@'%'`.
-- **`docker compose run` hangs** (entrypoint `exec`s supervisord, which never exits). For one-off boot checks use `docker run -d` + `docker logs` + `docker rm`.
-- **PHP 8.5 prints PDO deprecations to stdout** (entrypoint filters them when generating APP_KEY).
-- **The Bash tool shell is zsh**, which does not word-split variables (`$VAR cmd` fails). Write multi-command docker tests as `bash file.sh`.
+- **PHP 8.5 prints PDO deprecations to stdout** — when capturing `php artisan key:generate --show` output, grep for the `base64:` line to avoid deprecation noise.
+- **The Bash tool shell is zsh**, which does not word-split variables (`$VAR cmd` fails). Write multi-command test scripts as `bash file.sh`.

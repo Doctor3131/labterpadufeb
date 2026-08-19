@@ -15,9 +15,10 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      *
-     * Idempotent: safe to run on every container boot (docker entrypoint runs
-     * `db:seed --force` unconditionally). Admin credentials come from env
-     * (ADMIN_NAME / ADMIN_EMAIL / ADMIN_PASSWORD) and fall back to demo values.
+     * Idempotent: safe to run repeatedly; the deploy flow guards it with
+     * `db:seed` only when `bookings` is empty so dump-restored data stays
+     * authoritative. Admin credentials come from env (ADMIN_NAME /
+     * ADMIN_EMAIL / ADMIN_PASSWORD) and fall back to demo values.
      */
     public function run(): void
     {

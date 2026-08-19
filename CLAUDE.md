@@ -36,8 +36,8 @@ php artisan bps:sync-catalog [--dry-run] [--keep-missing]
 # Build frontend assets
 npm run build
 
-# Deploy via rsync
-./rsync-deploy.sh <user@host> <remote_path> [ssh_port]
+# Deploy via PM2 (see Deployment)
+pm2 startOrReload ecosystem.config.json --update-env
 ```
 
 Vite is configured to auto-detect local IP so HMR works from mobile devices on the same network.
@@ -111,4 +111,4 @@ Tests run on PHPUnit 11 (configured in `tests/TestCase.php`), not Pest — despi
 
 ### Deployment
 
-Production runs PHP's built-in server managed by PM2 (`ecosystem.config.json`) on port 3333. `rsync-deploy.sh` syncs files to the remote host; set `POST_DEPLOY_CMD` env var to run post-deploy steps (e.g., `php artisan optimize`).
+Production runs PHP's built-in server managed by PM2 (`ecosystem.config.json`) on port 3333 — no Docker, no shell scripts. Deploy by pulling the repo, running `composer install --no-dev`, `npm ci && npm run build`, `php artisan migrate --force`, then `pm2 startOrReload ecosystem.config.json --update-env`. The PM2 app runs `php artisan serve --no-reload` so APP_KEY/DB creds reach the `php -S` worker.
