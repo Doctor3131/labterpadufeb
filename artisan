@@ -2,6 +2,7 @@
 <?php
 
 use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 define('LARAVEL_START', microtime(true));
 
@@ -13,8 +14,12 @@ require __DIR__.'/vendor/autoload.php';
 $kernel = (require __DIR__.'/bootstrap/app.php')->make(Illuminate\Contracts\Console\Kernel::class);
 
 // Exit code 0 for success, 1 for failure
+// Pass a ConsoleOutput so unhandled exceptions render with real output;
+// without it, Collision crashes with a "setOutput() null given" TypeError,
+// masking the actual error (Laravel 12.58 dropped the output argument).
 $status = $kernel->handle(
     $input = new ArgvInput,
+    new ConsoleOutput,
 );
 
 $kernel->terminate($input, $status);
