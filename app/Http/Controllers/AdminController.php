@@ -8,6 +8,9 @@ use App\Models\Booking;
 use App\Models\BpsRequest;
 use App\Models\RefinitivRequest;
 use App\Models\Schedule;
+use App\Services\RecurrenceDateService;
+use App\Services\ScheduleCalendarService;
+use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -100,31 +103,42 @@ class AdminController extends Controller
     /**
      * Approve booking
      */
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
 
         // State guard: only pending bookings can be approved
         if ($booking->status !== 'pending') {
-            return redirect()->route('admin.dashboard')
+            return $this->bookingManagementRedirect($request)
                 ->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
         }
 
         // CRITICAL: Check for schedule conflicts BEFORE approving
         $bookingDate = Carbon::parse($booking->booking_date);
-        $conflictCheck = $this->checkScheduleConflict(
-            $booking->lab_id,
-            $booking->day,
-            $booking->start_time,
-            $booking->end_time,
-            $bookingDate->format('Y-m-d'),
-            $booking->is_recurring
-                ? ($booking->end_date ? $booking->end_date->format('Y-m-d') : null)
-                : $bookingDate->format('Y-m-d')
-        );
+        $conflictCheck = null;
+        $occurrenceDates = app(RecurrenceDateService::class)->datesForBooking($booking);
+
+        foreach ($occurrenceDates as $occurrenceDateString) {
+            $occurrenceDate = Carbon::parse($occurrenceDateString);
+            $conflict = app(ScheduleCalendarService::class)->findConflict(
+                (int) $booking->lab_id,
+                $occurrenceDate,
+                $booking->start_time,
+                $booking->end_time,
+                null,
+                null,
+                true,
+                $booking->id
+            );
+
+            if ($conflict) {
+                $conflictCheck = $conflict['label'].' pada '.$occurrenceDate->format('d/m/Y');
+                break;
+            }
+        }
 
         if ($conflictCheck) {
-            return redirect()->route('admin.dashboard')
+            return $this->bookingManagementRedirect($request)
                 ->with('error', 'Tidak dapat menyetujui peminjaman: '.$conflictCheck);
         }
 
@@ -137,59 +151,10 @@ class AdminController extends Controller
             }
             $booking->save();
 
-            // Create schedule entry from approved booking
-            // Important: Use Carbon with Asia/Jakarta timezone to get correct day
-            $bookingDate = Carbon::parse($booking->booking_date)->timezone('Asia/Jakarta');
-
-            $scheduleData = [
-                'lab_id' => $booking->lab_id,
-                'day' => $booking->day, // Use day from booking (already correct)
-                'start_time' => $booking->start_time,
-                'end_time' => $booking->end_time,
-                'booking_id' => $booking->id,
-                'student_count' => $booking->participant_count,
-            ];
-
-            // Tentukan type dan data spesifik berdasarkan booking_type
-            if ($booking->is_recurring) {
-                // Perkuliahan tetap - recurring schedule
-                $scheduleData['type'] = 'perkuliahan_tetap';
-                $scheduleData['start_date'] = $bookingDate->toDateString();
-                $scheduleData['end_date'] = $booking->end_date ? $booking->end_date->toDateString() : null; // Recurring (bisa tanpa batas)
-                $scheduleData['course'] = $booking->course_name;
-                $scheduleData['lecturer'] = $booking->lecturer_name;
-                $scheduleData['komting'] = $booking->pic_name;
-            } else {
-                // One-time booking - use booking_type directly
-                $scheduleData['type'] = $booking->booking_type; // perkuliahan_tidak_tetap, non_perkuliahan, or pribadi
-                $scheduleData['start_date'] = $bookingDate->toDateString();
-                $scheduleData['end_date'] = $bookingDate->toDateString();
-
-                // Map data based on booking type
-                if ($booking->booking_type === 'perkuliahan_tidak_tetap') {
-                    $scheduleData['course'] = $booking->course_name;
-                    $scheduleData['lecturer'] = $booking->lecturer_name;
-                    $scheduleData['komting'] = $booking->pic_name;
-                } elseif ($booking->booking_type === 'non_perkuliahan') {
-                    $scheduleData['course'] = $booking->activity_name;
-                    $scheduleData['lecturer'] = null;
-                    $scheduleData['komting'] = null;
-                } elseif ($booking->booking_type === 'pribadi') {
-                    $scheduleData['course'] = $booking->purpose ?? 'Peminjaman Pribadi';
-                    $scheduleData['lecturer'] = null;
-                    $scheduleData['komting'] = null;
-                } else {
-                    // Fallback for unknown booking type
-                    $scheduleData['course'] = $booking->course_name ?? $booking->activity_name ?? $booking->purpose ?? 'Peminjaman';
-                    $scheduleData['lecturer'] = null;
-                    $scheduleData['komting'] = null;
-                }
-            }
-
-            Schedule::create($scheduleData);
+            Schedule::create(ScheduleService::mapFromBooking($booking));
         });
 
-        return redirect()->route('admin.dashboard')
+        return $this->bookingManagementRedirect($request)
             ->with('success', 'Peminjaman berhasil disetujui!');
     }
 
@@ -211,7 +176,7 @@ class AdminController extends Controller
 
         // State guard: only pending bookings can be rejected
         if ($booking->status !== 'pending') {
-            return redirect()->route('admin.dashboard')
+            return $this->bookingManagementRedirect($request)
                 ->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
         }
 
@@ -241,8 +206,17 @@ class AdminController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.dashboard')
+        return $this->bookingManagementRedirect($request)
             ->with('success', 'Peminjaman berhasil ditolak.');
+    }
+
+    private function bookingManagementRedirect(Request $request)
+    {
+        $status = $request->input('return_status', 'pending');
+
+        return redirect()->route('admin.lab.bookings', [
+            'status' => in_array($status, ['pending', 'approved', 'rejected'], true) ? $status : 'pending',
+        ]);
     }
 
     /**

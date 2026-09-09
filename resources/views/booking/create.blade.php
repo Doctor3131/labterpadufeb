@@ -6,74 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Ajukan Peminjaman - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        .step-disabled {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        .step-indicator {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-        .step-item {
-            flex: 1;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
-        /* Mobile Progress Line */
-        .step-item:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            top: 20px; /* Center of the 40px circle */
-            left: 50%;
-            width: 100%;
-            height: 2px;
-            background: #e5e7eb;
-            z-index: -1;
-        }
-        .step-item.completed::after {
-            background: #22c55e;
-        }
-        /* Active/Completed States */
-        .step-item.active .step-number {
-            background: #eab308;
-            color: white;
-            border-color: #eab308;
-        }
-        .step-item.completed .step-number {
-            background: #22c55e;
-            color: white;
-            border-color: #22c55e;
-        }
-        .step-number {
-            width: 32px;
-            height: 32px;
-            md:width: 40px;
-            md:height: 40px;
-            border-radius: 50%;
-            background: #fff;
-            border: 2px solid #e5e7eb;
-            color: #6b7280;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-        @media (min-width: 768px) {
-            .step-number {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-            }
-        }
-    </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 booking-page">
     <!-- Navbar -->
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
@@ -90,26 +24,29 @@
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 md:px-6 py-4 md:py-12 max-w-4xl">
+    <main class="container mx-auto px-4 md:px-6 py-4 md:py-12 max-w-5xl"
+          data-error-step="{{ $errors->has('time_conflict') || $errors->hasAny(['booking_date', 'start_time', 'end_time', 'lab_id', 'participant_count', 'repeat_type', 'schedule_frequency', 'repeat_count', 'recurrence_days', 'repeat_end_date']) ? 3 : ($errors->has('document') ? 4 : ($errors->hasAny(['booking_type', 'unit_type']) ? 1 : ($errors->any() ? 2 : 1))) }}"
+          data-personal-sub-type="{{ old('pribadi_sub_type') }}">
         <!-- Header -->
-        <div class="text-center mb-6 md:mb-10">
-            <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">Ajukan Peminjaman Lab</h1>
-            <p class="text-sm md:text-base text-gray-600 px-4">Lengkapi formulir untuk mengajukan peminjaman laboratorium</p>
+        <div class="booking-hero text-center mb-6 md:mb-9">
+            <p class="booking-eyebrow">LABORATORIUM TERPADU FEB</p>
+            <h1 class="booking-title">Ajukan peminjaman lab</h1>
+            <p class="booking-subtitle">Isi data secara bertahap. Kolom bertanda <span class="text-red-600">*</span> wajib dilengkapi.</p>
         </div>
 
         <!-- Form Card -->
-        <div class="bg-white rounded-xl shadow-lg p-4 md:p-8">
+        <div class="booking-card p-4 md:p-8">
             <!-- Time Conflict Warning (More Prominent) -->
             @if ($errors->has('time_conflict'))
-                <div class="mb-6 bg-red-100 border-2 border-red-500 rounded-lg p-5">
+                <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4" role="alert" tabindex="-1" id="booking-error-summary">
                     <div class="flex items-start">
                         <svg class="w-8 h-8 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                         </svg>
                         <div>
-                            <h3 class="text-red-900 font-bold text-lg mb-2">⚠️ Konflik Jadwal!</h3>
+                            <h3 class="text-red-900 font-bold text-lg mb-2">Konflik jadwal</h3>
                             <p class="text-red-800 font-semibold">{{ $errors->first('time_conflict') }}</p>
-                            <p class="text-red-700 text-sm mt-2">💡 Sepertinya baru saja ada peminjaman lain yang mengajukan di waktu dan lab yang sama, sehingga terjadi bentrok. Silakan pilih waktu atau ruangan lain.</p>
+                            <p class="text-red-700 text-sm mt-2">Pengajuan lain baru saja masuk pada lab dan waktu yang sama. Silakan pilih waktu atau ruangan lain.</p>
                         </div>
                     </div>
                 </div>
@@ -117,7 +54,7 @@
 
             <!-- Error Messages -->
             @if ($errors->any() && !$errors->has('time_conflict'))
-                <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4" role="alert" tabindex="-1" id="booking-error-summary">
                     <div class="flex items-center mb-2">
                         <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
@@ -135,28 +72,25 @@
             @endif
 
             <!-- Step Indicator -->
-            <div class="step-indicator mb-6 md:mb-8 px-2 md:px-0">
-                <div class="step-item active" id="step-indicator-1">
+            <div class="step-indicator mb-6 md:mb-8" aria-label="Progres pengajuan">
+                <div class="step-item active" id="step-indicator-1" aria-current="step">
                     <div class="step-number">1</div>
-                    <div class="text-xs md:text-sm font-medium hidden md:block">Tipe</div>
-                    <div class="text-xs font-medium md:hidden">1</div>
+                    <div class="step-label">Kebutuhan</div>
                 </div>
                 <div class="step-item" id="step-indicator-2">
                     <div class="step-number">2</div>
-                    <div class="text-xs md:text-sm font-medium hidden md:block">Data Diri</div>
-                    <div class="text-xs font-medium md:hidden">2</div>
+                    <div class="step-label">Data pengaju</div>
                 </div>
                 <div class="step-item" id="step-indicator-3">
                     <div class="step-number">3</div>
-                    <div class="text-xs md:text-sm font-medium hidden md:block">Detail</div>
-                    <div class="text-xs font-medium md:hidden">3</div>
+                    <div class="step-label">Jadwal</div>
                 </div>
                 <div class="step-item" id="step-indicator-4">
                     <div class="step-number">4</div>
-                    <div class="text-xs md:text-sm font-medium hidden md:block">Submit</div>
-                    <div class="text-xs font-medium md:hidden">4</div>
+                    <div class="step-label">Tinjau</div>
                 </div>
             </div>
+            <p id="step-progress-status" class="step-status text-center -mt-4 mb-6" aria-live="polite">Langkah 1 dari 4</p>
 
             <form action="{{ route('booking.store') }}" method="POST" enctype="multipart/form-data" id="bookingForm">
                 @csrf
@@ -165,33 +99,34 @@
                 <div id="step-1" class="step-section">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">1</span>
-                        Pilih Tipe Peminjaman
+                        Mulai Pengajuan
                     </h3>
+                    <p class="section-intro">Pilih jenis penggunaan laboratorium dan lokasi unit yang sesuai.</p>
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
                         <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="perkuliahan_tetap" class="hidden peer" required {{ old('booking_type') == 'perkuliahan_tetap' ? 'checked' : '' }}>
+                            <input type="radio" name="booking_type" value="perkuliahan_tetap" class="sr-only peer" required {{ old('booking_type') == 'perkuliahan_tetap' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
                                 <div class="font-bold text-gray-800 text-sm md:text-lg">Perkuliahan Tetap</div>
                                 <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Jadwal rutin</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="perkuliahan_tidak_tetap" class="hidden peer" required {{ old('booking_type') == 'perkuliahan_tidak_tetap' ? 'checked' : '' }}>
+                            <input type="radio" name="booking_type" value="perkuliahan_tidak_tetap" class="sr-only peer" required {{ old('booking_type') == 'perkuliahan_tidak_tetap' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
                                 <div class="font-bold text-gray-800 text-sm md:text-lg">Perkuliahan Tidak Tetap</div>
                                 <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Sekali waktu</div>
                             </div>
                         </label>
                         <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="non_perkuliahan" class="hidden peer" required {{ old('booking_type') == 'non_perkuliahan' ? 'checked' : '' }}>
+                            <input type="radio" name="booking_type" value="non_perkuliahan" class="sr-only peer" required {{ old('booking_type') == 'non_perkuliahan' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
                                 <div class="font-bold text-gray-800 text-sm md:text-lg">Non-Perkuliahan</div>
                                 <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Kegiatan lain (Ormawa, Pelatihan, etc)</div>
                             </div>
                         </label>
                          <label class="booking-type-card cursor-pointer">
-                            <input type="radio" name="booking_type" value="pribadi" class="hidden peer" required {{ old('booking_type') == 'pribadi' ? 'checked' : '' }}>
+                            <input type="radio" name="booking_type" value="pribadi" class="sr-only peer" required {{ old('booking_type') == 'pribadi' ? 'checked' : '' }}>
                             <div class="border-2 border-gray-300 rounded-lg p-3 md:p-6 text-center hover:border-yellow-500 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all h-full flex flex-col justify-center min-h-[100px]">
                                 <div class="font-bold text-gray-800 text-sm md:text-lg">Pribadi</div>
                                 <div class="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">Keperluan Pribadi</div>
@@ -200,7 +135,8 @@
                     </div>
 
                     <div id="unit-selection" class="mb-8">
-                        <label class="block text-gray-700 font-bold mb-4 text-lg">Unit</label>
+                        <label class="block text-gray-700 font-bold mb-1 text-lg">Unit <span class="text-red-500">*</span></label>
+                        <p class="field-help mb-3">Pilih lokasi unit yang akan menggunakan laboratorium.</p>
                         <div class="space-y-3">
                             <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-yellow-50 transition-colors group">
                                 <input type="radio" name="unit_type" value="s1_tembalang" class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" required {{ old('unit_type') == 's1_tembalang' ? 'checked' : '' }}>
@@ -213,55 +149,62 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-end">
+                    <div class="booking-action-bar flex justify-end">
                         <button type="button" id="btn-next-1" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base w-full md:w-auto" disabled>
-                            Lanjut →
+                            Lanjutkan
                         </button>
                     </div>
                 </div>
 
-                <!-- STEP 2: Data Pribadi -->
+                <!-- STEP 2: Data Pengaju -->
                 <div id="step-2" class="step-section hidden step-disabled">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">2</span>
-                        Data Pribadi
+                        Data Pengaju & Kegiatan
                     </h3>
+                    <p class="section-intro">Masukkan identitas dan informasi kegiatan. Kolom yang tampil menyesuaikan tipe pengajuan.</p>
 
 
-                    <div class="md:col-span-2">
-                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-green-50 hover:border-green-300 transition-colors group {{ old('is_on_behalf_lecturer') ? 'bg-green-50 border-green-400' : '' }}">
-                            <input type="hidden" name="is_on_behalf_lecturer" value="0">
-                            <input type="checkbox" name="is_on_behalf_lecturer" id="is_on_behalf_lecturer" value="1"
-                                class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300"
-                                {{ old('is_on_behalf_lecturer') ? 'checked' : '' }}>
-                            <div class="ml-3">
-                                <span class="text-gray-800 font-semibold group-hover:text-green-700">Peminjaman atas nama dosen</span>
-                                <p class="text-xs text-gray-500 mt-0.5">Centang jika pengajuan dilakukan atas nama dosen (gunakan NIP, bukan NIM)</p>
-                            </div>
-                        </label>
-                    </div>
-
-                    {{-- Bimbingan Dosen Checkbox --}}
-                    <div class="md:col-span-2">
-                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group {{ old('is_bimbingan_dosen') ? 'bg-blue-50 border-blue-400' : '' }}">
-                            <input type="hidden" name="is_bimbingan_dosen" value="0">
-                            <input type="checkbox" name="is_bimbingan_dosen" id="is_bimbingan_dosen" value="1"
-                                class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
-                                {{ old('is_bimbingan_dosen') ? 'checked' : '' }}>
-                            <div class="ml-3">
-                                <span class="text-gray-800 font-semibold group-hover:text-blue-700">Bimbingan bersama Dosen?</span>
-                                <p class="text-xs text-gray-500 mt-0.5">Centang jika kegiatan ini merupakan bimbingan skripsi atau kegiatan bersama dosen</p>
-                            </div>
-                        </label>
-                    </div>
-                    <br>
+                    <fieldset id="lecturer-involvement-field" class="md:col-span-2">
+                        <legend class="block text-gray-800 text-sm font-bold mb-2">Keterlibatan dosen <span class="font-normal text-gray-500">(opsional, pilih satu)</span></legend>
+                        <p class="text-xs text-gray-500 mb-3">Pilihan ini hanya berlaku untuk kegiatan non-perkuliahan.</p>
+                        <div role="radiogroup" aria-label="Keterlibatan dosen" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <label data-lecturer-option="none" class="booking-choice-card flex items-start p-4 border-2 border-gray-200 rounded-xl cursor-pointer">
+                                <input type="radio" name="lecturer_involvement" value="none" class="mt-1 w-4 h-4 text-yellow-700 focus:ring-yellow-500"
+                                    {{ ! old('is_on_behalf_lecturer') && ! old('is_bimbingan_dosen') ? 'checked' : '' }}>
+                                <span class="ml-3">
+                                    <span class="block text-gray-800 font-semibold">Tidak melibatkan dosen</span>
+                                    <span class="block text-xs text-gray-500 mt-1">Pengajuan atas nama peminjam.</span>
+                                </span>
+                            </label>
+                            <label data-lecturer-option="on_behalf" class="booking-choice-card flex items-start p-4 border-2 border-gray-200 rounded-xl cursor-pointer">
+                                <input type="radio" name="lecturer_involvement" value="on_behalf" class="mt-1 w-4 h-4 text-yellow-700 focus:ring-yellow-500"
+                                    {{ old('is_on_behalf_lecturer') ? 'checked' : '' }}>
+                                <span class="ml-3">
+                                    <span class="block text-gray-800 font-semibold">Atas nama dosen</span>
+                                    <span class="block text-xs text-gray-500 mt-1">Gunakan NIP dosen, bukan NIM.</span>
+                                </span>
+                            </label>
+                            <label data-lecturer-option="bimbingan" class="booking-choice-card flex items-start p-4 border-2 border-gray-200 rounded-xl cursor-pointer">
+                                <input type="radio" name="lecturer_involvement" value="bimbingan" class="mt-1 w-4 h-4 text-yellow-700 focus:ring-yellow-500"
+                                    {{ old('is_bimbingan_dosen') ? 'checked' : '' }}>
+                                <span class="ml-3">
+                                    <span class="block text-gray-800 font-semibold">Bimbingan bersama dosen</span>
+                                    <span class="block text-xs text-gray-500 mt-1">Isi nama dan NIP dosen pembimbing.</span>
+                                </span>
+                            </label>
+                        </div>
+                        <input type="hidden" name="is_on_behalf_lecturer" id="is_on_behalf_lecturer" value="{{ old('is_on_behalf_lecturer') ? '1' : '0' }}">
+                        <input type="hidden" name="is_bimbingan_dosen" id="is_bimbingan_dosen" value="{{ old('is_bimbingan_dosen') ? '1' : '0' }}">
+                    </fieldset>
+                    <div class="h-5" aria-hidden="true"></div>
 
                     <!-- Status Fields for Pribadi (shown first for pribadi booking) -->
                     <div id="pribadi-status-fields" class="hidden mb-6">
                         <h4 class="font-bold text-gray-800 mb-4">Pilih Status Terlebih Dahulu</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status <span class="text-red-500">*</span></label>
+                                <label for="applicant_status" class="block text-gray-700 text-sm font-semibold mb-2">Status <span class="text-red-500">*</span></label>
                                 <select name="applicant_status" id="applicant_status"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     <option value="">Pilih Status</option>
@@ -272,7 +215,7 @@
                                 </select>
                             </div>
                             <div id="custom-status-field" style="display: none;">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Status Lainnya <span class="text-red-500">*</span></label>
+                                <label for="custom_status" class="block text-gray-700 text-sm font-semibold mb-2">Status Lainnya <span class="text-red-500">*</span></label>
                                 <input type="text" data-name="custom_status" id="custom_status" value="{{ old('custom_status') }}"
                                     placeholder="Masukkan status Anda"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -282,7 +225,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
+                            <label for="pic_name" class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
                             <input type="text" name="pic_name" id="pic_name" value="{{ old('pic_name') }}" required
                                 pattern="[a-zA-Z\s\.']+"
                                 title="Hanya huruf, spasi, titik, dan apostrof yang diperbolehkan"
@@ -293,7 +236,7 @@
                         </div>
 
                         <div id="study-program-field">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi <span class="text-red-500">*</span></label>
+                            <label for="study_program" class="block text-gray-700 text-sm font-semibold mb-2">Program Studi <span class="text-red-500">*</span></label>
                             <select name="study_program" id="study_program" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                 <option value="" disabled selected>Pilih Program Studi</option>
@@ -315,13 +258,13 @@
                         </div>
 
                         <div id="custom-study-program-field" style="display: none;">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Program Studi Lainnya <span class="text-red-500">*</span></label>
+                            <label for="custom_study_program" class="block text-gray-700 text-sm font-semibold mb-2">Program Studi Lainnya <span class="text-red-500">*</span></label>
                             <input type="text" id="custom_study_program" value="{{ old('custom_study_program') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div id="nim-field">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2"><span id="nim-label-text">NIM</span> <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(14 digit)</span></label>
+                            <label for="nim" class="block text-gray-700 text-sm font-semibold mb-2"><span id="nim-label-text">NIM</span> <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(14 digit)</span></label>
                             <input type="text" name="nim" id="nim" value="{{ old('nim') }}" required
                                 maxlength="14" pattern="[0-9]{14}"
                                 placeholder="Contoh: 12010120130001"
@@ -333,7 +276,7 @@
                         </div>
 
                         <div id="nip-field" style="display: none;">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2"><span id="nip-label-text">NIP</span> <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(18 digit)</span></label>
+                            <label for="nip" class="block text-gray-700 text-sm font-semibold mb-2"><span id="nip-label-text">NIP</span> <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(18 digit)</span></label>
                             <input type="text" data-name="nip" id="nip" value="{{ old('nip') }}"
                                 maxlength="18" pattern="[0-9]{18}"
                                 placeholder="Contoh: 198505102010121001"
@@ -345,7 +288,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(10-15 digit)</span></label>
+                            <label for="phone_number" class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon <span class="text-red-500">*</span> <span class="text-xs text-gray-500">(10-15 digit)</span></label>
                             <input type="tel" name="phone_number" id="phone_number" value="{{ old('phone_number') }}" required
                                 minlength="10" maxlength="15" pattern="^08[0-9]{8,13}$"
                                 placeholder="Contoh: 081234567890"
@@ -362,17 +305,17 @@
                         <h4 class="font-bold text-gray-800 mb-4">Data Perkuliahan</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Mata Kuliah <span class="text-red-500">*</span></label>
+                                <label for="course_name" class="block text-gray-700 text-sm font-semibold mb-2">Mata Kuliah <span class="text-red-500">*</span></label>
                                 <input type="text" name="course_name" id="course_name" value="{{ old('course_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Dosen Pengampu <span class="text-red-500">*</span></label>
+                                <label for="lecturer_name" class="block text-gray-700 text-sm font-semibold mb-2">Dosen Pengampu <span class="text-red-500">*</span></label>
                                 <input type="text" name="lecturer_name" id="lecturer_name" value="{{ old('lecturer_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen <span class="text-red-500">*</span></label>
+                                <label for="lecturer_nip" class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen <span class="text-red-500">*</span></label>
                                 <input type="text" name="lecturer_nip" id="lecturer_nip" value="{{ old('lecturer_nip') }}"
                                     maxlength="18" pattern="[0-9]{18}"
                                     placeholder="18 digit angka"
@@ -381,7 +324,7 @@
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Software yang Digunakan</label>
+                                <label for="software_needs" class="block text-gray-700 text-sm font-semibold mb-2">Software yang Digunakan</label>
                                 <input type="text" name="software_needs" id="software_needs" value="{{ old('software_needs') }}"
                                     placeholder="Contoh: SPSS, Microsoft Office, dll"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -394,7 +337,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                <label for="activity_name" class="block text-gray-700 text-sm font-semibold mb-2">Nama Kegiatan <span class="text-red-500">*</span></label>
                                 <input type="text" name="activity_name" id="activity_name" value="{{ old('activity_name') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
@@ -403,7 +346,7 @@
                             <div id="non-bimbingan-fields" class="md:col-span-2">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan <span class="text-red-500">*</span></label>
+                                        <label for="activity_type" class="block text-gray-700 text-sm font-semibold mb-2">Jenis Kegiatan <span class="text-red-500">*</span></label>
                                         <select name="activity_type" id="activity_type"
                                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                             <option value="">-- Pilih Jenis Kegiatan --</option>
@@ -416,7 +359,7 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-semibold mb-2">Posisi Peminjam <span class="text-red-500">*</span></label>
+                                        <label for="position" class="block text-gray-700 text-sm font-semibold mb-2">Posisi Peminjam <span class="text-red-500">*</span></label>
                                         <input type="text" name="position" id="position" value="{{ old('position') }}"
                                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     </div>
@@ -427,26 +370,26 @@
                             <div id="bimbingan-dosen-fields" class="hidden md:col-span-2">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Dosen <span class="text-red-500">*</span></label>
+                                        <label for="bimbingan_lecturer_name" class="block text-gray-700 text-sm font-semibold mb-2">Nama Dosen <span class="text-red-500">*</span></label>
                                         <input type="text" id="bimbingan_lecturer_name" value="{{ old('lecturer_name') }}"
                                             placeholder="Nama lengkap dosen pembimbing"
                                             oninput="this.value = this.value.replace(/[^a-zA-Z\s\.']/g, '')"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     </div>
                                     <div>
-                                        <label class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen <span class="text-red-500">*</span></label>
+                                        <label for="bimbingan_lecturer_nip" class="block text-gray-700 text-sm font-semibold mb-2">NIP Dosen <span class="text-red-500">*</span></label>
                                         <input type="text" id="bimbingan_lecturer_nip" value="{{ old('lecturer_nip') }}"
                                             maxlength="18" pattern="[0-9]{18}"
                                             placeholder="18 digit angka"
                                             inputmode="numeric"
                                             oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 18)"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Kebutuhan Peralatan</label>
+                                <label for="equipment_needs" class="block text-gray-700 text-sm font-semibold mb-2">Kebutuhan Peralatan</label>
                                 <textarea name="equipment_needs" id="equipment_needs" rows="3"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs') }}</textarea>
                             </div>
@@ -457,13 +400,13 @@
                         <h4 class="font-bold text-gray-800 mb-4">Data Peminjaman Pribadi</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div id="class-year-field" style="display: none;">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Angkatan <span class="text-red-500">*</span></label>
+                                <label for="class_year" class="block text-gray-700 text-sm font-semibold mb-2">Angkatan <span class="text-red-500">*</span></label>
                                 <input type="text" data-name="class_year" id="class_year" value="{{ old('class_year') }}"
                                     placeholder="Contoh: 2023" maxlength="4"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Keperluan <span class="text-red-500">*</span></label>
+                                <label for="purpose" class="block text-gray-700 text-sm font-semibold mb-2">Keperluan <span class="text-red-500">*</span></label>
                                 <input type="text" name="purpose" id="purpose" value="{{ old('purpose') }}"
                                     placeholder="Contoh: Ujian, Mengerjakan tugas pribadi"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -471,12 +414,12 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0 mt-8">
+                    <div class="booking-action-bar flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
                         <button type="button" id="btn-prev-2" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
-                            ← Kembali
+                            Kembali
                         </button>
                         <button type="button" id="btn-next-2" class="w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base" disabled>
-                            Lanjut →
+                            Lanjutkan
                         </button>
                     </div>
                 </div>
@@ -485,36 +428,61 @@
                 <div id="step-3" class="step-section hidden step-disabled">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">3</span>
-                        Detail Peminjaman Laboratorium
+                        Pilih Jadwal & Laboratorium
                     </h3>
+                    <p class="section-intro">Gunakan kalender untuk melihat slot yang sudah terisi. Anda juga dapat mengisi tanggal dan jam secara manual.</p>
+
+                    <div id="booking-calendar-panel" class="schedule-picker-panel mb-6 border rounded-xl p-4 md:p-5">
+                        <div class="flex flex-col md:flex-row md:items-end gap-3 mb-4">
+                            <div class="w-full md:w-80">
+                                <label for="booking-calendar-lab" class="block text-gray-700 text-sm font-semibold mb-2">Kalender laboratorium</label>
+                                <select id="booking-calendar-lab" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 bg-white">
+                                    <option value="">-- Pilih laboratorium --</option>
+                                    @foreach($labs as $lab)
+                                        <option value="{{ $lab->id }}" data-capacity="{{ $lab->capacity }}">{{ $lab->name }} (Kapasitas {{ $lab->capacity }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <p id="booking-calendar-status" class="field-help" aria-live="polite">Pilih lab, lalu klik atau tarik slot kosong untuk mengisi tanggal dan waktu.</p>
+                        </div>
+                        <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                            <div data-booking-calendar
+                                 data-availability-url="{{ route('booking.calendar-availability') }}"
+                                 class="min-w-[680px] p-2"></div>
+                        </div>
+                        <div class="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 field-help">
+                            <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded-sm bg-red-200 border border-red-400"></span>Terisi / menunggu persetujuan</span>
+                            <span>Slot waktu: 07.00–21.00 WIB</span>
+                        </div>
+                    </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Peminjaman <span class="text-red-500">*</span></label>
+                            <label for="booking_date" class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Peminjaman <span class="text-red-500">*</span></label>
                             <input type="date" name="booking_date" id="booking_date" value="{{ old('booking_date') }}" required
                                 min="{{ date('Y-m-d') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            <p class="text-xs text-gray-500 mt-1">⚠️ Peminjaman tidak tersedia pada hari Minggu</p>
+                            <p class="text-xs text-gray-500 mt-1">Peminjaman laboratorium tidak tersedia pada hari Minggu.</p>
                             <!-- Sunday Warning -->
-                            <div id="sunday-warning" class="hidden mt-2 bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-sm">
-                                ⚠️ Hari Minggu tidak tersedia untuk peminjaman lab. Silakan pilih tanggal lain.
+                            <div id="sunday-warning" role="alert" class="hidden mt-2 bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded-lg text-sm">
+                                Hari Minggu tidak tersedia untuk peminjaman lab. Silakan pilih tanggal lain.
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jumlah Peserta <span class="text-red-500">*</span></label>
+                            <label for="participant_count" class="block text-gray-700 text-sm font-semibold mb-2">Jumlah Peserta <span class="text-red-500">*</span></label>
                             <input type="number" name="participant_count" id="participant_count" value="{{ old('participant_count') }}" required
                                 min="1" placeholder="Contoh: 30"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai <span class="text-red-500">*</span></label>
+                            <label for="start_hour" class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai <span class="text-red-500">*</span></label>
                             <input type="hidden" name="start_time" id="start_time" value="{{ old('start_time') }}" required>
                             <div class="flex gap-2">
                                 <select id="start_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                     <option value="" disabled selected>Jam</option>
-                                    @foreach(range(0, 23) as $h)
+                                    @foreach(range(7, 21) as $h)
                                         <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
                                     @endforeach
                                 </select>
@@ -529,12 +497,12 @@
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jam Selesai <span class="text-red-500">*</span></label>
+                            <label for="end_hour" class="block text-gray-700 text-sm font-semibold mb-2">Jam Selesai <span class="text-red-500">*</span></label>
                             <input type="hidden" name="end_time" id="end_time" value="{{ old('end_time') }}" required>
                             <div class="flex gap-2">
                                 <select id="end_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                     <option value="" disabled selected>Jam</option>
-                                    @foreach(range(0, 23) as $h)
+                                    @foreach(range(7, 21) as $h)
                                         <option value="{{ sprintf('%02d', $h) }}">{{ sprintf('%02d', $h) }}</option>
                                     @endforeach
                                 </select>
@@ -550,42 +518,42 @@
 
                         <!-- Time Validation Error -->
                         <div class="md:col-span-2">
-                            <p id="time-error" class="text-sm text-red-500 hidden"><strong>* Jam Selesai harus setelah Jam Mulai</strong></p>
+                            <p id="time-error" role="alert" class="text-sm text-red-500 hidden"><strong>* Jam selesai harus setelah jam mulai.</strong></p>
                         </div>
 
                         <!-- Lab Selection Container - Hidden for pribadi bookings -->
                         <div id="lab-selection-container" class="md:col-span-2">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">Pilih Laboratorium <span class="text-red-500">*</span></label>
+                            <label for="labSelect" class="block text-gray-700 text-sm font-semibold mb-2">Pilih Laboratorium <span class="text-red-500">*</span></label>
                             <select name="lab_id" id="labSelect" required disabled
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100">
                                 <option value="">Isi data di atas untuk melihat lab yang tersedia</option>
                             </select>
-                            <p class="text-sm text-gray-500 mt-2">
+                            <p id="lab-availability-status" class="text-sm text-gray-500 mt-2" aria-live="polite">
                                 Lab akan muncul setelah Anda mengisi tanggal, waktu, dan jumlah peserta.
                                 <span class="text-red-500 font-medium">Jika lab tidak tersedia maka lab sedang dibooking.</span>
                             </p>
 
                             <!-- Conflict Warning Box (Hidden by default) -->
-                            <div id="conflictWarning" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                            <div id="conflictWarning" role="alert" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
                                 <div class="flex items-start">
                                     <svg class="w-6 h-6 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                                     </svg>
                                     <div>
-                                        <p class="font-bold text-red-800">⚠️ Lab Tidak Tersedia</p>
+                                        <p class="font-bold text-red-800">Lab tidak tersedia</p>
                                         <p class="text-sm text-red-700 mt-1">Lab ini sudah ada booking yang diajukan di jam dan di lab ini. Silakan pilih jadwal atau lab lain.</p>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Capacity Warning Box (Hidden by default) -->
-                            <div id="capacityWarning" class="hidden mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                            <div id="capacityWarning" role="status" class="hidden mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
                                 <div class="flex items-start">
                                     <svg class="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                     </svg>
                                     <div>
-                                        <p class="font-bold text-yellow-800">⚠️ Kapasitas Tidak Memadai</p>
+                                        <p class="font-bold text-yellow-800">Kapasitas tidak memadai</p>
                                         <p class="text-sm text-yellow-700 mt-1">
                                             Kapasitas lab ini (<span id="labCapacityDisplay" class="font-bold"></span>) lebih kecil dari jumlah peserta (<span id="participantCountDisplay" class="font-bold"></span>).
                                         </p>
@@ -599,14 +567,14 @@
                     </div>
 
                     <!-- Notice Peminjaman Berulang untuk Perkuliahan Tetap - Generic (ketika belum lengkap) -->
-                    <div id="recurring-booking-notice-generic" class="hidden mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <div id="recurring-booking-notice-generic" class="hidden mb-6 bg-amber-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
                         <div class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-6 h-6 text-yellow-700 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                             </svg>
                             <div>
-                                <p class="font-bold text-blue-800">ℹ️ Peminjaman Berulang</p>
-                                <p class="text-sm text-blue-700 mt-1">
+                                <p class="font-bold text-amber-900">Peminjaman berulang</p>
+                                <p class="text-sm text-amber-800 mt-1">
                                     Peminjaman akan berulang sesuai hari, jam, dan lab yang dipilih setiap minggu.
                                 </p>
                             </div>
@@ -614,15 +582,15 @@
                     </div>
 
                     <!-- Notice Peminjaman Berulang untuk Perkuliahan Tetap - Specific (ketika sudah lengkap) -->
-                    <div id="recurring-booking-notice-specific" class="hidden mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <div id="recurring-booking-notice-specific" class="hidden mb-6 bg-amber-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
                         <div class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-6 h-6 text-yellow-700 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                             </svg>
                             <div>
-                                <p class="font-bold text-blue-800">ℹ️ Peminjaman Berulang</p>
-                                <p class="text-sm text-blue-700 mt-1">
-                                    Peminjaman akan berulang setiap hari <span id="recurring-day-name" class="font-semibold"></span>
+                                <p class="font-bold text-amber-900">Peminjaman berulang</p>
+                                <p class="text-sm text-amber-800 mt-1">
+                                    Peminjaman akan berulang setiap minggu pada <span id="recurring-day-name" class="font-semibold"></span>
                                     di jam <span id="recurring-time-range" class="font-semibold"></span>
                                     di lab <span id="recurring-lab-name" class="font-semibold"></span>.
                                 </p>
@@ -632,18 +600,13 @@
 
                     <!-- Akhir Pengulangan untuk Perkuliahan Tetap -->
                     <div id="recurring-end-section" class="hidden mb-6 bg-white border border-yellow-200 rounded-xl p-4">
-                        <label class="block text-gray-700 text-sm font-semibold mb-3">Berakhir ...</label>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <span class="block text-gray-700 text-sm font-semibold mb-3">Berakhir ...</span>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="flex items-center gap-2">
-                                <input type="radio" name="repeat_type" id="repeat_never" value="never" checked
+                                <input type="radio" name="repeat_type" id="repeat_count_option" value="count" checked
                                        class="w-4 h-4 text-yellow-500 focus:ring-yellow-500">
-                                <label for="repeat_never" class="text-sm text-gray-700">Tidak pernah berakhir</label>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input type="radio" name="repeat_type" id="repeat_count" value="count"
-                                       class="w-4 h-4 text-yellow-500 focus:ring-yellow-500">
-                                <label for="repeat_count" class="text-sm text-gray-700">Setelah</label>
-                                <input type="number" name="repeat_count" id="repeat_count" min="2" max="52"
+                                <label for="repeat_count_option" class="text-sm text-gray-700">Setelah</label>
+                                <input type="number" name="repeat_count" id="fixed_repeat_count" min="2" max="60" value="{{ old('repeat_count', 16) }}"
                                        placeholder="N"
                                        class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm">
                                 <span class="text-sm text-gray-600">kali pertemuan</span>
@@ -659,12 +622,69 @@
                         <p id="recurring-end-hint" class="text-xs text-gray-500 mt-2"></p>
                     </div>
 
-                    <div class="flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0 mt-8">
+                    <!-- Custom weekly recurrence for perkuliahan tidak tetap -->
+                    <div id="nonfixed-frequency-section" class="hidden mb-6 bg-white border border-yellow-200 rounded-xl p-4">
+                        <fieldset>
+                            <legend class="block text-gray-800 text-sm font-bold mb-2">Frekuensi peminjaman</legend>
+                            <p class="text-xs text-gray-500 mb-3">Tentukan apakah kelas ini hanya sekali atau berulang secara mingguan.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label class="booking-choice-card flex items-start p-4 border-2 border-gray-200 rounded-xl cursor-pointer">
+                                    <input type="radio" name="schedule_frequency" id="schedule-frequency-once" value="once"
+                                        class="mt-1 w-4 h-4 text-yellow-700 focus:ring-yellow-500"
+                                        {{ old('schedule_frequency', 'once') === 'once' ? 'checked' : '' }}>
+                                    <span class="ml-3">
+                                        <span class="block text-gray-800 font-semibold">Sekali</span>
+                                        <span class="block text-xs text-gray-500 mt-1">Hanya memakai tanggal dan waktu yang dipilih.</span>
+                                    </span>
+                                </label>
+                                <label class="booking-choice-card flex items-start p-4 border-2 border-gray-200 rounded-xl cursor-pointer">
+                                    <input type="radio" name="schedule_frequency" id="schedule-frequency-multiple" value="multiple"
+                                        class="mt-1 w-4 h-4 text-yellow-700 focus:ring-yellow-500"
+                                        {{ old('schedule_frequency') === 'multiple' ? 'checked' : '' }}>
+                                    <span class="ml-3">
+                                        <span class="block text-gray-800 font-semibold">Berulang setiap minggu</span>
+                                        <span class="block text-xs text-gray-500 mt-1">Pilih hari dan jumlah total pertemuan.</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <div id="recurrence-days-section" class="hidden mt-5 border-t border-gray-100 pt-5">
+                            <fieldset>
+                                <legend class="block text-gray-800 text-sm font-bold mb-2">Hari pertemuan</legend>
+                                <p class="text-xs text-gray-500 mb-3">Boleh memilih lebih dari satu hari. Tanggal mulai harus termasuk salah satu hari yang dipilih.</p>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                                    @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $day)
+                                        <label class="booking-choice-card flex items-center justify-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer text-sm">
+                                            <input type="checkbox" name="recurrence_days[]" value="{{ $day }}" data-day="{{ $day }}"
+                                                class="w-4 h-4 text-yellow-700 rounded focus:ring-yellow-500"
+                                                {{ in_array($day, (array) old('recurrence_days', []), true) ? 'checked' : '' }} disabled>
+                                            <span class="ml-2 text-gray-700 font-medium">{{ $day }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                <p id="recurrence-days-hint" class="text-xs text-gray-500 mt-2"></p>
+                            </fieldset>
+
+                            <div id="nonfixed-repeat-count-section" class="hidden mt-5">
+                                <label for="nonfixed_repeat_count" class="block text-gray-800 text-sm font-bold mb-2">Jumlah total pertemuan</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="repeat_count" id="nonfixed_repeat_count" min="2" max="60"
+                                        value="{{ old('repeat_count', 6) }}" disabled
+                                        class="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                    <span class="text-sm text-gray-600">pertemuan (maksimal 60)</span>
+                                </div>
+                                <p id="nonfixed-frequency-hint" class="text-xs text-gray-500 mt-2"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="booking-action-bar flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
                         <button type="button" id="btn-prev-3" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
-                            ← Kembali
+                            Kembali
                         </button>
                         <button type="button" id="btn-next-3" class="w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base" disabled>
-                            Lanjut →
+                            Lanjutkan
                         </button>
                     </div>
                 </div>
@@ -673,17 +693,18 @@
                 <div id="step-4" class="step-section hidden step-disabled">
                     <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                         <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">4</span>
-                        Upload Dokumen & Konfirmasi
+                        Tinjau & Kirim Pengajuan
                     </h3>
+                    <p class="section-intro">Pastikan semua data sudah benar. Setelah dikirim, pengajuan akan menunggu pemeriksaan admin.</p>
 
                     <div class="mb-6" id="upload-document-section">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">
-                            Upload Dokumen Pendukung (KTM, Surat Lainnya) <span class="text-red-500">*</span>
-                        </label>
+                            <span class="block text-gray-700 text-sm font-semibold mb-2">
+                                Upload Dokumen Pendukung (KTM, Surat Lainnya) <span class="text-red-500">*</span>
+                            </span>
                         <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
-                            <input type="file" name="document" id="document" accept=".pdf" class="hidden" required>
+                            <input type="file" name="document" id="document" accept=".pdf" class="sr-only" required>
                             <label for="document" class="cursor-pointer">
-                                <div class="text-4xl mb-2">📄</div>
+                                <svg class="mx-auto mb-2 h-9 w-9 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A3.375 3.375 0 0011.25 11.625v5.25A2.625 2.625 0 0013.875 19.5h1.5A4.125 4.125 0 0019.5 15.375v-1.125zM8.25 15.75V5.625A3.375 3.375 0 0111.625 2.25h1.5A3.375 3.375 0 0116.5 5.625v.75" /></svg>
                                 <div class="text-gray-700 font-semibold mb-1">Klik untuk upload dokumen</div>
                                 <div class="text-sm text-gray-500 mb-1">PDF maksimal 5MB</div>
                                 <div class="text-xs text-gray-400">Jika file terlalu besar, silakan compress terlebih dahulu</div>
@@ -697,13 +718,13 @@
 
 
                     <!-- Capacity Warning (Red Text) -->
-                    <div id="capacity-warning-text" class="hidden mb-6 bg-red-50 border-2 border-red-500 rounded-lg p-5">
+                    <div id="capacity-warning-text" role="alert" class="hidden mb-6 bg-red-50 border-2 border-red-500 rounded-lg p-5">
                         <div class="flex items-start">
                             <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                             </svg>
                             <div class="flex-1">
-                                <h3 class="text-red-900 font-bold text-lg mb-2">⚠️ PERINGATAN KAPASITAS!</h3>
+                                <h3 class="text-red-900 font-bold text-lg mb-2">Peringatan kapasitas</h3>
                                 <p class="text-red-800 font-semibold mb-2">
                                     Jumlah peserta (<span id="warning-participant-count" class="font-bold"></span> orang)
                                     <span class="text-red-900">MELEBIHI</span>
@@ -722,17 +743,23 @@
                     </div>
 
                     <!-- Summary -->
-                    <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                        <h4 class="font-bold text-gray-800 mb-4">Ringkasan Peminjaman</h4>
-                        <div id="booking-summary" class="space-y-2 text-sm"></div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 md:p-6 mb-6">
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                <h4 class="font-bold text-gray-800">Ringkasan pengajuan</h4>
+                                <p class="field-help mt-1">Periksa tanggal, waktu, lab, dan identitas sebelum mengirim.</p>
+                            </div>
+                            <span class="hidden sm:inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800">Siap ditinjau</span>
+                        </div>
+                        <div id="booking-summary" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm"></div>
                     </div>
 
-                    <div class="flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0 mt-8">
+                    <div class="booking-action-bar flex flex-col-reverse md:flex-row justify-between gap-3 md:gap-0">
                         <button type="button" id="btn-prev-4" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors text-sm md:text-base">
-                            ← Kembali
+                            Kembali
                         </button>
-                        <button type="submit" id="btn-submit" disabled class="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base">
-                            ✓ Ajukan Peminjaman
+                        <button type="submit" id="btn-submit" disabled class="w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base">
+                            Ajukan peminjaman
                         </button>
                     </div>
                 </div>
@@ -746,7 +773,7 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
-                        ← Kembali Pilih Tipe
+                        Kembali ke pilihan tipe
                     </button>
                 </div>
 
@@ -785,7 +812,7 @@
                     <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
                         <h4 class="font-bold text-blue-800 mb-4">Masukkan NIM Anda</h4>
                         <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-semibold mb-2">NIM <span class="text-red-500">*</span></label>
+                            <label for="pb-nim" class="block text-gray-700 text-sm font-semibold mb-2">NIM <span class="text-red-500">*</span></label>
                             <div class="flex gap-3">
                                 <input type="text" name="nim" id="pb-nim" required
                                     maxlength="20"
@@ -827,16 +854,16 @@
                         <h4 class="font-bold text-purple-800 mb-4">Data Non-Mahasiswa</h4>
                         <div class="grid grid-cols-1 gap-4">
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
-                                <input type="text" name="pic_name" required
+                                <label for="personal-pic-name" class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
+                                <input type="text" name="pic_name" id="personal-pic-name" required
                                     pattern="[a-zA-Z\s\.']+"
                                     oninput="this.value = this.value.replace(/[^a-zA-Z\s\.']/g, '')"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     placeholder="Masukkan nama lengkap">
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span></label>
-                                <input type="text" name="nip" required
+                                <label for="personal-nip" class="block text-gray-700 text-sm font-semibold mb-2">NIP <span class="text-red-500">*</span></label>
+                                <input type="text" name="nip" id="personal-nip" required
                                     maxlength="30"
                                     placeholder="Masukkan NIP"
                                     inputmode="numeric"
@@ -844,8 +871,8 @@
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                             </div>
                             <div>
-                                <label class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon <span class="text-red-500">*</span></label>
-                                <input type="tel" name="phone_number" required
+                                <label for="personal-phone-number" class="block text-gray-700 text-sm font-semibold mb-2">Nomor Telepon <span class="text-red-500">*</span></label>
+                                <input type="tel" name="phone_number" id="personal-phone-number" required
                                     minlength="10" maxlength="15" pattern="^08[0-9]{8,13}$"
                                     placeholder="Contoh: 081234567890"
                                     inputmode="numeric"
@@ -864,18 +891,30 @@
 
         </div>
 
+        <details class="booking-card mt-5 p-4 md:p-5 text-sm text-slate-600">
+            <summary class="cursor-pointer font-semibold text-slate-800 focus:outline-none">Butuh bantuan mengisi formulir?</summary>
+            <div class="mt-3 space-y-2 leading-relaxed">
+                <p><strong>Perkuliahan Tetap</strong> digunakan untuk jadwal rutin mingguan. Tentukan jumlah pertemuan atau tanggal berakhirnya.</p>
+                <p><strong>Perkuliahan Tidak Tetap</strong> dapat diajukan sekali atau berulang mingguan dengan beberapa hari dan jumlah pertemuan.</p>
+                <p>Pilih slot kosong di kalender atau isi tanggal dan jam melalui kolom manual. Kalender menampilkan slot terisi tanpa membuka detail peminjam lain.</p>
+                <p>Setelah dikirim, simpan token pelacakan pada halaman konfirmasi untuk memeriksa status pengajuan.</p>
+            </div>
+        </details>
+
         <!-- Back to Home -->
         <div class="text-center mt-8">
             <a href="{{ route('landing') }}" class="text-gray-600 hover:text-gray-800 font-medium">
-                ← Kembali ke Beranda
+                Kembali ke beranda
             </a>
         </div>
-    </div>
+    </main>
 
     <script>
         let currentStep = 1;
         const totalSteps = 4;
         let selectedBookingType = '';
+        let availabilityController = null;
+        let availabilityRequestId = 0;
 
         // Helper function to show field errors
         function showFieldError(fieldId, message) {
@@ -920,23 +959,89 @@
 
             setupRealtimeValidation();
             preventEnterSubmit();
+            setupSubmitFeedback();
+            setupInitialFormState();
         });
+
+        function setupSubmitFeedback() {
+            const forms = [
+                document.getElementById('bookingForm'),
+                document.getElementById('mahasiswaForm'),
+                document.getElementById('nonMahasiswaForm')
+            ].filter(Boolean);
+
+            forms.forEach(form => form.addEventListener('submit', () => {
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (!submitButton) return;
+
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-busy', 'true');
+                submitButton.dataset.originalLabel = submitButton.textContent.trim();
+                submitButton.textContent = 'Mengirim pengajuan...';
+            }));
+        }
+
+        function setupInitialFormState() {
+            const main = document.querySelector('main[data-error-step]');
+            const errorSummary = document.getElementById('booking-error-summary');
+
+            if (!main) return;
+
+            // Restore the relevant step after a server-side validation redirect.
+            if (selectedBookingType === 'pribadi' && errorSummary) {
+                document.getElementById('step-1').classList.add('hidden');
+                document.getElementById('personal-borrowing-section').classList.remove('hidden');
+                document.querySelector('.step-indicator')?.classList.add('hidden');
+                document.getElementById('step-progress-status')?.classList.add('hidden');
+
+                const personalType = main.dataset.personalSubType;
+                if (personalType === 'mahasiswa') {
+                    document.getElementById('mahasiswaForm')?.classList.remove('hidden');
+                    document.getElementById('btn-mahasiswa')?.classList.add('border-blue-500', 'bg-blue-50');
+                } else if (personalType === 'non_mahasiswa') {
+                    document.getElementById('nonMahasiswaForm')?.classList.remove('hidden');
+                    document.getElementById('btn-non-mahasiswa')?.classList.add('border-purple-500', 'bg-purple-50');
+                }
+            } else if (errorSummary) {
+                const errorStep = Number(main.dataset.errorStep || 1);
+                if (errorStep > 1 && errorStep <= totalSteps) {
+                    goToStep(errorStep, { scroll: false, focus: false });
+                }
+            }
+
+            errorSummary?.focus({ preventScroll: true });
+        }
+
+        function getLecturerInvolvement() {
+            return document.querySelector('input[name="lecturer_involvement"]:checked')?.value || 'none';
+        }
+
+        function syncLecturerFlags() {
+            const involvement = selectedBookingType === 'non_perkuliahan' ? getLecturerInvolvement() : 'none';
+            const onBehalfInput = document.getElementById('is_on_behalf_lecturer');
+            const bimbinganInput = document.getElementById('is_bimbingan_dosen');
+
+            if (onBehalfInput) onBehalfInput.value = involvement === 'on_behalf' ? '1' : '0';
+            if (bimbinganInput) bimbinganInput.value = involvement === 'bimbingan' ? '1' : '0';
+
+            return involvement;
+        }
 
         // Bimbingan Dosen Toggle
         function setupBimbinganDosenToggle() {
-            const checkbox = document.getElementById('is_bimbingan_dosen');
-            if (!checkbox || checkbox._bimbinganToggleBound) return;
-            checkbox._bimbinganToggleBound = true;
+            const bimbinganInput = document.getElementById('is_bimbingan_dosen');
+            const radios = document.querySelectorAll('input[name="lecturer_involvement"]');
+            if (!bimbinganInput || !radios.length || bimbinganInput._bimbinganToggleBound) return;
+            bimbinganInput._bimbinganToggleBound = true;
 
             function toggleBimbinganFields() {
-                const isChecked = checkbox.checked;
+                const isChecked = syncLecturerFlags() === 'bimbingan';
                 const nonBimbinganFields = document.getElementById('non-bimbingan-fields');
                 const bimbinganFields = document.getElementById('bimbingan-dosen-fields');
                 const activityTypeSelect = document.getElementById('activity_type');
                 const positionInput = document.getElementById('position');
                 const lecturerNameInput = document.getElementById('bimbingan_lecturer_name');
                 const lecturerNipInput = document.getElementById('bimbingan_lecturer_nip');
-                const checkboxLabel = checkbox.closest('label');
 
                 if (isChecked) {
                     // Hide jenis kegiatan & posisi, show nama dosen & nip
@@ -953,8 +1058,6 @@
                     lecturerNipInput.setAttribute('name', 'lecturer_nip');
                     lecturerNipInput.setAttribute('required', 'required');
                     // Visual feedback
-                    checkboxLabel.classList.add('bg-blue-50', 'border-blue-400');
-                    checkboxLabel.classList.remove('border-gray-200');
                 } else {
                     // Show jenis kegiatan & posisi, hide nama dosen & nip
                     nonBimbinganFields.classList.remove('hidden');
@@ -968,14 +1071,12 @@
                     lecturerNipInput.removeAttribute('name');
                     lecturerNipInput.removeAttribute('required');
                     // Visual feedback
-                    checkboxLabel.classList.remove('bg-blue-50', 'border-blue-400');
-                    checkboxLabel.classList.add('border-gray-200');
                 }
                 // Re-validate step 2
                 validateStep2();
             }
 
-            checkbox.addEventListener('change', toggleBimbinganFields);
+            radios.forEach(radio => radio.addEventListener('change', toggleBimbinganFields));
             // Also listen to bimbingan dosen input fields for validation
             const lecturerNameInput = document.getElementById('bimbingan_lecturer_name');
             const lecturerNipInput = document.getElementById('bimbingan_lecturer_nip');
@@ -983,12 +1084,14 @@
             if (lecturerNipInput) lecturerNipInput.addEventListener('input', validateStep2);
             // Run on load for old() values
             toggleBimbinganFields();
+            window.applyBimbinganDosenState = toggleBimbinganFields;
         }
 
         function setupOnBehalfLecturerToggle() {
-            const checkbox = document.getElementById('is_on_behalf_lecturer');
-            if (!checkbox || checkbox._onBehalfLecturerBound) return;
-            checkbox._onBehalfLecturerBound = true;
+            const onBehalfInput = document.getElementById('is_on_behalf_lecturer');
+            const radios = document.querySelectorAll('input[name="lecturer_involvement"]');
+            if (!onBehalfInput || !radios.length || onBehalfInput._onBehalfLecturerBound) return;
+            onBehalfInput._onBehalfLecturerBound = true;
 
             const nimField = document.getElementById('nim-field');
             const nimInput = document.getElementById('nim');
@@ -998,10 +1101,10 @@
             const nimHint = document.getElementById('nim-hint');
             const nipLabel = document.getElementById('nip-label-text');
             const nipHint = document.getElementById('nip-hint');
-            const checkboxLabel = checkbox.closest('label');
 
             function toggleOnBehalfLecturer() {
-                const isOnBehalfLecturer = selectedBookingType === 'non_perkuliahan' && checkbox.checked;
+                const isOnBehalfLecturer = selectedBookingType === 'non_perkuliahan'
+                    && syncLecturerFlags() === 'on_behalf';
 
                 if (isOnBehalfLecturer) {
                     nimField.style.display = 'none';
@@ -1017,8 +1120,6 @@
                     if (nipLabel) nipLabel.textContent = 'NIP Dosen Pengaju';
                     if (nipHint) nipHint.textContent = 'Masukkan NIP dosen (18 digit angka).';
 
-                    checkboxLabel.classList.add('bg-green-50', 'border-green-400');
-                    checkboxLabel.classList.remove('border-gray-200');
                 } else {
                     nimField.style.display = 'block';
                     nimInput.setAttribute('required', 'required');
@@ -1033,14 +1134,12 @@
                     if (nipLabel) nipLabel.textContent = 'NIP';
                     if (nipHint) nipHint.textContent = 'NIP harus 18 digit angka';
 
-                    checkboxLabel.classList.remove('bg-green-50', 'border-green-400');
-                    checkboxLabel.classList.add('border-gray-200');
                 }
 
                 validateStep2();
             }
 
-            checkbox.addEventListener('change', toggleOnBehalfLecturer);
+            radios.forEach(radio => radio.addEventListener('change', toggleOnBehalfLecturer));
             if (nimInput) nimInput.addEventListener('input', validateStep2);
             if (nipInput) nipInput.addEventListener('input', validateStep2);
 
@@ -1089,6 +1188,7 @@
                      });
                      // Hide entire step indicator bar since pribadi goes to separate section
                      document.querySelector('.step-indicator').classList.add('hidden');
+                     document.getElementById('step-progress-status')?.classList.add('hidden');
 
                 } else {
                      // For others, unit type is required
@@ -1097,10 +1197,22 @@
                      document.getElementById('btn-next-1').disabled = !(bookingType && unitType);
                      // Show step indicator bar
                      document.querySelector('.step-indicator').classList.remove('hidden');
+                     document.getElementById('step-progress-status')?.classList.remove('hidden');
                 }
 
                 if (bookingType) {
                     selectedBookingType = bookingType.value;
+                    const lecturerField = document.getElementById('lecturer-involvement-field');
+                    const noneLecturerRadio = document.querySelector('input[name="lecturer_involvement"][value="none"]');
+
+                    if (selectedBookingType === 'non_perkuliahan') {
+                        lecturerField?.classList.remove('hidden');
+                    } else {
+                        lecturerField?.classList.add('hidden');
+                        if (noneLecturerRadio) noneLecturerRadio.checked = true;
+                    }
+                    syncLecturerFlags();
+
                     // Show/hide appropriate fields for step 2
                     if (selectedBookingType === 'non_perkuliahan') {
                         document.getElementById('perkuliahan-fields').classList.add('hidden');
@@ -1110,6 +1222,9 @@
                         setRequiredFields('non-perkuliahan-fields', true);
                         if (typeof window.applyOnBehalfLecturerState === 'function') {
                             window.applyOnBehalfLecturerState();
+                        }
+                        if (typeof window.applyBimbinganDosenState === 'function') {
+                            window.applyBimbinganDosenState();
                         }
                     } else if (selectedBookingType === 'pribadi') {
                         // Pribadi uses a separate section, hide regular step 2 fields
@@ -1121,6 +1236,9 @@
                         if (typeof window.applyOnBehalfLecturerState === 'function') {
                             window.applyOnBehalfLecturerState();
                         }
+                        if (typeof window.applyBimbinganDosenState === 'function') {
+                            window.applyBimbinganDosenState();
+                        }
                     } else {
                         document.getElementById('perkuliahan-fields').classList.remove('hidden');
                         document.getElementById('non-perkuliahan-fields').classList.add('hidden');
@@ -1130,14 +1248,16 @@
                         if (typeof window.applyOnBehalfLecturerState === 'function') {
                             window.applyOnBehalfLecturerState();
                         }
+                        if (typeof window.applyBimbinganDosenState === 'function') {
+                            window.applyBimbinganDosenState();
+                        }
                     }
 
                     // Toggle lab selection based on booking type
                     toggleLabSelection();
 
                     // Update recurring booking notice based on booking type
-                    updateRecurringBookingNotice();
-                    updateRecurringEndSection();
+                    updateRecurrenceControls();
                 }
             }
 
@@ -1406,14 +1526,15 @@
                     isValid = isValid && customProdi && customProdi.value.trim();
                 }
 
-                isValid = isValid && prodi && nim.length === 14 && mataKuliah && dosen && nip;
+                isValid = isValid && prodi && nim.length === 14 && mataKuliah && dosen && nip.length === 18;
             } else if (selectedBookingType === 'non_perkuliahan') {
                 const prodi = document.getElementById('study_program').value.trim();
                 const nim = document.getElementById('nim').value.trim();
                 const nip = document.getElementById('nip').value.trim();
                 const namaKegiatan = document.getElementById('activity_name').value.trim();
-                const isBimbingan = document.getElementById('is_bimbingan_dosen') && document.getElementById('is_bimbingan_dosen').checked;
-                const isOnBehalfLecturer = document.getElementById('is_on_behalf_lecturer') && document.getElementById('is_on_behalf_lecturer').checked;
+                const lecturerInvolvement = getLecturerInvolvement();
+                const isBimbingan = lecturerInvolvement === 'bimbingan';
+                const isOnBehalfLecturer = lecturerInvolvement === 'on_behalf';
 
                 // Check custom study program if 'Lainnya' is selected
                 if (prodi === 'Lainnya') {
@@ -1426,7 +1547,7 @@
                     const dosenName = document.getElementById('bimbingan_lecturer_name').value.trim();
                     const dosenNip = document.getElementById('bimbingan_lecturer_nip').value.trim();
                     const identityValid = isOnBehalfLecturer ? nip.length === 18 : nim.length === 14;
-                    isValid = isValid && prodi && identityValid && namaKegiatan && dosenName && dosenNip;
+                    isValid = isValid && prodi && identityValid && namaKegiatan && dosenName && dosenNip.length === 18;
                 } else {
                     // Regular non-perkuliahan
                     const jenisKegiatan = document.getElementById('activity_type').value.trim();
@@ -1476,66 +1597,80 @@
         }
 
         // Step 3 Validation
-        // Update recurring booking notice for perkuliahan tetap
+        function getSelectedRecurrenceDays() {
+            return Array.from(document.querySelectorAll('input[name="recurrence_days[]"]:checked'))
+                .map(input => input.value);
+        }
+
+        function getActiveRepeatCountInput() {
+            return selectedBookingType === 'perkuliahan_tidak_tetap'
+                ? document.getElementById('nonfixed_repeat_count')
+                : document.getElementById('fixed_repeat_count');
+        }
+
         function updateRecurringBookingNotice() {
             const recurringNoticeGeneric = document.getElementById('recurring-booking-notice-generic');
             const recurringNoticeSpecific = document.getElementById('recurring-booking-notice-specific');
             const recurringDayName = document.getElementById('recurring-day-name');
             const recurringTimeRange = document.getElementById('recurring-time-range');
             const recurringLabName = document.getElementById('recurring-lab-name');
-
             const bookingDate = document.getElementById('booking_date').value;
             const startTime = document.getElementById('start_time').value;
             const endTime = document.getElementById('end_time').value;
             const labSelect = document.getElementById('labSelect');
-            const selectedLabOption = labSelect.options[labSelect.selectedIndex];
+            const isNonFixedRecurring = selectedBookingType === 'perkuliahan_tidak_tetap'
+                && document.querySelector('input[name="schedule_frequency"]:checked')?.value === 'multiple';
+            const isRecurring = selectedBookingType === 'perkuliahan_tetap' || isNonFixedRecurring;
 
-            // Only show for perkuliahan_tetap
-            if (selectedBookingType === 'perkuliahan_tetap') {
-                // Check if all fields are filled
-                if (bookingDate && startTime && endTime && labSelect.value) {
-                    // Show specific notice with actual values
-                    const date = new Date(bookingDate);
-                    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                    const dayName = dayNames[date.getDay()];
-
-                    // Get lab name from selected option text (e.g. "EL. 309 (Kap: 30)" -> "EL. 309")
-                    const labFullText = selectedLabOption.textContent;
-                    const labName = labFullText.split(' (')[0];
-
-                    recurringDayName.textContent = dayName;
-                    recurringTimeRange.textContent = startTime + ' - ' + endTime;
-                    recurringLabName.textContent = labName;
-
-                    recurringNoticeGeneric.classList.add('hidden');
-                    recurringNoticeSpecific.classList.remove('hidden');
-                } else {
-                    // Show generic notice
-                    recurringNoticeGeneric.classList.remove('hidden');
-                    recurringNoticeSpecific.classList.add('hidden');
-                }
-            } else {
-                // Hide both notices for non perkuliahan_tetap
+            if (!isRecurring) {
                 recurringNoticeGeneric.classList.add('hidden');
+                recurringNoticeSpecific.classList.add('hidden');
+                return;
+            }
+
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const start = bookingDate ? new Date(bookingDate + 'T00:00:00') : null;
+            const days = selectedBookingType === 'perkuliahan_tetap'
+                ? (start ? [dayNames[start.getDay()]] : [])
+                : getSelectedRecurrenceDays();
+
+            if (bookingDate && startTime && endTime && labSelect.value && days.length) {
+                const selectedLabOption = labSelect.options[labSelect.selectedIndex];
+                const labName = selectedLabOption.textContent.split(' (')[0];
+                recurringDayName.textContent = days.join(' dan ');
+                recurringTimeRange.textContent = startTime + ' - ' + endTime;
+                recurringLabName.textContent = labName;
+                recurringNoticeGeneric.classList.add('hidden');
+                recurringNoticeSpecific.classList.remove('hidden');
+            } else {
+                recurringNoticeGeneric.classList.remove('hidden');
                 recurringNoticeSpecific.classList.add('hidden');
             }
         }
 
-        // Show/hide the recurrence-end selector and compute its summary hint
         function updateRecurringEndSection() {
             const section = document.getElementById('recurring-end-section');
-            if (!section) return;
-
+            const fixedCountInput = document.getElementById('fixed_repeat_count');
+            const repeatEndDate = document.getElementById('repeat_end_date');
+            const repeatTypeInputs = document.querySelectorAll('input[name="repeat_type"]');
             const bookingDate = document.getElementById('booking_date').value;
             const hint = document.getElementById('recurring-end-hint');
             const repeatType = document.querySelector('input[name="repeat_type"]:checked');
             const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const isFixed = selectedBookingType === 'perkuliahan_tetap';
 
-            if (selectedBookingType !== 'perkuliahan_tetap') {
-                section.classList.add('hidden');
+            section.classList.toggle('hidden', !isFixed);
+            repeatTypeInputs.forEach(input => input.disabled = !isFixed);
+            if (!isFixed) {
+                fixedCountInput.disabled = true;
+                repeatEndDate.disabled = true;
+                hint.textContent = '';
                 return;
             }
-            section.classList.remove('hidden');
+
+            const activeRepeatType = repeatType?.value || 'count';
+            fixedCountInput.disabled = activeRepeatType !== 'count';
+            repeatEndDate.disabled = activeRepeatType !== 'date';
 
             if (!bookingDate || !repeatType) {
                 hint.textContent = '';
@@ -1544,27 +1679,69 @@
 
             const start = new Date(bookingDate + 'T00:00:00');
             const dayName = dayNames[start.getDay()];
-
             if (repeatType.value === 'count') {
-                const count = parseInt(document.getElementById('repeat_count').value);
+                const count = parseInt(fixedCountInput.value);
                 hint.textContent = count > 1
                     ? `Pertemuan setiap hari ${dayName}, ${count} kali (terakhir ${formatIndoDate(addWeeks(start, count - 1))}).`
                     : 'Masukkan jumlah pertemuan (minimal 2).';
-            } else if (repeatType.value === 'date') {
-                const endDate = document.getElementById('repeat_end_date').value;
-                if (endDate) {
-                    const end = new Date(endDate + 'T00:00:00');
-                    if (end < start) {
-                        hint.textContent = 'Tanggal akhir harus setelah tanggal mulai.';
-                    } else {
-                        hint.textContent = `Pertemuan setiap hari ${dayName}, hingga ${formatIndoDate(end)}.`;
-                    }
-                } else {
-                    hint.textContent = 'Pilih tanggal akhir pengulangan.';
-                }
             } else {
-                hint.textContent = `Pertemuan setiap hari ${dayName} tanpa batas waktu.`;
+                const endDate = repeatEndDate.value;
+                if (!endDate) {
+                    hint.textContent = 'Pilih tanggal akhir pengulangan.';
+                } else {
+                    const end = new Date(endDate + 'T00:00:00');
+                    hint.textContent = end < start
+                        ? 'Tanggal akhir harus setelah tanggal mulai.'
+                        : `Pertemuan setiap hari ${dayName}, hingga ${formatIndoDate(end)}.`;
+                }
             }
+        }
+
+        function updateNonfixedFrequencySection() {
+            const section = document.getElementById('nonfixed-frequency-section');
+            const daysSection = document.getElementById('recurrence-days-section');
+            const countSection = document.getElementById('nonfixed-repeat-count-section');
+            const countInput = document.getElementById('nonfixed_repeat_count');
+            const frequencyInputs = document.querySelectorAll('input[name="schedule_frequency"]');
+            const dayInputs = document.querySelectorAll('input[name="recurrence_days[]"]');
+            const isNonFixed = selectedBookingType === 'perkuliahan_tidak_tetap';
+            const frequency = document.querySelector('input[name="schedule_frequency"]:checked')?.value || 'once';
+            const isMultiple = isNonFixed && frequency === 'multiple';
+
+            section.classList.toggle('hidden', !isNonFixed);
+            frequencyInputs.forEach(input => input.disabled = !isNonFixed);
+            daysSection.classList.toggle('hidden', !isMultiple);
+            countSection.classList.toggle('hidden', !isMultiple);
+            dayInputs.forEach(input => input.disabled = !isMultiple);
+            countInput.disabled = !isMultiple;
+
+            if (isMultiple) {
+                const bookingDate = document.getElementById('booking_date').value;
+                if (bookingDate && !getSelectedRecurrenceDays().length) {
+                    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    const startDay = dayNames[new Date(bookingDate + 'T00:00:00').getDay()];
+                    const matchingDay = Array.from(dayInputs).find(input => input.value === startDay);
+                    if (matchingDay) matchingDay.checked = true;
+                }
+
+                const selectedDays = getSelectedRecurrenceDays();
+                const count = parseInt(countInput.value);
+                document.getElementById('recurrence-days-hint').textContent = selectedDays.length
+                    ? `Dipilih: ${selectedDays.join(', ')}.`
+                    : 'Pilih minimal satu hari pertemuan.';
+                document.getElementById('nonfixed-frequency-hint').textContent = count >= 2
+                    ? `Sistem akan membuat ${count} occurrence pada hari yang dipilih.`
+                    : 'Jumlah minimal adalah 2 pertemuan.';
+            } else {
+                document.getElementById('recurrence-days-hint').textContent = '';
+                document.getElementById('nonfixed-frequency-hint').textContent = '';
+            }
+        }
+
+        function updateRecurrenceControls() {
+            updateRecurringEndSection();
+            updateNonfixedFrequencySection();
+            updateRecurringBookingNotice();
         }
 
         function addWeeks(date, weeks) {
@@ -1587,37 +1764,31 @@
 
             [bookingDate, participantCount, startTime, endTime].forEach(field => {
                 field.addEventListener('change', function() {
-                    // Only fetch labs for non-pribadi bookings
-                    if (selectedBookingType !== 'pribadi') {
-                        fetchAvailableLabs();
-                    }
+                    if (selectedBookingType !== 'pribadi') fetchAvailableLabs();
+                    updateRecurrenceControls();
                     validateStep3();
-                    updateRecurringBookingNotice();
                 });
             });
 
             labSelect.addEventListener('change', function() {
                 validateStep3();
                 checkCapacityWarning();
-                updateRecurringBookingNotice();
-                updateRecurringEndSection();
+                updateRecurrenceControls();
             });
 
-            // Recurrence-end controls update hint + validation
-            const repeatControls = document.querySelectorAll('#recurring-end-section input');
+            const repeatControls = document.querySelectorAll('#recurring-end-section input, #nonfixed-frequency-section input');
             repeatControls.forEach(input => {
                 input.addEventListener('change', function() {
-                    updateRecurringEndSection();
+                    updateRecurrenceControls();
+                    if (selectedBookingType === 'perkuliahan_tidak_tetap') fetchAvailableLabs();
                     validateStep3();
                 });
                 input.addEventListener('input', function() {
-                    updateRecurringEndSection();
+                    updateRecurrenceControls();
+                    if (selectedBookingType === 'perkuliahan_tidak_tetap') fetchAvailableLabs();
                     validateStep3();
                 });
             });
-
-            // No need to check conflict when date/time changes
-            // because fetchAvailableLabs() already filters out conflicting labs
         }
         function validateStep3() {
             const bookingDate = document.getElementById('booking_date').value;
@@ -1664,16 +1835,25 @@
             // For pribadi bookings, lab is not required
             const isPribadi = selectedBookingType === 'pribadi';
 
-            // Recurrence-end validation for perkuliahan_tetap
+            // Validate recurrence controls for both lecture variants.
             let repeatValid = true;
             if (selectedBookingType === 'perkuliahan_tetap') {
                 const repeatType = document.querySelector('input[name="repeat_type"]:checked');
-                const repeatCount = document.getElementById('repeat_count').value;
+                const repeatCount = document.getElementById('fixed_repeat_count').value;
                 const repeatEndDate = document.getElementById('repeat_end_date').value;
                 if (repeatType && repeatType.value === 'count') {
                     repeatValid = parseInt(repeatCount) >= 2;
                 } else if (repeatType && repeatType.value === 'date') {
                     repeatValid = !!repeatEndDate && repeatEndDate >= bookingDate;
+                }
+            } else if (selectedBookingType === 'perkuliahan_tidak_tetap') {
+                const frequency = document.querySelector('input[name="schedule_frequency"]:checked')?.value;
+                if (frequency === 'multiple') {
+                    const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    const startDay = bookingDate ? dayNames[new Date(bookingDate + 'T00:00:00').getDay()] : '';
+                    const count = parseInt(document.getElementById('nonfixed_repeat_count').value);
+                    const selectedDays = getSelectedRecurrenceDays();
+                    repeatValid = count >= 2 && selectedDays.length > 0 && selectedDays.includes(startDay);
                 }
             }
 
@@ -1693,10 +1873,12 @@
                 labSelect.disabled = true;
                 labSelect.value = '';
                 labSelect.removeAttribute('required');
+                document.getElementById('booking-calendar-panel')?.classList.add('hidden');
             } else {
                 // Show lab selection for other types
                 labContainer.classList.remove('hidden');
                 labSelect.setAttribute('required', 'required');
+                document.getElementById('booking-calendar-panel')?.classList.remove('hidden');
             }
         }
 
@@ -1715,7 +1897,18 @@
             if (!bookingDate || !participantCount || !startTime || !endTime) return;
 
             const labSelect = document.getElementById('labSelect');
+            const availabilityStatus = document.getElementById('lab-availability-status');
+            const preferredLabId = window.bookingCalendarPreferredLabId || labSelect.value;
+
+            availabilityController?.abort();
+            availabilityController = new AbortController();
+            const requestId = ++availabilityRequestId;
             labSelect.innerHTML = '<option value="">Memuat...</option>';
+            labSelect.disabled = true;
+            if (availabilityStatus) {
+                availabilityStatus.textContent = 'Memeriksa ketersediaan laboratorium...';
+                availabilityStatus.className = 'booking-loading text-sm mt-2';
+            }
 
             fetch('{{ route("booking.available-labs") }}', {
                 method: 'POST',
@@ -1723,11 +1916,16 @@
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
+                signal: availabilityController.signal,
                 body: JSON.stringify({
                     booking_date: bookingDate,
                     participant_count: participantCount,
                     start_time: startTime,
-                    end_time: endTime
+                    end_time: endTime,
+                    booking_type: selectedBookingType,
+                    schedule_frequency: document.querySelector('input[name="schedule_frequency"]:checked')?.value || null,
+                    recurrence_days: getSelectedRecurrenceDays(),
+                    repeat_count: getActiveRepeatCountInput()?.value || null
                 })
             })
             .then(response => {
@@ -1737,10 +1935,15 @@
                 return response.json();
             })
             .then(labs => {
+                if (requestId !== availabilityRequestId) return;
                 labSelect.innerHTML = '';
                 if (labs.length === 0) {
                     labSelect.innerHTML = '<option value="">Tidak ada lab tersedia</option>';
                     labSelect.disabled = true;
+                    if (availabilityStatus) {
+                        availabilityStatus.textContent = 'Tidak ada laboratorium yang tersedia pada kombinasi tanggal, jam, dan jumlah peserta ini. Coba ubah salah satu pilihan.';
+                        availabilityStatus.className = 'text-red-700 text-sm mt-2';
+                    }
                 } else {
                     labSelect.innerHTML = '<option value="">-- Pilih Laboratorium --</option>';
                     labs.forEach(lab => {
@@ -1750,19 +1953,33 @@
                         option.dataset.capacity = lab.capacity;
 
                         const isUnderCapacity = lab.capacity < parseInt(participantCount);
-                        const warningIcon = isUnderCapacity ? '⚠️ ' : '';
+                        const warningIcon = isUnderCapacity ? 'Kapasitas kurang — ' : '';
                         const warningText = isUnderCapacity ? ' (Kapasitas Kurang)' : '';
 
                         option.textContent = `${warningIcon}${lab.name} (Kap: ${lab.capacity})${warningText}`;
                         labSelect.appendChild(option);
                     });
                     labSelect.disabled = false;
+                    if (preferredLabId && Array.from(labSelect.options).some(option => option.value === String(preferredLabId))) {
+                        labSelect.value = String(preferredLabId);
+                        labSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    window.bookingCalendarPreferredLabId = null;
+                    if (availabilityStatus) {
+                        availabilityStatus.textContent = `${labs.length} laboratorium tersedia. Pilih salah satu untuk melanjutkan.`;
+                        availabilityStatus.className = 'text-green-700 text-sm mt-2';
+                    }
                 }
             })
             .catch(error => {
+                if (error.name === 'AbortError' || requestId !== availabilityRequestId) return;
                 console.error('Error:', error);
                 labSelect.innerHTML = '<option value="">Gagal memuat data lab</option>';
-                alert('Terjadi kesalahan saat memuat data laboratorium. Silakan cek konsol atau coba lagi.');
+                labSelect.disabled = true;
+                if (availabilityStatus) {
+                    availabilityStatus.textContent = 'Ketersediaan lab belum dapat dimuat. Periksa koneksi lalu ubah tanggal atau jam untuk mencoba lagi.';
+                    availabilityStatus.className = 'text-red-700 text-sm mt-2';
+                }
             });
         }
 
@@ -1843,7 +2060,7 @@
             validateStep4();
         }
 
-        function goToStep(step) {
+        function goToStep(step, options = {}) {
             // Check visibility if entering step 4
             if (step === 4) {
                 updateUploadVisibility();
@@ -1856,24 +2073,59 @@
             document.getElementById(`step-${step}`).classList.remove('hidden');
             document.getElementById(`step-${step}`).classList.remove('step-disabled');
 
+            if (step === 3) {
+                window.dispatchEvent(new CustomEvent('booking-step-3-visible'));
+            }
+
             currentStep = step;
             updateStepIndicator();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (options.scroll !== false) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            if (options.focus !== false) {
+                const firstField = document.querySelector(`#step-${step} input:not([type="hidden"]), #step-${step} select, #step-${step} textarea, #step-${step} button`);
+                firstField?.focus({ preventScroll: true });
+            }
         }
 
         function updateStepIndicator() {
+            const stepLabels = { 1: 'Tipe', 2: 'Data pengaju', 3: 'Jadwal', 4: 'Tinjau' };
             for (let i = 1; i <= totalSteps; i++) {
                 const indicator = document.getElementById(`step-indicator-${i}`);
                 if (i < currentStep) {
                     indicator.classList.add('completed');
                     indicator.classList.remove('active');
+                    indicator.removeAttribute('aria-current');
                 } else if (i === currentStep) {
                     indicator.classList.add('active');
                     indicator.classList.remove('completed');
+                    indicator.setAttribute('aria-current', 'step');
                 } else {
                     indicator.classList.remove('active', 'completed');
+                    indicator.removeAttribute('aria-current');
                 }
             }
+
+            const progress = document.getElementById('step-progress-status');
+            if (progress) {
+                progress.textContent = `Langkah ${currentStep} dari ${totalSteps}: ${stepLabels[currentStep]}`;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[character]));
+        }
+
+        function summaryRow(label, value) {
+            return `<div class="border-b border-slate-200 pb-2"><dt class="text-xs text-slate-500">${escapeHtml(label)}</dt><dd class="font-semibold text-slate-800 break-words">${escapeHtml(value || '-')}</dd></div>`;
         }
 
         // Generate Summary
@@ -1886,7 +2138,7 @@
             };
 
             const summary = [];
-            summary.push(`<div><strong>Tipe:</strong> ${bookingTypeLabels[selectedBookingType]}</div>`);
+            summary.push(summaryRow('Tipe', bookingTypeLabels[selectedBookingType]));
 
             // Add Unit if not pribadi
              if (selectedBookingType !== 'pribadi') {
@@ -1894,26 +2146,25 @@
                      's1_tembalang': 'S1 Tembalang',
                      'pascasarjana_pleburan': 'Pascasarjana Pleburan'
                  };
-                 const unit = document.querySelector('input[name="unit_type"]:checked').value;
-                 summary.push(`<div><strong>Unit:</strong> ${unitLabels[unit]}</div>`);
+                 const unit = document.querySelector('input[name="unit_type"]:checked')?.value;
+                 summary.push(summaryRow('Unit', unitLabels[unit] || unit));
              }
 
-            summary.push(`<div><strong>Nama:</strong> ${document.getElementById('pic_name').value}</div>`);
+            summary.push(summaryRow('Nama', document.getElementById('pic_name').value));
 
             // Display NIP or NIM based on what's filled
             const nimValue = document.getElementById('nim').value;
             const nipValue = document.getElementById('nip').value;
             const isOnBehalfLecturer = selectedBookingType === 'non_perkuliahan'
-                && document.getElementById('is_on_behalf_lecturer')
-                && document.getElementById('is_on_behalf_lecturer').checked;
+                && getLecturerInvolvement() === 'on_behalf';
 
             if (isOnBehalfLecturer) {
-                summary.push(`<div><strong>Atas Nama Dosen:</strong> Ya</div>`);
-                summary.push(`<div><strong>NIP:</strong> ${nipValue}</div>`);
+                summary.push(summaryRow('Atas nama dosen', 'Ya'));
+                summary.push(summaryRow('NIP', nipValue));
             } else if (nipValue) {
-                summary.push(`<div><strong>NIP:</strong> ${nipValue}</div>`);
+                summary.push(summaryRow('NIP', nipValue));
             } else if (nimValue) {
-                summary.push(`<div><strong>NIM:</strong> ${nimValue}</div>`);
+                summary.push(summaryRow('NIM', nimValue));
             }
 
             // Specific fields based on type
@@ -1926,39 +2177,47 @@
                     statusDisplay = document.getElementById('custom_status').value;
                 }
 
-                summary.push(`<div><strong>Status:</strong> ${statusDisplay}</div>`);
+                summary.push(summaryRow('Status', statusDisplay));
                 if (status === 'Mahasiswa') {
-                    summary.push(`<div><strong>Angkatan:</strong> ${document.getElementById('class_year').value}</div>`);
+                    summary.push(summaryRow('Angkatan', document.getElementById('class_year').value));
                 }
-                summary.push(`<div><strong>Keperluan:</strong> ${document.getElementById('purpose').value}</div>`);
+                summary.push(summaryRow('Keperluan', document.getElementById('purpose').value));
             } else if (selectedBookingType === 'non_perkuliahan') {
-                summary.push(`<div><strong>Kegiatan:</strong> ${document.getElementById('activity_name').value}</div>`);
-                const isBimbingan = document.getElementById('is_bimbingan_dosen') && document.getElementById('is_bimbingan_dosen').checked;
+                summary.push(summaryRow('Kegiatan', document.getElementById('activity_name').value));
+                const isBimbingan = getLecturerInvolvement() === 'bimbingan';
                 if (isBimbingan) {
-                    summary.push(`<div><strong>Bimbingan Dosen:</strong> Ya</div>`);
-                    summary.push(`<div><strong>Nama Dosen:</strong> ${document.getElementById('bimbingan_lecturer_name').value}</div>`);
-                    summary.push(`<div><strong>NIP Dosen:</strong> ${document.getElementById('bimbingan_lecturer_nip').value}</div>`);
+                    summary.push(summaryRow('Bimbingan dosen', 'Ya'));
+                    summary.push(summaryRow('Nama dosen', document.getElementById('bimbingan_lecturer_name').value));
+                    summary.push(summaryRow('NIP dosen', document.getElementById('bimbingan_lecturer_nip').value));
                 }
             } else {
-                 summary.push(`<div><strong>Mata Kuliah:</strong> ${document.getElementById('course_name').value}</div>`);
+                 summary.push(summaryRow('Mata kuliah', document.getElementById('course_name').value));
             }
 
-            summary.push(`<div><strong>Tanggal:</strong> ${document.getElementById('booking_date').value}</div>`);
-            summary.push(`<div><strong>Waktu:</strong> ${document.getElementById('start_time').value} - ${document.getElementById('end_time').value}</div>`);
-            summary.push(`<div><strong>Peserta:</strong> ${document.getElementById('participant_count').value} orang</div>`);
+            summary.push(summaryRow('Tanggal', formatIndoDate(new Date(`${document.getElementById('booking_date').value}T00:00:00`))));
+            summary.push(summaryRow('Waktu', `${document.getElementById('start_time').value} - ${document.getElementById('end_time').value} WIB`));
+            summary.push(summaryRow('Peserta', `${document.getElementById('participant_count').value} orang`));
 
-            // Recurrence-end display for perkuliahan_tetap
+            // Recurrence display for both lecture variants.
             if (selectedBookingType === 'perkuliahan_tetap') {
                 const repeatType = document.querySelector('input[name="repeat_type"]:checked');
                 if (repeatType) {
                     let endText = 'Berulang tanpa batas';
                     if (repeatType.value === 'count') {
-                        const count = parseInt(document.getElementById('repeat_count').value);
+                        const count = parseInt(document.getElementById('fixed_repeat_count').value);
                         endText = `Berulang, ${count} kali pertemuan`;
                     } else if (repeatType.value === 'date') {
                         endText = `Berulang hingga ${document.getElementById('repeat_end_date').value}`;
                     }
-                    summary.push(`<div><strong>Pengulangan:</strong> ${endText}</div>`);
+                    summary.push(summaryRow('Pengulangan', endText));
+                }
+            } else if (selectedBookingType === 'perkuliahan_tidak_tetap') {
+                const frequency = document.querySelector('input[name="schedule_frequency"]:checked')?.value;
+                if (frequency === 'multiple') {
+                    const count = parseInt(document.getElementById('nonfixed_repeat_count').value);
+                    summary.push(summaryRow('Pengulangan', `Setiap minggu pada ${getSelectedRecurrenceDays().join(', ')}, ${count} kali pertemuan`));
+                } else {
+                    summary.push(summaryRow('Pengulangan', 'Sekali'));
                 }
             }
 
@@ -1966,8 +2225,8 @@
             const warningBox = document.getElementById('capacity-warning-text');
             if (selectedBookingType !== 'pribadi') {
                 const labSelect = document.getElementById('labSelect');
-                const labName = labSelect.options[labSelect.selectedIndex].text;
-                summary.push(`<div><strong>Lab:</strong> ${labName}</div>`);
+                const labName = labSelect.options[labSelect.selectedIndex]?.text;
+                summary.push(summaryRow('Laboratorium', labName));
 
                 document.getElementById('booking-summary').innerHTML = summary.join('');
 
@@ -2015,9 +2274,9 @@
                     let errorMsg = '';
 
                     if (file.type !== allowedType && !allowedExt) {
-                        errorMsg = '⚠️ Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
+                        errorMsg = 'Format file harus PDF. File yang dipilih: ' + file.name.split('.').pop().toUpperCase();
                     } else if (file.size > maxSize) {
-                        errorMsg = '⚠️ Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                        errorMsg = 'Ukuran file maksimal 5MB. File yang dipilih: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB';
                     }
 
                     if (errorMsg) {
@@ -2039,7 +2298,7 @@
                     }
 
                     const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                    fileNameDisplay.textContent = `✓ Terpilih: ${file.name} (${fileSizeMB} MB)`;
+                    fileNameDisplay.textContent = `Dipilih: ${file.name} (${fileSizeMB} MB)`;
                     fileNameDisplay.classList.add('text-green-600');
                     uploadBox.classList.add('border-green-400', 'bg-green-50');
                 } else {
@@ -2189,22 +2448,31 @@
             input.classList.remove('border-gray-300', 'focus:ring-yellow-500', 'focus:border-transparent');
             input.classList.add('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
 
+            const customTrigger = input.closest('.custom-select-wrapper')?.querySelector('.custom-select-trigger');
+            customTrigger?.classList.add('border-red-500');
+            customTrigger?.setAttribute('aria-invalid', 'true');
+
             // Add error message text
             let parent = input.parentElement;
             let errorText = parent.querySelector('.validation-error-msg');
 
             if (!errorText) {
                 errorText = document.createElement('p');
-                errorText.className = 'validation-error-msg text-red-500 text-xs mt-1 italic';
+                errorText.className = 'validation-error-msg text-red-600 text-xs mt-1 font-medium';
+                errorText.setAttribute('role', 'alert');
                 parent.appendChild(errorText);
             }
-            errorText.textContent = `⚠ ${message}`;
+            errorText.textContent = message;
         }
 
         function clearError(input) {
             // Restore normal border
             input.classList.remove('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
             input.classList.add('border-gray-300', 'focus:ring-yellow-500', 'focus:border-transparent');
+
+            const customTrigger = input.closest('.custom-select-wrapper')?.querySelector('.custom-select-trigger');
+            customTrigger?.classList.remove('border-red-500');
+            customTrigger?.removeAttribute('aria-invalid');
 
             // Remove error message
             let parent = input.parentElement;
@@ -2219,28 +2487,42 @@
         class CustomSelectEncoded {
             constructor(originalSelect) {
                 this.originalSelect = originalSelect;
-                this.originalSelect.style.display = 'none'; // Hide original
+                if (this.originalSelect.dataset.customSelectReady) return;
+                this.originalSelect.dataset.customSelectReady = 'true';
+                this.originalSelect.classList.add('custom-select-native');
+                this.originalSelect.setAttribute('aria-hidden', 'true');
+                this.originalSelect.tabIndex = -1;
+                this.activeIndex = 0;
 
                 // Create wrapper
                 this.wrapper = document.createElement('div');
-                this.wrapper.className = 'relative custom-select-wrapper w-full';
+                this.wrapper.className = 'custom-select-wrapper w-full';
                 this.originalSelect.parentNode.insertBefore(this.wrapper, this.originalSelect);
                 this.wrapper.appendChild(this.originalSelect); // Move original inside
 
                 // Create Trigger Element
                 this.trigger = document.createElement('button');
                 this.trigger.type = 'button';
-                // Match the style of existing inputs in create.blade.php (px-4 py-3 border border-gray-300 rounded-lg)
-                this.trigger.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base text-left bg-white flex justify-between items-center transition-shadow duration-200';
+                this.trigger.className = 'custom-select-trigger';
+                this.trigger.setAttribute('aria-haspopup', 'listbox');
+                this.trigger.setAttribute('aria-expanded', 'false');
+                const label = document.querySelector(`label[for="${CSS.escape(this.originalSelect.id)}"]`);
+                if (label) {
+                    label.id ||= `${this.originalSelect.id}-label`;
+                    this.trigger.setAttribute('aria-labelledby', label.id);
+                } else {
+                    this.trigger.setAttribute('aria-label', this.originalSelect.getAttribute('aria-label') || this.originalSelect.name || 'Pilih opsi');
+                }
 
                 // Content span
                 this.triggerLabel = document.createElement('span');
-                this.triggerLabel.className = 'block truncate text-gray-700';
+                this.triggerLabel.className = 'block truncate';
 
                 // Chevron icon
                 const chevron = document.createElement('div');
                 chevron.innerHTML = `<svg class="w-5 h-5 text-gray-400 pointer-events-none transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
                 this.chevronIcon = chevron.firstElementChild;
+                this.chevronIcon.classList.add('custom-select-chevron');
 
                 this.trigger.appendChild(this.triggerLabel);
                 this.trigger.appendChild(chevron);
@@ -2248,7 +2530,10 @@
 
                 // Create Options Container
                 this.optionsContainer = document.createElement('div');
-                this.optionsContainer.className = 'absolute z-50 w-full bg-white shadow-xl max-h-60 rounded-lg py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm mt-1 hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 option-container-anim';
+                this.optionsContainer.className = 'custom-select-options hidden';
+                this.optionsContainer.id = `${this.originalSelect.id || `select-${Date.now()}`}-options`;
+                this.optionsContainer.setAttribute('role', 'listbox');
+                this.trigger.setAttribute('aria-controls', this.optionsContainer.id);
                 this.wrapper.appendChild(this.optionsContainer);
 
                 // Initialize
@@ -2261,6 +2546,9 @@
                     e.stopPropagation();
                     this.toggleDropdown();
                 });
+
+                this.trigger.addEventListener('keydown', (event) => this.handleTriggerKeydown(event));
+                this.optionsContainer.addEventListener('keydown', (event) => this.handleOptionKeydown(event));
 
                 // Close when clicking outside
                 document.addEventListener('click', (e) => {
@@ -2315,7 +2603,11 @@
                     if (option.hidden) return;
 
                     const optionDiv = document.createElement('div');
-                    optionDiv.className = `text-gray-900 cursor-pointer select-none relative py-3 pl-4 pr-9 hover:bg-yellow-50 transition-colors duration-150 border-b border-gray-50 last:border-0`;
+                    optionDiv.className = 'custom-select-option';
+                    optionDiv.setAttribute('role', 'option');
+                    optionDiv.setAttribute('aria-selected', option.selected ? 'true' : 'false');
+                    optionDiv.dataset.index = String(option.index);
+                    optionDiv.tabIndex = -1;
 
                     // Allow html content for warnings (lab capacity icons)
                     // But usually option.text is plain.
@@ -2324,15 +2616,13 @@
 
                     // Handle disabled options (like headers "Pilih ...")
                     if (option.disabled && option.value === "") {
-                        optionDiv.className = 'text-gray-400 select-none relative py-2 pl-4 pr-4 bg-gray-50 cursor-default font-semibold text-sm';
+                        optionDiv.className = 'custom-select-option is-disabled';
+                        optionDiv.setAttribute('aria-disabled', 'true');
                     }
 
                     if (option.selected) {
-                        optionDiv.classList.add('bg-blue-50', 'text-blue-900', 'font-medium');
-                        const check = document.createElement('span');
-                        check.className = 'absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600';
-                        check.innerHTML = `<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
-                        optionDiv.appendChild(check);
+                        optionDiv.classList.add('is-active');
+                        this.activeIndex = option.index;
                     }
 
                     if (!option.disabled) {
@@ -2342,11 +2632,13 @@
                             this.originalSelect.dispatchEvent(new Event('change'));
                             this.closeDropdown();
                         });
+
+                        optionDiv.addEventListener('mousemove', () => this.setActiveOption(option.index));
                     }
 
-                    this.optionsContainer.appendChild(optionDiv);
-                });
-            }
+                this.optionsContainer.appendChild(optionDiv);
+            });
+        }
 
             updateTrigger() {
                 const selectedOption = this.originalSelect.options[this.originalSelect.selectedIndex];
@@ -2358,6 +2650,55 @@
                 } else {
                     this.trigger.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
                     this.trigger.removeAttribute('disabled');
+                }
+            }
+
+            selectableOptions() {
+                return Array.from(this.originalSelect.options).filter(option => !option.disabled && option.value !== '');
+            }
+
+            setActiveOption(index) {
+                const target = this.optionsContainer.querySelector(`[data-index="${index}"]`);
+                if (!target || target.classList.contains('is-disabled')) return;
+                this.optionsContainer.querySelectorAll('.custom-select-option').forEach(option => option.classList.remove('is-active'));
+                target.classList.add('is-active');
+                this.activeIndex = index;
+                target.scrollIntoView({ block: 'nearest' });
+            }
+
+            chooseActiveOption() {
+                const option = this.originalSelect.options[this.activeIndex];
+                if (!option || option.disabled || option.value === '') return;
+                this.originalSelect.value = option.value;
+                this.originalSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                this.closeDropdown();
+                this.trigger.focus();
+            }
+
+            handleTriggerKeydown(event) {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (this.optionsContainer.classList.contains('hidden')) this.toggleDropdown();
+                    const options = this.selectableOptions();
+                    if (!options.length) return;
+                    const current = options.findIndex(option => option.index === this.activeIndex);
+                    const next = event.key === 'ArrowDown'
+                        ? options[Math.min(current + 1, options.length - 1)]
+                        : options[Math.max(current - 1, 0)];
+                    this.setActiveOption(next.index);
+                } else if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    if (this.optionsContainer.classList.contains('hidden')) this.toggleDropdown();
+                    else this.chooseActiveOption();
+                } else if (event.key === 'Escape') {
+                    this.closeDropdown();
+                }
+            }
+
+            handleOptionKeydown(event) {
+                if (event.key === 'Escape') {
+                    this.closeDropdown();
+                    this.trigger.focus();
                 }
             }
 
@@ -2374,7 +2715,8 @@
 
                 if (isHidden) {
                     this.optionsContainer.classList.remove('hidden');
-                    this.chevronIcon.classList.add('rotate-180');
+                    this.trigger.setAttribute('aria-expanded', 'true');
+                    this.setActiveOption(this.originalSelect.selectedIndex || this.selectableOptions()[0]?.index);
                 } else {
                     this.closeDropdown();
                 }
@@ -2382,21 +2724,13 @@
 
             closeDropdown() {
                 this.optionsContainer.classList.add('hidden');
-                this.chevronIcon.classList.remove('rotate-180');
+                this.trigger.setAttribute('aria-expanded', 'false');
             }
         }
 
         // Initialize for Booking Page
         document.addEventListener('DOMContentLoaded', function() {
-            // Target selects
-            const selects = ['activity_type', 'applicant_status', 'labSelect'];
-
-            selects.forEach(id => {
-                const selectElement = document.getElementById(id) || document.querySelector(`select[name="${id}"]`);
-                if (selectElement) {
-                    new CustomSelectEncoded(selectElement);
-                }
-            });
+            document.querySelectorAll('.booking-page select').forEach(select => new CustomSelectEncoded(select));
         });
 
         // ===== PERSONAL BORROWING SECTION JS =====

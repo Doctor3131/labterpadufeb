@@ -47,7 +47,7 @@
         @if($isEdit && $schedule->booking)
             <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-r-lg">
                 <p class="font-bold">Jadwal dari Booking</p>
-                <p class="text-sm">Perubahan akan disinkronkan ke data booking terkait (ID: #{{ $schedule->booking_id }})</p>
+                <p class="text-sm">Booking #{{ $schedule->booking_id }} tetap disimpan sebagai permohonan asli; perubahan dicatat sebagai revisi jadwal.</p>
             </div>
         @endif
 
@@ -58,29 +58,66 @@
                 <label class="block text-sm font-semibold text-gray-700 mb-3">Lingkup Perubahan *</label>
                 <div class="space-y-3">
                     <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="radio" name="scope" value="all" checked
+                        <input type="radio" name="scope" value="all" checked form="scheduleForm"
                                class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
-                        <span class="text-sm text-gray-700"><span class="font-medium">Seluruh rangkaian</span> — ubah semua pertemuan kelas ini</span>
+                        <span class="text-sm text-gray-700"><span class="font-medium">Semua yang belum terlaksana</span> — histori jadwal lampau tidak berubah</span>
                     </label>
                     <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="radio" name="scope" value="single"
+                        <input type="radio" name="scope" value="single" form="scheduleForm"
                                class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
                         <span class="text-sm text-gray-700"><span class="font-medium">Hanya tanggal ini</span> — ubah lab/jam hanya pada satu pertemuan</span>
                     </label>
                     <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="radio" name="scope" value="future"
+                        <input type="radio" name="scope" value="future" form="scheduleForm"
                                class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
                         <span class="text-sm text-gray-700"><span class="font-medium">Tanggal ini &amp; selanjutnya</span> — ubah mulai satu pertemuan hingga akhir rangkaian</span>
                     </label>
 
                     <div id="occurrence-date-field" class="hidden pl-7">
                         <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Kemunculan <span class="text-red-500">*</span></label>
-                        <input type="date" name="occurrence_date" id="occurrence_date"
+                        <input type="date" name="occurrence_date" id="occurrence_date" form="scheduleForm"
                                class="w-full md:w-80 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Hari pertemuan: <span class="font-medium">{{ $schedule->day }}</span>.</p>
                     </div>
                 </div>
+                <div class="mt-4">
+                    <label for="change_reason" class="block text-sm font-semibold text-gray-700 mb-1">Alasan perubahan *</label>
+                    <textarea id="change_reason" name="change_reason" form="scheduleForm" required rows="2" maxlength="1000"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                              placeholder="Contoh: perubahan ruang dari program studi">{{ old('change_reason') }}</textarea>
+                </div>
             </div>
+        @elseif($isEdit)
+            <div class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+                <label for="change_reason" class="block text-sm font-semibold text-gray-700 mb-1">Alasan perubahan *</label>
+                <textarea id="change_reason" name="change_reason" form="scheduleForm" required rows="2" maxlength="1000"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                          placeholder="Contoh: perubahan ruang dari program studi">{{ old('change_reason') }}</textarea>
+            </div>
+        @endif
+
+        @if($isEdit && isset($changeLogs) && $changeLogs->isNotEmpty())
+            <details class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+                <summary class="cursor-pointer font-semibold text-gray-800">Riwayat perubahan ({{ $changeLogs->count() }})</summary>
+                <div class="mt-4 overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="text-left text-gray-500 border-b">
+                            <tr><th class="py-2 pr-3">Waktu</th><th class="py-2 pr-3">Aksi</th><th class="py-2 pr-3">Tanggal efektif</th><th class="py-2 pr-3">Admin</th><th class="py-2">Alasan</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach($changeLogs as $log)
+                                <tr class="border-b border-gray-100 align-top">
+                                    <td class="py-2 pr-3 whitespace-nowrap">{{ $log->created_at->timezone('Asia/Jakarta')->format('d/m/Y H:i') }}</td>
+                                    <td class="py-2 pr-3">{{ str_replace('_', ' ', ucfirst($log->action)) }}</td>
+                                    <td class="py-2 pr-3 whitespace-nowrap">{{ $log->effective_date?->format('d/m/Y') ?: '-' }}</td>
+                                    <td class="py-2 pr-3">{{ $log->changedBy?->name ?: 'Sistem' }}</td>
+                                    <td class="py-2">{{ $log->reason ?: '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </details>
         @endif
 
         <!-- Form -->
@@ -98,7 +135,7 @@
                         <select name="day" id="daySelect" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base">
                             <option value="">Pilih Hari</option>
                             @foreach($days as $day)
-                                <option value="{{ $day }}" {{ old('day', $schedule->day ?? '') == $day ? 'selected' : '' }}>
+                                <option value="{{ $day }}" {{ old('day', $schedule->day ?? request('day', '')) == $day ? 'selected' : '' }}>
                                     {{ $day }}
                                 </option>
                             @endforeach
@@ -110,7 +147,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tipe Jadwal *</label>
                         <select name="type" id="typeSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                             @foreach($types as $key => $label)
-                                <option value="{{ $key }}" {{ old('type', $schedule->type ?? 'perkuliahan_tetap') == $key ? 'selected' : '' }}>
+                                <option value="{{ $key }}" {{ old('type', $schedule->type ?? request('type', 'perkuliahan_tetap')) == $key ? 'selected' : '' }}>
                                     {{ $label }}
                                 </option>
                             @endforeach
@@ -121,7 +158,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Mulai *</label>
                         <input type="hidden" name="start_time" id="startTime" required
-                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : '') }}">
+                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : request('start_time', '')) }}">
                         <div class="flex gap-2">
                             <select id="start_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                 <option value="" disabled selected>Jam</option>
@@ -143,7 +180,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Selesai *</label>
                         <input type="hidden" name="end_time" id="endTime" required
-                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : '') }}">
+                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : request('end_time', '')) }}">
                         <div class="flex gap-2">
                             <select id="end_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                 <option value="" disabled selected>Jam</option>
@@ -166,18 +203,18 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
                         <input type="date" name="start_date" id="startDate"
-                               value="{{ old('start_date', $schedule && $schedule->start_date ? $schedule->start_date->format('Y-m-d') : '') }}"
+                               value="{{ old('start_date', $schedule && $schedule->start_date ? $schedule->start_date->format('Y-m-d') : request('start_date', '')) }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         
                     </div>
 
                     <!-- End Date -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Selesai</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Selesai <span id="end-date-required" class="text-red-500">*</span></label>
                         <input type="date" name="end_date" id="endDate"
-                               value="{{ old('end_date', $schedule && $schedule->end_date ? $schedule->end_date->format('Y-m-d') : '') }}"
+                               value="{{ old('end_date', $schedule && $schedule->end_date ? $schedule->end_date->format('Y-m-d') : request('end_date', '')) }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        <p class="text-xs text-gray-500 mt-1">Kosongkan jika berlaku selamanya</p>
+                        <p class="text-xs text-gray-500 mt-1">Wajib untuk perkuliahan tetap; maksimal 60 pertemuan.</p>
                     </div>
 
                     <!-- Lab (LAST - After time is selected, fetched via AJAX) -->
@@ -518,6 +555,7 @@
         const isEditMode = {{ $isEdit ? 'true' : 'false' }};
         const excludeScheduleId = {{ $isEdit ? $schedule->id : 'null' }};
         const currentLabId = {{ $isEdit ? ($schedule->lab_id ?? 'null') : 'null' }};
+        const requestedLabId = Number(new URLSearchParams(window.location.search).get('lab_id')) || null;
 
         // Fetch available labs via AJAX
         function fetchAvailableLabs() {
@@ -575,7 +613,7 @@
                         option.textContent = `${lab.name} (Kap. ${lab.capacity})`;
                         
                         // Pre-select current lab in edit mode
-                        if (isEditMode && lab.id === currentLabId) {
+                        if ((isEditMode && lab.id === currentLabId) || (!isEditMode && lab.id === requestedLabId)) {
                             option.selected = true;
                         }
                         
@@ -620,6 +658,8 @@
         // Function to show/hide fields based on type
         function updateFieldsVisibility() {
             const selectedType = typeSelect.value;
+            endDateEl.required = selectedType === 'perkuliahan_tetap';
+            document.getElementById('end-date-required')?.classList.toggle('hidden', selectedType !== 'perkuliahan_tetap');
             
             // Smart field transfer when switching types
             transferFieldsBetweenTypes(previousType, selectedType);

@@ -6,6 +6,8 @@ use App\Helpers\DayHelper;
 use App\Models\Booking;
 use App\Models\Lab;
 use App\Models\MahasiswaFeb;
+use App\Services\RecurrenceDateService;
+use App\Services\ScheduleCalendarService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +21,7 @@ class BookingController extends Controller
      */
     public function create()
     {
-        $labs = Lab::orderBy('name')->get();
+        $labs = Lab::where('status', 'available')->orderBy('name')->get();
 
         return view('booking.create', compact('labs'));
     }
@@ -35,8 +37,21 @@ class BookingController extends Controller
         $startTime = $request->start_time;
         $endTime = $request->end_time;
 
-        // Get day name from date using DayHelper
-        $dayName = DayHelper::fromEnglish(date('l', strtotime($date)));
+        $startDate = Carbon::parse($date);
+        $datesToCheck = collect([$startDate->toDateString()]);
+
+        // A non-fixed recurring booking must be available on every selected day,
+        // not only on the first date shown in the form.
+        if ($request->booking_type === 'perkuliahan_tidak_tetap'
+            && $request->schedule_frequency === 'multiple'
+            && $request->filled('repeat_count')) {
+            $days = is_array($request->recurrence_days) ? $request->recurrence_days : [];
+            $datesToCheck = app(RecurrenceDateService::class)->datesForCount(
+                $startDate,
+                $days,
+                (int) $request->repeat_count
+            );
+        }
 
         // Get all labs with eager loading to prevent N+1 queries
         // Only get labs that are available (not in maintenance)
@@ -46,11 +61,37 @@ class BookingController extends Controller
             }])->orderBy('capacity', 'asc')->get();
 
         // Filter labs that are available at the requested time (in memory, no additional queries)
-        $availableLabs = $labs->filter(function ($lab) use ($dayName, $startTime, $endTime, $date) {
-            return $lab->isAvailable($dayName, $startTime, $endTime, $date);
+        $availableLabs = $labs->filter(function ($lab) use ($startTime, $endTime, $datesToCheck) {
+            return $datesToCheck->every(fn (string $dateToCheck) => $lab->isAvailable(
+                DayHelper::fromDate(Carbon::parse($dateToCheck)),
+                $startTime,
+                $endTime,
+                $dateToCheck
+            ));
         });
 
         return response()->json($availableLabs->values());
+    }
+
+    /**
+     * Privacy-safe busy blocks used by the public booking calendar.
+     */
+    public function calendarAvailability(Request $request, ScheduleCalendarService $calendar)
+    {
+        $validated = $request->validate([
+            'start' => 'required|date',
+            'end' => 'required|date|after:start',
+            'lab_id' => 'required|integer|exists:labs,id',
+        ]);
+
+        $start = Carbon::parse($validated['start'])->startOfDay();
+        $end = Carbon::parse($validated['end'])->startOfDay()->subDay();
+
+        if ($start->diffInDays($end) > 62) {
+            throw ValidationException::withMessages(['end' => 'Rentang kalender maksimal 63 hari.']);
+        }
+
+        return response()->json($calendar->busyEvents($start, $end, (int) $validated['lab_id']));
     }
 
     /**
@@ -69,6 +110,14 @@ class BookingController extends Controller
             $isPribadi = $request->booking_type === 'pribadi';
             $isNonPerkuliahanOnBehalfLecturer = $request->booking_type === 'non_perkuliahan'
                 && $request->boolean('is_on_behalf_lecturer');
+            $isBimbinganDosen = $request->booking_type === 'non_perkuliahan'
+                && $request->boolean('is_bimbingan_dosen');
+
+            if ($isNonPerkuliahanOnBehalfLecturer && $isBimbinganDosen) {
+                throw ValidationException::withMessages([
+                    'lecturer_involvement' => 'Pilih salah satu: peminjaman atas nama dosen atau bimbingan bersama dosen.',
+                ]);
+            }
 
             // Use constants from Booking model for validation
             $bookingTypesRule = 'required|in:'.implode(',', Booking::BOOKING_TYPES);
@@ -162,31 +211,57 @@ class BookingController extends Controller
                     'custom_study_program' => 'nullable|required_if:study_program,Lainnya|string|max:255|regex:/^[a-zA-Z0-9\s\.\-]+$/',
                     'is_bimbingan_dosen' => 'nullable|boolean',
                     'is_on_behalf_lecturer' => 'nullable|boolean',
-                    'activity_type' => $request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen
+                    'activity_type' => $request->booking_type === 'non_perkuliahan' && $isBimbinganDosen
                         ? 'nullable|in:'.implode(',', Booking::ACTIVITY_TYPES)
                         : $activityTypesRule,
-                    'position' => $request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen
+                    'position' => $request->booking_type === 'non_perkuliahan' && $isBimbinganDosen
                         ? 'nullable|string|max:255'
                         : 'required_if:booking_type,non_perkuliahan|string|max:255',
                     'equipment_needs' => 'nullable|string',
                     'activity_name' => 'required_if:booking_type,non_perkuliahan|string|max:255',
                     'course_name' => 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
-                    'lecturer_name' => ($request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen)
+                    'lecturer_name' => ($request->booking_type === 'non_perkuliahan' && $isBimbinganDosen)
                         ? ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\.\']+$/']
                         : 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:255',
-                    'lecturer_nip' => ($request->booking_type === 'non_perkuliahan' && $request->is_bimbingan_dosen)
+                    'lecturer_nip' => ($request->booking_type === 'non_perkuliahan' && $isBimbinganDosen)
                         ? ['required', 'string', 'max:18', 'regex:/^[0-9]+$/']
                         : 'required_if:booking_type,perkuliahan_tetap,perkuliahan_tidak_tetap|string|max:18|regex:/^[0-9]+$/',
                     'software_needs' => 'nullable|string|max:255',
 
-                    // Recurrence end for perkuliahan_tetap (Google Calendar style)
-                    'repeat_type' => 'nullable|required_if:booking_type,perkuliahan_tetap|in:never,count,date',
-                    'repeat_count' => 'nullable|required_if:repeat_type,count|integer|min:2|max:52',
-                    'repeat_end_date' => 'nullable|required_if:repeat_type,date|date',
+                    // Recurrence controls for fixed and non-fixed lectures.
+                    'repeat_type' => 'nullable|required_if:booking_type,perkuliahan_tetap|in:count,date',
+                    'schedule_frequency' => 'nullable|required_if:booking_type,perkuliahan_tidak_tetap|in:once,multiple',
+                    'repeat_count' => 'nullable|required_if:repeat_type,count|required_if:schedule_frequency,multiple|integer|min:2|max:60',
+                    'recurrence_days' => 'nullable|required_if:schedule_frequency,multiple|array',
+                    'recurrence_days.*' => 'in:'.implode(',', DayHelper::SCHEDULE_DAYS),
+                    'repeat_end_date' => [
+                        'nullable',
+                        'required_if:repeat_type,date',
+                        'date',
+                        'after_or_equal:booking_date',
+                        function ($attribute, $value, $fail) use ($request) {
+                            if ($value && $request->booking_date
+                                && Carbon::parse($request->booking_date)->diffInWeeks(Carbon::parse($value)) >= 60) {
+                                $fail('Peminjaman berulang dibatasi maksimal 60 pertemuan.');
+                            }
+                        },
+                    ],
                 ]);
             }
 
             $validated = $request->validate($rules);
+
+            if ($request->booking_type === 'perkuliahan_tidak_tetap'
+                && $request->schedule_frequency === 'multiple') {
+                $startDay = DayHelper::fromDate(Carbon::parse($request->booking_date));
+                $recurrenceDays = array_values(array_unique($request->input('recurrence_days', [])));
+
+                if (! in_array($startDay, $recurrenceDays, true)) {
+                    throw ValidationException::withMessages([
+                        'recurrence_days' => 'Pilih juga '.$startDay.' karena itu adalah tanggal mulai pengulangan.',
+                    ]);
+                }
+            }
 
             Log::info('Validation passed', ['booking_type' => $validated['booking_type']]);
 
@@ -237,17 +312,26 @@ class BookingController extends Controller
                     $date = Carbon::parse($validated['booking_date']);
                     $day = DayHelper::fromIndex($date->dayOfWeek);
 
-                    // Compute recurrence end for perkuliahan_tetap
                     $isTetap = $request->booking_type === 'perkuliahan_tetap';
+                    $isNonTetapRecurring = $request->booking_type === 'perkuliahan_tidak_tetap'
+                        && $request->schedule_frequency === 'multiple';
+                    $isRecurring = $isTetap || $isNonTetapRecurring;
+                    $recurrenceDays = $isRecurring
+                        ? ($isTetap
+                            ? [$day]
+                            : app(RecurrenceDateService::class)->normaliseDays($request->input('recurrence_days'), $day))
+                        : null;
                     $recurringEnd = $isTetap
                         ? $this->computeRecurringEndDate($date->copy(), $request->repeat_type, $request->repeat_count, $request->repeat_end_date)
-                        : null;
+                        : ($isNonTetapRecurring
+                            ? app(RecurrenceDateService::class)->endDateForCount($date->copy(), $recurrenceDays, (int) $request->repeat_count)
+                            : null);
 
                     // Lock the lab row to prevent concurrent bookings
                     $lab = Lab::lockForUpdate()->findOrFail($validated['lab_id']);
 
                     // Check availability inside the transaction (after lock), across the whole range
-                    if (! $this->isLabAvailableForRange($lab, $day, $validated['start_time'], $validated['end_time'], $date, $recurringEnd)) {
+                    if (! $this->isLabAvailableForRange($lab, $day, $validated['start_time'], $validated['end_time'], $date, $recurringEnd, $recurrenceDays)) {
                         return back()->withErrors([
                             'time_conflict' => 'Ruangan '.$lab->name.' tidak tersedia pada waktu yang dipilih. Sudah ada jadwal lain yang bentrok dengan waktu peminjaman Anda ('.$validated['start_time'].' - '.$validated['end_time'].'). Silakan pilih waktu atau ruangan lain.',
                         ])->withInput();
@@ -259,8 +343,10 @@ class BookingController extends Controller
                         $validated['document_path'] = $path;
                     }
 
-                    // Set is_recurring for perkuliahan tetap
-                    $validated['is_recurring'] = $request->booking_type === 'perkuliahan_tetap';
+                    // Store one series with its selected weekdays. Concrete dates
+                    // are expanded later by the calendar/approval workflows.
+                    $validated['is_recurring'] = $isRecurring;
+                    $validated['recurrence_days'] = $recurrenceDays;
 
                     // Generate unique tracking token
                     $validated['tracking_token'] = bin2hex(random_bytes(16));
@@ -268,8 +354,8 @@ class BookingController extends Controller
                     // Set day for booking
                     $validated['day'] = $day;
 
-                    // Set end date for recurring perkuliahan_tetap series
-                    if ($isTetap) {
+                    // Set end date for any recurring lecture series.
+                    if ($isRecurring) {
                         $validated['end_date'] = $recurringEnd;
                     }
 
@@ -323,19 +409,17 @@ class BookingController extends Controller
      * Check lab availability across every occurrence of a recurring series.
      * Falls back to a single-date check when the series has no end date.
      */
-    private function isLabAvailableForRange(Lab $lab, $day, $startTime, $endTime, Carbon $startDate, $endDate = null): bool
+    private function isLabAvailableForRange(Lab $lab, $day, $startTime, $endTime, Carbon $startDate, $endDate = null, ?array $recurrenceDays = null): bool
     {
-        $current = $startDate->copy();
-        $guard = 0;
+        $dates = $endDate
+            ? app(RecurrenceDateService::class)->datesBetween($startDate, Carbon::parse($endDate), $recurrenceDays, $day)
+            : collect([$startDate->toDateString()]);
 
-        do {
-            if (! $lab->isAvailable($day, $startTime, $endTime, $current->toDateString())) {
+        foreach ($dates as $date) {
+            if (! $lab->isAvailable($day, $startTime, $endTime, $date)) {
                 return false;
             }
-
-            $current->addWeek();
-            $guard++;
-        } while ($endDate && $current->lte(Carbon::parse($endDate)) && $guard < 60);
+        }
 
         return true;
     }

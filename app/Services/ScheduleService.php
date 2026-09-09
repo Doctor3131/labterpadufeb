@@ -6,12 +6,13 @@ use App\Helpers\DayHelper;
 use App\Models\Booking;
 use App\Models\Lab;
 use App\Models\Schedule;
-use App\Models\ScheduleOccurrence;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class ScheduleService
 {
+    public function __construct(private readonly ScheduleCalendarService $calendar) {}
+
     protected $months = [
         '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
         '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
@@ -39,106 +40,24 @@ class ScheduleService
      */
     public function getWeekSchedules(Carbon $startOfWeek, Carbon $endOfWeek, array $labIds = []): Collection
     {
-        $schedules = collect();
+        $activeLabs = Lab::where('status', 'available')
+            ->when($labIds !== [], fn ($query) => $query->whereIn('id', $labIds))
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
 
-        // 1. Fetch Regular Schedules (only from active labs)
-        $labsQuery = Lab::where('status', 'available')
-            ->with(['schedules' => function ($query) use ($startOfWeek, $endOfWeek) {
-                $query->activeBetweenDates($startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d'));
-            }, 'schedules.booking', 'schedules.occurrences.lab']);
-
-        // Apply lab filter if provided
-        if (! empty($labIds)) {
-            $labsQuery->whereIn('id', $labIds);
+        if ($activeLabs === []) {
+            return collect();
         }
 
-        $labs = $labsQuery->get();
+        return $this->calendar
+            ->events($startOfWeek, $endOfWeek, $activeLabs, false)
+            ->map(function (array $event) {
+                $event['id'] = 'sched_'.$event['schedule_id'];
+                $event['date_formatted'] = $this->formatDateForDisplay(Carbon::parse($event['date']));
 
-        foreach ($labs as $lab) {
-            foreach ($lab->schedules as $schedule) {
-                // Find the concrete date for this schedule in the current week
-                $dayIndex = array_search($schedule->day, DayHelper::SCHEDULE_DAYS);
-                if ($dayIndex !== false) {
-                    $concreteDate = $startOfWeek->copy()->addDays($dayIndex);
-                    $concreteDateStr = $concreteDate->format('Y-m-d');
-
-                    // Skip if specific date doesn't match a one-time schedule
-                    // One-time types: perkuliahan_tidak_tetap, non_perkuliahan, pribadi
-                    $oneTimeTypes = ['perkuliahan_tidak_tetap', 'non_perkuliahan', 'pribadi'];
-                    if (in_array($schedule->type, $oneTimeTypes) && $schedule->start_date && $schedule->start_date->format('Y-m-d') !== $concreteDateStr) {
-                        continue;
-                    }
-
-                    // SKIP PRIBADI BOOKINGS - don't show in public schedule
-                    if ($schedule->booking && $schedule->booking->booking_type === 'pribadi') {
-                        continue;
-                    }
-
-                    // Apply per-occurrence override/cancellation for recurring schedules
-                    $occurrence = $schedule->occurrenceFor($concreteDateStr);
-                    if ($occurrence) {
-                        // Cancelled occurrence -> this instance does not happen
-                        if ($occurrence->isCancelled()) {
-                            continue;
-                        }
-                        // Moved occurrence -> render at the override lab/time
-                        if ($occurrence->type === ScheduleOccurrence::TYPE_MOVED) {
-                            $schedule['rendered_lab_id'] = $occurrence->lab_id ?? $schedule->lab_id;
-                            $schedule['rendered_lab_name'] = $occurrence->lab ? $occurrence->lab->name : $lab->name;
-                            $schedule['rendered_start_time'] = $occurrence->start_time;
-                            $schedule['rendered_end_time'] = $occurrence->end_time;
-                        }
-                    }
-
-                    // Prepare display data
-                    $courseName = $schedule->course;
-                    $lecturerName = $schedule->lecturer;
-                    $komtingName = $schedule->komting;
-
-                    // Handle overrides for Booking-based schedules
-                    if ($schedule->booking) {
-                        if ($schedule->booking->booking_type === 'non_perkuliahan') {
-                            $courseName = $schedule->booking->activity_name;
-                        }
-                    }
-
-                    $effectiveLabId = $schedule['rendered_lab_id'] ?? $lab->id;
-                    $effectiveLabName = $schedule['rendered_lab_name'] ?? $lab->name;
-                    $effectiveStart = $schedule['rendered_start_time'] ?? $schedule->start_time;
-                    $effectiveEnd = $schedule['rendered_end_time'] ?? $schedule->end_time;
-
-                    $schedules->push([
-                        'id' => 'sched_'.$schedule->id,
-                        'lab' => $effectiveLabName,
-                        'lab_id' => $effectiveLabId,
-                        'day' => $schedule->day,
-                        'date' => $concreteDateStr,
-                        'date_formatted' => $this->formatDateForDisplay($concreteDate),
-                        'start_time' => Carbon::parse($effectiveStart)->format('H:i'),
-                        'end_time' => Carbon::parse($effectiveEnd)->format('H:i'),
-                        'course' => $courseName,
-                        'lecturer' => $lecturerName,
-                        'komting' => $komtingName,
-                        'student_count' => $schedule->student_count,
-                        'booking_type' => $schedule->booking ? $schedule->booking->booking_type : $schedule->type,
-                        'type' => $schedule->type,
-                        'is_booking' => false,
-                    ]);
-                }
-            }
-        }
-
-        // Note: Approved bookings should always have schedules (created in AdminController::approve)
-        // No need for fallback fetch here - if orphans exist, it's a data integrity issue
-
-        // Sort by Date then Start Time
-        return $schedules->sort(function ($a, $b) {
-            if ($a['date'] === $b['date']) {
-                return strcmp($a['start_time'], $b['start_time']);
-            }
-
-            return strcmp($a['date'], $b['date']);
-        });
+                return $event;
+            });
     }
 
     /**
@@ -229,6 +148,7 @@ class ScheduleService
         $scheduleData = [
             'lab_id' => $booking->lab_id,
             'day' => $booking->day,
+            'recurrence_days' => $booking->recurrence_days,
             'start_time' => $booking->start_time,
             'end_time' => $booking->end_time,
             'booking_id' => $booking->id,
@@ -237,7 +157,9 @@ class ScheduleService
 
         // Determine type and dates
         if ($booking->is_recurring) {
-            $scheduleData['type'] = 'perkuliahan_tetap';
+            // Keep the original booking type. A recurring non-fixed lecture is
+            // still non-fixed; its recurrence is represented by recurrence_days.
+            $scheduleData['type'] = $booking->booking_type;
             $scheduleData['start_date'] = $bookingDate->toDateString();
             $scheduleData['end_date'] = $booking->end_date ? $booking->end_date->toDateString() : null;
 
@@ -283,6 +205,32 @@ class ScheduleService
      */
     public static function checkConflict($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId = null)
     {
+        if ($startDate) {
+            $date = Carbon::parse($startDate);
+            $lastDate = Carbon::parse($endDate ?? $startDate);
+            $checked = 0;
+
+            while ($date->lte($lastDate) && $checked < 60) {
+                $conflict = app(ScheduleCalendarService::class)->findConflict(
+                    (int) $labId,
+                    $date,
+                    $startTime,
+                    $endTime,
+                    $excludeScheduleId
+                );
+
+                if ($conflict) {
+                    return $conflict['label'].' pada '.$date->format('d/m/Y');
+                }
+
+                $date->addWeek();
+                $checked++;
+            }
+
+            return null;
+        }
+
+        // Legacy date-less schedules cannot be expanded into concrete occurrences.
         $query = Schedule::where('lab_id', $labId)
             ->where('day', $day)
             ->where(function ($q) use ($startTime, $endTime) {
@@ -293,29 +241,6 @@ class ScheduleService
 
         if ($excludeScheduleId) {
             $query->where('id', '!=', $excludeScheduleId);
-        }
-
-        // Date overlap check
-        if ($startDate || $endDate) {
-            $query->where(function ($q) use ($startDate, $endDate) {
-                // Overlap logic: (StartA <= EndB) and (EndA >= StartB)
-                // Existing Permanent Schedule (StartA=..., EndA=NULL)
-                $q->where(function ($q2) use ($startDate, $endDate) {
-                    $q2->whereNull('end_date')
-                        ->where(function ($q3) use ($endDate, $startDate) {
-                            $q3->whereNull('start_date')
-                                ->orWhere('start_date', '<=', $endDate ?? $startDate);
-                        });
-                    // Existing Dated Schedule
-                })->orWhere(function ($q2) use ($startDate, $endDate) {
-                    $q2->whereNotNull('start_date')
-                        ->where('start_date', '<=', $endDate ?? $startDate)
-                        ->where(function ($q3) use ($startDate) {
-                            $q3->whereNull('end_date')
-                                ->orWhere('end_date', '>=', $startDate);
-                        });
-                });
-            });
         }
 
         $conflicting = $query->first();

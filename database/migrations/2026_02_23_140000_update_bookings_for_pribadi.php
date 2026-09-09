@@ -9,7 +9,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Makes several columns nullable to support pribadi bookings
      * which don't require date/time/lab/document/participant data.
      * Also adds pribadi_sub_type column (mahasiswa/non_mahasiswa).
@@ -34,8 +34,13 @@ return new class extends Migration
             $table->string('phone_number')->nullable()->change();
         });
 
-        // Handle ENUM 'day' column separately (Laravel change() doesn't handle ENUMs well)
-        DB::statement("ALTER TABLE bookings MODIFY COLUMN `day` ENUM('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu') NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE bookings MODIFY COLUMN `day` ENUM('Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu') NULL");
+        } else {
+            Schema::table('bookings', function (Blueprint $table) {
+                $table->string('day')->nullable()->change();
+            });
+        }
     }
 
     /**

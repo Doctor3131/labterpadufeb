@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\ScheduleCalendarService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -49,78 +51,19 @@ class Lab extends Model
             return false;
         }
 
-        // Check recurring schedules (perkuliahan tetap)
-        $hasScheduleConflict = $this->schedules()
+        if ($date) {
+            return app(ScheduleCalendarService::class)->findConflict(
+                $this->id,
+                Carbon::parse($date),
+                $startTime,
+                $endTime
+            ) === null;
+        }
+
+        // Date-less checks are retained only for legacy callers.
+        return ! $this->schedules()
             ->where('day', $day)
-            ->where(function ($query) use ($date, $startTime, $endTime) {
-                // Check if schedule is active on the requested date
-                if ($date) {
-                    $query->activeBetweenDates($date, $date);
-                }
-
-                // Check for time overlap
-                $query->overlappingTime($startTime, $endTime);
-            })
-            // A schedule whose occurrence is cancelled on this date does not block the slot
-            ->when($date, function ($query) use ($date) {
-                $query->whereDoesntHave('occurrences', function ($q) use ($date) {
-                    $q->where('occurrence_date', $date)
-                        ->where('type', ScheduleOccurrence::TYPE_CANCELLED);
-                });
-            })
+            ->overlappingTime($startTime, $endTime)
             ->exists();
-
-        if ($hasScheduleConflict) {
-            return false;
-        }
-
-        // Check moved occurrences that occupy this lab/time on the requested date
-        // A single instance moved into this lab blocks this slot.
-        if ($date) {
-            $movedConflict = ScheduleOccurrence::where('lab_id', $this->id)
-                ->where('occurrence_date', $date)
-                ->where('type', ScheduleOccurrence::TYPE_MOVED)
-                ->where(function ($query) use ($startTime, $endTime) {
-                    $query->whereTime('start_time', '<', $endTime)
-                        ->whereTime('end_time', '>', $startTime);
-                })
-                ->exists();
-
-            if ($movedConflict) {
-                return false;
-            }
-        }
-
-        // Check one-time bookings (only if date is provided)
-        if ($date) {
-            // Check 1: Exact date match for NON-recurring pending bookings
-            $hasBookingConflict = $this->bookings()
-                ->where('booking_date', $date)
-                ->where('status', 'pending')
-                ->where('is_recurring', false)
-                ->overlappingTime($startTime, $endTime)
-                ->exists();
-
-            if ($hasBookingConflict) {
-                return false;
-            }
-
-            // Check 2: Day-of-week match for RECURRING pending bookings
-            // A recurring booking (perkuliahan_tetap) blocks the same day every week
-            // starting from booking_date
-            $hasRecurringConflict = $this->bookings()
-                ->where('day', $day)  // Same day of week
-                ->where('status', 'pending')
-                ->where('is_recurring', true)
-                ->where('booking_date', '<=', $date)  // Requested date is on/after booking starts
-                ->overlappingTime($startTime, $endTime)
-                ->exists();
-
-            if ($hasRecurringConflict) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

@@ -113,6 +113,17 @@
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Tanggal</label>
                             <p class="text-base md:text-lg">{{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
                         </div>
+                        @if($booking->is_recurring)
+                        <div class="rounded-lg bg-blue-50 border border-blue-100 p-3">
+                            <label class="block text-sm font-semibold text-blue-800 mb-1">Jadwal berulang</label>
+                            <p class="text-sm text-blue-700">
+                                Setiap minggu pada {{ implode(', ', $booking->recurrence_days ?: [$booking->day]) }}
+                                @if($booking->end_date)
+                                    sampai {{ $booking->end_date->locale('id')->isoFormat('D MMMM Y') }}
+                                @endif
+                            </p>
+                        </div>
+                        @endif
                         <div>
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Waktu</label>
                             <p class="text-base md:text-lg">{{ $booking->start_time }} - {{ $booking->end_time }} WIB</p>

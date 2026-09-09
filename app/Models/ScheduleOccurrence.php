@@ -17,14 +17,18 @@ class ScheduleOccurrence extends Model
     protected $fillable = [
         'schedule_id',
         'occurrence_date',
+        'override_date',
         'type',
         'lab_id',
         'start_time',
         'end_time',
+        'change_reason',
+        'changed_by',
     ];
 
     protected $casts = [
         'occurrence_date' => 'date',
+        'override_date' => 'date',
     ];
 
     /**
@@ -41,6 +45,16 @@ class ScheduleOccurrence extends Model
     public function lab(): BelongsTo
     {
         return $this->belongsTo(Lab::class);
+    }
+
+    public function changedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'changed_by');
+    }
+
+    public function changeLogs()
+    {
+        return $this->hasMany(ScheduleChangeLog::class);
     }
 
     /**

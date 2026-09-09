@@ -23,6 +23,25 @@
         .booking-card:nth-child(3) { animation-delay: 0.15s; }
         .booking-card:nth-child(4) { animation-delay: 0.2s; }
         .booking-card:nth-child(5) { animation-delay: 0.25s; }
+
+        #lab-section .booking-card {
+            border-color: #e2e8f0;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+        }
+
+        #lab-section .booking-card:hover {
+            transform: translateY(-1px);
+        }
+
+        .lab-booking-search:focus {
+            border-color: #ca8a04;
+            box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.22);
+            outline: none;
+        }
+
+        .tab-button[aria-selected="true"] {
+            background: #fffbeb;
+        }
     </style>
 @endpush
 
@@ -51,8 +70,16 @@
                     </svg>
                 </div>
             </div>
-            
-
+            <div class="border-t border-yellow-400/50 pt-4">
+                <label for="lab-booking-search" class="sr-only">Cari pengajuan pada status yang sedang dibuka</label>
+                <div class="relative max-w-xl">
+                    <svg class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-yellow-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input id="lab-booking-search" type="search" autocomplete="off" placeholder="Cari nama, mata kuliah, kegiatan, atau lab pada daftar ini" class="lab-booking-search w-full rounded-xl border border-yellow-300/70 bg-white/95 py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400">
+                </div>
+                <p id="lab-booking-search-status" class="mt-2 text-xs text-yellow-50" aria-live="polite">Pencarian berlaku pada daftar dan halaman yang sedang terbuka.</p>
+            </div>
         </div>
     </div>
 
@@ -71,8 +98,8 @@
     <!-- LAB BORROWING SECTION -->
     <div id="lab-section" class="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
         <div class="border-b-2 border-gray-100 overflow-x-auto">
-            <nav class="flex px-2 min-w-max" aria-label="Tabs">
-                <button onclick="showTab('pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700" data-tab="pending">
+            <nav class="flex px-2 min-w-max" aria-label="Status peminjaman lab" role="tablist">
+                <button id="pending-tab-button" onclick="showTab('pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700" data-tab="pending" role="tab" aria-controls="pending-tab" aria-selected="true">
                     <div class="flex items-center justify-center">
                         <div class="bg-yellow-100 p-2 rounded-lg mb-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,10 +107,10 @@
                             </svg>
                         </div>
                     </div>
-                    <span class="hidden md:inline">Pending</span>
+                    <span>Menunggu</span>
                     <span class="mt-1 px-2 py-0.5 bg-yellow-500 text-white rounded-full text-xs font-bold">{{ $pendingBookings->total() }}</span>
                 </button>
-                <button onclick="showTab('approved')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="approved">
+                <button id="approved-tab-button" onclick="showTab('approved')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="approved" role="tab" aria-controls="approved-tab" aria-selected="false">
                     <div class="flex items-center justify-center">
                         <div class="bg-gray-100 p-2 rounded-lg mb-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,10 +118,10 @@
                             </svg>
                         </div>
                     </div>
-                    <span class="hidden md:inline">Disetujui</span>
+                    <span>Disetujui</span>
                     <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $approvedBookings->total() }}</span>
                 </button>
-                <button onclick="showTab('rejected')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="rejected">
+                <button id="rejected-tab-button" onclick="showTab('rejected')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="rejected" role="tab" aria-controls="rejected-tab" aria-selected="false">
                     <div class="flex items-center justify-center">
                         <div class="bg-gray-100 p-2 rounded-lg mb-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,14 +129,14 @@
                             </svg>
                         </div>
                     </div>
-                    <span class="hidden md:inline">Ditolak</span>
+                    <span>Ditolak</span>
                     <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $rejectedBookings->total() }}</span>
                 </button>
             </nav>
         </div>
 
     <!-- Pending Bookings -->
-    <div id="pending-tab" class="tab-content hidden p-3 md:p-6">
+    <div id="pending-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="pending-tab-button">
         @forelse($pendingBookings as $booking)
             <div class="booking-card bg-yellow-50 rounded-2xl shadow-lg hover:shadow-2xl mb-3 p-4 border-l-4 border-yellow-500 transition-all">
                 <!-- Header dengan badges dan tanggal -->
@@ -253,7 +280,7 @@
     </div>
 
     <!-- Approved Bookings -->
-    <div id="approved-tab" class="tab-content hidden p-3 md:p-6">
+    <div id="approved-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="approved-tab-button">
         @forelse($approvedBookings as $booking)
             <div class="booking-card bg-green-50 rounded-2xl shadow-lg mb-3 p-4 border-l-4 border-green-500 hover:shadow-xl transition-all">
                 <!-- Header dengan badges dan tanggal -->
@@ -371,7 +398,7 @@
     </div>
 
     <!-- Rejected Bookings -->
-    <div id="rejected-tab" class="tab-content hidden p-3 md:p-6">
+    <div id="rejected-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="rejected-tab-button">
         @forelse($rejectedBookings as $booking)
             <div class="booking-card bg-red-50 rounded-2xl shadow-lg mb-3 p-4 border-l-4 border-red-500 hover:shadow-xl transition-all">
                 <!-- Header dengan badges dan tanggal -->
@@ -501,6 +528,7 @@
         
         <form id="rejectForm" method="POST">
             @csrf
+            <input type="hidden" name="return_status" value="pending">
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-3">
                     Alasan Penolakan <span class="text-red-500">*</span>
@@ -1056,7 +1084,7 @@
                     <p class="text-sm text-red-100">Berikan alasan penolakan</p>
                 </div>
             </div>
-            <button onclick="closeRejectModal()" class="text-white/80 hover:text-white transition">
+            <button onclick="closeRejectAssetModal()" class="text-white/80 hover:text-white transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -1089,7 +1117,7 @@
                 <div class="flex justify-end space-x-3 pt-2">
                     <button 
                         type="button" 
-                        onclick="closeRejectModal()" 
+                        onclick="closeRejectAssetModal()"
                         class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-all"
                     >
                         Batal
@@ -1244,6 +1272,27 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    let activeLabBookingTab = 'pending';
+
+    function filterLabBookings() {
+        const input = document.getElementById('lab-booking-search');
+        const status = document.getElementById('lab-booking-search-status');
+        if (!input || !status) return;
+
+        const query = input.value.trim().toLocaleLowerCase('id-ID');
+        const cards = Array.from(document.querySelectorAll(`#${activeLabBookingTab}-tab .booking-card`));
+        let visible = 0;
+
+        cards.forEach((card) => {
+            const matches = !query || card.innerText.toLocaleLowerCase('id-ID').includes(query);
+            card.classList.toggle('hidden', !matches);
+            if (matches) visible += 1;
+        });
+
+        status.textContent = query
+            ? `${visible} dari ${cards.length} pengajuan pada halaman ini cocok dengan pencarian.`
+            : 'Pencarian berlaku pada daftar dan halaman yang sedang terbuka.';
+    }
 
 
     // Tab switching with smooth animations
@@ -1277,6 +1326,8 @@
                     badge.classList.remove('bg-yellow-500', 'text-white', 'bg-green-500', 'bg-red-500');
                     badge.classList.add('bg-gray-300', 'text-gray-700');
                 }
+
+                btn.setAttribute('aria-selected', 'false');
             });
         }
         
@@ -1321,6 +1372,9 @@
         }
         
         activeBtn.classList.remove('border-transparent', 'text-gray-500');
+        activeBtn.setAttribute('aria-selected', 'true');
+        activeLabBookingTab = tabName;
+        filterLabBookings();
         
         // Smooth scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1343,7 +1397,7 @@
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/admin/bookings/${_pendingApproveLabId}/approve`;
-            form.innerHTML = '@csrf';
+            form.innerHTML = '@csrf<input type="hidden" name="return_status" value="pending">';
             document.body.appendChild(form);
             form.submit();
         }
@@ -1383,6 +1437,7 @@
 
     // Detect active tab from URL parameters on page load
     document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('lab-booking-search')?.addEventListener('input', filterLabBookings);
         const urlParams = new URLSearchParams(window.location.search);
         
         // Check which pagination parameter exists for Lab section
@@ -1433,8 +1488,8 @@
         document.getElementById('rejectionReasonInput').focus();
     };
 
-    // Close reject modal
-    function closeRejectModal() {
+    // Close asset rejection modal without overriding the lab rejection modal.
+    function closeRejectAssetModal() {
         document.getElementById('rejectAssetModal').classList.add('hidden');
         document.getElementById('rejectAssetModal').classList.remove('flex');
         document.getElementById('rejectAssetForm').reset();
@@ -1846,4 +1901,3 @@
     });
 </script>
 @endpush
-

@@ -49,7 +49,7 @@
                 'non_perkuliahan' => 'Non-Perkuliahan',
                 'pribadi' => 'Pribadi',
             ];
-            $label = $booking->is_recurring ? 'Perkuliahan Tetap' : ($typeLabels[$booking->booking_type] ?? $booking->booking_type);
+            $label = $typeLabels[$booking->booking_type] ?? $booking->booking_type;
         @endphp
         Peminjaman : {{ $label }}
     </div>

@@ -36,7 +36,9 @@
                     <td class="px-4 py-3">
                         <span class="font-medium text-gray-800">{{ $schedule->lab->name }}</span>
                     </td>
-                    <td class="px-4 py-3 text-gray-600">{{ $schedule->day }}</td>
+                    <td class="px-4 py-3 text-gray-600">
+                        {{ $schedule->recurrence_days ? implode(', ', $schedule->recurrence_days) : $schedule->day }}
+                    </td>
                     <td class="px-4 py-3 text-gray-600 whitespace-nowrap">
                         {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
                     </td>
@@ -70,7 +72,7 @@
                                 Edit / Pindah
                             </a>
                             <button type="button"
-                                    onclick="openDeleteModal({{ $schedule->id }}, {{ json_encode($schedule->course) }}, {{ in_array($schedule->type, ['perkuliahan_tetap']) ? 'true' : 'false' }}, {{ json_encode($schedule->day) }}, null)"
+                                    onclick="openDeleteModal({{ $schedule->id }}, {{ json_encode($schedule->course) }}, {{ app(\App\Services\ScheduleCalendarService::class)->isRecurringSchedule($schedule) ? 'true' : 'false' }}, {{ json_encode($schedule->day) }}, null)"
                                     class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
                                 Hapus
                             </button>
@@ -101,7 +103,7 @@
                     <div class="flex flex-wrap gap-2 items-center text-sm text-gray-600 mb-2">
                         <span class="font-medium">{{ $schedule->lab->name }}</span>
                         <span class="text-gray-400">•</span>
-                        <span>{{ $schedule->day }}</span>
+                        <span>{{ $schedule->recurrence_days ? implode(', ', $schedule->recurrence_days) : $schedule->day }}</span>
                         <span class="text-gray-400">•</span>
                         <span>{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</span>
                     </div>
@@ -137,7 +139,7 @@
                     Edit / Pindah
                 </a>
                 <button type="button"
-                        onclick="openDeleteModal({{ $schedule->id }}, {{ json_encode($schedule->course) }}, {{ in_array($schedule->type, ['perkuliahan_tetap']) ? 'true' : 'false' }}, {{ json_encode($schedule->day) }}, null)"
+                        onclick="openDeleteModal({{ $schedule->id }}, {{ json_encode($schedule->course) }}, {{ app(\App\Services\ScheduleCalendarService::class)->isRecurringSchedule($schedule) ? 'true' : 'false' }}, {{ json_encode($schedule->day) }}, null)"
                         class="flex-1 px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium">
                     Hapus
                 </button>

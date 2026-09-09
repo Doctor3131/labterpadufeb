@@ -44,6 +44,10 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
                         <span class="hidden sm:inline">Timetable</span>
                     </button>
+                    <button type="button" id="btn-view-calendar" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span class="hidden sm:inline">Kalender</span>
+                    </button>
                 </div>
                 <a href="{{ route('admin.schedules.create') }}" 
                    class="flex items-center justify-center px-4 py-3 md:py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-sm md:text-base flex-1 md:flex-none">
@@ -168,27 +172,95 @@
             {{-- Timetable Grid --}}
             <div id="tt-grid-container" class="bg-white rounded-xl shadow-md overflow-x-auto"></div>
         </div>
+
+        {{-- ==================== INTERACTIVE CALENDAR VIEW ==================== --}}
+        <div id="calendar-view-section" class="hidden">
+            <div class="bg-white rounded-xl shadow-md p-4 mb-4">
+                <div class="flex flex-col md:flex-row md:items-end gap-3">
+                    <div class="w-full md:w-72">
+                        <label for="calendar-lab-filter" class="block text-sm font-semibold text-gray-700 mb-1">Filter laboratorium</label>
+                        <select id="calendar-lab-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+                            <option value="">Semua laboratorium</option>
+                            @foreach($labs as $lab)
+                                <option value="{{ $lab->id }}">{{ $lab->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <p class="text-sm text-gray-600">Drag area kosong untuk membuat jadwal. Drag atau resize event mendatang untuk mengubahnya.</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-3 md:p-5 overflow-x-auto">
+                <div data-admin-schedule-calendar
+                     data-events-url="{{ route('admin.schedules.calendar.events') }}"
+                     data-change-url="{{ route('admin.schedules.calendar.change', '__ID__') }}"
+                     data-create-url="{{ route('admin.schedules.create') }}"
+                     data-edit-url="{{ route('admin.schedules.edit', '__ID__') }}"
+                     class="min-w-[760px]"></div>
+            </div>
+            <p id="calendar-live-region" class="sr-only" aria-live="polite"></p>
+        </div>
     </div>
+
+    <dialog id="calendar-change-dialog" class="m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl p-0 shadow-2xl backdrop:bg-black/50">
+        <form id="calendar-change-form" method="dialog" class="bg-white">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-bold text-gray-800">Konfirmasi perubahan jadwal</h2>
+                <p id="calendar-change-summary" class="text-sm text-gray-600 mt-1"></p>
+            </div>
+            <div class="p-6 space-y-4">
+                <div id="calendar-change-scope-group">
+                    <span class="block text-sm font-semibold text-gray-700 mb-2">Lingkup perubahan</span>
+                    <label class="flex items-center gap-2 mb-2">
+                        <input type="radio" name="calendar_change_scope" value="single" checked>
+                        <span class="text-sm">Hanya pertemuan ini</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="radio" name="calendar_change_scope" value="future">
+                        <span class="text-sm">Pertemuan ini dan seterusnya</span>
+                    </label>
+                </div>
+                <div>
+                    <label for="calendar-change-lab" class="block text-sm font-semibold text-gray-700 mb-1">Laboratorium</label>
+                    <select id="calendar-change-lab" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        @foreach($labs as $lab)
+                            <option value="{{ $lab->id }}">{{ $lab->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="calendar-change-reason" class="block text-sm font-semibold text-gray-700 mb-1">Alasan perubahan *</label>
+                    <textarea id="calendar-change-reason" required maxlength="1000" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              placeholder="Contoh: penyesuaian ruang dari program studi"></textarea>
+                </div>
+                <p id="calendar-change-error" class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3" role="alert"></p>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+                <button type="button" id="calendar-change-cancel" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold">Batalkan</button>
+                <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold">Simpan perubahan</button>
+            </div>
+        </form>
+    </dialog>
 
     {{-- ==================== DELETE MODAL ==================== --}}
     <div id="delete-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div class="px-6 py-4 bg-red-50 border-b border-red-100">
-                <h3 class="text-lg font-bold text-red-800">Hapus Jadwal</h3>
+                <h3 class="text-lg font-bold text-red-800">Batalkan Jadwal</h3>
                 <p id="delete-course" class="text-sm text-red-700"></p>
             </div>
             <div class="p-6 space-y-4">
                 <div id="delete-scope-all" class="flex items-start gap-3 cursor-pointer">
                     <input type="radio" name="delete_scope" value="all" checked class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
                     <div>
-                        <p class="text-sm font-semibold text-gray-800">Hapus keseluruhan kelas</p>
-                        <p class="text-xs text-gray-500">Menghapus seluruh rangkaian kelas. Data tetap tercatat di laporan sebagai "Dibatalkan".</p>
+                        <p class="text-sm font-semibold text-gray-800">Batalkan seluruh jadwal mendatang</p>
+                        <p class="text-xs text-gray-500">Pertemuan yang sudah terlaksana tetap utuh; jadwal mendatang dicatat sebagai dibatalkan.</p>
                     </div>
                 </div>
                 <div id="delete-scope-single" class="hidden items-start gap-3 cursor-pointer">
                     <input type="radio" name="delete_scope" value="single" class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-800">Hapus di hari itu saja</p>
+                        <p class="text-sm font-semibold text-gray-800">Batalkan di hari itu saja</p>
                         <p class="text-xs text-gray-500 mb-2">Membatalkan hanya satu pertemuan pada tanggal tertentu.</p>
                         <input type="date" id="delete-single-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500">
                     </div>
@@ -202,12 +274,19 @@
                     </div>
                 </div>
 
+                <div>
+                    <label for="delete-reason" class="block text-sm font-semibold text-gray-700 mb-1">Alasan pembatalan *</label>
+                    <textarea id="delete-reason" rows="2" maxlength="1000"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500"
+                              placeholder="Contoh: kegiatan dibatalkan oleh program studi"></textarea>
+                </div>
+
                 <div class="flex gap-3 pt-2">
                     <button type="button" id="delete-cancel" class="flex-1 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg text-sm">
                         Batal
                     </button>
                     <button type="button" id="delete-confirm" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm">
-                        Hapus
+                        Batalkan Jadwal
                     </button>
                 </div>
             </div>
@@ -218,6 +297,7 @@
         @method('DELETE')
         <input type="hidden" name="scope" id="delete-form-scope" value="all">
         <input type="hidden" name="occurrence_date" id="delete-form-date">
+        <input type="hidden" name="change_reason" id="delete-form-reason">
     </form>
     <script>
         // Custom Dropdown Implementation (Reused from form.blade.php)
@@ -652,9 +732,11 @@
         function initViewToggle() {
             const btnList = document.getElementById('btn-view-list');
             const btnTimetable = document.getElementById('btn-view-timetable');
+            const btnCalendar = document.getElementById('btn-view-calendar');
 
             btnList.addEventListener('click', () => switchView('list'));
             btnTimetable.addEventListener('click', () => switchView('timetable'));
+            btnCalendar.addEventListener('click', () => switchView('calendar'));
 
             // Load saved view
             const savedView = localStorage.getItem('admin_schedule_view') || 'list';
@@ -664,28 +746,35 @@
         function switchView(mode) {
             const listSection = document.getElementById('list-view-section');
             const ttSection = document.getElementById('timetable-view-section');
+            const calendarSection = document.getElementById('calendar-view-section');
             const btnList = document.getElementById('btn-view-list');
             const btnTimetable = document.getElementById('btn-view-timetable');
+            const btnCalendar = document.getElementById('btn-view-calendar');
+
+            [listSection, ttSection, calendarSection].forEach(section => section.classList.add('hidden'));
+            [btnList, btnTimetable, btnCalendar].forEach(button => {
+                button.classList.remove('bg-white', 'shadow-sm', 'text-yellow-700');
+                button.classList.add('text-gray-500');
+            });
 
             if (mode === 'timetable') {
-                listSection.classList.add('hidden');
                 ttSection.classList.remove('hidden');
                 btnTimetable.classList.add('bg-white', 'shadow-sm', 'text-yellow-700');
                 btnTimetable.classList.remove('text-gray-500');
-                btnList.classList.remove('bg-white', 'shadow-sm', 'text-yellow-700');
-                btnList.classList.add('text-gray-500');
 
                 // Load timetable data on first switch
                 if (!ttWeekData) {
                     ttLoadWeek();
                 }
+            } else if (mode === 'calendar') {
+                calendarSection.classList.remove('hidden');
+                btnCalendar.classList.add('bg-white', 'shadow-sm', 'text-yellow-700');
+                btnCalendar.classList.remove('text-gray-500');
+                window.dispatchEvent(new CustomEvent('schedule-calendar-visible'));
             } else {
                 listSection.classList.remove('hidden');
-                ttSection.classList.add('hidden');
                 btnList.classList.add('bg-white', 'shadow-sm', 'text-yellow-700');
                 btnList.classList.remove('text-gray-500');
-                btnTimetable.classList.remove('bg-white', 'shadow-sm', 'text-yellow-700');
-                btnTimetable.classList.add('text-gray-500');
             }
 
             localStorage.setItem('admin_schedule_view', mode);
@@ -921,7 +1010,7 @@
                                 <a href="${TT_BASE_URL}/${scheduleId}/print" target="_blank" class="p-1.5 bg-blue-400 hover:bg-blue-500 rounded-md transition-colors" title="Cetak">
                                     <svg class="w-3.5 h-3.5 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                 </a>
-                                <button type="button" onclick="ttDeleteSchedule(${scheduleId}, this, event)" class="p-1.5 bg-red-400 hover:bg-red-500 rounded-md transition-colors" title="Hapus">
+                                <button type="button" onclick="ttDeleteSchedule(${scheduleId}, this, event)" class="p-1.5 bg-red-400 hover:bg-red-500 rounded-md transition-colors" title="Batalkan jadwal">
                                     <svg class="w-3.5 h-3.5 text-red-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -964,6 +1053,7 @@
 
             // Reset state
             document.querySelector('input[name="delete_scope"][value="all"]').checked = true;
+            document.getElementById('delete-reason').value = '';
             scopeSingle.classList.add('hidden');
             scopeFuture.classList.add('hidden');
 
@@ -1006,7 +1096,14 @@
                 return;
             }
 
+            const reason = document.getElementById('delete-reason').value.trim();
+            if (!reason) {
+                alert('Alasan pembatalan wajib diisi.');
+                return;
+            }
+
             document.getElementById('delete-form-date').value = date || '';
+            document.getElementById('delete-form-reason').value = reason;
             form.submit();
         }
 

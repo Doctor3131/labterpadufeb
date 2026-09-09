@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Schedule extends Model
 {
@@ -13,7 +14,11 @@ class Schedule extends Model
 
     protected $fillable = [
         'lab_id',
+        'series_uuid',
+        'parent_schedule_id',
+        'revision_number',
         'day',
+        'recurrence_days',
         'start_date',
         'end_date',
         'start_time',
@@ -37,9 +42,15 @@ class Schedule extends Model
      */
     protected static function booted()
     {
+        static::creating(function ($schedule) {
+            $schedule->series_uuid ??= (string) Str::uuid();
+        });
+
         static::deleting(function ($schedule) {
             // Delete associated document file if exists
-            if ($schedule->document && $schedule->document->ktm_path) {
+            if ($schedule->document && $schedule->document->ktm_path && ! ScheduleDocument::where('ktm_path', $schedule->document->ktm_path)
+                ->where('schedule_id', '!=', $schedule->id)
+                ->exists()) {
                 Storage::disk('public')->delete($schedule->document->ktm_path);
             }
 
@@ -57,6 +68,7 @@ class Schedule extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'recurrence_days' => 'array',
         // Note: start_time and end_time are stored as TIME, not DATETIME
         // No cast needed - use Carbon::parse() when formatting
     ];
@@ -75,6 +87,21 @@ class Schedule extends Model
     public function booking()
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_schedule_id');
+    }
+
+    public function revisions()
+    {
+        return $this->hasMany(self::class, 'parent_schedule_id');
+    }
+
+    public function changeLogs()
+    {
+        return $this->hasMany(ScheduleChangeLog::class);
     }
 
     /**
@@ -197,19 +224,13 @@ class Schedule extends Model
      */
     public function scopeActiveBetweenDates($query, $startDate, $endDate)
     {
-        return $query->where(function ($q) use ($startDate, $endDate) {
-            // Case 1: Schedule has no start_date (always active from beginning)
-            $q->whereNull('start_date')
-                ->orWhere(function ($q2) use ($endDate, $startDate) {
-                    // Case 2: Schedule starts before or on the end date of the requested range
-                    $q2->where('start_date', '<=', $endDate)
-                        ->where(function ($q3) use ($startDate) {
-                            // AND it has no end_date or ends after or on the start date of the requested range
-                            $q3->whereNull('end_date')
-                                ->orWhere('end_date', '>=', $startDate);
-                        });
-                });
-        });
+        return $query
+            ->where(function ($q) use ($endDate) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', $endDate);
+            })
+            ->where(function ($q) use ($startDate) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $startDate);
+            });
     }
 
     /**

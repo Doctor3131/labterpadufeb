@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\InventoryTransferController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\LabInventoryController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ScheduleCalendarController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AssetBorrowingController;
@@ -102,6 +103,12 @@ Route::post('/booking/available-labs', [
 ])
     ->middleware('throttle:60,1') // Max 60 requests per minute (for AJAX)
     ->name('booking.available-labs');
+Route::get('/booking/calendar-availability', [
+    BookingController::class,
+    'calendarAvailability',
+])
+    ->middleware('throttle:60,1')
+    ->name('booking.calendar-availability');
 
 // Lab Availability API (rate limited)
 Route::get('/api/labs/available', [
@@ -230,6 +237,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     ])->name('admin.booking.reject');
 
     // Admin Schedule CRUD
+    Route::get('/admin/schedules-calendar/events', [
+        ScheduleCalendarController::class,
+        'events',
+    ])->name('admin.schedules.calendar.events');
+    Route::post('/admin/schedules/{schedule}/calendar-change', [
+        ScheduleCalendarController::class,
+        'change',
+    ])->name('admin.schedules.calendar.change');
     Route::post('/admin/schedules/available-labs', [
         App\Http\Controllers\Admin\ScheduleController::class,
         'getAvailableLabs',

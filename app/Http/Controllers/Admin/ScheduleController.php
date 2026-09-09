@@ -7,7 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Lab;
 use App\Models\Schedule;
-use App\Models\ScheduleOccurrence;
+use App\Models\ScheduleChangeLog;
+use App\Services\RecurrenceDateService;
+use App\Services\ScheduleCalendarService;
+use App\Services\ScheduleChangeService;
 use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -278,6 +281,11 @@ class ScheduleController extends Controller
     public function edit($id)
     {
         $schedule = Schedule::with(['booking', 'document'])->findOrFail($id);
+        $changeLogs = ScheduleChangeLog::with('changedBy')
+            ->where('series_uuid', $schedule->series_uuid)
+            ->latest()
+            ->limit(50)
+            ->get();
         $labs = Lab::orderBy('name')->get();
         $days = DayHelper::SCHEDULE_DAYS;
         $types = $this->types;
@@ -288,6 +296,7 @@ class ScheduleController extends Controller
             'days' => $days,
             'types' => $types,
             'isEdit' => true,
+            'changeLogs' => $changeLogs,
         ]);
     }
 
@@ -303,7 +312,8 @@ class ScheduleController extends Controller
         $validated = $request->validate($rules);
 
         $scope = $request->input('scope', 'all');
-        $isRecurring = in_array($schedule->type, ['perkuliahan_tetap']);
+        $isRecurring = app(ScheduleCalendarService::class)->isRecurringSchedule($schedule);
+        $scheduleData = ScheduleService::mapFromRequest($validated, $request->type);
 
         // Scoped updates only apply to recurring day-based series
         if ($scope === 'single' && $isRecurring) {
@@ -314,8 +324,35 @@ class ScheduleController extends Controller
             return $this->updateFutureOccurrences($schedule, $request, $validated);
         }
 
-        // Scope 'all' (default) - full series update
-        $scheduleData = ScheduleService::mapFromRequest($validated, $request->type);
+        // "All" means all not-yet-completed occurrences. Past occurrences are immutable.
+        if ($isRecurring) {
+            $today = now('Asia/Jakarta')->startOfDay();
+            $originalDate = $this->nextOccurrenceOnOrAfter($schedule, $today);
+            if (! $originalDate) {
+                return back()->withErrors(['scope' => 'Rangkaian ini sudah selesai dan menjadi data historis.'])->withInput();
+            }
+
+            $targetDate = Carbon::parse($validated['start_date'])->gte($today)
+                ? Carbon::parse($validated['start_date'])
+                : $this->nextDateForDay($today, $validated['day']);
+
+            $updated = app(ScheduleChangeService::class)->changeFuture(
+                $schedule,
+                $originalDate,
+                $targetDate,
+                $scheduleData,
+                $validated['change_reason'],
+                Auth::id()
+            );
+            $this->saveDocumentData($updated, $request);
+
+            return redirect()->route('admin.schedules.index')
+                ->with('success', 'Semua pertemuan yang belum terlaksana berhasil diperbarui tanpa mengubah histori.');
+        }
+
+        if ($schedule->start_date && $schedule->start_date->lt(now('Asia/Jakarta')->startOfDay())) {
+            return back()->withErrors(['scope' => 'Jadwal yang sudah terlaksana tidak dapat ditimpa.'])->withInput();
+        }
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
@@ -364,40 +401,9 @@ class ScheduleController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use ($schedule, $scheduleData, $validated, $request) {
+        DB::transaction(function () use ($schedule, $scheduleData, $request) {
             // Update schedule
             $schedule->update($scheduleData);
-
-            // Sync changes to booking if exists
-            if ($schedule->booking) {
-                $bookingData = [
-                    'lab_id' => $validated['lab_id'],
-                    'booking_date' => $validated['start_date'] ?? $schedule->booking->booking_date, // update date if changed
-                    'start_time' => $validated['start_time'],
-                    'end_time' => $validated['end_time'],
-                    'participant_count' => $validated['student_count'] ?? $schedule->booking->participant_count,
-                    'booking_type' => $validated['type'], // Also update type
-                ];
-
-                // Sync type-specific fields
-                if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
-                    $bookingData['course_name'] = $validated['course_name'];
-                    $bookingData['lecturer_name'] = $validated['lecturer_name'];
-                    if (isset($validated['komting'])) {
-                        $bookingData['pic_name'] = $validated['komting'] ?? $schedule->booking->pic_name;
-                    }
-
-                } elseif ($request->type === 'non_perkuliahan') {
-                    $bookingData['activity_name'] = $validated['activity_name'];
-                    $bookingData['activity_type'] = $validated['activity_type'];
-                    $bookingData['position'] = $validated['position'];
-                    $bookingData['equipment_needs'] = $validated['equipment_needs'] ?? null;
-                    $bookingData['pic_name'] = $validated['pic_name_non_perkuliahan'] ?? $schedule->booking->pic_name;
-                }
-                // Note: no else branch needed - validation only accepts 3 valid types
-
-                $schedule->booking->update($bookingData);
-            }
 
             // Save document fields
             $this->saveDocumentData($schedule, $request);
@@ -419,64 +425,53 @@ class ScheduleController extends Controller
     {
         $schedule = Schedule::with('booking')->findOrFail($id);
 
-        $scope = $request->input('scope', 'all');
-        $occurrenceDate = $request->input('occurrence_date');
-        $isRecurring = in_array($schedule->type, ['perkuliahan_tetap']);
+        $validated = $request->validate([
+            'scope' => 'nullable|in:all,single,future',
+            'occurrence_date' => 'nullable|date',
+            'change_reason' => 'required|string|max:1000',
+        ]);
+
+        $scope = $validated['scope'] ?? 'all';
+        $occurrenceDate = $validated['occurrence_date'] ?? null;
+        $isRecurring = app(ScheduleCalendarService::class)->isRecurringSchedule($schedule);
 
         $info = $schedule->course.' ('.$schedule->day.')';
 
-        DB::transaction(function () use ($schedule, $scope, $occurrenceDate, $isRecurring) {
-            // Scoped deletions apply to recurring day-based series
-            if ($isRecurring && in_array($scope, ['single', 'future'])) {
-                $date = $occurrenceDate ? Carbon::parse($occurrenceDate) : null;
-                if (! $date) {
-                    abort(422, 'Tanggal kemunculan wajib diisi.');
-                }
+        $changes = app(ScheduleChangeService::class);
+        if ($isRecurring) {
+            $date = $occurrenceDate
+                ? Carbon::parse($occurrenceDate)
+                : $this->nextOccurrenceOnOrAfter($schedule, now('Asia/Jakarta')->startOfDay());
 
-                if ($scope === 'single') {
-                    // Cancel just this occurrence; the rest of the series stays
-                    $schedule->occurrences()->updateOrCreate(
-                        ['occurrence_date' => $date->toDateString()],
-                        [
-                            'type' => ScheduleOccurrence::TYPE_CANCELLED,
-                            'lab_id' => null,
-                            'start_time' => null,
-                            'end_time' => null,
-                        ]
-                    );
-
-                    return;
-                }
-
-                // future: truncate the series to the week before the chosen date
-                $schedule->update([
-                    'end_date' => $date->copy()->subWeek()->toDateString(),
-                ]);
-
-                return;
+            if (! $date) {
+                return back()->withErrors(['scope' => 'Tidak ada pertemuan mendatang yang dapat dibatalkan.']);
             }
 
-            // Default 'all' (or non-recurring): full deletion
-            if ($schedule->booking) {
-                $bookingUpdate = [
-                    'status' => 'deleted',
-                    'handled_at' => now(),
-                ];
-
-                if (Auth::check()) {
-                    $bookingUpdate['handled_by'] = Auth::id();
-                }
-
-                $schedule->booking->update($bookingUpdate);
+            if ($scope === 'single') {
+                $changes->cancelOccurrence($schedule, $date, $validated['change_reason'], Auth::id());
+            } else {
+                $changes->cancelFuture($schedule, $date, $validated['change_reason'], Auth::id());
             }
+        } else {
+            $date = $schedule->start_date;
+            if (! $date || $date->lt(now('Asia/Jakarta')->startOfDay())) {
+                return back()->withErrors(['scope' => 'Jadwal historis tidak dapat dihapus.']);
+            }
+            $changes->cancelOccurrence($schedule, $date, $validated['change_reason'], Auth::id());
+        }
 
-            $schedule->delete();
-        });
+        if ($scope === 'all' && $schedule->booking) {
+            $schedule->booking->update([
+                'status' => 'deleted',
+                'handled_at' => now(),
+                'handled_by' => Auth::id(),
+            ]);
+        }
 
         $message = match ($scope) {
-            'single' => 'Kemunculan tanggal '.Carbon::parse($occurrenceDate)->format('d/m/Y').' dari jadwal "'.$info.'" berhasil dihapus!',
+            'single' => 'Pertemuan tanggal '.Carbon::parse($occurrenceDate)->format('d/m/Y').' dari jadwal "'.$info.'" berhasil dibatalkan!',
             'future' => 'Jadwal "'.$info.'" dibatalkan mulai tanggal '.Carbon::parse($occurrenceDate)->format('d/m/Y').' dan seterusnya!',
-            default => 'Jadwal "'.$info.'" berhasil dihapus!',
+            default => 'Jadwal "'.$info.'" berhasil dibatalkan tanpa menghapus histori!',
         };
 
         return redirect()->route('admin.schedules.index')
@@ -494,50 +489,18 @@ class ScheduleController extends Controller
         }
 
         $date = Carbon::parse($occurrenceDate);
-        if (DayHelper::fromDate($date) !== $schedule->day) {
-            return back()->withErrors(['occurrence_date' => 'Tanggal harus jatuh pada hari '.$schedule->day.'.'])->withInput();
-        }
+        $targetDate = Carbon::parse($request->input('target_date', $occurrenceDate));
 
-        // Conflict on the target date/lab/time (exclude the source series)
-        $conflict = ScheduleService::checkConflict(
-            $validated['lab_id'],
-            $schedule->day,
+        app(ScheduleChangeService::class)->moveOccurrence(
+            $schedule,
+            $date,
+            $targetDate,
+            (int) $validated['lab_id'],
             $validated['start_time'],
             $validated['end_time'],
-            $date->toDateString(),
-            $date->toDateString(),
-            $schedule->id
+            $validated['change_reason'],
+            Auth::id()
         );
-
-        if ($conflict) {
-            return back()->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: '.$conflict])->withInput();
-        }
-
-        $pendingConflict = $this->checkPendingBookings(
-            $validated['lab_id'],
-            $schedule->day,
-            $validated['start_time'],
-            $validated['end_time'],
-            $date->toDateString(),
-            $date->toDateString(),
-            $schedule->booking_id
-        );
-
-        if ($pendingConflict) {
-            return back()->withErrors(['conflict' => $pendingConflict])->withInput();
-        }
-
-        DB::transaction(function () use ($schedule, $validated, $date) {
-            $schedule->occurrences()->updateOrCreate(
-                ['occurrence_date' => $date->toDateString()],
-                [
-                    'type' => ScheduleOccurrence::TYPE_MOVED,
-                    'lab_id' => $validated['lab_id'],
-                    'start_time' => $validated['start_time'],
-                    'end_time' => $validated['end_time'],
-                ]
-            );
-        });
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Kemunculan tanggal '.$date->format('d/m/Y').' berhasil dipindah!');
@@ -555,88 +518,47 @@ class ScheduleController extends Controller
         }
 
         $date = Carbon::parse($occurrenceDate);
-        $occurrenceDay = DayHelper::fromDate($date);
-        if ($validated['day'] !== $occurrenceDay) {
-            return back()->withErrors(['day' => 'Hari baru harus sama dengan hari tanggal mulai ('.$occurrenceDay.').'])->withInput();
-        }
-
-        $originalEnd = $schedule->end_date ? $schedule->end_date->toDateString() : null;
-
-        $conflict = ScheduleService::checkConflict(
-            $validated['lab_id'],
-            $validated['day'],
-            $validated['start_time'],
-            $validated['end_time'],
-            $date->toDateString(),
-            $originalEnd,
-            $schedule->id
+        $targetDate = Carbon::parse($request->input('target_date', $occurrenceDate));
+        $newData = ScheduleService::mapFromRequest($validated, $schedule->type);
+        $newSchedule = app(ScheduleChangeService::class)->changeFuture(
+            $schedule,
+            $date,
+            $targetDate,
+            $newData,
+            $validated['change_reason'],
+            Auth::id()
         );
-
-        if ($conflict) {
-            return back()->withErrors(['conflict' => 'Jadwal bentrok dengan jadwal yang sudah ada: '.$conflict])->withInput();
-        }
-
-        $pendingConflict = $this->checkPendingBookings(
-            $validated['lab_id'],
-            $validated['day'],
-            $validated['start_time'],
-            $validated['end_time'],
-            $date->toDateString(),
-            $originalEnd,
-            $schedule->booking_id
-        );
-
-        if ($pendingConflict) {
-            return back()->withErrors(['conflict' => $pendingConflict])->withInput();
-        }
-
-        DB::transaction(function () use ($schedule, $validated, $date, $originalEnd) {
-            // Truncate the old series up to the week before the chosen date
-            $schedule->update(['end_date' => $date->copy()->subWeek()->toDateString()]);
-
-            $newData = ScheduleService::mapFromRequest($validated, $schedule->type);
-            $newData['start_date'] = $date->toDateString();
-            $newData['end_date'] = $originalEnd;
-            $newData['booking_id'] = $schedule->booking_id;
-
-            $newSchedule = Schedule::create($newData);
-
-            // Migrate later occurrences to the new series
-            $schedule->occurrences()
-                ->where('occurrence_date', '>=', $date->toDateString())
-                ->update(['schedule_id' => $newSchedule->id]);
-
-            // Move the document record so the active series keeps it
-            if ($schedule->document) {
-                $schedule->document->update(['schedule_id' => $newSchedule->id]);
-            }
-
-            // Sync the source booking to the new (active) values for reporting
-            if ($schedule->booking) {
-                $bookingData = [
-                    'lab_id' => $validated['lab_id'],
-                    'day' => $validated['day'],
-                    'booking_date' => $schedule->booking->booking_date,
-                    'start_time' => $validated['start_time'],
-                    'end_time' => $validated['end_time'],
-                    'participant_count' => $validated['student_count'] ?? $schedule->booking->participant_count,
-                    'booking_type' => $schedule->type,
-                ];
-
-                if ($schedule->type === 'perkuliahan_tetap' || $schedule->type === 'perkuliahan_tidak_tetap') {
-                    $bookingData['course_name'] = $validated['course_name'];
-                    $bookingData['lecturer_name'] = $validated['lecturer_name'];
-                    if (isset($validated['komting'])) {
-                        $bookingData['pic_name'] = $validated['komting'];
-                    }
-                }
-
-                $schedule->booking->update($bookingData);
-            }
-        });
+        $this->saveDocumentData($newSchedule, $request);
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Rangkaian jadwal diubah mulai tanggal '.$date->format('d/m/Y').' dan seterusnya!');
+    }
+
+    private function nextOccurrenceOnOrAfter(Schedule $schedule, Carbon $date): ?Carbon
+    {
+        $candidate = $schedule->start_date && $schedule->start_date->gt($date)
+            ? $schedule->start_date->copy()
+            : $date->copy();
+        $recurrenceDays = app(RecurrenceDateService::class)->normaliseDays(
+            $schedule->recurrence_days,
+            $schedule->day
+        );
+
+        while (! in_array(DayHelper::fromDate($candidate), $recurrenceDays, true)) {
+            $candidate->addDay();
+        }
+
+        return $schedule->end_date && $candidate->gt($schedule->end_date) ? null : $candidate;
+    }
+
+    private function nextDateForDay(Carbon $date, string $day): Carbon
+    {
+        $candidate = $date->copy();
+        while (DayHelper::fromDate($candidate) !== $day) {
+            $candidate->addDay();
+        }
+
+        return $candidate;
     }
 
     private function validateDayInDateRange($selectedDay, $startDate, $endDate)
@@ -745,7 +667,14 @@ class ScheduleController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'student_count' => 'required|integer|min:1',
+            'target_date' => 'nullable|date',
         ];
+
+        if ($request->isMethod('PUT')) {
+            $rules['scope'] = 'nullable|in:all,single,future';
+            $rules['occurrence_date'] = 'nullable|required_if:scope,single,future|date';
+            $rules['change_reason'] = 'required|string|max:1000';
+        }
 
         // Conditional validation based on type
         if ($request->type === 'perkuliahan_tetap' || $request->type === 'perkuliahan_tidak_tetap') {
@@ -753,6 +682,20 @@ class ScheduleController extends Controller
             $rules['lecturer_name'] = 'required|string|max:255';
             $rules['komting'] = 'nullable|string|max:255';
             $rules['komting_phone'] = 'nullable|string|max:20';
+
+            if ($request->type === 'perkuliahan_tetap') {
+                $rules['start_date'] = 'required|date';
+                $rules['end_date'] = [
+                    'required',
+                    'date',
+                    'after_or_equal:start_date',
+                    function ($attribute, $value, $fail) use ($request) {
+                        if ($request->start_date && Carbon::parse($request->start_date)->diffInWeeks(Carbon::parse($value)) >= 60) {
+                            $fail('Jadwal berulang dibatasi maksimal 60 pertemuan.');
+                        }
+                    },
+                ];
+            }
         } elseif ($request->type === 'non_perkuliahan') {
             $rules['activity_name'] = 'required|string|max:255';
             $rules['activity_type'] = 'required|in:'.implode(',', Booking::ACTIVITY_TYPES);

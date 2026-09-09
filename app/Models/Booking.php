@@ -67,6 +67,7 @@ class Booking extends Model
         'software_needs',
         'is_recurring',
         'day',
+        'recurrence_days',
         'booking_date',
         'end_date',
         'start_time',
@@ -84,6 +85,7 @@ class Booking extends Model
         'participant_count' => 'integer',
         'is_recurring' => 'boolean',
         'is_bimbingan_dosen' => 'boolean',
+        'recurrence_days' => 'array',
     ];
 
     /**
@@ -107,7 +109,15 @@ class Booking extends Model
      */
     public function schedule()
     {
-        return $this->hasOne(Schedule::class);
+        return $this->hasOne(Schedule::class)->latestOfMany();
+    }
+
+    /**
+     * All historical schedule segments created from this booking.
+     */
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
     }
 
     /**
