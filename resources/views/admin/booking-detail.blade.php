@@ -13,28 +13,16 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans">
-    <nav class="bg-white shadow-sm border-b-2 border-yellow-400 sticky top-0 z-20">
-        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2 md:space-x-3">
-                    <a href="{{ route('landing') }}">
-                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-8 md:h-12 w-auto object-contain">
-                    </a>
-
-                </div>
-                <a href="{{ route('admin.lab.bookings', ['status' => $booking->status]) }}" class="group flex items-center text-sm font-medium text-gray-500 hover:text-yellow-700 transition-colors">
-                    <div class="p-1.5 rounded-full group-hover:bg-yellow-50 transition-colors mr-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                    </div>
-                    <span>Kembali ke Peminjaman Lab</span>
-                </a>
-            </div>
-        </div>
-    </nav>
-
     <div class="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-6xl pb-32 md:pb-8">
+        <div class="mb-4">
+            <a href="{{ route('admin.lab.bookings', ['status' => $booking->status]) }}" class="group inline-flex items-center text-sm font-medium text-gray-600 hover:text-yellow-700 transition-colors">
+                <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Kembali ke Peminjaman Lab
+            </a>
+        </div>
+
         <!-- Main Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
             <div class="w-full md:w-auto">
