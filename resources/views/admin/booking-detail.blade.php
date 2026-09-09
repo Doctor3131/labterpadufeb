@@ -5,9 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Peminjaman - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .detail-card { border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05); }
+        .detail-card__heading { border-bottom: 1px solid #f1f5f9; background: #ffffff; }
+        .detail-card__heading h2, .detail-card__heading h3 { color: #1f2937; }
+        .detail-card a:focus-visible, .detail-card button:focus-visible, .detail-action:focus-visible { outline: 3px solid rgba(250, 204, 21, 0.55); outline-offset: 2px; }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans">
-    <nav class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-20">
+<body class="bg-slate-50 min-h-screen font-sans">
+    <nav class="bg-white shadow-sm border-b-2 border-yellow-400 sticky top-0 z-20">
         <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-2 md:space-x-3">
@@ -16,13 +22,13 @@
                     </a>
 
                 </div>
-                <a href="{{ route('admin.dashboard') }}" class="group flex items-center text-sm font-medium text-gray-500 hover:text-yellow-600 transition-colors">
+                <a href="{{ route('admin.lab.bookings', ['status' => $booking->status]) }}" class="group flex items-center text-sm font-medium text-gray-500 hover:text-yellow-700 transition-colors">
                     <div class="p-1.5 rounded-full group-hover:bg-yellow-50 transition-colors mr-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                         </svg>
                     </div>
-                    <span>Kembali ke Dashboard</span>
+                    <span>Kembali ke Peminjaman Lab</span>
                 </a>
             </div>
         </div>
@@ -33,7 +39,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
             <div class="w-full md:w-auto">
                 <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
-                    <h1 class="text-xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Detail Peminjaman</h1>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Detail Peminjaman</h1>
                     <span class="px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-[10px] md:text-xs font-mono font-medium border border-gray-200">#{{ $booking->id }}</span>
                 </div>
                 <p class="text-gray-500 text-xs md:text-sm">Diajukan pada {{ $booking->created_at->format('d M Y, H:i') }} WIB</p>
@@ -42,7 +48,7 @@
             <div class="flex flex-wrap items-center gap-2 md:gap-3 mt-2 md:mt-0">
                  @if($booking->status === 'pending')
                     <span class="inline-flex items-center px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-sm">
-                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Menunggu Persetujuan
                     </span>
                     <div class="h-6 w-px bg-gray-300 mx-1 hidden md:block"></div>
@@ -50,12 +56,13 @@
                     <div class="hidden md:flex gap-2 w-full md:w-auto">
                         <form action="{{ route('admin.booking.approve', $booking->id) }}" method="POST" class="flex-1 md:flex-none">
                             @csrf
-                            <button type="submit" onclick="return confirm('Setujui peminjaman ini?')" class="w-full md:w-auto inline-flex justify-center items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                            <input type="hidden" name="return_status" value="pending">
+                            <button type="submit" onclick="return confirm('Setujui peminjaman ini?')" class="detail-action w-full md:w-auto inline-flex justify-center items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
                                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 Setujui
                             </button>
                         </form>
-                        <button onclick="showRejectModal()" class="flex-1 md:flex-none w-full md:w-auto inline-flex justify-center items-center px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all focus:ring-2 focus:ring-offset-2 focus:ring-rose-500">
+                        <button onclick="showRejectModal()" class="detail-action flex-1 md:flex-none w-full md:w-auto inline-flex justify-center items-center px-4 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all">
                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             Tolak
                         </button>
@@ -100,23 +107,23 @@
             <!-- Left Column: Booking Info & Applicant Info -->
             <div class="lg:col-span-1 space-y-6">
                 <!-- Booking Info Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600">
-                        <h3 class="font-bold text-white flex items-center text-lg">
-                            <svg class="w-5 h-5 mr-2 text-yellow-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <div class="detail-card bg-white rounded-xl overflow-hidden">
+                    <div class="detail-card__heading px-5 py-4">
+                        <h3 class="font-bold flex items-center text-base">
+                            <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             Informasi Peminjaman
                         </h3>
                     </div>
-                    <div class="p-4 md:p-6 space-y-4">
+                    <div class="p-4 md:p-5 space-y-4">
                         @if($booking->booking_type !== 'pribadi')
                         <div>
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Tanggal</label>
                             <p class="text-base md:text-lg">{{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
                         </div>
                         @if($booking->is_recurring)
-                        <div class="rounded-lg bg-blue-50 border border-blue-100 p-3">
-                            <label class="block text-sm font-semibold text-blue-800 mb-1">Jadwal berulang</label>
-                            <p class="text-sm text-blue-700">
+                        <div class="rounded-lg bg-yellow-50 border border-yellow-100 p-3">
+                            <label class="block text-sm font-semibold text-yellow-800 mb-1">Jadwal berulang</label>
+                            <p class="text-sm text-yellow-800">
                                 Setiap minggu pada {{ implode(', ', $booking->recurrence_days ?: [$booking->day]) }}
                                 @if($booking->end_date)
                                     sampai {{ $booking->end_date->locale('id')->isoFormat('D MMMM Y') }}
@@ -161,14 +168,14 @@
 
                 <!-- Applicant Card (Render here if NOT moving) -->
                 @if(!$isPersonalNoDoc)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                     <div class="px-6 py-4 bg-gradient-to-r from-slate-700 to-slate-800">
-                        <h3 class="font-bold text-white flex items-center text-lg">
-                            <svg class="w-5 h-5 mr-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <div class="detail-card bg-white rounded-xl overflow-hidden">
+                     <div class="detail-card__heading px-5 py-4">
+                        <h3 class="font-bold flex items-center text-base">
+                            <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             Informasi Peminjam
                         </h3>
                     </div>
-                    <div class="p-4 md:p-6 space-y-4">
+                    <div class="p-4 md:p-5 space-y-4">
                         <div class="flex items-center gap-4">
                             <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-base md:text-lg">
                                 {{ substr($booking->pic_name, 0, 1) }}
@@ -198,8 +205,8 @@
             <!-- Right Column: Details -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Activity Details -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
+                <div class="detail-card bg-white rounded-xl overflow-hidden">
+                    <div class="detail-card__heading px-5 py-4 flex justify-between items-center">
                         <h2 class="font-bold text-lg text-gray-800 flex items-center">
                             <span class="w-1.5 h-6 bg-yellow-500 rounded-full mr-3"></span>
                             Detail Kegiatan
@@ -207,7 +214,7 @@
                         <x-booking-badge :type="$booking->booking_type" class="text-xs font-medium" />
                     </div>
                     
-                    <div class="p-6">
+                    <div class="p-5">
                         @if($booking->booking_type === 'non_perkuliahan')
                             <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
                                 <div class="col-span-2 md:col-span-1">
@@ -302,14 +309,14 @@
 
                 <!-- Applicant Card (Render here if moving) -->
                 @if($isPersonalNoDoc)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                     <div class="px-6 py-4 bg-gradient-to-r from-slate-700 to-slate-800">
-                        <h3 class="font-bold text-white flex items-center text-lg">
-                            <svg class="w-5 h-5 mr-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                <div class="detail-card bg-white rounded-xl overflow-hidden">
+                     <div class="detail-card__heading px-5 py-4">
+                        <h3 class="font-bold flex items-center text-base">
+                            <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             Informasi Peminjam
                         </h3>
                     </div>
-                    <div class="p-4 md:p-6 space-y-4">
+                    <div class="p-4 md:p-5 space-y-4">
                         <div class="flex items-center gap-4">
                             <div class="h-10 w-10 md:h-12 md:w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-base md:text-lg">
                                 {{ substr($booking->pic_name, 0, 1) }}
@@ -337,20 +344,20 @@
 
                 <!-- Documents -->
                  @if($booking->document_path)
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-50 flex items-center">
+                <div class="detail-card bg-white rounded-xl overflow-hidden">
+                    <div class="detail-card__heading px-5 py-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         <h3 class="font-bold text-gray-800">Dokumen Pendukung</h3>
                     </div>
-                    <div class="p-6">
-                         <div class="flex flex-col gap-4 p-4 bg-yellow-50 rounded-xl border border-yellow-100 group hover:border-yellow-200 transition-colors sm:flex-row sm:items-center sm:justify-between">
+                    <div class="p-5">
+                         <div class="flex flex-col gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 group hover:border-yellow-200 transition-colors sm:flex-row sm:items-center sm:justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="bg-white p-2 rounded-lg shadow-sm">
                                     <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
                                 </div>
                                 <div>
                                     <p class="font-semibold text-gray-900 group-hover:text-yellow-700 transition-colors">Dokumen PDF</p>
-                                    <p class="text-xs text-yellow-700/70">Pratinjau tersedia di bawah</p>
+                                    <p class="text-xs text-gray-500">Pratinjau tersedia di bawah</p>
                                 </div>
                             </div>
                             <a href="{{ route('admin.secure-file', ['path' => $booking->document_path]) }}" target="_blank" rel="noopener" class="px-4 py-2 bg-white hover:bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-lg border border-yellow-300 transition-all flex items-center justify-center">
@@ -428,6 +435,7 @@
             
             <form action="{{ route('admin.booking.reject', $booking->id) }}" method="POST">
                 @csrf
+                <input type="hidden" name="return_status" value="pending">
                 <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-bold mb-2">
                         Alasan Penolakan <span class="text-red-500">*</span>
@@ -463,12 +471,13 @@
         <div class="flex gap-3">
              <form action="{{ route('admin.booking.approve', $booking->id) }}" method="POST" class="flex-1">
                 @csrf
-                <button type="submit" onclick="return confirm('Setujui peminjaman ini?')" class="w-full inline-flex justify-center items-center px-4 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-base font-bold rounded-xl shadow-lg transition-all active:scale-95">
+                <input type="hidden" name="return_status" value="pending">
+                <button type="submit" onclick="return confirm('Setujui peminjaman ini?')" class="w-full inline-flex justify-center items-center px-4 py-3.5 bg-yellow-500 hover:bg-yellow-600 text-white text-base font-bold rounded-xl shadow-sm transition-all active:scale-95">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     Setujui
                 </button>
             </form>
-            <button onclick="showRejectModal()" class="flex-1 inline-flex justify-center items-center px-4 py-3.5 bg-rose-600 hover:bg-rose-700 text-white text-base font-bold rounded-xl shadow-lg transition-all active:scale-95">
+            <button onclick="showRejectModal()" class="flex-1 inline-flex justify-center items-center px-4 py-3.5 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-base font-bold rounded-xl transition-all active:scale-95">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 Tolak
             </button>
