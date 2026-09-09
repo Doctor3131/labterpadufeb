@@ -1,237 +1,791 @@
 @extends('layouts.admin')
 
-@section('title', 'Peminjaman Laboratorium')
+@section('title', 'Manajemen Peminjaman - Laboratorium dan Fasilitas Digital FEB UNDIP')
 
 @push('styles')
-<style>
-    .lab-bookings-page { max-width: 1120px; margin: 0 auto; }
-    .lab-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 1px 2px rgb(15 23 42 / 0.04); }
-    .lab-stat { border: 1px solid #e2e8f0; border-radius: .875rem; background: #fff; padding: 1rem; }
-    .lab-stat[data-active="true"] { border-color: #facc15; box-shadow: 0 0 0 3px rgb(254 249 195 / 0.9); }
-    .lab-tab { border-bottom: 2px solid transparent; color: #64748b; font-weight: 700; padding: .875rem 1rem; white-space: nowrap; }
-    .lab-tab[aria-selected="true"] { border-color: #eab308; color: #854d0e; }
-    .lab-tab:focus-visible, .lab-action:focus-visible { outline: 3px solid #fde68a; outline-offset: 2px; }
-    .lab-booking-card { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); overflow: hidden; border: 1px solid #e2e8f0; border-radius: .875rem; background: #fff; }
-    .lab-booking-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 14px rgb(15 23 42 / 0.06); }
-    .lab-booking-date { border-right: 1px solid #e2e8f0; padding: 1rem; }
-    .lab-chip { display: inline-flex; align-items: center; border-radius: 9999px; padding: .25rem .625rem; font-size: .72rem; font-weight: 700; }
-    .lab-action { display: inline-flex; align-items: center; justify-content: center; border-radius: .625rem; padding: .55rem .8rem; font-size: .875rem; font-weight: 700; transition: background-color .15s, border-color .15s, color .15s; }
-    .lab-modal[aria-hidden="true"] { display: none; }
-    .lab-modal[aria-hidden="false"] { display: flex; }
-    @media (max-width: 640px) {
-        .lab-booking-card { grid-template-columns: 1fr; }
-        .lab-booking-date { display: grid; grid-template-columns: 1fr 1fr; gap: .2rem 1rem; border-right: 0; border-bottom: 1px solid #e2e8f0; padding: .875rem 1rem; }
-        .lab-booking-date p { margin-top: 0 !important; }
-    }
-</style>
+    <style>
+        /* Mobile-friendly animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .booking-card {
+            animation: fadeInUp 0.4s ease-out;
+        }
+        .booking-card:nth-child(1) { animation-delay: 0.05s; }
+        .booking-card:nth-child(2) { animation-delay: 0.1s; }
+        .booking-card:nth-child(3) { animation-delay: 0.15s; }
+        .booking-card:nth-child(4) { animation-delay: 0.2s; }
+        .booking-card:nth-child(5) { animation-delay: 0.25s; }
+
+        #lab-section .booking-card {
+            border-color: #e2e8f0;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+        }
+
+        #lab-section .booking-card:hover {
+            transform: translateY(-1px);
+        }
+
+        .lab-booking-search:focus {
+            border-color: #ca8a04;
+            box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.22);
+            outline: none;
+        }
+
+        .tab-button[aria-selected="true"] {
+            background: #fffbeb;
+        }
+    </style>
 @endpush
 
 @section('content')
-@php
-    $statusMeta = [
-        'pending' => ['label' => 'Menunggu keputusan', 'description' => 'Perlu ditinjau', 'chip' => 'bg-amber-100 text-amber-900'],
-        'approved' => ['label' => 'Disetujui', 'description' => 'Siap dijalankan', 'chip' => 'bg-emerald-100 text-emerald-800'],
-        'rejected' => ['label' => 'Ditolak', 'description' => 'Arsip keputusan', 'chip' => 'bg-red-100 text-red-800'],
-    ];
-    $typeLabels = [
-        'perkuliahan_tetap' => 'Perkuliahan tetap',
-        'perkuliahan_tidak_tetap' => 'Perkuliahan tidak tetap',
-        'non_perkuliahan' => 'Non-perkuliahan',
-        'pribadi' => 'Pribadi',
-    ];
-    $bookingGroups = [
-        'pending' => $pendingBookings,
-        'approved' => $approvedBookings,
-        'rejected' => $rejectedBookings,
-    ];
-    $activeStatus = in_array(request('status'), array_keys($bookingGroups), true) ? request('status') : 'pending';
-@endphp
-
-<main class="lab-bookings-page px-4 py-6 md:px-6 md:py-8">
-    <div class="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-end md:justify-between">
-        <div>
-            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-yellow-800">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                Dashboard
-            </a>
-            <p class="mt-4 text-xs font-bold uppercase tracking-[.16em] text-yellow-700">Operasional laboratorium</p>
-            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Peminjaman laboratorium</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Tinjau pengajuan, ambil keputusan, dan buka detail jadwal tanpa bercampur dengan peminjaman aset.</p>
-        </div>
-        <a href="{{ route('admin.schedules.index') }}" class="lab-action shrink-0 border border-yellow-300 bg-yellow-50 text-yellow-900 hover:bg-yellow-100">
-            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            Buka kalender jadwal
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-gray-600 hover:text-yellow-600 font-medium transition-all group">
+            <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali ke Dashboard
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800" role="alert">{{ session('error') }}</div>
-    @endif
-
-    <section class="mb-5 grid gap-3 sm:grid-cols-3" aria-label="Ringkasan status pengajuan">
-        @foreach($bookingGroups as $status => $bookings)
-            <button type="button" class="lab-stat text-left" data-status-summary="{{ $status }}" data-active="{{ $activeStatus === $status ? 'true' : 'false' }}">
-                <p class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ $statusMeta[$status]['description'] }}</p>
-                <div class="mt-2 flex items-end justify-between gap-3">
-                    <span class="text-2xl font-bold text-slate-900">{{ $bookings->total() }}</span>
-                    <span class="text-sm font-bold {{ $status === 'pending' ? 'text-yellow-700' : ($status === 'approved' ? 'text-emerald-700' : 'text-red-700') }}">{{ $statusMeta[$status]['label'] }}</span>
+    <!-- Header Section -->
+    <div class="mb-6">
+        <div class="bg-yellow-500 rounded-2xl p-4 md:p-6 shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Manajemen Peminjaman</h1>
+                    <p class="text-xs md:text-sm text-yellow-50">Kelola permintaan peminjaman laboratorium</p>
                 </div>
-            </button>
-        @endforeach
-    </section>
-
-    <section class="lab-panel overflow-hidden">
-        <div class="flex flex-col gap-4 border-b border-slate-200 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5">
-            <div class="-mb-4 flex max-w-full overflow-x-auto" role="tablist" aria-label="Status peminjaman">
-                @foreach($bookingGroups as $status => $bookings)
-                    <button id="{{ $status }}-tab" type="button" class="lab-tab" role="tab" aria-controls="{{ $status }}-panel" aria-selected="{{ $activeStatus === $status ? 'true' : 'false' }}" tabindex="{{ $activeStatus === $status ? '0' : '-1' }}" data-booking-tab="{{ $status }}">
-                        {{ $statusMeta[$status]['label'] }} <span class="ml-1 text-xs">{{ $bookings->total() }}</span>
-                    </button>
-                @endforeach
+                <div class="bg-white/20 backdrop-blur-sm p-2 md:p-3 rounded-xl">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
             </div>
-            <label class="relative block md:w-72">
-                <span class="sr-only">Cari peminjaman pada tab aktif</span>
-                <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <input id="booking-search" type="search" class="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-100" placeholder="Cari pengaju, kegiatan, atau lab">
-            </label>
+            <div class="border-t border-yellow-400/50 pt-4">
+                <label for="lab-booking-search" class="sr-only">Cari pengajuan pada status yang sedang dibuka</label>
+                <div class="relative max-w-xl">
+                    <svg class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-yellow-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input id="lab-booking-search" type="search" autocomplete="off" placeholder="Cari nama, mata kuliah, kegiatan, atau lab pada daftar ini" class="lab-booking-search w-full rounded-xl border border-yellow-300/70 bg-white/95 py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400">
+                </div>
+                <p id="lab-booking-search-status" class="mt-2 text-xs text-yellow-50" aria-live="polite">Pencarian berlaku pada daftar dan halaman yang sedang terbuka.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    @if(session('success'))
+        <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 md:px-6 py-4 rounded-r-lg shadow-sm animate-pulse">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="font-medium text-sm md:text-base">{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+
+    <!-- LAB BORROWING SECTION -->
+    <div id="lab-section" class="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+        <div class="border-b-2 border-gray-100 overflow-x-auto">
+            <nav class="flex px-2 min-w-max" aria-label="Status peminjaman lab" role="tablist">
+                <button id="pending-tab-button" onclick="showTab('pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700" data-tab="pending" role="tab" aria-controls="pending-tab" aria-selected="true">
+                    <div class="flex items-center justify-center">
+                        <div class="bg-yellow-100 p-2 rounded-lg mb-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span>Menunggu</span>
+                    <span class="mt-1 px-2 py-0.5 bg-yellow-500 text-white rounded-full text-xs font-bold">{{ $pendingBookings->total() }}</span>
+                </button>
+                <button id="approved-tab-button" onclick="showTab('approved')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="approved" role="tab" aria-controls="approved-tab" aria-selected="false">
+                    <div class="flex items-center justify-center">
+                        <div class="bg-gray-100 p-2 rounded-lg mb-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span>Disetujui</span>
+                    <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $approvedBookings->total() }}</span>
+                </button>
+                <button id="rejected-tab-button" onclick="showTab('rejected')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-transparent text-gray-500" data-tab="rejected" role="tab" aria-controls="rejected-tab" aria-selected="false">
+                    <div class="flex items-center justify-center">
+                        <div class="bg-gray-100 p-2 rounded-lg mb-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <span>Ditolak</span>
+                    <span class="mt-1 px-2 py-0.5 bg-gray-300 text-gray-700 rounded-full text-xs font-bold">{{ $rejectedBookings->total() }}</span>
+                </button>
+            </nav>
         </div>
 
-        @foreach($bookingGroups as $status => $bookings)
-            <div id="{{ $status }}-panel" class="p-4 md:p-5" role="tabpanel" aria-labelledby="{{ $status }}-tab" data-booking-panel="{{ $status }}" @if($activeStatus !== $status) hidden @endif>
-                <div class="space-y-3" data-booking-list>
-                    @forelse($bookings as $booking)
-                        @include('admin.lab-bookings.booking-card', compact('booking', 'status', 'statusMeta', 'typeLabels'))
-                    @empty
-                        <div class="rounded-xl border border-dashed border-slate-300 px-5 py-12 text-center">
-                            <p class="font-semibold text-slate-700">Belum ada pengajuan {{ strtolower($statusMeta[$status]['label']) }}.</p>
-                            <p class="mt-1 text-sm text-slate-500">Data yang masuk akan tampil pada tab ini.</p>
-                        </div>
-                    @endforelse
-                    <p class="hidden rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600" data-search-empty>Tidak ada hasil yang cocok pada tab ini.</p>
+    <!-- Pending Bookings -->
+    <div id="pending-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="pending-tab-button">
+        @forelse($pendingBookings as $booking)
+            <div class="booking-card bg-yellow-50 rounded-2xl shadow-lg hover:shadow-2xl mb-3 p-4 border-l-4 border-yellow-500 transition-all">
+                <!-- Header dengan badges dan tanggal -->
+                <div class="flex items-start justify-between gap-2 mb-0">
+                    <div class="flex flex-wrap items-center gap-2 flex-1">
+                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                        <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
+                        <!-- Waktu Dibuat - Inline -->
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                            {{ $booking->created_at->diffForHumans() }}
+                        </span>
+                    </div>
+                    <!-- Tanggal & Waktu - Compact -->
+                    <div class="flex flex-col items-end text-right flex-shrink-0">
+                        <span class="text-xs font-bold text-gray-800">
+                            {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }}
+                        </span>
+                        <span class="text-xs text-purple-600 font-medium">
+                            {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}
+                        </span>
+                    </div>
                 </div>
-                @if($bookings->hasPages())
-                    <div class="mt-5 border-t border-slate-100 pt-4">{{ $bookings->appends(['status' => $status])->links() }}</div>
+                
+                <!-- Judul -->
+                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
+                    @if($booking->booking_type === 'non_perkuliahan')
+                        {{ $booking->activity_name }}
+                    @elseif($booking->booking_type === 'pribadi')
+                        {{ $booking->purpose ?? 'Peminjaman Pribadi' }}
+                    @else
+                        {{ $booking->course_name }}
+                    @endif
+                </h3>
+                
+                <!-- Info Detail - Grid Layout yang Lebih Rapi -->
+                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                    <div class="flex items-start">
+                        <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                        <span><strong>Peminjam:</strong> {{ $booking->pic_name }}</span>
+                    </div>
+                    @if($booking->study_program)
+                    <div class="flex items-start">
+                        <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                        </svg>
+                        <span><strong>Prodi:</strong> {{ $booking->study_program }}</span>
+                    </div>
+                    @endif
+                    @if($booking->booking_type !== 'non_perkuliahan' && $booking->booking_type !== 'pribadi')
+                        <div class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                            </svg>
+                            <span><strong>Dosen:</strong> {{ $booking->lecturer_name }}</span>
+                        </div>
+                    @endif
+                    <div class="flex items-start">
+                        <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                        </svg>
+                        <span><strong>Peserta:</strong> {{ $booking->participant_count }} orang</span>
+                    </div>
+                    @if($booking->booking_type === 'non_perkuliahan' && $booking->activity_type)
+                        <div class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                            <span><strong>Jenis Kegiatan:</strong> {{ $booking->activity_type }}</span>
+                        </div>
+                    @endif
+                    @if($booking->booking_type === 'pribadi')
+                        <div class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                            <span><strong>Status:</strong> 
+                                @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
+                                    {{ $booking->custom_status }}
+                                @else
+                                    {{ $booking->applicant_status }}
+                                @endif
+                                @if($booking->applicant_status === 'Mahasiswa' && $booking->class_year)
+                                    • Angkatan {{ $booking->class_year }}
+                                @endif
+                            </span>
+                        </div>
+                        @if($booking->purpose)
+                        <div class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <span><strong>Keperluan:</strong> {{ $booking->purpose }}</span>
+                        </div>
+                        @endif
+                    @endif
+                </div>
+
+                <!-- Action Buttons - Full width on mobile, stacked -->
+                <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-gray-100">
+                    <a href="{{ route('admin.booking.show', $booking->id) }}" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        <span>Detail</span>
+                    </a>
+                    <button onclick="approveBooking({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Setujui</span>
+                    </button>
+                    <button onclick="showRejectModal({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        <span>Tolak</span>
+                    </button>
+                </div>
+            </div>
+        @empty
+            <div class="bg-yellow-50 rounded-2xl shadow-inner p-8 md:p-16 text-center">
+                <div class="inline-block p-5 bg-yellow-100 rounded-2xl mb-4 shadow-lg">
+                    <svg class="w-12 h-12 md:w-16 md:h-16 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Semua Telah Diproses</h3>
+                <p class="text-sm text-gray-600">Tidak ada peminjaman yang menunggu persetujuan</p>
+            </div>
+        @endforelse
+        
+        {{-- Pagination Links --}}
+        @if($pendingBookings->hasPages())
+            <div class="mt-4 px-2">
+                {{ $pendingBookings->links() }}
+            </div>
+        @endif
+    </div>
+
+    <!-- Approved Bookings -->
+    <div id="approved-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="approved-tab-button">
+        @forelse($approvedBookings as $booking)
+            <div class="booking-card bg-green-50 rounded-2xl shadow-lg mb-3 p-4 border-l-4 border-green-500 hover:shadow-xl transition-all">
+                <!-- Header dengan badges dan tanggal -->
+                <div class="flex items-start justify-between gap-2 mb-0">
+                    <div class="flex flex-wrap items-center gap-2 flex-1">
+                        <span class="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg shadow-sm flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Disetujui
+                        </span>
+                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                        <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
+                    </div>
+                    <!-- Tanggal & Waktu - Compact -->
+                    <div class="flex flex-col items-end text-right flex-shrink-0">
+                        <span class="text-xs font-bold text-gray-800">
+                            {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }}
+                        </span>
+                        <span class="text-xs text-gray-600 font-medium">
+                            {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Judul -->
+                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
+                    @if($booking->booking_type === 'non_perkuliahan')
+                        {{ $booking->activity_name }}
+                    @elseif($booking->booking_type === 'pribadi')
+                        {{ $booking->purpose ?? 'Peminjaman Pribadi' }}
+                    @else
+                        {{ $booking->course_name }}
+                    @endif
+                </h3>
+                
+                <!-- Info Detail -->
+                <div class="space-y-1 mb-3">
+                    @if($booking->booking_type === 'perkuliahan_tetap' || $booking->booking_type === 'perkuliahan_tidak_tetap')
+                        <p class="text-sm text-gray-600">
+                            <strong>Dosen:</strong> {{ $booking->lecturer_name }}
+                        </p>
+                    @elseif($booking->booking_type === 'non_perkuliahan')
+                        <p class="text-sm text-gray-600">
+                            <strong>{{ $booking->position }}</strong> • {{ $booking->activity_type }}
+                        </p>
+                    @elseif($booking->booking_type === 'pribadi')
+                        <p class="text-sm text-gray-600">
+                            <strong>Status:</strong> 
+                            @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
+                                {{ $booking->custom_status }}
+                            @else
+                                {{ $booking->applicant_status }}
+                            @endif
+                            @if($booking->applicant_status === 'Mahasiswa' && $booking->class_year)
+                                • Angkatan {{ $booking->class_year }}
+                            @endif
+                        </p>
+                    @endif
+                    <p class="text-sm text-gray-600">
+                        <strong>{{ $booking->pic_name }}</strong> • {{ $booking->participant_count }} orang
+                    </p>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3 border-t border-gray-100">
+                    @if($booking->handler)
+                        <span class="text-xs text-purple-600 font-medium flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ $booking->handler->name }}
+                        </span>
+                    @else
+                        <div></div>
+                    @endif
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if($booking->document_path)
+                            <a href="{{ route('admin.secure-file', ['path' => $booking->document_path]) }}" target="_blank" class="flex items-center text-sm text-yellow-600 hover:text-yellow-800 font-medium transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Dokumen Pendukung
+                            </a>
+                        @endif
+                        @if($booking->booking_type !== 'pribadi')
+                            <a href="{{ route('booking.print', $booking->tracking_token) }}" target="_blank" class="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Download PDF
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="bg-green-50 rounded-2xl shadow-inner p-8 md:p-16 text-center">
+                <div class="inline-block p-5 bg-green-100 rounded-2xl mb-4 shadow-lg">
+                    <svg class="w-12 h-12 md:w-16 md:h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Belum Ada Peminjaman Disetujui</h3>
+                <p class="text-sm text-gray-600">Approve peminjaman untuk melihatnya di sini</p>
+            </div>
+        @endforelse
+        
+        {{-- Pagination Links --}}
+        @if($approvedBookings->hasPages())
+            <div class="mt-4 px-2">
+                {{ $approvedBookings->links() }}
+            </div>
+        @endif
+    </div>
+
+    <!-- Rejected Bookings -->
+    <div id="rejected-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="rejected-tab-button">
+        @forelse($rejectedBookings as $booking)
+            <div class="booking-card bg-red-50 rounded-2xl shadow-lg mb-3 p-4 border-l-4 border-red-500 hover:shadow-xl transition-all">
+                <!-- Header dengan badges dan tanggal -->
+                <div class="flex items-start justify-between gap-2 mb-0">
+                    <div class="flex flex-wrap items-center gap-2 flex-1">
+                        <span class="px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-lg shadow-sm flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            Ditolak
+                        </span>
+                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
+                        <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
+                    </div>
+                    <!-- Tanggal & Waktu - Compact -->
+                    <div class="flex flex-col items-end text-right flex-shrink-0">
+                        <span class="text-xs font-bold text-gray-800">
+                            {{ \Carbon\Carbon::parse($booking->booking_date)->locale('id')->isoFormat('D MMM YYYY') }}
+                        </span>
+                        <span class="text-xs text-gray-600 font-medium">
+                            {{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Judul -->
+                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
+                    @if($booking->booking_type === 'non_perkuliahan')
+                        {{ $booking->activity_name }}
+                    @elseif($booking->booking_type === 'pribadi')
+                        {{ $booking->purpose ?? 'Peminjaman Pribadi' }}
+                    @else
+                        {{ $booking->course_name }}
+                    @endif
+                </h3>
+                
+                <!-- Info Detail -->
+                <div class="space-y-1 mb-3">
+                    @if($booking->booking_type === 'perkuliahan_tetap' || $booking->booking_type === 'perkuliahan_tidak_tetap')
+                        <p class="text-sm text-gray-600">
+                            <strong>Dosen:</strong> {{ $booking->lecturer_name }}
+                        </p>
+                    @elseif($booking->booking_type === 'non_perkuliahan')
+                        <p class="text-sm text-gray-600">
+                            <strong>{{ $booking->position }}</strong> • {{ $booking->activity_type }}
+                        </p>
+                    @elseif($booking->booking_type === 'pribadi')
+                        <p class="text-sm text-gray-600">
+                            <strong>Status:</strong> 
+                            @if($booking->applicant_status === 'Lainnya' && $booking->custom_status)
+                                {{ $booking->custom_status }}
+                            @else
+                                {{ $booking->applicant_status }}
+                            @endif
+                            @if($booking->applicant_status === 'Mahasiswa' && $booking->class_year)
+                                • Angkatan {{ $booking->class_year }}
+                            @endif
+                        </p>
+                    @endif
+                    <p class="text-sm text-gray-600">
+                        <strong>{{ $booking->pic_name }}</strong> • {{ $booking->participant_count }} orang
+                    </p>
+                </div>
+
+                <!-- Alasan Penolakan -->
+                @if($booking->rejection_reason)
+                    <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-xs font-semibold text-red-600 mb-1">Alasan Penolakan:</p>
+                        <p class="text-sm text-red-700">{{ $booking->rejection_reason }}</p>
+                    </div>
+                @endif
+                
+                <!-- Footer - Handler Info -->
+                @if($booking->handler)
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <span class="text-xs text-purple-600 font-medium flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                            Ditolak oleh: <span class="font-semibold ml-1">{{ $booking->handler->name }}</span>
+                        </span>
+                    </div>
                 @endif
             </div>
-        @endforeach
-    </section>
-</main>
-
-<div id="approve-modal" class="lab-modal fixed inset-0 z-[60] items-center justify-center bg-slate-950/45 p-4" role="dialog" aria-modal="true" aria-labelledby="approve-modal-title" aria-hidden="true">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <p class="text-xs font-bold uppercase tracking-[.14em] text-yellow-700">Konfirmasi keputusan</p>
-        <h2 id="approve-modal-title" class="mt-2 text-xl font-bold text-slate-900">Setujui peminjaman?</h2>
-        <p id="approve-modal-description" class="mt-2 text-sm leading-6 text-slate-600">Jadwal akan dibuat dan tidak dapat disetujui ulang.</p>
-        <form id="approve-form" method="POST" class="mt-6 flex justify-end gap-3">
-            @csrf
-            <input type="hidden" name="return_status" value="pending">
-            <button type="button" class="lab-action border border-slate-300 bg-white text-slate-700 hover:bg-slate-50" data-close-modal="approve-modal">Batal</button>
-            <button type="submit" class="lab-action bg-yellow-500 text-white hover:bg-yellow-600">Setujui peminjaman</button>
-        </form>
+        @empty
+            <div class="bg-red-50 rounded-2xl shadow-inner p-8 md:p-16 text-center">
+                <div class="inline-block p-5 bg-red-100 rounded-2xl mb-4 shadow-lg">
+                    <svg class="w-12 h-12 md:w-16 md:h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Tidak Ada Peminjaman Ditolak</h3>
+                <p class="text-sm text-gray-600">Semua peminjaman telah disetujui</p>
+            </div>
+        @endforelse
+        
+        {{-- Pagination Links --}}
+        @if($rejectedBookings->hasPages())
+            <div class="mt-4 px-2">
+                {{ $rejectedBookings->links() }}
+            </div>
+        @endif
     </div>
 </div>
 
-<div id="reject-modal" class="lab-modal fixed inset-0 z-[60] items-center justify-center bg-slate-950/45 p-4" role="dialog" aria-modal="true" aria-labelledby="reject-modal-title" aria-hidden="true">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <p class="text-xs font-bold uppercase tracking-[.14em] text-red-700">Keputusan peminjaman</p>
-        <h2 id="reject-modal-title" class="mt-2 text-xl font-bold text-slate-900">Tolak peminjaman</h2>
-        <p id="reject-modal-description" class="mt-2 text-sm leading-6 text-slate-600">Berikan alasan yang jelas agar pengaju memahami keputusan ini.</p>
-        <form id="reject-form" method="POST" class="mt-5">
+<!-- Modern Reject Modal -->
+<div id="rejectModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-3">
+                <div class="bg-red-100 p-3 rounded-full">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Tolak Peminjaman</h3>
+                    <p class="text-sm text-gray-500">Berikan alasan penolakan</p>
+                </div>
+            </div>
+            <button onclick="closeRejectModal()" class="text-gray-400 hover:text-gray-600 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="rejectForm" method="POST">
             @csrf
             <input type="hidden" name="return_status" value="pending">
-            <label for="rejection_reason" class="text-sm font-bold text-slate-800">Alasan penolakan <span class="text-red-600">*</span></label>
-            <textarea id="rejection_reason" name="rejection_reason" required maxlength="500" rows="4" class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" placeholder="Contoh: waktu yang diminta bertabrakan dengan kegiatan prioritas."></textarea>
-            <div class="mt-1 flex justify-between text-xs text-slate-500"><span>Alasan akan tersimpan pada riwayat.</span><span id="rejection-count">0/500</span></div>
-            <div class="mt-6 flex justify-end gap-3">
-                <button type="button" class="lab-action border border-slate-300 bg-white text-slate-700 hover:bg-slate-50" data-close-modal="reject-modal">Batal</button>
-                <button type="submit" class="lab-action bg-red-600 text-white hover:bg-red-700">Tolak peminjaman</button>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-3">
+                    Alasan Penolakan <span class="text-red-500">*</span>
+                </label>
+                <textarea 
+                    name="rejection_reason" 
+                    rows="4" 
+                    class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all" 
+                    required 
+                    placeholder="Contoh: Jadwal bertabrakan dengan kegiatan lain, dokumen tidak lengkap, dll..."
+                ></textarea>
+                <p class="mt-2 text-xs text-gray-500">
+                    <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    Peminjam akan melihat alasan ini
+                </p>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button 
+                    type="button" 
+                    onclick="closeRejectModal()" 
+                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-all"
+                >
+                    Batal
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Tolak Peminjaman
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Approve Lab Booking Modal -->
+<div id="approveLabModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-100 p-3 rounded-full">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Setujui Peminjaman Lab</h3>
+                    <p class="text-sm text-gray-500">Konfirmasi persetujuan peminjaman</p>
+                </div>
+            </div>
+            <button onclick="closeApproveLabModal()" class="text-gray-400 hover:text-gray-600 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <p class="text-gray-600 text-sm mb-8">Peminjam akan dapat menggunakan laboratorium sesuai jadwal yang diminta.</p>
+        <div class="flex justify-end space-x-3">
+            <button type="button" onclick="closeApproveLabModal()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-all">Batal</button>
+            <button type="button" id="approveLabConfirmBtn" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Ya, Setujui
+            </button>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
-    (() => {
-        const statusNames = ['pending', 'approved', 'rejected'];
-        const search = document.getElementById('booking-search');
-        const approveModal = document.getElementById('approve-modal');
-        const rejectModal = document.getElementById('reject-modal');
-        const approveForm = document.getElementById('approve-form');
-        const rejectForm = document.getElementById('reject-form');
-        const rejectionReason = document.getElementById('rejection_reason');
-        const rejectionCount = document.getElementById('rejection-count');
-        let lastTrigger = null;
+    let activeLabBookingTab = 'pending';
 
-        const setActiveTab = (status, updateUrl = true) => {
-            statusNames.forEach((name) => {
-                const selected = name === status;
-                document.querySelector(`[data-booking-tab="${name}"]`).setAttribute('aria-selected', selected ? 'true' : 'false');
-                document.querySelector(`[data-booking-tab="${name}"]`).setAttribute('tabindex', selected ? '0' : '-1');
-                document.querySelector(`[data-booking-panel="${name}"]`).hidden = !selected;
-                document.querySelector(`[data-status-summary="${name}"]`).dataset.active = selected ? 'true' : 'false';
-            });
-            search.value = '';
-            filterCards();
-            if (updateUrl) {
-                const url = new URL(window.location.href);
-                url.searchParams.set('status', status);
-                window.history.replaceState({}, '', url);
-            }
-        };
+    function filterLabBookings() {
+        const input = document.getElementById('lab-booking-search');
+        const status = document.getElementById('lab-booking-search-status');
+        if (!input || !status) return;
 
-        const filterCards = () => {
-            const activePanel = document.querySelector('[data-booking-panel]:not([hidden])');
-            if (!activePanel) return;
-            const query = search.value.trim().toLocaleLowerCase('id');
-            let shown = 0;
-            activePanel.querySelectorAll('[data-booking-card]').forEach((card) => {
-                const matches = !query || card.textContent.toLocaleLowerCase('id').includes(query);
-                card.hidden = !matches;
-                if (matches) shown += 1;
-            });
-            const empty = activePanel.querySelector('[data-search-empty]');
-            if (empty) empty.hidden = shown !== 0 || !query;
-        };
+        const query = input.value.trim().toLocaleLowerCase('id-ID');
+        const cards = Array.from(document.querySelectorAll(`#${activeLabBookingTab}-tab .booking-card`));
+        let visible = 0;
 
-        document.querySelectorAll('[data-booking-tab], [data-status-summary]').forEach((trigger) => {
-            trigger.addEventListener('click', () => setActiveTab(trigger.dataset.bookingTab || trigger.dataset.statusSummary));
+        cards.forEach((card) => {
+            const matches = !query || card.innerText.toLocaleLowerCase('id-ID').includes(query);
+            card.classList.toggle('hidden', !matches);
+            if (matches) visible += 1;
         });
-        search.addEventListener('input', filterCards);
 
-        const closeModal = (modal) => {
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('overflow-hidden');
-            lastTrigger?.focus();
-        };
-        const openModal = (modal, trigger) => {
-            lastTrigger = trigger;
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('overflow-hidden');
-            window.setTimeout(() => modal.querySelector('button, textarea')?.focus(), 20);
-        };
+        status.textContent = query
+            ? `${visible} dari ${cards.length} pengajuan pada halaman ini cocok dengan pencarian.`
+            : 'Pencarian berlaku pada daftar dan halaman yang sedang terbuka.';
+    }
 
-        document.querySelectorAll('[data-close-modal]').forEach((button) => button.addEventListener('click', () => closeModal(document.getElementById(button.dataset.closeModal))));
-        [approveModal, rejectModal].forEach((modal) => modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(modal); }));
-        document.addEventListener('keydown', (event) => { if (event.key === 'Escape') [approveModal, rejectModal].forEach((modal) => { if (modal.getAttribute('aria-hidden') === 'false') closeModal(modal); }); });
 
-        document.querySelectorAll('[data-approve-booking]').forEach((button) => button.addEventListener('click', () => {
-            approveForm.action = `{{ url('/admin/bookings') }}/${button.dataset.approveBooking}/approve`;
-            document.getElementById('approve-modal-description').textContent = `Setujui “${button.dataset.bookingTitle}”? Jadwal akan dibuat setelah persetujuan.`;
-            openModal(approveModal, button);
-        }));
-        document.querySelectorAll('[data-reject-booking]').forEach((button) => button.addEventListener('click', () => {
-            rejectForm.action = `{{ url('/admin/bookings') }}/${button.dataset.rejectBooking}/reject`;
-            document.getElementById('reject-modal-description').textContent = `Tulis alasan penolakan untuk “${button.dataset.bookingTitle}”.`;
-            rejectionReason.value = '';
-            rejectionCount.textContent = '0/500';
-            openModal(rejectModal, button);
-        }));
-        rejectionReason.addEventListener('input', () => { rejectionCount.textContent = `${rejectionReason.value.length}/500`; });
-    })();
+    // Tab switching with smooth animations
+    function showTab(tabName) {
+        const isLabTab = ['pending', 'approved', 'rejected'].includes(tabName);
+        
+        // Hide the other lab-booking tabs.
+        if (isLabTab) {
+            // Hide all lab booking tabs
+            document.getElementById('pending-tab').classList.add('hidden');
+            document.getElementById('approved-tab').classList.add('hidden');
+            document.getElementById('rejected-tab').classList.add('hidden');
+            
+            // Remove active state from all lab tab buttons
+            document.querySelectorAll('#lab-section .tab-button').forEach(btn => {
+                btn.classList.remove('border-yellow-500', 'text-yellow-700', 'border-green-500', 'text-green-700', 'border-red-500', 'text-red-700');
+                btn.classList.add('border-transparent', 'text-gray-500');
+                
+                // Reset icon backgrounds
+                const iconBg = btn.querySelector('div.bg-yellow-100, div.bg-green-100, div.bg-red-100');
+                if (iconBg) {
+                    iconBg.classList.remove('bg-yellow-100', 'bg-green-100', 'bg-red-100');
+                    iconBg.classList.add('bg-gray-100');
+                }
+                
+                // Update badge colors
+                const badge = btn.querySelector('span.rounded-full');
+                if (badge) {
+                    badge.classList.remove('bg-yellow-500', 'text-white', 'bg-green-500', 'bg-red-500');
+                    badge.classList.add('bg-gray-300', 'text-gray-700');
+                }
+
+                btn.setAttribute('aria-selected', 'false');
+            });
+        }
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.remove('hidden');
+        
+        // Add active state to clicked button
+        const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        const iconBg = activeBtn.querySelector('div.p-2');
+        const badge = activeBtn.querySelector('span.rounded-full');
+        
+        if (tabName === 'pending') {
+            activeBtn.classList.add('border-yellow-500', 'text-yellow-700');
+            if (iconBg) {
+                iconBg.classList.remove('bg-gray-100');
+                iconBg.classList.add('bg-yellow-100');
+            }
+            if (badge) {
+                badge.classList.remove('bg-gray-300', 'text-gray-700');
+                badge.classList.add('bg-yellow-500', 'text-white');
+            }
+        } else if (tabName === 'approved') {
+            activeBtn.classList.add('border-green-500', 'text-green-700');
+            if (iconBg) {
+                iconBg.classList.remove('bg-gray-100');
+                iconBg.classList.add('bg-green-100');
+            }
+            if (badge) {
+                badge.classList.remove('bg-gray-300', 'text-gray-700');
+                badge.classList.add('bg-green-500', 'text-white');
+            }
+        } else if (tabName === 'rejected') {
+            activeBtn.classList.add('border-red-500', 'text-red-700');
+            if (iconBg) {
+                iconBg.classList.remove('bg-gray-100');
+                iconBg.classList.add('bg-red-100');
+            }
+            if (badge) {
+                badge.classList.remove('bg-gray-300', 'text-gray-700');
+                badge.classList.add('bg-red-500', 'text-white');
+            }
+        }
+        
+        activeBtn.classList.remove('border-transparent', 'text-gray-500');
+        activeBtn.setAttribute('aria-selected', 'true');
+        activeLabBookingTab = tabName;
+        filterLabBookings();
+        
+        // Smooth scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Approve booking
+    let _pendingApproveLabId = null;
+    function approveBooking(id) {
+        _pendingApproveLabId = id;
+        document.getElementById('approveLabModal').classList.remove('hidden');
+        document.getElementById('approveLabModal').classList.add('flex');
+    }
+    function closeApproveLabModal() {
+        document.getElementById('approveLabModal').classList.add('hidden');
+        document.getElementById('approveLabModal').classList.remove('flex');
+        _pendingApproveLabId = null;
+    }
+    document.getElementById('approveLabConfirmBtn').addEventListener('click', function() {
+        if (_pendingApproveLabId !== null) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/bookings/${_pendingApproveLabId}/approve`;
+            form.innerHTML = '@csrf<input type="hidden" name="return_status" value="pending">';
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+
+    // Show reject modal
+    function showRejectModal(id) {
+        const modal = document.getElementById('rejectModal');
+        const form = document.getElementById('rejectForm');
+        form.action = `/admin/bookings/${id}/reject`;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    // Close reject modal
+    function closeRejectModal() {
+        const modal = document.getElementById('rejectModal');
+        const form = document.getElementById('rejectForm');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        form.reset();
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('rejectModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeRejectModal();
+        }
+    });
+
+    // ESC key to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeRejectModal();
+        }
+    });
+
+    // Detect active tab from URL parameters on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('lab-booking-search')?.addEventListener('input', filterLabBookings);
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check which pagination parameter exists for Lab section
+        if (urlParams.has('approved_page')) {
+            showTab('approved');
+        } else if (urlParams.has('rejected_page')) {
+            showTab('rejected');
+        } else if (urlParams.has('pending_page')) {
+            showTab('pending');
+        } else {
+            // Default: show pending tab for lab section
+            showTab('pending');
+        }
+        
+    });
 </script>
 @endpush

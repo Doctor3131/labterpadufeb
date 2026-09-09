@@ -76,7 +76,7 @@ class AdminController extends Controller
      */
     public function show($id)
     {
-        $booking = Booking::with(['lab', 'handler'])->findOrFail($id);
+        $booking = Booking::with('lab')->findOrFail($id);
 
         return view('admin.booking-detail', compact('booking'));
     }
