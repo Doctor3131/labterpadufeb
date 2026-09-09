@@ -64,29 +64,10 @@ class AdminController extends Controller
             ->orderBy('updated_at', 'desc')
             ->paginate(15, ['*'], 'rejected_page');
 
-        // Asset Borrowings
-        $pendingAssetBorrowings = AssetBorrowing::with(['lab', 'borrowedItems.item'])
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc')
-            ->paginate(15, ['*'], 'asset_pending_page');
-
-        $approvedAssetBorrowings = AssetBorrowing::with(['lab', 'borrowedItems.item', 'approvedBy'])
-            ->whereIn('status', ['approved', 'borrowed'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15, ['*'], 'asset_approved_page');
-
-        $completedAssetBorrowings = AssetBorrowing::with(['lab', 'borrowedItems.item'])
-            ->whereIn('status', ['returned', 'rejected', 'cancelled'])
-            ->orderBy('updated_at', 'desc')
-            ->paginate(15, ['*'], 'asset_completed_page');
-
         return view('admin.lab-bookings', compact(
             'pendingBookings',
             'approvedBookings',
-            'rejectedBookings',
-            'pendingAssetBorrowings',
-            'approvedAssetBorrowings',
-            'completedAssetBorrowings'
+            'rejectedBookings'
         ));
     }
 
@@ -95,7 +76,7 @@ class AdminController extends Controller
      */
     public function show($id)
     {
-        $booking = Booking::with('lab')->findOrFail($id);
+        $booking = Booking::with(['lab', 'handler'])->findOrFail($id);
 
         return view('admin.booking-detail', compact('booking'));
     }
