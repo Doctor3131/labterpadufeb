@@ -13,6 +13,14 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans">
+    <nav class="bg-white shadow-sm border-b-2 border-yellow-400 sticky top-0 z-20" aria-label="Header halaman">
+        <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
+            <a href="{{ route('landing') }}" class="inline-flex" aria-label="Beranda Laboratorium FEB">
+                <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-8 md:h-12 w-auto object-contain">
+            </a>
+        </div>
+    </nav>
+
     <div class="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-6xl pb-32 md:pb-8">
         <div class="mb-4">
             <a href="{{ route('admin.lab.bookings', ['status' => $booking->status]) }}" class="group inline-flex items-center text-sm font-medium text-gray-600 hover:text-yellow-700 transition-colors">
