@@ -55,7 +55,15 @@ class ScheduleController extends Controller
         $schedules = $query
             ->orderByRaw('CASE WHEN start_date IS NULL THEN 1 ELSE 0 END') // nulls last
             ->orderByDesc('start_date')
-            ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
+            ->orderByRaw("CASE day
+                WHEN 'Senin' THEN 1
+                WHEN 'Selasa' THEN 2
+                WHEN 'Rabu' THEN 3
+                WHEN 'Kamis' THEN 4
+                WHEN 'Jumat' THEN 5
+                WHEN 'Sabtu' THEN 6
+                ELSE 7
+            END")
             ->orderBy('start_time')
             ->paginate(100)
             ->withQueryString();
