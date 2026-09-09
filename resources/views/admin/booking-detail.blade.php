@@ -13,6 +13,8 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans">
+    @include('components.flash-toast')
+
     <nav class="bg-white shadow-sm border-b-2 border-yellow-400 sticky top-0 z-20" aria-label="Header halaman">
         <div class="container mx-auto px-4 md:px-6 py-3 md:py-4">
             <a href="{{ route('landing') }}" class="inline-flex" aria-label="Beranda Laboratorium FEB">

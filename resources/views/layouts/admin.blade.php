@@ -36,6 +36,8 @@
     @stack('styles')
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50">
+    @include('components.flash-toast')
+
     <!-- Modern Navbar -->
     <nav class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-yellow-500">
         <div class="container mx-auto px-3 md:px-4 py-2 md:py-3">
