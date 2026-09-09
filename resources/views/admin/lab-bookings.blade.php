@@ -42,6 +42,30 @@
         .tab-button[aria-selected="true"] {
             background: #fffbeb;
         }
+
+        /* Keep the familiar layout, but reduce visual competition between cards. */
+        #lab-section .booking-card {
+            animation: none;
+            background: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        }
+
+        #lab-section .booking-card:hover {
+            transform: none;
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
+        }
+
+        #pending-tab .booking-card { border-left-color: #eab308; }
+        #approved-tab .booking-card { border-left-color: #10b981; }
+        #rejected-tab .booking-card { border-left-color: #ef4444; }
+
+        #lab-section .tab-button { background: #ffffff; }
+        #lab-section .tab-button[aria-selected="true"] { background: #fffbeb; }
+
+        #lab-section button:focus-visible,
+        #lab-section a:focus-visible { outline: 3px solid rgba(250, 204, 21, 0.55); outline-offset: 2px; }
     </style>
 @endpush
 
@@ -58,34 +82,34 @@
 
     <!-- Header Section -->
     <div class="mb-6">
-        <div class="bg-yellow-500 rounded-2xl p-4 md:p-6 shadow-lg">
+        <div class="bg-white border border-yellow-200 rounded-2xl p-4 md:p-6 shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Manajemen Peminjaman</h1>
-                    <p class="text-xs md:text-sm text-yellow-50">Kelola permintaan peminjaman laboratorium</p>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 mb-1">Peminjaman Laboratorium</h1>
+                    <p class="text-xs md:text-sm text-gray-600">Pengajuan laboratorium yang perlu diproses.</p>
                 </div>
-                <div class="bg-white/20 backdrop-blur-sm p-2 md:p-3 rounded-xl">
-                    <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-yellow-100 p-2 md:p-3 rounded-xl">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
             </div>
-            <div class="border-t border-yellow-400/50 pt-4">
+            <div class="border-t border-gray-100 pt-4">
                 <label for="lab-booking-search" class="sr-only">Cari pengajuan pada status yang sedang dibuka</label>
                 <div class="relative max-w-xl">
-                    <svg class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-yellow-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                    <input id="lab-booking-search" type="search" autocomplete="off" placeholder="Cari nama, mata kuliah, kegiatan, atau lab pada daftar ini" class="lab-booking-search w-full rounded-xl border border-yellow-300/70 bg-white/95 py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400">
+                    <input id="lab-booking-search" type="search" autocomplete="off" placeholder="Cari nama, mata kuliah, kegiatan, atau lab" class="lab-booking-search w-full rounded-xl border border-gray-300 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400">
                 </div>
-                <p id="lab-booking-search-status" class="mt-2 text-xs text-yellow-50" aria-live="polite">Pencarian berlaku pada daftar dan halaman yang sedang terbuka.</p>
+                <p id="lab-booking-search-status" class="mt-2 text-xs text-gray-500" aria-live="polite">Pencarian berlaku pada daftar dan halaman yang sedang terbuka.</p>
             </div>
         </div>
     </div>
 
     <!-- Success Message -->
     @if(session('success'))
-        <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 md:px-6 py-4 rounded-r-lg shadow-sm animate-pulse">
+        <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 md:px-6 py-4 rounded-r-lg shadow-sm">
             <div class="flex items-center">
                 <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -96,7 +120,7 @@
     @endif
 
     <!-- LAB BORROWING SECTION -->
-    <div id="lab-section" class="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+    <div id="lab-section" class="bg-slate-50 border border-gray-200 rounded-2xl shadow-sm mb-6 overflow-hidden">
         <div class="border-b-2 border-gray-100 overflow-x-auto">
             <nav class="flex px-2 min-w-max" aria-label="Status peminjaman lab" role="tablist">
                 <button id="pending-tab-button" onclick="showTab('pending')" class="tab-button flex-1 flex flex-col items-center px-3 py-3 text-xs md:text-sm font-semibold border-b-3 border-yellow-500 text-yellow-700" data-tab="pending" role="tab" aria-controls="pending-tab" aria-selected="true">
@@ -172,7 +196,7 @@
                 </h3>
                 
                 <!-- Info Detail - Grid Layout yang Lebih Rapi -->
-                <div class="space-y-2 text-sm text-gray-600 mb-4">
+                <div class="grid grid-cols-1 gap-x-5 gap-y-2 text-sm text-gray-600 mb-4 sm:grid-cols-2">
                     <div class="flex items-start">
                         <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
@@ -238,20 +262,20 @@
 
                 <!-- Action Buttons - Full width on mobile, stacked -->
                 <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-gray-100">
-                    <a href="{{ route('admin.booking.show', $booking->id) }}" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
+                    <a href="{{ route('admin.booking.show', $booking->id) }}" class="flex-1 px-4 py-2.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                         </svg>
                         <span>Detail</span>
                     </a>
-                    <button onclick="approveBooking({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
+                    <button onclick="approveBooking({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-lg transition-all shadow-sm flex items-center justify-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                         <span>Setujui</span>
                     </button>
-                    <button onclick="showRejectModal({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center">
+                    <button onclick="showRejectModal({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -260,8 +284,8 @@
                 </div>
             </div>
         @empty
-            <div class="bg-yellow-50 rounded-2xl shadow-inner p-8 md:p-16 text-center">
-                <div class="inline-block p-5 bg-yellow-100 rounded-2xl mb-4 shadow-lg">
+            <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-8 md:p-16 text-center">
+                <div class="inline-block p-5 bg-yellow-100 rounded-2xl mb-4">
                     <svg class="w-12 h-12 md:w-16 md:h-16 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -378,8 +402,8 @@
                 </div>
             </div>
         @empty
-            <div class="bg-green-50 rounded-2xl shadow-inner p-8 md:p-16 text-center">
-                <div class="inline-block p-5 bg-green-100 rounded-2xl mb-4 shadow-lg">
+            <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-8 md:p-16 text-center">
+                <div class="inline-block p-5 bg-green-100 rounded-2xl mb-4">
                     <svg class="w-12 h-12 md:w-16 md:h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -484,8 +508,8 @@
                 @endif
             </div>
         @empty
-            <div class="bg-red-50 rounded-2xl shadow-inner p-8 md:p-16 text-center">
-                <div class="inline-block p-5 bg-red-100 rounded-2xl mb-4 shadow-lg">
+            <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-8 md:p-16 text-center">
+                <div class="inline-block p-5 bg-red-100 rounded-2xl mb-4">
                     <svg class="w-12 h-12 md:w-16 md:h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
