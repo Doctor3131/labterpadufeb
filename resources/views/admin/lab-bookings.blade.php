@@ -57,10 +57,6 @@
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
         }
 
-        #pending-tab .booking-card { border-left-color: #eab308; }
-        #approved-tab .booking-card { border-left-color: #10b981; }
-        #rejected-tab .booking-card { border-left-color: #ef4444; }
-
         #lab-section .tab-button { background: #ffffff; }
         #lab-section .tab-button[aria-selected="true"] { background: #fffbeb; }
 
@@ -162,12 +158,12 @@
     <!-- Pending Bookings -->
     <div id="pending-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="pending-tab-button">
         @forelse($pendingBookings as $booking)
-            <div class="booking-card bg-yellow-50 rounded-2xl shadow-lg hover:shadow-2xl mb-3 p-4 border-l-4 border-yellow-500 transition-all">
+            <div class="booking-card rounded-xl mb-2.5 p-3 transition-all">
                 <!-- Header dengan badges dan tanggal -->
                 <div class="flex items-start justify-between gap-2 mb-0">
                     <div class="flex flex-wrap items-center gap-2 flex-1">
-                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
-                        <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
+                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-2.5 py-1 text-xs" />
+                        <x-booking-badge :type="$booking->booking_type" class="px-2.5 py-1 text-xs font-semibold rounded-lg" />
                         <!-- Waktu Dibuat - Inline -->
                         <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                             {{ $booking->created_at->diffForHumans() }}
@@ -185,7 +181,7 @@
                 </div>
                 
                 <!-- Judul -->
-                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
+                <h3 class="text-base font-bold text-gray-800 mb-1 mt-2">
                     @if($booking->booking_type === 'non_perkuliahan')
                         {{ $booking->activity_name }}
                     @elseif($booking->booking_type === 'pribadi')
@@ -196,7 +192,7 @@
                 </h3>
                 
                 <!-- Info Detail - Grid Layout yang Lebih Rapi -->
-                <div class="grid grid-cols-1 gap-x-5 gap-y-2 text-sm text-gray-600 mb-4 sm:grid-cols-2">
+                <div class="grid grid-cols-1 gap-x-5 gap-y-1.5 text-sm text-gray-600 mb-3 sm:grid-cols-2">
                     <div class="flex items-start">
                         <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
@@ -261,21 +257,21 @@
                 </div>
 
                 <!-- Action Buttons - Full width on mobile, stacked -->
-                <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-gray-100">
-                    <a href="{{ route('admin.booking.show', $booking->id) }}" class="flex-1 px-4 py-2.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center">
+                <div class="flex flex-col sm:flex-row gap-2 pt-2.5 border-t border-gray-100">
+                    <a href="{{ route('admin.booking.show', $booking->id) }}" class="flex-1 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                         </svg>
                         <span>Detail</span>
                     </a>
-                    <button onclick="approveBooking({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-lg transition-all shadow-sm flex items-center justify-center">
+                    <button onclick="approveBooking({{ $booking->id }})" class="flex-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-lg transition-all shadow-sm flex items-center justify-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                         <span>Setujui</span>
                     </button>
-                    <button onclick="showRejectModal({{ $booking->id }})" class="flex-1 px-4 py-2.5 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center">
+                    <button onclick="showRejectModal({{ $booking->id }})" class="flex-1 px-3 py-2 bg-white hover:bg-red-50 border border-red-200 text-red-700 text-sm font-semibold rounded-lg transition-all flex items-center justify-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
@@ -306,18 +302,18 @@
     <!-- Approved Bookings -->
     <div id="approved-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="approved-tab-button">
         @forelse($approvedBookings as $booking)
-            <div class="booking-card bg-green-50 rounded-2xl shadow-lg mb-3 p-4 border-l-4 border-green-500 hover:shadow-xl transition-all">
+            <div class="booking-card rounded-xl mb-2.5 p-3 transition-all">
                 <!-- Header dengan badges dan tanggal -->
                 <div class="flex items-start justify-between gap-2 mb-0">
                     <div class="flex flex-wrap items-center gap-2 flex-1">
-                        <span class="px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg shadow-sm flex items-center">
+                        <span class="px-2.5 py-1 bg-green-500 text-white text-xs font-bold rounded-lg flex items-center">
                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
                             Disetujui
                         </span>
-                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
-                        <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
+                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-2.5 py-1 text-xs" />
+                        <x-booking-badge :type="$booking->booking_type" class="px-2.5 py-1 text-xs font-semibold rounded-lg" />
                     </div>
                     <!-- Tanggal & Waktu - Compact -->
                     <div class="flex flex-col items-end text-right flex-shrink-0">
@@ -331,7 +327,7 @@
                 </div>
 
                 <!-- Judul -->
-                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
+                <h3 class="text-base font-bold text-gray-800 mb-1 mt-1.5">
                     @if($booking->booking_type === 'non_perkuliahan')
                         {{ $booking->activity_name }}
                     @elseif($booking->booking_type === 'pribadi')
@@ -342,7 +338,7 @@
                 </h3>
                 
                 <!-- Info Detail -->
-                <div class="space-y-1 mb-3">
+                <div class="space-y-1 mb-2.5">
                     @if($booking->booking_type === 'perkuliahan_tetap' || $booking->booking_type === 'perkuliahan_tidak_tetap')
                         <p class="text-sm text-gray-600">
                             <strong>Dosen:</strong> {{ $booking->lecturer_name }}
@@ -370,9 +366,9 @@
                 </div>
 
                 <!-- Footer Actions -->
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-3 border-t border-gray-100">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 pt-2.5 border-t border-gray-100">
                     @if($booking->handler)
-                        <span class="text-xs text-purple-600 font-medium flex items-center">
+                        <span class="text-xs text-gray-500 font-medium flex items-center">
                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                             </svg>
@@ -391,7 +387,7 @@
                             </a>
                         @endif
                         @if($booking->booking_type !== 'pribadi')
-                            <a href="{{ route('booking.print', $booking->tracking_token) }}" target="_blank" class="flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                            <a href="{{ route('booking.print', $booking->tracking_token) }}" target="_blank" class="flex items-center text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
@@ -424,18 +420,18 @@
     <!-- Rejected Bookings -->
     <div id="rejected-tab" class="tab-content hidden p-3 md:p-6" role="tabpanel" aria-labelledby="rejected-tab-button">
         @forelse($rejectedBookings as $booking)
-            <div class="booking-card bg-red-50 rounded-2xl shadow-lg mb-3 p-4 border-l-4 border-red-500 hover:shadow-xl transition-all">
+            <div class="booking-card rounded-xl mb-2.5 p-3 transition-all">
                 <!-- Header dengan badges dan tanggal -->
                 <div class="flex items-start justify-between gap-2 mb-0">
                     <div class="flex flex-wrap items-center gap-2 flex-1">
-                        <span class="px-3 py-1.5 bg-red-500 text-white text-xs font-bold rounded-lg shadow-sm flex items-center">
+                        <span class="px-2.5 py-1 bg-red-500 text-white text-xs font-bold rounded-lg flex items-center">
                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                             </svg>
                             Ditolak
                         </span>
-                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-3 py-1.5 text-xs lg:text-sm" />
-                        <x-booking-badge :type="$booking->booking_type" class="px-3 py-1.5 text-xs font-semibold rounded-lg" />
+                        <x-room-badge :lab="$booking->lab->name" :type="$booking->booking_type" class="px-2.5 py-1 text-xs" />
+                        <x-booking-badge :type="$booking->booking_type" class="px-2.5 py-1 text-xs font-semibold rounded-lg" />
                     </div>
                     <!-- Tanggal & Waktu - Compact -->
                     <div class="flex flex-col items-end text-right flex-shrink-0">
@@ -449,7 +445,7 @@
                 </div>
 
                 <!-- Judul -->
-                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1.5 mt-2">
+                <h3 class="text-base font-bold text-gray-800 mb-1 mt-1.5">
                     @if($booking->booking_type === 'non_perkuliahan')
                         {{ $booking->activity_name }}
                     @elseif($booking->booking_type === 'pribadi')
@@ -460,7 +456,7 @@
                 </h3>
                 
                 <!-- Info Detail -->
-                <div class="space-y-1 mb-3">
+                <div class="space-y-1 mb-2.5">
                     @if($booking->booking_type === 'perkuliahan_tetap' || $booking->booking_type === 'perkuliahan_tidak_tetap')
                         <p class="text-sm text-gray-600">
                             <strong>Dosen:</strong> {{ $booking->lecturer_name }}
@@ -489,7 +485,7 @@
 
                 <!-- Alasan Penolakan -->
                 @if($booking->rejection_reason)
-                    <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="mt-2.5 p-2.5 bg-red-50 border border-red-200 rounded-lg">
                         <p class="text-xs font-semibold text-red-600 mb-1">Alasan Penolakan:</p>
                         <p class="text-sm text-red-700">{{ $booking->rejection_reason }}</p>
                     </div>
@@ -497,8 +493,8 @@
                 
                 <!-- Footer - Handler Info -->
                 @if($booking->handler)
-                    <div class="mt-3 pt-3 border-t border-gray-100">
-                        <span class="text-xs text-purple-600 font-medium flex items-center">
+                    <div class="mt-2.5 pt-2.5 border-t border-gray-100">
+                        <span class="text-xs text-gray-500 font-medium flex items-center">
                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                             </svg>
