@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Database\QueryException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +21,23 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->renderable(function (QueryException $exception, $request) {
+            if (! $request->routeIs('admin.schedules.calendar.change')) {
+                return null;
+            }
+
+            report($exception);
+            $message = str_contains($exception->getMessage(), 'schedule_occurrences')
+                ? 'Pertemuan ini sudah memiliki perubahan. Muat ulang kalender, lalu coba lagi.'
+                : 'Perubahan jadwal tidak dapat disimpan. Silakan coba lagi.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 409);
+            }
+
+            return back()->with('error', $message);
+        });
+
         $exceptions->renderable(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, $request) {
             $errorMessage = 'File yang Anda upload terlalu besar. Maksimal ukuran file adalah 5MB. Silakan compress file PDF Anda terlebih dahulu.';
 

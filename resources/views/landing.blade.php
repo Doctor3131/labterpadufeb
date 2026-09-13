@@ -213,12 +213,13 @@
     <section class="py-8 lg:py-16">
         <div class="container mx-auto px-4 lg:px-8">
             <!-- Week Info -->
-            <div class="text-center mb-6 animate-fade-in-up animation-delay-400 relative z-10">
+            <div class="text-center mb-6 animate-fade-in-up animation-delay-400 relative z-50">
                 <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 mb-2">Jadwal Laboratorium</h2>
                 <p id="calWeekLabel" class="text-slate-600">Memuat...</p>
                 <div class="relative inline-block">
-                    <button id="btnOpenCalendar"
-                        class="inline-flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-semibold mt-2">
+                    <button id="btnOpenCalendar" type="button" aria-haspopup="dialog" aria-expanded="false"
+                        aria-controls="miniCalendarPopup"
+                        class="inline-flex items-center gap-1.5 text-sm text-yellow-700 hover:text-yellow-800 font-semibold mt-2 rounded-lg px-2.5 py-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -226,11 +227,12 @@
                         Lihat tanggal lain
                     </button>
                     <!-- Mini Calendar Popup -->
-                    <div id="miniCalendarPopup"
-                        class="hidden absolute z-[100] mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 w-[300px]"
+                    <div id="miniCalendarPopup" role="dialog" aria-label="Pilih tanggal jadwal"
+                        class="public-mini-calendar hidden absolute z-[100] mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 w-[300px]"
                         style="left:50%; transform:translateX(-50%);">
                         <div class="flex items-center justify-between mb-3">
-                            <button id="calPrevMonth" class="p-1 hover:bg-slate-100 rounded-lg transition">
+                            <button id="calPrevMonth" type="button" aria-label="Bulan sebelumnya"
+                                class="p-1.5 hover:bg-yellow-50 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400">
                                 <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -238,7 +240,8 @@
                                 </svg>
                             </button>
                             <span id="calMonthLabel" class="font-bold text-slate-800"></span>
-                            <button id="calNextMonth" class="p-1 hover:bg-slate-100 rounded-lg transition">
+                            <button id="calNextMonth" type="button" aria-label="Bulan berikutnya"
+                                class="p-1.5 hover:bg-yellow-50 rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400">
                                 <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -256,11 +259,13 @@
                             <div>MG</div>
                         </div>
                         <div id="calDaysGrid" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+                        <p id="calendarPickerStatus" class="min-h-4 mt-2 text-center text-xs text-slate-500"
+                            aria-live="polite"></p>
                         <div class="mt-3 pt-3 border-t border-slate-200 flex justify-between">
-                            <button id="calToday"
-                                class="text-xs text-yellow-600 hover:text-yellow-700 font-semibold">Hari Ini</button>
-                            <button id="calClose"
-                                class="text-xs text-slate-500 hover:text-slate-700 font-semibold">Tutup</button>
+                            <button id="calToday" type="button"
+                                class="text-xs text-yellow-700 hover:text-yellow-800 font-semibold rounded-md px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400">Hari ini</button>
+                            <button id="calClose" type="button"
+                                class="text-xs text-slate-600 hover:text-slate-800 font-semibold rounded-md px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Tutup</button>
                         </div>
                     </div>
                 </div>
@@ -502,13 +507,15 @@
             let selectedDay = null;   // Currently selected day name
             let selectedDate = null;  // Currently selected date string
             let calViewMonth = null;  // Mini-calendar current month (Date)
+            let pendingCalendarDate = null; // Date currently being loaded from the picker
+            let scheduleRequestId = 0; // Ignore responses from an older date selection
             let allLabs = [];         // Labs list
 
             // ==================== COLOR MAPPING ====================
             const TYPE_COLORS = {
-                'perkuliahan_tetap': { bg: 'bg-yellow-300', accent: 'bg-yellow-600', border: 'border-yellow-500', shadow: 'shadow-yellow-100', text: 'text-yellow-900' },
-                'perkuliahan_tidak_tetap': { bg: 'bg-indigo-400', accent: 'bg-indigo-700', border: 'border-indigo-500', shadow: 'shadow-indigo-100', text: 'text-indigo-900' },
-                'non_perkuliahan': { bg: 'bg-emerald-400', accent: 'bg-emerald-700', border: 'border-emerald-500', shadow: 'shadow-emerald-100', text: 'text-emerald-900' }
+                'perkuliahan_tetap': { bg: 'bg-yellow-100', accent: 'bg-yellow-500', border: 'border-yellow-300', shadow: 'shadow-yellow-100', text: 'text-yellow-900' },
+                'perkuliahan_tidak_tetap': { bg: 'bg-indigo-50', accent: 'bg-indigo-500', border: 'border-indigo-200', shadow: 'shadow-indigo-100', text: 'text-indigo-900' },
+                'non_perkuliahan': { bg: 'bg-emerald-50', accent: 'bg-emerald-500', border: 'border-emerald-200', shadow: 'shadow-emerald-100', text: 'text-emerald-900' }
             };
 
             // ==================== HELPERS ====================
@@ -536,11 +543,38 @@
                 return `${y}-${m}-${dd}`;
             }
 
+            function formatPickerDate(dateValue) {
+                return new Date(dateValue + 'T00:00:00').toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+
+            function setCalendarStatus(message, tone = 'muted') {
+                const status = document.getElementById('calendarPickerStatus');
+                if (!status) return;
+
+                const toneClasses = {
+                    muted: 'text-slate-500',
+                    success: 'text-emerald-600',
+                    error: 'text-red-600'
+                };
+                status.className = `min-h-4 mt-2 text-center text-xs ${toneClasses[tone] || toneClasses.muted}`;
+                status.textContent = message;
+            }
+
             // ==================== API ====================
             function loadSchedules(targetDate) {
+                const requestId = ++scheduleRequestId;
                 let url = `{{ route('schedules.week') }}`;
                 if (targetDate) {
                     url += `?date=${targetDate}`;
+                }
+
+                if (targetDate) {
+                    setCalendarStatus(`Memuat jadwal ${formatPickerDate(targetDate)}...`);
                 }
 
                 // Show loading
@@ -556,8 +590,13 @@
                 </div>`;
 
                 fetch(url)
-                    .then(r => r.json())
+                    .then(r => {
+                        if (!r.ok) throw new Error(`Schedule request failed with status ${r.status}`);
+                        return r.json();
+                    })
                     .then(data => {
+                        if (requestId !== scheduleRequestId) return;
+
                         weekData = data;
                         allLabs = data.labs || [];
 
@@ -594,9 +633,23 @@
                                 selectDay(DAYS_ID[0], data.week_start);
                             }
                         }
+
+                        pendingCalendarDate = null;
+                        if (!document.getElementById('miniCalendarPopup').classList.contains('hidden')) {
+                            renderCalendar();
+                            setCalendarStatus(targetDate ? 'Jadwal berhasil diperbarui.' : '');
+                        }
                     })
                     .catch(err => {
+                        if (requestId !== scheduleRequestId) return;
+
                         console.error('Error loading schedules:', err);
+                        pendingCalendarDate = null;
+                        const calendarPopup = document.getElementById('miniCalendarPopup');
+                        if (calViewMonth && !calendarPopup.classList.contains('hidden')) {
+                            renderCalendar();
+                        }
+                        setCalendarStatus('Jadwal belum dapat dimuat. Coba pilih tanggal lain.', 'error');
                         document.getElementById('calendarGrid').innerHTML = `
                         <div class="text-center py-12">
                             <svg class="w-16 h-16 text-orange-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -848,13 +901,36 @@
             // ==================== MINI CALENDAR ====================
             function openCalendar() {
                 const popup = document.getElementById('miniCalendarPopup');
-                popup.classList.toggle('hidden');
-                if (!popup.classList.contains('hidden')) {
-                    // Set current month based on selected date
+                const button = document.getElementById('btnOpenCalendar');
+                const shouldOpen = popup.classList.contains('hidden');
+
+                popup.classList.toggle('hidden', !shouldOpen);
+                button.setAttribute('aria-expanded', String(shouldOpen));
+
+                if (shouldOpen) {
+                    // Set current month based on the selected date.
                     calViewMonth = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
                     calViewMonth.setDate(1);
+                    pendingCalendarDate = null;
                     renderCalendar();
+                    setCalendarStatus('Pilih tanggal untuk melihat pekannya.');
                 }
+            }
+
+            function closeCalendar(restoreFocus = false) {
+                const popup = document.getElementById('miniCalendarPopup');
+                const button = document.getElementById('btnOpenCalendar');
+                popup.classList.add('hidden');
+                button.setAttribute('aria-expanded', 'false');
+                if (restoreFocus) button.focus();
+            }
+
+            function selectCalendarDate(dateValue) {
+                pendingCalendarDate = dateValue;
+                const date = new Date(dateValue + 'T00:00:00');
+                calViewMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+                renderCalendar();
+                loadSchedules(dateValue);
             }
 
             function renderCalendar() {
@@ -874,7 +950,7 @@
 
                 // Empty cells before first day
                 for (let i = 0; i < startDow; i++) {
-                    html += '<div></div>';
+                    html += '<span aria-hidden="true"></span>';
                 }
 
                 // Day cells
@@ -882,24 +958,32 @@
                     const cellDate = new Date(year, month, d);
                     const cellStr = dateStr(cellDate);
                     const isToday = cellStr === todayStr;
-                    const isSelected = cellStr === selectedDate;
+                    const isSelected = cellStr === selectedDate || cellStr === pendingCalendarDate;
                     const isSunday = cellDate.getDay() === 0;
 
-                    let classes = 'py-1.5 rounded-lg cursor-pointer transition text-sm ';
+                    let classes = 'h-9 rounded-lg transition text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-1 ';
                     if (isSelected) {
-                        classes += 'bg-yellow-500 text-white font-bold shadow-md ';
+                        classes += 'bg-yellow-500 text-white font-bold shadow-sm ';
                     } else if (isToday) {
-                        classes += 'bg-yellow-100 text-yellow-800 font-bold ring-2 ring-yellow-400 ';
+                        classes += 'bg-yellow-50 text-yellow-800 font-bold ring-1 ring-yellow-400 ';
                     } else if (isSunday) {
                         classes += 'text-slate-300 cursor-default ';
                     } else {
-                        classes += 'hover:bg-slate-100 text-slate-700 ';
+                        classes += 'hover:bg-yellow-50 text-slate-700 ';
                     }
 
                     if (isSunday) {
-                        html += `<div class="${classes}">${d}</div>`;
+                        html += `<span class="${classes} flex items-center justify-center" aria-hidden="true">${d}</span>`;
                     } else {
-                        html += `<div class="${classes} cal-day-cell" data-date="${cellStr}">${d}</div>`;
+                        const ariaLabel = cellDate.toLocaleDateString('id-ID', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                        const ariaCurrent = isToday ? ' aria-current="date"' : '';
+                        const ariaPressed = isSelected ? ' aria-pressed="true"' : ' aria-pressed="false"';
+                        html += `<button type="button" class="${classes} cal-day-cell" data-date="${cellStr}" aria-label="${ariaLabel}"${ariaCurrent}${ariaPressed}>${d}</button>`;
                     }
                 }
 
@@ -968,11 +1052,10 @@
                     openCalendar();
                 });
                 document.getElementById('calClose').addEventListener('click', () => {
-                    document.getElementById('miniCalendarPopup').classList.add('hidden');
+                    closeCalendar(true);
                 });
                 document.getElementById('calToday').addEventListener('click', () => {
-                    document.getElementById('miniCalendarPopup').classList.add('hidden');
-                    loadSchedules(dateStr(new Date()));
+                    selectCalendarDate(dateStr(new Date()));
                 });
                 document.getElementById('calPrevMonth').addEventListener('click', () => {
                     calViewMonth.setMonth(calViewMonth.getMonth() - 1);
@@ -988,7 +1071,13 @@
                     const popup = document.getElementById('miniCalendarPopup');
                     const btn = document.getElementById('btnOpenCalendar');
                     if (!popup.contains(e.target) && !btn.contains(e.target)) {
-                        popup.classList.add('hidden');
+                        closeCalendar();
+                    }
+                });
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && !document.getElementById('miniCalendarPopup').classList.contains('hidden')) {
+                        closeCalendar(true);
                     }
                 });
 
@@ -996,8 +1085,8 @@
                 document.getElementById('calDaysGrid').addEventListener('click', function (e) {
                     const cell = e.target.closest('.cal-day-cell');
                     if (cell && cell.dataset.date) {
-                        document.getElementById('miniCalendarPopup').classList.add('hidden');
-                        loadSchedules(cell.dataset.date);
+                        e.stopPropagation();
+                        selectCalendarDate(cell.dataset.date);
                     }
                 });
             });

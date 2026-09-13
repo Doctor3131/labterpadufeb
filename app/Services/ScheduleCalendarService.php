@@ -110,6 +110,7 @@ class ScheduleCalendarService
                     'student_count' => $schedule->student_count,
                     'booking_type' => $schedule->booking?->booking_type ?? $schedule->type,
                     'type' => $schedule->type,
+                    'recurrence_days' => $schedule->recurrence_days,
                     'is_booking' => (bool) $schedule->booking_id,
                     'is_recurring' => $this->isRecurringSchedule($schedule),
                     'is_exception' => (bool) $occurrence,

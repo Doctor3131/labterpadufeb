@@ -9,6 +9,7 @@ use App\Models\ScheduleChangeLog;
 use App\Models\ScheduleOccurrence;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -62,18 +63,15 @@ class ScheduleChangeService
                 ->whereDate('occurrence_date', $originalDate)
                 ->first()?->toArray();
 
-            $occurrence = $schedule->occurrences()->updateOrCreate(
-                ['occurrence_date' => $originalDate->toDateString()],
-                [
-                    'type' => ScheduleOccurrence::TYPE_MOVED,
-                    'override_date' => $targetDate->toDateString(),
-                    'lab_id' => $labId,
-                    'start_time' => $startTime,
-                    'end_time' => $endTime,
-                    'change_reason' => $reason,
-                    'changed_by' => $userId,
-                ]
-            );
+            $occurrence = $this->upsertOccurrence($schedule, $originalDate, [
+                'type' => ScheduleOccurrence::TYPE_MOVED,
+                'override_date' => $targetDate->toDateString(),
+                'lab_id' => $labId,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'change_reason' => $reason,
+                'changed_by' => $userId,
+            ]);
 
             $this->log($schedule, $occurrence, 'move', 'single', $originalDate, $before, $occurrence->fresh()->toArray(), $reason, $userId);
 
@@ -95,18 +93,15 @@ class ScheduleChangeService
                 ->whereDate('occurrence_date', $originalDate)
                 ->first()?->toArray();
 
-            $occurrence = $schedule->occurrences()->updateOrCreate(
-                ['occurrence_date' => $originalDate->toDateString()],
-                [
-                    'type' => ScheduleOccurrence::TYPE_CANCELLED,
-                    'override_date' => null,
-                    'lab_id' => null,
-                    'start_time' => null,
-                    'end_time' => null,
-                    'change_reason' => $reason,
-                    'changed_by' => $userId,
-                ]
-            );
+            $occurrence = $this->upsertOccurrence($schedule, $originalDate, [
+                'type' => ScheduleOccurrence::TYPE_CANCELLED,
+                'override_date' => null,
+                'lab_id' => null,
+                'start_time' => null,
+                'end_time' => null,
+                'change_reason' => $reason,
+                'changed_by' => $userId,
+            ]);
 
             $this->log($schedule, $occurrence, 'cancel', 'single', $originalDate, $before, $occurrence->fresh()->toArray(), $reason, $userId);
 
@@ -338,6 +333,42 @@ class ScheduleChangeService
     {
         if ($date->isSunday()) {
             throw ValidationException::withMessages(['target_date' => 'Laboratorium tidak dijadwalkan pada hari Minggu.']);
+        }
+    }
+
+    /**
+     * Find an occurrence by calendar date before creating it.
+     *
+     * SQLite stores date casts with a time component in some local databases,
+     * so an exact `occurrence_date = YYYY-MM-DD` lookup can miss an existing
+     * row and incorrectly attempt a duplicate insert.
+     */
+    private function upsertOccurrence(Schedule $schedule, Carbon $date, array $values): ScheduleOccurrence
+    {
+        try {
+            $occurrence = $schedule->occurrences()
+                ->whereDate('occurrence_date', $date->toDateString())
+                ->first();
+
+            if ($occurrence) {
+                $occurrence->fill($values);
+                $occurrence->save();
+
+                return $occurrence;
+            }
+
+            return $schedule->occurrences()->create(array_merge([
+                'occurrence_date' => $date->toDateString(),
+            ], $values));
+        } catch (QueryException $exception) {
+            if ($exception->getCode() === '23000'
+                && str_contains($exception->getMessage(), 'schedule_occurrences')) {
+                throw ValidationException::withMessages([
+                    'occurrence_date' => 'Pertemuan ini baru saja berubah. Muat ulang kalender, lalu coba lagi.',
+                ]);
+            }
+
+            throw $exception;
         }
     }
 

@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import laravel from "laravel-vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 // [DITAMBAHKAN] Import untuk auto-detect IP address
@@ -26,9 +26,11 @@ const localIp = getLocalIpAddress();
 // [DITAMBAHKAN] Tampilkan IP yang akan digunakan saat dev server berjalan
 console.log(`🌐 Vite akan menggunakan IP: ${localIp}`);
 
-// [DITAMBAHKAN] Allow an explicit HMR host override,
-// e.g. VITE_HMR_HOST=localhost when the host browser reaches Vite on :5173.
-const hmrHost = process.env.VITE_HMR_HOST || localIp;
+// Allow the local browser and HMR endpoint to be configured per machine.
+// This avoids collisions when another Vite project already uses the default port.
+const env = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
+const hmrHost = env.VITE_HMR_HOST || "localhost";
+const devPort = Number(env.VITE_DEV_SERVER_PORT || 5173);
 
 export default defineConfig({
     plugins: [
@@ -43,7 +45,7 @@ export default defineConfig({
     // di jaringan yang sama (seperti mobile device) tanpa perlu mengubah file .env
     server: {
         host: "0.0.0.0", // [DITAMBAHKAN] Listening di semua network interfaces
-        port: 5173, // [DITAMBAHKAN] Port default Vite
+        port: devPort,
         strictPort: true, // [DITAMBAHKAN] Gagal jika port sudah digunakan
         hmr: {
             // [DITAMBAHKAN] Hot Module Replacement configuration
@@ -51,8 +53,8 @@ export default defineConfig({
             // berfungsi dengan baik saat diakses dari mobile device
             host: hmrHost, // [DITAMBAHKAN] Auto-detect IP, or VITE_HMR_HOST to override
             protocol: "ws", // [DITAMBAHKAN] WebSocket protocol untuk HMR
-            port: 5173, // [DITAMBAHKAN] Port untuk HMR WebSocket
-            clientPort: 5173, // [DITAMBAHKAN] Port yang digunakan client untuk connect
+            port: devPort,
+            clientPort: devPort,
         },
     },
 });

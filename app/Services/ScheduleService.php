@@ -111,6 +111,21 @@ class ScheduleService
             'student_count' => $validated['student_count'],
         ];
 
+        // A non-fixed lecture can be switched from a recurring series to a
+        // one-off schedule. Clear the old series metadata in that case so an
+        // edit cannot accidentally keep the previous end date or weekdays.
+        if ($type === 'perkuliahan_tidak_tetap' && ($validated['schedule_frequency'] ?? null) === 'once') {
+            $scheduleData['end_date'] = $scheduleData['start_date'];
+            $scheduleData['recurrence_days'] = null;
+        // Keep recurrence as explicit data when the admin form supplies it.
+        // An empty array means a one-off schedule and must not fall back to
+        // the primary day automatically.
+        } elseif (array_key_exists('recurrence_days', $validated)) {
+            $scheduleData['recurrence_days'] = ! empty($validated['recurrence_days'])
+                ? app(RecurrenceDateService::class)->normaliseDays($validated['recurrence_days'], $validated['day'])
+                : null;
+        }
+
         // Map course/lecturer/komting based on type
         if ($type === 'perkuliahan_tetap' || $type === 'perkuliahan_tidak_tetap') {
             $scheduleData['course'] = $validated['course_name'];
@@ -203,14 +218,18 @@ class ScheduleService
     /**
      * Check for schedule conflicts
      */
-    public static function checkConflict($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId = null)
+    public static function checkConflict($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId = null, ?array $recurrenceDays = null)
     {
         if ($startDate) {
-            $date = Carbon::parse($startDate);
-            $lastDate = Carbon::parse($endDate ?? $startDate);
-            $checked = 0;
+            $dates = app(RecurrenceDateService::class)->datesBetween(
+                Carbon::parse($startDate),
+                Carbon::parse($endDate ?? $startDate),
+                $recurrenceDays,
+                $day
+            );
 
-            while ($date->lte($lastDate) && $checked < 60) {
+            foreach ($dates as $dateString) {
+                $date = Carbon::parse($dateString);
                 $conflict = app(ScheduleCalendarService::class)->findConflict(
                     (int) $labId,
                     $date,
@@ -222,21 +241,27 @@ class ScheduleService
                 if ($conflict) {
                     return $conflict['label'].' pada '.$date->format('d/m/Y');
                 }
-
-                $date->addWeek();
-                $checked++;
             }
 
             return null;
         }
 
-        // Legacy date-less schedules cannot be expanded into concrete occurrences.
+        $days = app(RecurrenceDateService::class)->normaliseDays($recurrenceDays, $day);
+
+        // Date-less schedules are standing weekly reservations. Match all
+        // selected weekdays, including recurrence_days from older bookings.
         $query = Schedule::where('lab_id', $labId)
-            ->where('day', $day)
             ->where(function ($q) use ($startTime, $endTime) {
                 // Time overlap check
                 $q->whereTime('start_time', '<', $endTime)
                     ->whereTime('end_time', '>', $startTime);
+            })
+            ->where(function ($q) use ($days) {
+                $q->whereIn('day', $days);
+
+                foreach ($days as $recurrenceDay) {
+                    $q->orWhereJsonContains('recurrence_days', $recurrenceDay);
+                }
             });
 
         if ($excludeScheduleId) {

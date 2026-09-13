@@ -65,6 +65,8 @@ class ScheduleCalendarController extends Controller
             'lab_id' => ['required_if:action,move,resize', 'nullable', 'integer', 'exists:labs,id'],
             'start_time' => ['required_if:action,move,resize', 'nullable', 'date_format:H:i'],
             'end_time' => ['required_if:action,move,resize', 'nullable', 'date_format:H:i', 'after:start_time'],
+            'recurrence_days' => ['nullable', 'array', 'min:1'],
+            'recurrence_days.*' => ['in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu'],
             'end_date' => ['required_if:action,end_date', 'nullable', 'date'],
             'reason' => ['required', 'string', 'max:1000'],
         ]);
@@ -100,6 +102,7 @@ class ScheduleCalendarController extends Controller
                     'lab_id' => (int) $validated['lab_id'],
                     'start_time' => $validated['start_time'],
                     'end_time' => $validated['end_time'],
+                    'recurrence_days' => $validated['recurrence_days'] ?? null,
                 ],
                 $validated['reason'],
                 $userId

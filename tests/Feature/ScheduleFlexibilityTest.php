@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleChangeLog;
 use App\Services\ScheduleCalendarService;
 use App\Services\ScheduleChangeService;
+use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -77,6 +78,41 @@ class ScheduleFlexibilityTest extends TestCase
             'Koreksi tanpa audit khusus',
             null
         );
+    }
+
+    public function test_moving_an_occurrence_again_updates_its_existing_override(): void
+    {
+        [$sourceLab, $targetLab] = $this->labs();
+        $schedule = $this->schedule($sourceLab);
+
+        $changes = app(ScheduleChangeService::class);
+        $changes->moveOccurrence(
+            $schedule,
+            Carbon::parse('2026-09-14'),
+            Carbon::parse('2026-09-15'),
+            $targetLab->id,
+            '10:00',
+            '12:00',
+            'Pemindahan pertama',
+            null
+        );
+        $changes->moveOccurrence(
+            $schedule,
+            Carbon::parse('2026-09-14'),
+            Carbon::parse('2026-09-16'),
+            $targetLab->id,
+            '11:00',
+            '13:00',
+            'Pemindahan kedua',
+            null
+        );
+
+        $occurrence = $schedule->occurrences()->whereDate('occurrence_date', '2026-09-14')->first();
+
+        $this->assertNotNull($occurrence);
+        $this->assertSame('2026-09-16', $occurrence->override_date->toDateString());
+        $this->assertSame('11:00', $occurrence->start_time);
+        $this->assertSame(1, $schedule->occurrences()->count());
     }
 
     public function test_future_change_creates_a_new_revision_and_preserves_old_segment(): void
@@ -224,6 +260,84 @@ class ScheduleFlexibilityTest extends TestCase
             $events->pluck('date')->all()
         );
         $this->assertTrue($events->every(fn (array $event) => $event['is_recurring']));
+    }
+
+    public function test_conflict_check_covers_all_selected_weekdays(): void
+    {
+        [$sourceLab] = $this->labs();
+        Schedule::create([
+            'lab_id' => $sourceLab->id,
+            'day' => 'Rabu',
+            'recurrence_days' => ['Rabu'],
+            'start_date' => '2026-09-01',
+            'end_date' => '2026-09-30',
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'course' => 'Jadwal Rabu',
+            'type' => 'perkuliahan_tidak_tetap',
+            'student_count' => 20,
+        ]);
+
+        $conflict = ScheduleService::checkConflict(
+            $sourceLab->id,
+            'Senin',
+            '08:00',
+            '10:00',
+            '2026-09-07',
+            '2026-09-16',
+            null,
+            ['Senin', 'Rabu']
+        );
+
+        $this->assertSame('Jadwal Rabu pada 09/09/2026', $conflict);
+    }
+
+    public function test_one_off_non_fixed_mapping_clears_previous_recurrence_metadata(): void
+    {
+        $mapped = ScheduleService::mapFromRequest([
+            'lab_id' => 1,
+            'day' => 'Senin',
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'start_date' => '2026-09-14',
+            'end_date' => '2026-10-26',
+            'student_count' => 20,
+            'schedule_frequency' => 'once',
+            'recurrence_days' => ['Senin', 'Rabu'],
+            'course_name' => 'Kelas Sekali',
+            'lecturer_name' => 'Dosen Uji',
+        ], 'perkuliahan_tidak_tetap');
+
+        $this->assertSame('2026-09-14', $mapped['end_date']);
+        $this->assertNull($mapped['recurrence_days']);
+    }
+
+    public function test_date_less_conflict_matches_a_secondary_recurrence_day(): void
+    {
+        [$sourceLab] = $this->labs();
+        Schedule::create([
+            'lab_id' => $sourceLab->id,
+            'day' => 'Rabu',
+            'recurrence_days' => ['Rabu'],
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'course' => 'Jadwal Tetap Rabu',
+            'type' => 'perkuliahan_tetap',
+            'student_count' => 20,
+        ]);
+
+        $conflict = ScheduleService::checkConflict(
+            $sourceLab->id,
+            'Senin',
+            '09:00',
+            '11:00',
+            null,
+            null,
+            null,
+            ['Senin', 'Rabu']
+        );
+
+        $this->assertSame('Jadwal Tetap Rabu (08:00 - 10:00)', $conflict);
     }
 
     private function labs(): array

@@ -1,41 +1,34 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $isEdit ? 'Edit' : 'Tambah' }} Jadwal - Laboratorium dan Fasilitas Digital FEB UNDIP</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 min-h-screen">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50 border-b-4 border-yellow-500">
-        <div class="container mx-auto px-3 sm:px-4 md:px-6 py-3 md:py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <a href="{{ route('landing') }}">
-                        <img src="{{ asset('images/LogoUndips.png') }}" alt="Logo Undip" class="h-12 sm:h-14 md:h-16 w-auto object-contain">
-                    </a>
-                </div>
-                <a href="{{ route('admin.schedules.index') }}" class="px-3 sm:px-4 py-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg font-medium text-sm md:text-base">
-                    ← <span class="hidden sm:inline">Kembali ke </span>Daftar
-                </a>
-            </div>
-        </div>
-    </nav>
+@extends('layouts.admin')
 
-    <div class="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-8 max-w-3xl">
-        <!-- Header -->
-        <div class="mb-4 md:mb-6">
-            <h1 class="text-xl md:text-2xl font-bold text-gray-800">{{ $isEdit ? 'Edit' : 'Tambah' }} Jadwal</h1>
-            <p class="text-sm md:text-base text-gray-600">Silakan isi form berikut untuk {{ $isEdit ? 'memperbarui' : 'menambahkan' }} jadwal</p>
+@section('title', ($isEdit ? 'Edit' : 'Tambah').' Jadwal - Laboratorium dan Fasilitas Digital FEB UNDIP')
+
+@section('content')
+
+    <div class="admin-schedule-page mx-auto max-w-5xl px-0">
+        @include('admin.schedules.partials.navigation', [
+            'current' => $isEdit ? 'Edit Jadwal' : 'Tambah Jadwal',
+            'backUrl' => route('admin.schedules.index'),
+            'backLabel' => 'Kembali ke Manajemen Jadwal',
+            'includeSchedule' => true,
+        ])
+
+        <!-- Page heading -->
+        <div class="mb-6 flex flex-col gap-3 md:mb-8 md:flex-row md:items-end md:justify-between">
+            <div>
+                <p class="mb-1 text-xs font-bold uppercase tracking-[0.14em] text-yellow-700">{{ $isEdit ? 'Perubahan jadwal' : 'Jadwal baru' }}</p>
+                <h1 class="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">{{ $isEdit ? 'Edit' : 'Tambah' }} Jadwal</h1>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600">{{ $isEdit ? 'Halaman ini untuk mengubah detail jadwal. Untuk memindahkan satu pertemuan dengan cepat, gunakan kalender.' : 'Tentukan waktu, lokasi, dan informasi kegiatan untuk membuat jadwal laboratorium.' }}</p>
+            </div>
+            @if($isEdit)
+                <span class="inline-flex w-fit items-center rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-600">Jadwal #{{ $schedule->id }}</span>
+            @endif
         </div>
 
         <!-- Error Messages -->
         @if($errors->any())
-            <div class="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg">
-                <p class="font-bold">Terjadi Kesalahan:</p>
-                <ul class="list-disc list-inside mt-2">
+            <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
+                <p class="font-bold">Periksa kembali data berikut:</p>
+                <ul class="mt-2 list-disc list-inside text-sm">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -45,60 +38,130 @@
 
         <!-- Booking Info (if editing booking schedule) -->
         @if($isEdit && $schedule->booking)
-            <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-r-lg">
-                <p class="font-bold">Jadwal dari Booking</p>
-                <p class="text-sm">Booking #{{ $schedule->booking_id }} tetap disimpan sebagai permohonan asli; perubahan dicatat sebagai revisi jadwal.</p>
+            <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-900">
+                <p class="font-bold">Berasal dari pengajuan peminjaman</p>
+                <p class="mt-1 text-sm leading-5">Pengajuan #{{ $schedule->booking_id }} tetap disimpan sebagai data asli. Perubahan pada halaman ini dicatat sebagai revisi jadwal.</p>
             </div>
         @endif
 
-        @php $isRecurringEdit = $isEdit && in_array($schedule->type, ['perkuliahan_tetap']); @endphp
+        @if($isEdit)
+            <section class="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 md:p-5" aria-labelledby="schedule-summary-heading">
+                <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h2 id="schedule-summary-heading" class="text-base font-bold text-gray-900">Ringkasan jadwal saat ini</h2>
+                        <p class="mt-1 text-sm text-gray-600">Gunakan ringkasan ini untuk memastikan perubahan diterapkan pada jadwal yang benar.</p>
+                    </div>
+                    <span class="w-fit rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-500">Data tersimpan</span>
+                </div>
+                <dl class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Laboratorium</dt>
+                        <dd class="mt-1 font-semibold text-gray-900">{{ $schedule->lab?->name ?? '-' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Hari &amp; waktu</dt>
+                        <dd class="mt-1 font-semibold text-gray-900">{{ $schedule->day }} · {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Periode</dt>
+                        <dd class="mt-1 font-semibold text-gray-900">{{ $schedule->start_date?->format('d M Y') ?? 'Tanpa batas awal' }} – {{ $schedule->end_date?->format('d M Y') ?? 'Tanpa batas akhir' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Kegiatan</dt>
+                        <dd class="mt-1 font-semibold text-gray-900">{{ $schedule->course ?: '-' }}</dd>
+                    </div>
+                </dl>
+            </section>
+        @endif
+
+        @php
+            $isRecurringEdit = $isEdit && app(\App\Services\ScheduleCalendarService::class)->isRecurringSchedule($schedule);
+            $currentScheduleFrequency = old(
+                'schedule_frequency',
+                $isEdit && $schedule->type === 'perkuliahan_tidak_tetap' && $isRecurringEdit ? 'multiple' : 'once'
+            );
+            $selectedRecurrenceDays = (array) old('recurrence_days', $schedule->recurrence_days ?? []);
+            if ($isEdit && $schedule->type === 'perkuliahan_tidak_tetap' && $currentScheduleFrequency === 'multiple' && $selectedRecurrenceDays === []) {
+                $selectedRecurrenceDays = [$schedule->day];
+            }
+        @endphp
         @if($isRecurringEdit)
-            <!-- Lingkup Perubahan (for recurring series only) -->
-            <div class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-3">Lingkup Perubahan *</label>
-                <div class="space-y-3">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="radio" name="scope" value="all" checked form="scheduleForm"
-                               class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
-                        <span class="text-sm text-gray-700"><span class="font-medium">Semua yang belum terlaksana</span> — histori jadwal lampau tidak berubah</span>
+            <!-- Change scope for recurring series -->
+            <section class="mb-6 rounded-2xl border border-yellow-200 bg-yellow-50/50 p-4 md:p-5" aria-labelledby="change-scope-heading">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h2 id="change-scope-heading" class="text-base font-bold text-gray-900">Atur lingkup perubahan</h2>
+                        <p class="mt-1 text-sm leading-5 text-gray-600">Pilih bagian rangkaian jadwal yang ingin diubah. Pertemuan yang sudah lewat tetap tersimpan sebagai histori.</p>
+                    </div>
+                    <span class="w-fit rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-yellow-800">Histori aman</span>
+                </div>
+                <fieldset class="mt-4 space-y-3">
+                    <legend class="sr-only">Lingkup perubahan</legend>
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-yellow-300 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                        <input type="radio" name="scope" value="all" {{ old('scope', request('scope', 'all')) === 'all' ? 'checked' : '' }} form="scheduleForm"
+                               class="mt-1 h-4 w-4 accent-yellow-600 focus:ring-yellow-500">
+                        <span class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Semua pertemuan yang akan datang</span><span class="mt-0.5 block text-xs text-gray-500">Perubahan berlaku untuk jadwal setelah pertemuan ini.</span></span>
                     </label>
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="radio" name="scope" value="single" form="scheduleForm"
-                               class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
-                        <span class="text-sm text-gray-700"><span class="font-medium">Hanya tanggal ini</span> — ubah lab/jam hanya pada satu pertemuan</span>
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-yellow-300 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                        <input type="radio" name="scope" value="single" {{ old('scope', request('scope')) === 'single' ? 'checked' : '' }} form="scheduleForm"
+                               class="mt-1 h-4 w-4 accent-yellow-600 focus:ring-yellow-500">
+                        <span class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Pertemuan ini saja</span><span class="mt-0.5 block text-xs text-gray-500">Ubah lab atau waktu hanya pada satu tanggal.</span></span>
                     </label>
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="radio" name="scope" value="future" form="scheduleForm"
-                               class="mt-0.5 w-4 h-4 text-yellow-500 focus:ring-yellow-500">
-                        <span class="text-sm text-gray-700"><span class="font-medium">Tanggal ini &amp; selanjutnya</span> — ubah mulai satu pertemuan hingga akhir rangkaian</span>
+                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-yellow-300 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                        <input type="radio" name="scope" value="future" {{ old('scope', request('scope')) === 'future' ? 'checked' : '' }} form="scheduleForm"
+                               class="mt-1 h-4 w-4 accent-yellow-600 focus:ring-yellow-500">
+                        <span class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Pertemuan ini dan berikutnya</span><span class="mt-0.5 block text-xs text-gray-500">Perbarui rangkaian mulai tanggal ini sampai jadwal berakhir.</span></span>
                     </label>
 
                     <div id="occurrence-date-field" class="hidden pl-7">
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Kemunculan <span class="text-red-500">*</span></label>
-                        <input type="date" name="occurrence_date" id="occurrence_date" form="scheduleForm"
-                               class="w-full md:w-80 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        <p class="text-xs text-gray-500 mt-1">Hari pertemuan: <span class="font-medium">{{ $schedule->day }}</span>.</p>
+                        <label for="occurrence_date-trigger" class="mb-1 block text-sm font-medium text-gray-600">Tanggal pertemuan yang diubah <span class="text-red-500">*</span></label>
+                        <div class="schedule-date-picker w-full md:w-80" data-schedule-date-picker data-date-placeholder="Pilih tanggal pertemuan" data-date-label="Tanggal pertemuan yang diubah">
+                            <input type="hidden" name="occurrence_date" id="occurrence_date" form="scheduleForm"
+                                   value="{{ old('occurrence_date', request('occurrence_date', '')) }}">
+                            <button type="button" id="occurrence_date-trigger" class="schedule-date-trigger" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-controls="occurrence_date-calendar">
+                                <span data-date-value>Belum dipilih</span>
+                                <svg class="schedule-date-trigger-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 2v3m8-3v3M3.5 9.5h17M5 4.5h14A1.5 1.5 0 0120.5 6v13A1.5 1.5 0 0119 20.5H5A1.5 1.5 0 013.5 19V6A1.5 1.5 0 015 4.5z"/></svg>
+                            </button>
+                            <div id="occurrence_date-calendar" class="schedule-date-popover hidden" data-date-popover role="dialog" aria-label="Pilih tanggal pertemuan">
+                                <div class="schedule-date-header">
+                                    <button type="button" class="schedule-date-nav" data-date-prev aria-label="Bulan sebelumnya">‹</button>
+                                    <p class="schedule-date-month" data-date-month></p>
+                                    <button type="button" class="schedule-date-nav" data-date-next aria-label="Bulan berikutnya">›</button>
+                                </div>
+                                <div class="schedule-date-weekdays" data-date-weekdays></div>
+                                <div class="schedule-date-grid" data-date-grid role="grid" aria-label="Kalender"></div>
+                                <div class="schedule-date-footer">
+                                    <button type="button" class="schedule-date-link" data-date-today>Hari ini</button>
+                                    <button type="button" class="schedule-date-link schedule-date-clear" data-date-clear>Kosongkan</button>
+                                </div>
+                            </div>
+                            <p class="schedule-date-error hidden" data-date-error role="alert"></p>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Pilih tanggal pertemuan yang menjadi titik mulai perubahan.</p>
+                        <input type="hidden" name="target_date" value="{{ old('target_date', request('target_date', '')) }}" form="scheduleForm">
                     </div>
-                </div>
+                </fieldset>
                 <div class="mt-4">
                     <label for="change_reason" class="block text-sm font-semibold text-gray-700 mb-1">Alasan perubahan *</label>
                     <textarea id="change_reason" name="change_reason" form="scheduleForm" required rows="2" maxlength="1000"
                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                               placeholder="Contoh: perubahan ruang dari program studi">{{ old('change_reason') }}</textarea>
                 </div>
-            </div>
+            </section>
         @elseif($isEdit)
-            <div class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+            <section class="mb-6 rounded-2xl border border-yellow-200 bg-yellow-50/50 p-4 md:p-5" aria-labelledby="change-reason-heading">
+                <h2 id="change-reason-heading" class="text-base font-bold text-gray-900">Catatan perubahan</h2>
+                <p class="mt-1 mb-4 text-sm text-gray-600">Tuliskan alasan perubahan agar riwayat jadwal tetap mudah ditelusuri.</p>
                 <label for="change_reason" class="block text-sm font-semibold text-gray-700 mb-1">Alasan perubahan *</label>
                 <textarea id="change_reason" name="change_reason" form="scheduleForm" required rows="2" maxlength="1000"
                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                           placeholder="Contoh: perubahan ruang dari program studi">{{ old('change_reason') }}</textarea>
-            </div>
+            </section>
         @endif
 
         @if($isEdit && isset($changeLogs) && $changeLogs->isNotEmpty())
-            <details class="mb-6 bg-white border border-gray-200 rounded-xl shadow-sm p-4">
-                <summary class="cursor-pointer font-semibold text-gray-800">Riwayat perubahan ({{ $changeLogs->count() }})</summary>
+            <details class="mb-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5">
+                <summary class="cursor-pointer font-semibold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">Riwayat perubahan ({{ $changeLogs->count() }})</summary>
                 <div class="mt-4 overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="text-left text-gray-500 border-b">
@@ -121,17 +184,35 @@
         @endif
 
         <!-- Form -->
-        <div class="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6">
+        <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
             <form id="scheduleForm" action="{{ $isEdit ? route('admin.schedules.update', $schedule->id) : route('admin.schedules.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if($isEdit)
                     @method('PUT')
                 @endif
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <!-- Day (FIRST - Time selection starts here) -->
+                <section aria-labelledby="schedule-timing-heading">
+                    <div class="mb-5 border-b border-gray-100 pb-4">
+                        <h2 id="schedule-timing-heading" class="text-lg font-bold text-gray-900">Jadwal dan lokasi</h2>
+                        <p class="mt-1 text-sm leading-5 text-gray-600">Pilih tipe jadwal, kemudian tentukan hari, waktu, periode, laboratorium, dan kapasitasnya.</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+                    <!-- Type drives the conditional detail fields below. -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Hari *</label>
+                        <label for="typeSelect" class="block text-sm font-semibold text-gray-700 mb-2">Tipe Jadwal *</label>
+                        <select name="type" id="typeSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                            @foreach($types as $key => $label)
+                                <option value="{{ $key }}" {{ old('type', $schedule->type ?? request('type', 'perkuliahan_tetap')) == $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Jenis jadwal menentukan rincian kegiatan yang perlu dilengkapi.</p>
+                    </div>
+
+                    <!-- Day -->
+                    <div>
+                        <label for="daySelect" class="block text-sm font-semibold text-gray-700 mb-2">Hari *</label>
                         <select name="day" id="daySelect" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base">
                             <option value="">Pilih Hari</option>
                             @foreach($days as $day)
@@ -142,23 +223,11 @@
                         </select>
                     </div>
 
-                    <!-- Type (Moved up for context) -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tipe Jadwal *</label>
-                        <select name="type" id="typeSelect" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                            @foreach($types as $key => $label)
-                                <option value="{{ $key }}" {{ old('type', $schedule->type ?? request('type', 'perkuliahan_tetap')) == $key ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
                     <!-- Start Time -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Mulai *</label>
+                        <label for="start_hour" class="block text-sm font-semibold text-gray-700 mb-2">Jam Mulai *</label>
                         <input type="hidden" name="start_time" id="startTime" required
-                               value="{{ old('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : request('start_time', '')) }}">
+                               value="{{ old('start_time', request('start_time', $schedule ? \Carbon\Carbon::parse($schedule->start_time)->format('H:i') : '')) }}">
                         <div class="flex gap-2">
                             <select id="start_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                 <option value="" disabled selected>Jam</option>
@@ -178,9 +247,9 @@
 
                     <!-- End Time -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Selesai *</label>
+                        <label for="end_hour" class="block text-sm font-semibold text-gray-700 mb-2">Jam Selesai *</label>
                         <input type="hidden" name="end_time" id="endTime" required
-                               value="{{ old('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : request('end_time', '')) }}">
+                               value="{{ old('end_time', request('end_time', $schedule ? \Carbon\Carbon::parse($schedule->end_time)->format('H:i') : '')) }}">
                         <div class="flex gap-2">
                             <select id="end_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                 <option value="" disabled selected>Jam</option>
@@ -201,29 +270,67 @@
 
                     <!-- Start Date -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
-                        <input type="date" name="start_date" id="startDate"
-                               value="{{ old('start_date', $schedule && $schedule->start_date ? $schedule->start_date->format('Y-m-d') : request('start_date', '')) }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        
+                        <label for="startDate-trigger" class="mb-2 block text-sm font-semibold text-gray-700">Tanggal Mulai <span id="start-date-required" class="hidden text-red-500">*</span></label>
+                        <div class="schedule-date-picker" data-schedule-date-picker data-date-placeholder="Pilih tanggal mulai" data-date-label="Tanggal mulai">
+                            <input type="hidden" name="start_date" id="startDate"
+                                   value="{{ old('start_date', $schedule && $schedule->start_date ? $schedule->start_date->format('Y-m-d') : request('start_date', '')) }}">
+                            <button type="button" id="startDate-trigger" class="schedule-date-trigger" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-controls="startDate-calendar">
+                                <span data-date-value>Belum dipilih</span>
+                                <svg class="schedule-date-trigger-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 2v3m8-3v3M3.5 9.5h17M5 4.5h14A1.5 1.5 0 0120.5 6v13A1.5 1.5 0 0119 20.5H5A1.5 1.5 0 013.5 19V6A1.5 1.5 0 015 4.5z"/></svg>
+                            </button>
+                            <div id="startDate-calendar" class="schedule-date-popover hidden" data-date-popover role="dialog" aria-label="Pilih tanggal mulai">
+                                <div class="schedule-date-header">
+                                    <button type="button" class="schedule-date-nav" data-date-prev aria-label="Bulan sebelumnya">‹</button>
+                                    <p class="schedule-date-month" data-date-month></p>
+                                    <button type="button" class="schedule-date-nav" data-date-next aria-label="Bulan berikutnya">›</button>
+                                </div>
+                                <div class="schedule-date-weekdays" data-date-weekdays></div>
+                                <div class="schedule-date-grid" data-date-grid role="grid" aria-label="Kalender"></div>
+                                <div class="schedule-date-footer">
+                                    <button type="button" class="schedule-date-link" data-date-today>Hari ini</button>
+                                    <button type="button" class="schedule-date-link schedule-date-clear" data-date-clear>Kosongkan</button>
+                                </div>
+                            </div>
+                            <p class="schedule-date-error hidden" data-date-error role="alert"></p>
+                        </div>
+                        <p id="start-date-help" class="mt-1 text-xs text-gray-500">Kosongkan jika jadwal berlaku tanpa tanggal mulai.</p>
                     </div>
 
                     <!-- End Date -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Selesai <span id="end-date-required" class="text-red-500">*</span></label>
-                        <input type="date" name="end_date" id="endDate"
-                               value="{{ old('end_date', $schedule && $schedule->end_date ? $schedule->end_date->format('Y-m-d') : request('end_date', '')) }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
-                        <p class="text-xs text-gray-500 mt-1">Wajib untuk perkuliahan tetap; maksimal 60 pertemuan.</p>
+                        <label for="endDate-trigger" class="mb-2 block text-sm font-semibold text-gray-700">Tanggal Selesai <span id="end-date-required" class="text-red-500">*</span></label>
+                        <div class="schedule-date-picker" data-schedule-date-picker data-date-placeholder="Pilih tanggal selesai" data-date-label="Tanggal selesai" data-min-input="startDate">
+                            <input type="hidden" name="end_date" id="endDate"
+                                   value="{{ old('end_date', $schedule && $schedule->end_date ? $schedule->end_date->format('Y-m-d') : request('end_date', '')) }}">
+                            <button type="button" id="endDate-trigger" class="schedule-date-trigger" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-controls="endDate-calendar">
+                                <span data-date-value>Belum dipilih</span>
+                                <svg class="schedule-date-trigger-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 2v3m8-3v3M3.5 9.5h17M5 4.5h14A1.5 1.5 0 0120.5 6v13A1.5 1.5 0 0119 20.5H5A1.5 1.5 0 013.5 19V6A1.5 1.5 0 015 4.5z"/></svg>
+                            </button>
+                            <div id="endDate-calendar" class="schedule-date-popover hidden" data-date-popover role="dialog" aria-label="Pilih tanggal selesai">
+                                <div class="schedule-date-header">
+                                    <button type="button" class="schedule-date-nav" data-date-prev aria-label="Bulan sebelumnya">‹</button>
+                                    <p class="schedule-date-month" data-date-month></p>
+                                    <button type="button" class="schedule-date-nav" data-date-next aria-label="Bulan berikutnya">›</button>
+                                </div>
+                                <div class="schedule-date-weekdays" data-date-weekdays></div>
+                                <div class="schedule-date-grid" data-date-grid role="grid" aria-label="Kalender"></div>
+                                <div class="schedule-date-footer">
+                                    <button type="button" class="schedule-date-link" data-date-today>Hari ini</button>
+                                    <button type="button" class="schedule-date-link schedule-date-clear" data-date-clear>Kosongkan</button>
+                                </div>
+                            </div>
+                            <p class="schedule-date-error hidden" data-date-error role="alert"></p>
+                        </div>
+                        <p id="end-date-help" class="text-xs text-gray-500 mt-1">Wajib untuk perkuliahan tetap; maksimal 60 pertemuan.</p>
                     </div>
 
                     <!-- Lab (LAST - After time is selected, fetched via AJAX) -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Laboratorium *</label>
+                        <label for="labSelect" class="block text-sm font-semibold text-gray-700 mb-2">Laboratorium *</label>
                         <select name="lab_id" id="labSelect" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base" {{ $isEdit ? '' : 'disabled' }}>
                             @if($isEdit)
                                 @foreach($labs as $lab)
-                                    <option value="{{ $lab->id }}" data-capacity="{{ $lab->capacity }}" {{ old('lab_id', $schedule->lab_id ?? '') == $lab->id ? 'selected' : '' }}>
+                                    <option value="{{ $lab->id }}" data-capacity="{{ $lab->capacity }}" {{ old('lab_id', request('lab_id', $schedule->lab_id ?? '')) == $lab->id ? 'selected' : '' }}>
                                         {{ $lab->name }} (Kap. {{ $lab->capacity }})
                                     </option>
                                 @endforeach
@@ -235,43 +342,96 @@
 
                     <!-- Student Count -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Mahasiswa *</label>
+                        <label for="student_count" class="block text-sm font-semibold text-gray-700 mb-2">Jumlah Mahasiswa *</label>
                         <input type="number" name="student_count" id="student_count" min="1" required
                                value="{{ old('student_count', $schedule->student_count ?? '') }}"
                                placeholder="Wajib diisi"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                     </div>
-                </div>
+                    </div>
 
-                <!-- Conditional Fields Based on Type -->
-                
-                <!-- Perkuliahan Fields -->
-                <div id="perkuliahan-fields" class="hidden mt-6">
-                    <h4 class="font-bold text-gray-800 mb-4 text-lg">Data Perkuliahan</h4>
+                <!-- Recurrence pattern -->
+                <div id="nonfixed-schedule-pattern" class="mt-6 hidden rounded-xl border border-yellow-200 bg-yellow-50/50 p-4">
+                    <fieldset>
+                        <legend class="text-sm font-semibold text-gray-800">Pola pengulangan</legend>
+                        <p class="mt-1 text-xs text-gray-600">Tentukan apakah jadwal hanya berlangsung sekali atau berulang setiap minggu.</p>
+
+                        <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                                <input type="radio" name="schedule_frequency" value="once"
+                                       class="mt-0.5 h-4 w-4 accent-yellow-600 focus:ring-yellow-500"
+                                       {{ $currentScheduleFrequency === 'once' ? 'checked' : '' }}>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-800">Sekali</span>
+                                    <span class="mt-0.5 block text-xs text-gray-500">Gunakan satu tanggal dan waktu.</span>
+                                </span>
+                            </label>
+                            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-white p-3 has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50">
+                                <input type="radio" name="schedule_frequency" value="multiple"
+                                       class="mt-0.5 h-4 w-4 accent-yellow-600 focus:ring-yellow-500"
+                                       {{ $currentScheduleFrequency === 'multiple' ? 'checked' : '' }}>
+                                <span>
+                                    <span class="block text-sm font-semibold text-gray-800">Berulang setiap minggu</span>
+                                    <span class="mt-0.5 block text-xs text-gray-500">Pilih hari dan tanggal akhir rangkaian.</span>
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div id="recurrence-days-panel" class="mt-4 hidden border-t border-yellow-200 pt-4">
+                        <fieldset>
+                            <legend class="text-sm font-semibold text-gray-800">Hari pertemuan</legend>
+                            <p class="mt-1 text-xs text-gray-600">Tanggal mulai harus jatuh pada salah satu hari yang dipilih.</p>
+                            <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+                                @foreach($days as $day)
+                                    <label class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-2.5 text-sm has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-100">
+                                        <input type="checkbox" name="recurrence_days[]" value="{{ $day }}"
+                                               class="recurrence-day h-4 w-4 rounded accent-yellow-600 focus:ring-yellow-500"
+                                               {{ in_array($day, $selectedRecurrenceDays, true) ? 'checked' : '' }}>
+                                        <span class="font-medium text-gray-700">{{ $day }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </fieldset>
+                        <p id="recurrence-validation-error" class="mt-3 hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert"></p>
+                    </div>
+                </div>
+                </section>
+
+                <!-- Conditional activity details -->
+                <section class="mt-8 border-t border-gray-100 pt-6" aria-labelledby="activity-details-heading">
+                    <div class="mb-5">
+                        <h2 id="activity-details-heading" class="text-lg font-bold text-gray-900">Rincian kegiatan</h2>
+                        <p class="mt-1 text-sm leading-5 text-gray-600">Lengkapi informasi yang sesuai dengan tipe jadwal yang dipilih.</p>
+                    </div>
+
+                    <!-- Perkuliahan Fields -->
+                    <div id="perkuliahan-fields" class="hidden">
+                    <h3 class="mb-4 text-base font-bold text-gray-800">Informasi perkuliahan</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Mata Kuliah *</label>
+                            <label for="course_name" class="block text-sm font-semibold text-gray-700 mb-2">Mata Kuliah *</label>
                             <input type="text" name="course_name" id="course_name"
                                    value="{{ old('course_name', $schedule->course ?? '') }}"
                                    placeholder="Contoh: Sistem Informasi Manajemen"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Dosen Pengampu *</label>
+                            <label for="lecturer_name" class="block text-sm font-semibold text-gray-700 mb-2">Dosen Pengampu *</label>
                             <input type="text" name="lecturer_name" id="lecturer_name"
                                    value="{{ old('lecturer_name', $schedule->lecturer ?? '') }}"
                                    placeholder="Contoh: Dr. Budi Santoso"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Koordinator / Komting</label>
+                            <label for="komting" class="block text-sm font-semibold text-gray-700 mb-2">Koordinator / Komting</label>
                             <input type="text" name="komting" id="komting"
                                    value="{{ old('komting', $schedule->komting ?? '') }}"
                                    placeholder="Contoh: Ahmad Faizal"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">No. Telepon Komting</label>
+                            <label for="komting_phone" class="block text-sm font-semibold text-gray-700 mb-2">No. Telepon Komting</label>
                             <input type="text" name="komting_phone" id="komting_phone"
                                    value="{{ old('komting_phone', $schedule->komting_phone ?? '') }}"
                                    placeholder="Contoh: 08123456789"
@@ -280,19 +440,19 @@
                     </div>
                 </div>
 
-                <!-- Non-Perkuliahan Fields -->
-                <div id="non-perkuliahan-fields" class="hidden mt-6">
-                    <h4 class="font-bold text-gray-800 mb-4 text-lg">Data Kegiatan Non-Perkuliahan</h4>
+                    <!-- Non-Perkuliahan Fields -->
+                    <div id="non-perkuliahan-fields" class="hidden">
+                    <h3 class="mb-4 text-base font-bold text-gray-800">Informasi kegiatan non-perkuliahan</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Kegiatan *</label>
+                            <label for="activity_name" class="block text-sm font-semibold text-gray-700 mb-2">Nama Kegiatan *</label>
                             <input type="text" name="activity_name" id="activity_name"
                                    value="{{ old('activity_name', $isEdit ? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->activity_name : ($schedule->type === 'non_perkuliahan' ? $schedule->course : '')) : '') }}"
                                    placeholder="Contoh: Workshop Data Analytics"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan *</label>
+                            <label for="activity_type" class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan *</label>
                             <select name="activity_type" id="activity_type"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                 @php
@@ -308,39 +468,40 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Posisi Peminjam</label>
+                            <label for="position" class="block text-sm font-semibold text-gray-700 mb-2">Posisi Peminjam</label>
                             <input type="text" name="position" id="position"
                                    value="{{ old('position', $isEdit ? ($schedule->position ?? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->position : '')) : '') }}"
                                    placeholder="Contoh: Ketua Panitia"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Peminjam / PIC *</label>
+                            <label for="pic_name_non_perkuliahan" class="block text-sm font-semibold text-gray-700 mb-2">Nama Peminjam / PIC *</label>
                             <input type="text" name="pic_name_non_perkuliahan" id="pic_name_non_perkuliahan"
                                    value="{{ old('pic_name_non_perkuliahan', $schedule->lecturer ?? '') }}"
                                    placeholder="Contoh: Ahmad Rafi"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Kebutuhan Peralatan</label>
+                            <label for="equipment_needs" class="block text-sm font-semibold text-gray-700 mb-2">Kebutuhan Peralatan</label>
                             <textarea name="equipment_needs" id="equipment_needs" rows="3"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">{{ old('equipment_needs', $isEdit ? ($schedule->equipment_needs ?? (($schedule->booking && $schedule->booking->booking_type === 'non_perkuliahan') ? $schedule->booking->equipment_needs : '')) : '') }}</textarea>
                         </div>
                     </div>
-                </div>
+                    </div>
+                </section>
 
                 <!-- Document Fields (Collapsible) -->
                 <div class="mt-6 border border-gray-200 rounded-lg overflow-hidden">
-                    <button type="button" id="doc-toggle" onclick="toggleDocSection()" class="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-left transition-colors">
+                    <button type="button" id="doc-toggle" onclick="toggleDocSection()" aria-expanded="false" aria-controls="doc-section" class="flex w-full items-center justify-between bg-gray-50 px-4 py-3 text-left transition-colors hover:bg-yellow-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-inset">
                         <div>
-                            <span class="font-semibold text-gray-700">Data Dokumen (Opsional)</span>
-                            <span class="text-sm text-gray-500 ml-2">— untuk generate dokumen peminjaman</span>
+                            <span class="font-semibold text-gray-700">Data dokumen <span class="font-normal text-gray-500">(opsional)</span></span>
+                            <span class="mt-0.5 block text-sm text-gray-500">Lengkapi hanya jika dokumen peminjaman perlu dibuat.</span>
                         </div>
                         <svg id="doc-chevron" class="w-5 h-5 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <div id="doc-section" class="hidden px-4 py-4 space-y-4">
+                    <div id="doc-section" role="region" aria-labelledby="doc-toggle" class="hidden space-y-4 px-4 py-4">
                         @php
                             $doc = ($isEdit && $schedule->document) ? $schedule->document : null;
                         @endphp
@@ -348,8 +509,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Study Program (all types) -->
                             <div id="doc-study-program">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Strata/Jurusan</label>
-                                <select name="study_program" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                                <label for="study_program" class="block text-sm font-semibold text-gray-700 mb-2">Strata/Jurusan</label>
+                                <select name="study_program" id="study_program" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                                     <option value="">Pilih Program Studi</option>
                                     @foreach(['S1- Ekonomi', 'S1- Manajemen', 'S1- Akuntansi', 'S1- Ekonomi Islam', 'S1- Bisnis Digital', 'S2- Ekonomi', 'S2- Manajemen', 'S2- Akuntansi', 'Sekolah Vokasi', 'S3- PDIE Ilmu Ekonomi', 'S3- PDIE Akuntansi', 'S3- PDIE Manajemen', 'Lainnya'] as $program)
                                         <option value="{{ $program }}" {{ old('study_program', $doc->study_program ?? '') == $program ? 'selected' : '' }}>{{ $program }}</option>
@@ -359,8 +520,8 @@
 
                             {{-- Phone Number: only for non_perkuliahan (perkuliahan uses komting_phone) --}}
                             <div id="doc-phone-number" class="hidden">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">No. Telp. Koordinator</label>
-                                <input type="text" name="doc_phone_number" 
+                                <label for="doc_phone_number" class="block text-sm font-semibold text-gray-700 mb-2">No. Telp. Koordinator</label>
+                                <input type="text" name="doc_phone_number" id="doc_phone_number"
                                        value="{{ old('doc_phone_number', $doc->phone_number ?? '') }}"
                                        placeholder="08xxxxxxxxxx"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -368,8 +529,8 @@
 
                             <!-- Lecturer NIP (perkuliahan only) -->
                             <div id="doc-lecturer-nip">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">NIP Dosen Pengampu</label>
-                                <input type="text" name="lecturer_nip"
+                                <label for="lecturer_nip" class="block text-sm font-semibold text-gray-700 mb-2">NIP Dosen Pengampu</label>
+                                <input type="text" name="lecturer_nip" id="lecturer_nip"
                                        value="{{ old('lecturer_nip', $doc->lecturer_nip ?? '') }}"
                                        placeholder="NIP Dosen"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -377,8 +538,8 @@
 
                             <!-- NIM (non-perkuliahan) -->
                             <div id="doc-nim">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">NIM</label>
-                                <input type="text" name="nim"
+                                <label for="nim" class="block text-sm font-semibold text-gray-700 mb-2">NIM</label>
+                                <input type="text" name="nim" id="nim"
                                        value="{{ old('nim', $doc->nim ?? '') }}"
                                        placeholder="NIM Koordinator"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -386,8 +547,8 @@
 
                             <!-- NIP (non-perkuliahan, alternative) -->
                             <div id="doc-nip">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">NIP (jika dosen/pegawai)</label>
-                                <input type="text" name="nip"
+                                <label for="nip" class="block text-sm font-semibold text-gray-700 mb-2">NIP (jika dosen/pegawai)</label>
+                                <input type="text" name="nip" id="nip"
                                        value="{{ old('nip', $doc->nip ?? '') }}"
                                        placeholder="NIP jika bukan mahasiswa"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
@@ -396,15 +557,15 @@
 
                         <!-- Software Needs -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Software yang Digunakan</label>
-                            <textarea name="software_needs" rows="2"
+                            <label for="software_needs" class="block text-sm font-semibold text-gray-700 mb-2">Software yang Digunakan</label>
+                            <textarea name="software_needs" id="software_needs" rows="2"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                                 placeholder="Contoh: Microsoft Excel, SPSS, EViews">{{ old('software_needs', $doc->software_needs ?? '') }}</textarea>
                         </div>
 
                         <!-- KTM Upload -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Upload KTM (Opsional)</label>
+                            <label for="ktm_file" class="block text-sm font-semibold text-gray-700 mb-2">Upload KTM (Opsional)</label>
                             <div class="flex items-center gap-3">
                                 <input type="file" name="ktm_file" id="ktm_file" accept=".jpg,.jpeg,.png,.pdf"
                                     class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
@@ -425,10 +586,10 @@
 
                 <!-- Submit Button -->
                 <div class="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4">
-                    <button type="submit" class="flex-1 py-3.5 md:py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all text-base">
+                    <button type="submit" class="schedule-primary-button flex-1 rounded-lg py-3.5 text-base font-bold shadow-sm transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 md:py-3">
                         {{ $isEdit ? 'Simpan Perubahan' : 'Tambah Jadwal' }}
                     </button>
-                    <a href="{{ route('admin.schedules.index') }}" class="text-center px-6 py-3.5 md:py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all text-base">
+                    <a href="{{ route('admin.schedules.index') }}" class="schedule-secondary-button rounded-lg px-6 py-3.5 text-center text-base font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 md:py-3">
                         Batal
                     </a>    
                 </div>
@@ -554,8 +715,8 @@
         const labSelectEl = document.getElementById('labSelect');
         const isEditMode = {{ $isEdit ? 'true' : 'false' }};
         const excludeScheduleId = {{ $isEdit ? $schedule->id : 'null' }};
-        const currentLabId = {{ $isEdit ? ($schedule->lab_id ?? 'null') : 'null' }};
         const requestedLabId = Number(new URLSearchParams(window.location.search).get('lab_id')) || null;
+        const currentLabId = requestedLabId || {{ $isEdit ? ($schedule->lab_id ?? 'null') : 'null' }};
 
         // Fetch available labs via AJAX
         function fetchAvailableLabs() {
@@ -591,6 +752,7 @@
                     end_time: endTime,
                     start_date: startDate || null,
                     end_date: endDate || null,
+                    recurrence_days: getSelectedRecurrenceDays(),
                     exclude_schedule_id: excludeScheduleId
                 })
             })
@@ -651,6 +813,10 @@
         const typeSelect = document.getElementById('typeSelect');
         const perkuliahanFields = document.getElementById('perkuliahan-fields');
         const nonPerkuliahanFields = document.getElementById('non-perkuliahan-fields');
+        const nonfixedSchedulePattern = document.getElementById('nonfixed-schedule-pattern');
+        const recurrenceDaysPanel = document.getElementById('recurrence-days-panel');
+        const recurrenceValidationError = document.getElementById('recurrence-validation-error');
+        const recurrenceDayInputs = Array.from(document.querySelectorAll('.recurrence-day'));
 
         // Track previous type for smart field transfer
         let previousType = typeSelect.value;
@@ -658,8 +824,29 @@
         // Function to show/hide fields based on type
         function updateFieldsVisibility() {
             const selectedType = typeSelect.value;
-            endDateEl.required = selectedType === 'perkuliahan_tetap';
-            document.getElementById('end-date-required')?.classList.toggle('hidden', selectedType !== 'perkuliahan_tetap');
+            const isNonfixedMultiple = selectedType === 'perkuliahan_tidak_tetap'
+                && getScheduleFrequency() === 'multiple';
+            const isNonfixed = selectedType === 'perkuliahan_tidak_tetap';
+            const requiresEndDate = selectedType === 'perkuliahan_tetap' || isNonfixedMultiple;
+
+            startDateEl.required = isNonfixed;
+            endDateEl.required = requiresEndDate;
+            document.getElementById('start-date-required')?.classList.toggle('hidden', !isNonfixed);
+            document.getElementById('end-date-required')?.classList.toggle('hidden', !requiresEndDate);
+            const startDateHelp = document.getElementById('start-date-help');
+            const endDateHelp = document.getElementById('end-date-help');
+            if (startDateHelp) {
+                startDateHelp.textContent = isNonfixed
+                    ? 'Wajib untuk menentukan tanggal pelaksanaan.'
+                    : 'Kosongkan jika jadwal berlaku tanpa tanggal mulai.';
+            }
+            if (endDateHelp) {
+                endDateHelp.textContent = isNonfixedMultiple
+                    ? 'Pilih tanggal akhir rangkaian; maksimal 60 pertemuan.'
+                    : selectedType === 'perkuliahan_tetap'
+                        ? 'Wajib untuk membatasi periode jadwal perkuliahan tetap.'
+                        : 'Untuk jadwal sekali, tanggal selesai akan disamakan dengan tanggal mulai.';
+            }
             
             // Smart field transfer when switching types
             transferFieldsBetweenTypes(previousType, selectedType);
@@ -691,6 +878,71 @@
                     docPhoneEl.classList.add('hidden');
                 }
             }
+
+            updateRecurrenceVisibility();
+        }
+
+        function getScheduleFrequency() {
+            return document.querySelector('input[name="schedule_frequency"]:checked')?.value || 'once';
+        }
+
+        function getSelectedRecurrenceDays() {
+            return recurrenceDayInputs.filter(input => input.checked && !input.disabled).map(input => input.value);
+        }
+
+        function updateRecurrenceVisibility() {
+            const isNonfixed = typeSelect.value === 'perkuliahan_tidak_tetap';
+            const isMultiple = isNonfixed && getScheduleFrequency() === 'multiple';
+
+            nonfixedSchedulePattern?.classList.toggle('hidden', !isNonfixed);
+            recurrenceDaysPanel?.classList.toggle('hidden', !isMultiple);
+            recurrenceDayInputs.forEach(input => {
+                input.disabled = !isMultiple;
+            });
+
+            if (isNonfixed && !isMultiple && startDateEl.value) {
+                endDateEl.value = startDateEl.value;
+            }
+
+            endDateEl.required = typeSelect.value === 'perkuliahan_tetap' || isMultiple;
+            document.getElementById('end-date-required')?.classList.toggle('hidden', !endDateEl.required);
+            validateRecurrencePattern();
+        }
+
+        function validateRecurrencePattern() {
+            if (typeSelect.value !== 'perkuliahan_tidak_tetap' || getScheduleFrequency() !== 'multiple') {
+                recurrenceValidationError?.classList.add('hidden');
+                return true;
+            }
+
+            const selectedDays = getSelectedRecurrenceDays();
+            if (selectedDays.length === 0) {
+                if (recurrenceValidationError) {
+                    recurrenceValidationError.textContent = 'Pilih minimal satu hari untuk jadwal berulang.';
+                    recurrenceValidationError.classList.remove('hidden');
+                }
+                return false;
+            }
+
+            if (!startDateEl.value || !endDateEl.value) {
+                if (recurrenceValidationError) {
+                    recurrenceValidationError.textContent = 'Isi tanggal mulai dan tanggal selesai untuk jadwal berulang.';
+                    recurrenceValidationError.classList.remove('hidden');
+                }
+                return false;
+            }
+
+            const startDay = dayNames[new Date(`${startDateEl.value}T00:00:00`).getDay()];
+            if (!selectedDays.includes(startDay)) {
+                if (recurrenceValidationError) {
+                    recurrenceValidationError.textContent = `Tanggal mulai harus jatuh pada salah satu hari yang dipilih (${selectedDays.join(', ')}).`;
+                    recurrenceValidationError.classList.remove('hidden');
+                }
+                return false;
+            }
+
+            recurrenceValidationError?.classList.add('hidden');
+            return true;
         }
 
         /**
@@ -769,14 +1021,34 @@
         typeSelect.addEventListener('change', function() {
             updateFieldsVisibility();
             updateDocFieldsVisibility();
+            fetchAvailableLabs();
+        });
+
+        document.querySelectorAll('input[name="schedule_frequency"]').forEach(input => {
+            input.addEventListener('change', function() {
+                updateRecurrenceVisibility();
+                validateDayInDateRange();
+                fetchAvailableLabs();
+            });
+        });
+
+        recurrenceDayInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                validateRecurrencePattern();
+                validateDayInDateRange();
+                fetchAvailableLabs();
+            });
         });
 
         // Document section toggle
         function toggleDocSection() {
             const section = document.getElementById('doc-section');
             const chevron = document.getElementById('doc-chevron');
-            section.classList.toggle('hidden');
+            const trigger = document.getElementById('doc-toggle');
+            const isOpening = section.classList.contains('hidden');
+            section.classList.toggle('hidden', !isOpening);
             chevron.classList.toggle('rotate-180');
+            trigger?.setAttribute('aria-expanded', String(isOpening));
         }
 
         // Confirm Delete KTM
@@ -825,7 +1097,7 @@
         
         // Create error message container
         const errorContainer = document.createElement('div');
-        errorContainer.className = 'hidden mt-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg';
+        errorContainer.className = 'hidden mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700';
         errorContainer.id = 'day-validation-error';
         endDateEl.parentElement.appendChild(errorContainer);
 
@@ -844,29 +1116,45 @@
             const selectedDay = daySelectEl.value;
             const startDate = startDateEl.value;
             const endDate = endDateEl.value;
+            const recurrenceDays = getSelectedRecurrenceDays();
+            const isMultipleNonfixed = typeSelect.value === 'perkuliahan_tidak_tetap'
+                && getScheduleFrequency() === 'multiple';
+            const allowedDays = isMultipleNonfixed ? recurrenceDays : [selectedDay];
 
             // If no day selected or no dates, clear error
             if (!selectedDay || (!startDate && !endDate)) {
                 errorContainer.classList.add('hidden');
-                submitButton.disabled = false;
-                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                return;
+                return validateRecurrencePattern();
+            }
+
+            if (isMultipleNonfixed && recurrenceDays.length === 0) {
+                errorContainer.classList.add('hidden');
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                return false;
             }
 
             // Parse dates
-            const start = new Date(startDate || endDate);
-            const end = new Date(endDate || startDate);
+            const start = new Date(`${startDate || endDate}T00:00:00`);
+            const end = new Date(`${endDate || startDate}T00:00:00`);
 
-            // IMPORTANT: Validate that start date matches the selected day
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+                errorContainer.textContent = 'Tanggal selesai harus sama atau setelah tanggal mulai.';
+                errorContainer.classList.remove('hidden');
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                return false;
+            }
+
             const startDayOfWeek = start.getDay();
             const startDayName = dayNames[startDayOfWeek];
             
-            if (startDayName !== selectedDay) {
+            if (!allowedDays.includes(startDayName)) {
                 const formattedStart = start.toLocaleDateString('id-ID');
                 errorContainer.innerHTML = `
-                    <p class="font-bold">⚠️ Validasi Hari dan Tanggal Mulai</p>
-                    <p class="text-sm mt-1">Tanggal mulai (<strong>${formattedStart}</strong>) adalah hari <strong>${startDayName}</strong>, tetapi hari yang dipilih adalah <strong>${selectedDay}</strong>.</p>
-                    <p class="text-sm mt-1">Silakan pilih tanggal mulai yang jatuh pada hari ${selectedDay}.</p>
+                    <p class="font-bold">Validasi tanggal mulai</p>
+                    <p class="text-sm mt-1">Tanggal mulai (<strong>${formattedStart}</strong>) adalah hari <strong>${startDayName}</strong>.</p>
+                    <p class="text-sm mt-1">Pilih tanggal yang jatuh pada salah satu hari: <strong>${allowedDays.join(', ')}</strong>.</p>
                 `;
                 errorContainer.classList.remove('hidden');
                 submitButton.disabled = true;
@@ -880,7 +1168,7 @@
 
             while (currentDate <= end) {
                 const dayOfWeek = currentDate.getDay();
-                if (dayNames[dayOfWeek] === selectedDay) {
+                if (allowedDays.includes(dayNames[dayOfWeek])) {
                     dayFound = true;
                     break;
                 }
@@ -893,9 +1181,9 @@
                 const formattedEnd = end.toLocaleDateString('id-ID');
                 
                 errorContainer.innerHTML = `
-                    <p class="font-bold">⚠️ Validasi Hari dan Tanggal</p>
-                    <p class="text-sm mt-1">Hari <strong>${selectedDay}</strong> tidak ditemukan dalam rentang tanggal <strong>${formattedStart} - ${formattedEnd}</strong>.</p>
-                    <p class="text-sm mt-1">Silakan pilih rentang tanggal yang mengandung hari ${selectedDay} atau ubah pilihan hari.</p>
+                    <p class="font-bold">Validasi rentang tanggal</p>
+                    <p class="text-sm mt-1">Tidak ada hari yang dipilih dalam rentang tanggal <strong>${formattedStart} - ${formattedEnd}</strong>.</p>
+                    <p class="text-sm mt-1">Pilih rentang yang memuat salah satu hari: <strong>${allowedDays.join(', ')}</strong>.</p>
                 `;
                 errorContainer.classList.remove('hidden');
                 submitButton.disabled = true;
@@ -905,10 +1193,14 @@
                 // Check if student count validation also passes before enabling
                 const studentCountValid = validateStudentCount();
                 if (studentCountValid) {
-                    submitButton.disabled = false;
-                    submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    const recurrenceValid = validateRecurrencePattern();
+                    submitButton.disabled = !recurrenceValid;
+                    submitButton.classList.toggle('opacity-50', !recurrenceValid);
+                    submitButton.classList.toggle('cursor-not-allowed', !recurrenceValid);
                 }
             }
+
+            return !submitButton.disabled;
         }
 
         // Add event listeners
@@ -951,7 +1243,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                         <div>
-                            <p class="font-bold">⚠️ Kapasitas Tidak Memadai</p>
+                            <p class="font-bold">Kapasitas tidak memadai</p>
                             <p class="mt-1">Jumlah mahasiswa (${studentCount}) melebihi kapasitas ${labName} (${labCapacity} orang).</p>
                             <p class="mt-1 italic font-semibold">Konsekuensi: Fasilitas mungkin tidak mencukupi untuk setiap peserta dan ketidaknyamanan ditanggung sendiri.</p>
                         </div>
@@ -989,26 +1281,39 @@
         class CustomSelect {
             constructor(originalSelect) {
                 this.originalSelect = originalSelect;
-                this.originalSelect.style.display = 'none'; // Hide original
+                if (this.originalSelect.dataset.customSelectReady) return;
+                this.originalSelect.dataset.customSelectReady = 'true';
+                this.originalSelect.classList.add('custom-select-native');
+                this.originalSelect.setAttribute('aria-hidden', 'true');
+                this.originalSelect.tabIndex = -1;
                 
                 // Create wrapper
                 this.wrapper = document.createElement('div');
-                this.wrapper.className = 'relative custom-select-wrapper w-full';
+                this.wrapper.className = 'custom-select-wrapper w-full';
                 this.originalSelect.parentNode.insertBefore(this.wrapper, this.originalSelect);
                 this.wrapper.appendChild(this.originalSelect); // Move original inside
                 
                 // Create Trigger Element
                 this.trigger = document.createElement('button');
                 this.trigger.type = 'button';
-                this.trigger.className = 'w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-base text-left bg-white flex justify-between items-center transition-shadow duration-200';
+                this.trigger.className = 'custom-select-trigger';
+                this.trigger.setAttribute('aria-haspopup', 'listbox');
+                this.trigger.setAttribute('aria-expanded', 'false');
+                const label = document.querySelector(`label[for="${CSS.escape(this.originalSelect.id)}"]`);
+                if (label) {
+                    label.id ||= `${this.originalSelect.id}-label`;
+                    this.trigger.setAttribute('aria-labelledby', label.id);
+                } else {
+                    this.trigger.setAttribute('aria-label', this.originalSelect.getAttribute('aria-label') || this.originalSelect.name || 'Pilih opsi');
+                }
                 
                 // Content span
                 this.triggerLabel = document.createElement('span');
-                this.triggerLabel.className = 'block truncate text-gray-700';
+                this.triggerLabel.className = 'block truncate';
                 
                 // Chevron icon
                 const chevron = document.createElement('div');
-                chevron.innerHTML = `<svg class="w-5 h-5 text-gray-400 pointer-events-none transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
+                chevron.innerHTML = `<svg class="custom-select-chevron h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>`;
                 this.chevronIcon = chevron.firstElementChild;
 
                 this.trigger.appendChild(this.triggerLabel);
@@ -1017,8 +1322,11 @@
 
                 // Create Options Container
                 this.optionsContainer = document.createElement('div');
-                this.optionsContainer.className = 'absolute z-50 w-full bg-white shadow-xl max-h-60 rounded-lg py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm mt-1 hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 option-container-anim';
-                // Add some animation styles inline or verify classes
+                const selectId = this.originalSelect.id || `custom-select-${Math.random().toString(36).slice(2)}`;
+                this.optionsContainer.id = `${selectId}-options`;
+                this.optionsContainer.setAttribute('role', 'listbox');
+                this.trigger.setAttribute('aria-controls', this.optionsContainer.id);
+                this.optionsContainer.className = 'custom-select-options hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100';
                 this.wrapper.appendChild(this.optionsContainer);
 
                 // Initialize
@@ -1074,26 +1382,52 @@
             initOptions() {
                 this.optionsContainer.innerHTML = '';
                 Array.from(this.originalSelect.options).forEach(option => {
-                    if (option.value === "" && option.disabled) return; // Skip placeholder if disabled? usually simply keep it
-
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = `text-gray-900 cursor-pointer select-none relative py-2.5 pl-4 pr-9 hover:bg-yellow-50 transition-colors duration-150 border-b border-gray-50 last:border-0`;
+                     const optionDiv = document.createElement('div');
+                     optionDiv.setAttribute('role', 'option');
+                     optionDiv.setAttribute('aria-selected', option.selected ? 'true' : 'false');
+                     optionDiv.tabIndex = option.disabled ? -1 : 0;
+                     optionDiv.className = 'custom-select-option';
                     optionDiv.textContent = option.text;
+
+                    if (option.disabled) {
+                        optionDiv.classList.add('is-disabled');
+                        optionDiv.setAttribute('aria-disabled', 'true');
+                    }
                     
                     if (option.selected) {
-                        optionDiv.classList.add('bg-blue-50', 'text-blue-900', 'font-medium'); // Highlight selected
+                        optionDiv.classList.add('is-active');
                         const check = document.createElement('span');
-                        check.className = 'absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600';
+                        check.className = 'ml-auto inline-flex items-center pl-4 text-yellow-700';
                         check.innerHTML = `<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
                         optionDiv.appendChild(check);
                     }
 
-                    optionDiv.addEventListener('click', (e) => {
+                     optionDiv.addEventListener('click', (e) => {
+                        if (option.disabled) return;
                         e.stopPropagation();
                         this.originalSelect.value = option.value;
-                        this.originalSelect.dispatchEvent(new Event('change'));
-                        this.closeDropdown();
-                    });
+                        this.originalSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                         this.closeDropdown();
+                     });
+
+                     optionDiv.addEventListener('keydown', (e) => {
+                         const options = Array.from(this.optionsContainer.querySelectorAll('[role="option"]'));
+                         const currentIndex = options.indexOf(optionDiv);
+                         if (e.key === 'Enter' || e.key === ' ') {
+                             e.preventDefault();
+                             optionDiv.click();
+                         } else if (e.key === 'ArrowDown' && options[currentIndex + 1]) {
+                             e.preventDefault();
+                             options[currentIndex + 1].focus();
+                         } else if (e.key === 'ArrowUp' && options[currentIndex - 1]) {
+                             e.preventDefault();
+                             options[currentIndex - 1].focus();
+                         } else if (e.key === 'Escape') {
+                             e.preventDefault();
+                             this.closeDropdown();
+                             this.trigger.focus();
+                         }
+                     });
 
                     this.optionsContainer.appendChild(optionDiv);
                 });
@@ -1107,27 +1441,32 @@
                 if (this.originalSelect.disabled) {
                     this.trigger.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
                     this.trigger.setAttribute('disabled', 'disabled');
+                    this.trigger.setAttribute('aria-disabled', 'true');
                 } else {
                     this.trigger.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
                     this.trigger.removeAttribute('disabled');
+                    this.trigger.removeAttribute('aria-disabled');
                 }
             }
 
             toggleDropdown() {
                 const isHidden = this.optionsContainer.classList.contains('hidden');
                 // Close others
-                document.querySelectorAll('.custom-select-wrapper .options-container').forEach(el => {
+                document.querySelectorAll('.custom-select-wrapper .custom-select-options').forEach(el => {
                     if (!el.classList.contains('hidden') && el !== this.optionsContainer) {
                         el.classList.add('hidden');
-                        // Reset chevron of others
-                         const otherChevron = el.parentElement.querySelector('svg');
-                         if(otherChevron) otherChevron.classList.remove('rotate-180');
+                        const otherTrigger = el.parentElement.querySelector('.custom-select-trigger');
+                        if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+                        const otherChevron = el.parentElement.querySelector('.custom-select-chevron');
+                        if (otherChevron) otherChevron.classList.remove('rotate-180');
                     }
                 });
 
                 if (isHidden) {
                     this.optionsContainer.classList.remove('hidden');
                     this.chevronIcon.classList.add('rotate-180');
+                    this.trigger.setAttribute('aria-expanded', 'true');
+                    this.optionsContainer.querySelector('[aria-selected="true"]')?.focus();
                 } else {
                     this.closeDropdown();
                 }
@@ -1136,26 +1475,14 @@
             closeDropdown() {
                 this.optionsContainer.classList.add('hidden');
                 this.chevronIcon.classList.remove('rotate-180');
+                this.trigger.setAttribute('aria-expanded', 'false');
             }
         }
 
         // Initialize Custom Selects
         document.addEventListener('DOMContentLoaded', function() {
-            // Target specific selects
-            const selects = [
-                'lab_id', 
-                'day', 
-                'type', 
-                'applicant_status', 
-                'activity_type'
-            ];
-
-            selects.forEach(name => {
-                const selectElement = document.querySelector(`select[name="${name}"]`);
-                if (selectElement) {
-                    new CustomSelect(selectElement);
-                }
-            });
+            // Use one custom surface for every select in the schedule form.
+            document.querySelectorAll('.admin-schedule-page select').forEach(select => new CustomSelect(select));
         });
 
         // Lingkup Perubahan (recurring edit) - toggle occurrence date field
@@ -1193,5 +1520,4 @@
             updateScopeUI();
         });
     </script>
-</body>
-</html>
+@endsection

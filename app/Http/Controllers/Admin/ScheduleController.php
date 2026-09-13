@@ -42,6 +42,7 @@ class ScheduleController extends Controller
             'lab_id' => 'nullable|exists:labs,id',
             'day' => 'nullable|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'type' => 'nullable|in:perkuliahan_tetap,perkuliahan_tidak_tetap,non_perkuliahan',
+            'period' => 'nullable|in:upcoming,history,all',
             'search' => 'nullable|string|max:255',
         ]);
 
@@ -103,17 +104,24 @@ class ScheduleController extends Controller
      */
     public function getAvailableLabs(Request $request)
     {
-        $day = $request->day;
-        $startTime = $request->start_time;
-        $endTime = $request->end_time;
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
-        $excludeScheduleId = $request->exclude_schedule_id;
+        $validated = $request->validate([
+            'day' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'recurrence_days' => 'nullable|array',
+            'recurrence_days.*' => 'in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'exclude_schedule_id' => 'nullable|integer|exists:schedules,id',
+        ]);
 
-        // Validate required fields
-        if (! $day || ! $startTime || ! $endTime) {
-            return response()->json([]);
-        }
+        $day = $validated['day'];
+        $startTime = $validated['start_time'];
+        $endTime = $validated['end_time'];
+        $startDate = $validated['start_date'] ?? null;
+        $endDate = $validated['end_date'] ?? null;
+        $recurrenceDays = $validated['recurrence_days'] ?? null;
+        $excludeScheduleId = $validated['exclude_schedule_id'] ?? null;
 
         // Get all labs with schedules and bookings eager loaded
         // Only get labs that are available (not in maintenance)
@@ -123,8 +131,8 @@ class ScheduleController extends Controller
             ->get();
 
         // Filter available labs
-        $availableLabs = $labs->filter(function ($lab) use ($day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId) {
-            return $this->isLabAvailableForSchedule($lab, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId);
+        $availableLabs = $labs->filter(function ($lab) use ($day, $startTime, $endTime, $startDate, $endDate, $recurrenceDays, $excludeScheduleId) {
+            return $this->isLabAvailableForSchedule($lab, $day, $startTime, $endTime, $startDate, $endDate, $recurrenceDays, $excludeScheduleId);
         });
 
         // Return labs with id, name, and capacity
@@ -141,79 +149,72 @@ class ScheduleController extends Controller
      * Check if a lab is available for the given schedule criteria
      * Returns true if no conflicts exist
      */
-    private function isLabAvailableForSchedule($lab, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId = null)
+    private function isLabAvailableForSchedule($lab, $day, $startTime, $endTime, $startDate, $endDate, ?array $recurrenceDays = null, $excludeScheduleId = null)
     {
-        // Query for conflicting schedules
-        $query = $lab->schedules()
-            ->where('day', $day)
-            ->where(function ($q) use ($startTime, $endTime) {
-                // Time overlap check
-                $q->whereTime('start_time', '<', $endTime)
-                    ->whereTime('end_time', '>', $startTime);
-            });
+        $days = app(RecurrenceDateService::class)->normaliseDays($recurrenceDays, $day);
 
-        // Exclude current schedule if editing
-        if ($excludeScheduleId) {
-            $query->where('id', '!=', $excludeScheduleId);
-        }
-
-        // Date range conflict check
+        // Use the same concrete-occurrence resolver as the calendar when
+        // dates are available. This includes moved/cancelled occurrences and
+        // all weekdays in a multi-day recurring schedule.
         if ($startDate || $endDate) {
-            // If the new schedule has dates, check overlap with existing schedules
-            $query->where(function ($q) use ($startDate, $endDate) {
-                $q->where(function ($q2) use ($startDate, $endDate) {
-                    // Existing schedule has no end_date (permanent)
-                    $q2->whereNull('end_date')
-                        ->where(function ($q3) use ($endDate, $startDate) {
-                            $q3->whereNull('start_date')
-                                ->orWhere('start_date', '<=', $endDate ?? $startDate);
-                        });
-                })->orWhere(function ($q2) use ($startDate, $endDate) {
-                    // Existing schedule has date range
-                    $q2->whereNotNull('start_date')
-                        ->where('start_date', '<=', $endDate ?? $startDate)
-                        ->where(function ($q3) use ($startDate) {
-                            $q3->whereNull('end_date')
-                                ->orWhere('end_date', '>=', $startDate);
-                        });
-                });
-            });
-        } else {
-            // New schedule is permanent (no dates), conflicts with any existing schedule on that day/time
-            // No additional date filtering needed - any overlap is a conflict
+            $rangeStart = Carbon::parse($startDate ?? $endDate);
+            $rangeEnd = Carbon::parse($endDate ?? $startDate);
+            $dates = app(RecurrenceDateService::class)->datesBetween($rangeStart, $rangeEnd, $days, $day);
+
+            foreach ($dates as $dateString) {
+                if (app(ScheduleCalendarService::class)->findConflict(
+                    (int) $lab->id,
+                    Carbon::parse($dateString),
+                    $startTime,
+                    $endTime,
+                    $excludeScheduleId ? (int) $excludeScheduleId : null
+                )) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        $hasScheduleConflict = $query->exists();
+        // A date-less schedule is a standing reservation. Check every weekday
+        // in its recurrence pattern instead of only the primary `day` column.
+        $hasScheduleConflict = $lab->schedules->contains(function (Schedule $existing) use ($days, $startTime, $endTime, $excludeScheduleId) {
+            if ($excludeScheduleId && (int) $existing->id === (int) $excludeScheduleId) {
+                return false;
+            }
+
+            $existingDays = app(RecurrenceDateService::class)->normaliseDays(
+                $existing->recurrence_days,
+                $existing->day
+            );
+
+            return array_intersect($days, $existingDays) !== []
+                && $this->timesOverlap($existing->start_time, $existing->end_time, $startTime, $endTime);
+        });
 
         if ($hasScheduleConflict) {
             return false;
         }
 
-        // Check pending bookings only if dates are specified
-        if ($startDate || $endDate) {
-            $pendingQuery = $lab->bookings()
-                ->where('day', $day)
-                ->where('status', 'pending')
-                ->where(function ($q) use ($startTime, $endTime) {
-                    $q->whereTime('start_time', '<', $endTime)
-                        ->whereTime('end_time', '>', $startTime);
-                });
-
-            // Filter by date range
-            if ($startDate && $endDate) {
-                $pendingQuery->whereBetween('booking_date', [$startDate, $endDate]);
-            } elseif ($startDate) {
-                $pendingQuery->where('booking_date', '>=', $startDate);
-            } else {
-                $pendingQuery->where('booking_date', '<=', $endDate);
-            }
-
-            if ($pendingQuery->exists()) {
+        return ! $lab->bookings->contains(function (Booking $booking) use ($days, $startTime, $endTime) {
+            if ($booking->status !== 'pending') {
                 return false;
             }
-        }
 
-        return true;
+            $bookingDays = app(RecurrenceDateService::class)->normaliseDays(
+                $booking->recurrence_days,
+                $booking->day
+            );
+
+            return array_intersect($days, $bookingDays) !== []
+                && $this->timesOverlap($booking->start_time, $booking->end_time, $startTime, $endTime);
+        });
+    }
+
+    private function timesOverlap(string $existingStart, string $existingEnd, string $newStart, string $newEnd): bool
+    {
+        return Carbon::parse($existingStart)->format('H:i') < Carbon::parse($newEnd)->format('H:i')
+            && Carbon::parse($existingEnd)->format('H:i') > Carbon::parse($newStart)->format('H:i');
     }
 
     /**
@@ -227,12 +228,16 @@ class ScheduleController extends Controller
 
         // Map data using Service (DRY)
         $scheduleData = ScheduleService::mapFromRequest($validated, $request->type);
+        $startDate = $scheduleData['start_date'] ?? null;
+        $endDate = $scheduleData['end_date'] ?? null;
+        $recurrenceDays = $scheduleData['recurrence_days'] ?? null;
 
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
             $validated['day'],
-            $validated['start_date'] ?? null,
-            $validated['end_date'] ?? null
+            $startDate,
+            $endDate,
+            $recurrenceDays
         );
 
         if ($dayValidation !== true) {
@@ -247,9 +252,10 @@ class ScheduleController extends Controller
             $validated['day'],
             $validated['start_time'],
             $validated['end_time'],
-            $validated['start_date'] ?? null,
-            $validated['end_date'] ?? null,
-            null
+            $startDate,
+            $endDate,
+            null,
+            $recurrenceDays
         );
 
         if ($conflict) {
@@ -264,8 +270,9 @@ class ScheduleController extends Controller
             $validated['day'],
             $validated['start_time'],
             $validated['end_time'],
-            $validated['start_date'] ?? null,
-            $validated['end_date'] ?? null
+            $startDate,
+            $endDate,
+            $recurrenceDays
         );
 
         if ($pendingConflict) {
@@ -362,11 +369,16 @@ class ScheduleController extends Controller
             return back()->withErrors(['scope' => 'Jadwal yang sudah terlaksana tidak dapat ditimpa.'])->withInput();
         }
 
+        $startDate = $scheduleData['start_date'] ?? null;
+        $endDate = $scheduleData['end_date'] ?? null;
+        $recurrenceDays = $scheduleData['recurrence_days'] ?? null;
+
         // Validate day exists in date range
         $dayValidation = $this->validateDayInDateRange(
             $validated['day'],
-            $validated['start_date'] ?? null,
-            $validated['end_date'] ?? null
+            $startDate,
+            $endDate,
+            $recurrenceDays
         );
 
         if ($dayValidation !== true) {
@@ -381,9 +393,10 @@ class ScheduleController extends Controller
             $validated['day'],
             $validated['start_time'],
             $validated['end_time'],
-            $validated['start_date'] ?? null,
-            $validated['end_date'] ?? null,
-            $id
+            $startDate,
+            $endDate,
+            $id,
+            $recurrenceDays
         );
 
         if ($conflict) {
@@ -398,8 +411,9 @@ class ScheduleController extends Controller
             $validated['day'],
             $validated['start_time'],
             $validated['end_time'],
-            $validated['start_date'] ?? null,
-            $validated['end_date'] ?? null,
+            $startDate,
+            $endDate,
+            $recurrenceDays,
             $schedule->booking_id // Exclude current booking if schedule is from booking
         );
 
@@ -569,7 +583,7 @@ class ScheduleController extends Controller
         return $candidate;
     }
 
-    private function validateDayInDateRange($selectedDay, $startDate, $endDate)
+    private function validateDayInDateRange($selectedDay, $startDate, $endDate, ?array $recurrenceDays = null)
     {
         // If no date range specified, validation passes (schedule berlaku selamanya)
         if (! $startDate && ! $endDate) {
@@ -580,12 +594,16 @@ class ScheduleController extends Controller
         $start = Carbon::parse($startDate ?? $endDate);
         $end = Carbon::parse($endDate ?? $startDate);
 
-        // IMPORTANT: Validate that start date matches the selected day
-        $startDayName = DayHelper::fromDate($start);
-        if ($startDayName !== $selectedDay) {
-            $formattedStart = $start->format('d/m/Y');
+        $allowedDays = app(RecurrenceDateService::class)->normaliseDays($recurrenceDays, $selectedDay);
 
-            return "Tanggal mulai ({$formattedStart}) adalah hari {$startDayName}, tetapi hari yang dipilih adalah {$selectedDay}. Silakan pilih tanggal mulai yang jatuh pada hari {$selectedDay}.";
+        // The start date must be one of the selected recurring weekdays. For
+        // legacy/single-day schedules this naturally falls back to `day`.
+        $startDayName = DayHelper::fromDate($start);
+        if (! in_array($startDayName, $allowedDays, true)) {
+            $formattedStart = $start->format('d/m/Y');
+            $daysLabel = implode(', ', $allowedDays);
+
+            return "Tanggal mulai ({$formattedStart}) adalah hari {$startDayName}. Pilih tanggal yang jatuh pada salah satu hari: {$daysLabel}.";
         }
 
         // Check if selected day exists in the date range
@@ -593,7 +611,7 @@ class ScheduleController extends Controller
         $currentDate = $start->copy();
 
         while ($currentDate->lte($end)) {
-            if (DayHelper::fromDate($currentDate) === $selectedDay) {
+            if (in_array(DayHelper::fromDate($currentDate), $allowedDays, true)) {
                 $dayFound = true;
                 break;
             }
@@ -604,7 +622,7 @@ class ScheduleController extends Controller
             $formattedStart = $start->format('d/m/Y');
             $formattedEnd = $end->format('d/m/Y');
 
-            return "Hari {$selectedDay} tidak ditemukan dalam rentang tanggal {$formattedStart} - {$formattedEnd}. Silakan pilih rentang tanggal yang mengandung hari {$selectedDay} atau ubah pilihan hari.";
+            return "Tidak ada hari yang dipilih dalam rentang tanggal {$formattedStart} - {$formattedEnd}. Pilih rentang yang memuat salah satu hari: ".implode(', ', $allowedDays).'.';
         }
 
         return true;
@@ -614,35 +632,35 @@ class ScheduleController extends Controller
      * Check for pending bookings that conflict with the schedule
      * Returns an error message if any pending bookings are found, null otherwise
      */
-    private function checkPendingBookings($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeBookingId = null)
+    private function checkPendingBookings($labId, $day, $startTime, $endTime, $startDate, $endDate, $recurrenceDays = null, $excludeBookingId = null)
     {
-        $query = Booking::where('lab_id', $labId)
-            ->where('day', $day)
+        $days = app(RecurrenceDateService::class)->normaliseDays($recurrenceDays, $day);
+        $rangeStart = $startDate ? Carbon::parse($startDate) : null;
+        $rangeEnd = Carbon::parse($endDate ?? $startDate ?? now('Asia/Jakarta')->addYears(5));
+
+        $pendingBookings = Booking::where('lab_id', $labId)
             ->where('status', 'pending')
-            ->where(function ($q) use ($startTime, $endTime) {
-                $q->whereTime('start_time', '<', $endTime)
-                    ->whereTime('end_time', '>', $startTime);
-            });
+            ->when($excludeBookingId, fn ($query) => $query->where('id', '!=', $excludeBookingId))
+            ->get()
+            ->filter(function (Booking $booking) use ($days, $startTime, $endTime, $rangeStart, $rangeEnd) {
+                $bookingDays = app(RecurrenceDateService::class)->normaliseDays(
+                    $booking->recurrence_days,
+                    $booking->day
+                );
 
-        // Exclude specific booking if needed (for update scenario)
-        if ($excludeBookingId) {
-            $query->where('id', '!=', $excludeBookingId);
-        }
-
-        // If dates are specified, filter bookings within date range
-        if ($startDate || $endDate) {
-            $query->where(function ($q) use ($startDate, $endDate) {
-                if ($startDate && $endDate) {
-                    $q->whereBetween('booking_date', [$startDate, $endDate]);
-                } elseif ($startDate) {
-                    $q->where('booking_date', '>=', $startDate);
-                } else {
-                    $q->where('booking_date', '<=', $endDate);
+                if (array_intersect($days, $bookingDays) === []
+                    || ! $this->timesOverlap($booking->start_time, $booking->end_time, $startTime, $endTime)) {
+                    return false;
                 }
-            });
-        }
 
-        $pendingBookings = $query->get();
+                if (! $rangeStart) {
+                    return true;
+                }
+
+                return app(RecurrenceDateService::class)
+                    ->datesForBooking($booking)
+                    ->contains(fn (string $date) => Carbon::parse($date)->betweenIncluded($rangeStart, $rangeEnd));
+            });
 
         if ($pendingBookings->count() > 0) {
             $bookingList = $pendingBookings->map(function ($booking) {
@@ -675,6 +693,8 @@ class ScheduleController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'student_count' => 'required|integer|min:1',
+            'recurrence_days' => 'nullable|array',
+            'recurrence_days.*' => 'in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'target_date' => 'nullable|date',
         ];
 
@@ -703,6 +723,38 @@ class ScheduleController extends Controller
                         }
                     },
                 ];
+            } else {
+                $rules['start_date'] = 'required|date';
+                $rules['schedule_frequency'] = 'required|in:once,multiple';
+
+                if ($request->schedule_frequency === 'multiple') {
+                    $rules['end_date'] = [
+                        'required',
+                        'date',
+                        'after_or_equal:start_date',
+                        function ($attribute, $value, $fail) use ($request) {
+                            try {
+                                $days = app(RecurrenceDateService::class)->normaliseDays(
+                                    $request->input('recurrence_days', []),
+                                    $request->day
+                                );
+                                $meetings = app(RecurrenceDateService::class)->datesBetween(
+                                    Carbon::parse($request->start_date),
+                                    Carbon::parse($value),
+                                    $days,
+                                    $request->day
+                                )->count();
+                            } catch (\Throwable) {
+                                return;
+                            }
+
+                            if ($meetings > 60) {
+                                $fail('Jadwal berulang dibatasi maksimal 60 pertemuan.');
+                            }
+                        },
+                    ];
+                    $rules['recurrence_days'] = 'required|array|min:1';
+                }
             }
         } elseif ($request->type === 'non_perkuliahan') {
             $rules['activity_name'] = 'required|string|max:255';
@@ -741,7 +793,10 @@ class ScheduleController extends Controller
 
         // Filter by Day (manual day selection - independent of date filter)
         if ($request->filled('day')) {
-            $query->where('day', $request->day);
+            $query->where(function ($q) use ($request) {
+                $q->where('day', $request->day)
+                    ->orWhereJsonContains('recurrence_days', $request->day);
+            });
         }
 
         // Filter by Search (course/activity name or lecturer)
@@ -761,7 +816,10 @@ class ScheduleController extends Controller
                 $date = Carbon::parse($request->date);
                 $dayName = DayHelper::fromDate($date);
 
-                $query->where('day', $dayName)
+                $query->where(function ($q) use ($dayName) {
+                        $q->where('day', $dayName)
+                            ->orWhereJsonContains('recurrence_days', $dayName);
+                    })
                     ->where(function ($q) use ($request) {
                         $q->where(function ($q2) use ($request) {
                             // Has start_date, check range
@@ -808,17 +866,20 @@ class ScheduleController extends Controller
                 });
             });
         } else {
-            // No specific date/month - show active/future schedules only - DEFAULT
-            $query->where(function ($q) {
-                $q->where(function ($q2) {
-                    // Has end_date in the future
-                    $q2->whereNotNull('end_date')
-                        ->where('end_date', '>=', now()->format('Y-m-d'));
-                })->orWhere(function ($q2) {
-                    // No end_date (permanent/recurring)
-                    $q2->whereNull('end_date');
-                });
-            });
+            $today = now('Asia/Jakarta')->format('Y-m-d');
+
+            match ($request->input('period', 'upcoming')) {
+                'history' => $query
+                    ->whereNotNull('end_date')
+                    ->where('end_date', '<', $today),
+                'all' => null,
+                default => $query->where(function ($q) use ($today) {
+                    $q->where(function ($q2) use ($today) {
+                        $q2->whereNotNull('end_date')
+                            ->where('end_date', '>=', $today);
+                    })->orWhereNull('end_date');
+                }),
+            };
         }
     }
 
