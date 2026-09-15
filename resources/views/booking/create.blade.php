@@ -432,18 +432,44 @@
                     </h3>
                     <p class="section-intro">Gunakan kalender untuk melihat slot yang sudah terisi. Anda juga dapat mengisi tanggal dan jam secara manual.</p>
 
-                    <div id="booking-calendar-panel" class="schedule-picker-panel mb-6 border rounded-xl p-4 md:p-5">
-                        <div class="flex flex-col md:flex-row md:items-end gap-3 mb-4">
-                            <div class="w-full md:w-80">
-                                <label for="booking-calendar-lab" class="block text-gray-700 text-sm font-semibold mb-2">Kalender laboratorium</label>
-                                <select id="booking-calendar-lab" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 bg-white">
-                                    <option value="">-- Pilih laboratorium --</option>
-                                    @foreach($labs as $lab)
-                                        <option value="{{ $lab->id }}" data-capacity="{{ $lab->capacity }}">{{ $lab->name }} (Kapasitas {{ $lab->capacity }})</option>
-                                    @endforeach
-                                </select>
+                    <div id="lab-selection-container" class="mb-6">
+                        <label for="labSelect" class="block text-gray-700 text-sm font-semibold mb-2">Pilih Laboratorium <span class="text-red-500">*</span></label>
+                        <select name="lab_id" id="labSelect" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100">
+                            <option value="">-- Pilih Laboratorium --</option>
+                            @foreach($labs as $lab)
+                                <option value="{{ $lab->id }}" data-capacity="{{ $lab->capacity }}" {{ (string) old('lab_id') === (string) $lab->id ? 'selected' : '' }}>{{ $lab->name }} (Kapasitas {{ $lab->capacity }})</option>
+                            @endforeach
+                        </select>
+                        <p id="lab-availability-status" class="text-sm text-gray-500 mt-2" aria-live="polite">
+                            Pilih lab yang ingin digunakan. Setelah tanggal, jam, dan jumlah peserta diisi, sistem akan memeriksa ketersediaannya.
+                        </p>
+
+                        <div id="capacityWarning" role="status" class="hidden mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                            <div class="flex items-start">
+                                <svg class="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333-.192-3 1.732-3z"/>
+                                </svg>
+                                <div>
+                                    <p class="font-bold text-yellow-800">Kapasitas mungkin tidak mencukupi</p>
+                                    <p class="text-sm text-yellow-700 mt-1">
+                                        Kapasitas lab ini (<span id="labCapacityDisplay" class="font-bold"></span>) lebih kecil dari jumlah peserta (<span id="participantCountDisplay" class="font-bold"></span>).
+                                    </p>
+                                    <p class="text-xs text-yellow-800 mt-2 font-semibold">
+                                        Anda tetap dapat mengajukan, tetapi fasilitas mungkin tidak mencukupi untuk seluruh peserta.
+                                    </p>
+                                </div>
                             </div>
-                            <p id="booking-calendar-status" class="field-help" aria-live="polite">Pilih lab, lalu klik atau tarik slot kosong untuk mengisi tanggal dan waktu.</p>
+                        </div>
+                    </div>
+
+                    <div id="booking-calendar-panel" class="schedule-picker-panel mb-6 border rounded-xl p-4 md:p-5">
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 mb-4">
+                            <div>
+                                <h4 class="font-bold text-gray-800">Kalender ketersediaan</h4>
+                                <p class="field-help">Klik atau tarik slot kosong untuk mengisi tanggal dan jam pengajuan.</p>
+                            </div>
+                            <p id="booking-calendar-status" class="field-help md:ml-auto md:text-right" aria-live="polite">Pilih laboratorium terlebih dahulu.</p>
                         </div>
                         <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
                             <div data-booking-calendar
@@ -478,7 +504,7 @@
 
                         <div>
                             <label for="start_hour" class="block text-gray-700 text-sm font-semibold mb-2">Jam Mulai <span class="text-red-500">*</span></label>
-                            <input type="hidden" name="start_time" id="start_time" value="{{ old('start_time') }}" required>
+                            <input type="hidden" name="start_time" id="start_time" value="{{ old('start_time') }}">
                             <div class="flex gap-2">
                                 <select id="start_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                     <option value="" disabled selected>Jam</option>
@@ -498,7 +524,7 @@
 
                         <div>
                             <label for="end_hour" class="block text-gray-700 text-sm font-semibold mb-2">Jam Selesai <span class="text-red-500">*</span></label>
-                            <input type="hidden" name="end_time" id="end_time" value="{{ old('end_time') }}" required>
+                            <input type="hidden" name="end_time" id="end_time" value="{{ old('end_time') }}">
                             <div class="flex gap-2">
                                 <select id="end_hour" class="w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white">
                                     <option value="" disabled selected>Jam</option>
@@ -521,49 +547,6 @@
                             <p id="time-error" role="alert" class="text-sm text-red-500 hidden"><strong>* Jam selesai harus setelah jam mulai.</strong></p>
                         </div>
 
-                        <!-- Lab Selection Container - Hidden for pribadi bookings -->
-                        <div id="lab-selection-container" class="md:col-span-2">
-                            <label for="labSelect" class="block text-gray-700 text-sm font-semibold mb-2">Pilih Laboratorium <span class="text-red-500">*</span></label>
-                            <select name="lab_id" id="labSelect" required disabled
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100">
-                                <option value="">Isi data di atas untuk melihat lab yang tersedia</option>
-                            </select>
-                            <p id="lab-availability-status" class="text-sm text-gray-500 mt-2" aria-live="polite">
-                                Lab akan muncul setelah Anda mengisi tanggal, waktu, dan jumlah peserta.
-                                <span class="text-red-500 font-medium">Jika lab tidak tersedia maka lab sedang dibooking.</span>
-                            </p>
-
-                            <!-- Conflict Warning Box (Hidden by default) -->
-                            <div id="conflictWarning" role="alert" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-                                <div class="flex items-start">
-                                    <svg class="w-6 h-6 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <div>
-                                        <p class="font-bold text-red-800">Lab tidak tersedia</p>
-                                        <p class="text-sm text-red-700 mt-1">Lab ini sudah ada booking yang diajukan di jam dan di lab ini. Silakan pilih jadwal atau lab lain.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Capacity Warning Box (Hidden by default) -->
-                            <div id="capacityWarning" role="status" class="hidden mt-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
-                                <div class="flex items-start">
-                                    <svg class="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                    </svg>
-                                    <div>
-                                        <p class="font-bold text-yellow-800">Kapasitas tidak memadai</p>
-                                        <p class="text-sm text-yellow-700 mt-1">
-                                            Kapasitas lab ini (<span id="labCapacityDisplay" class="font-bold"></span>) lebih kecil dari jumlah peserta (<span id="participantCountDisplay" class="font-bold"></span>).
-                                        </p>
-                                        <p class="text-xs text-yellow-800 mt-2 italic font-semibold">
-                                            Konsekuensi: Fasilitas mungkin tidak mencukupi untuk setiap peserta dan ketidaknyamanan ditanggung sendiri.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Notice Peminjaman Berulang untuk Perkuliahan Tetap - Generic (ketika belum lengkap) -->
@@ -913,6 +896,7 @@
         let currentStep = 1;
         const totalSteps = 4;
         let selectedBookingType = '';
+        let selectedLabId = '';
         let availabilityController = null;
         let availabilityRequestId = 0;
 
@@ -1597,6 +1581,38 @@
         }
 
         // Step 3 Validation
+        function getTimeFieldValue(prefix) {
+            const hiddenInput = document.getElementById(`${prefix}_time`);
+            const hourSelect = document.getElementById(`${prefix}_hour`);
+            const minuteSelect = document.getElementById(`${prefix}_minute`);
+
+            if (hourSelect?.value && minuteSelect?.value) {
+                return `${hourSelect.value}:${minuteSelect.value}`;
+            }
+
+            if (hiddenInput?.value) return hiddenInput.value;
+
+            return '';
+        }
+
+        function syncTimeFieldValue(prefix) {
+            const value = getTimeFieldValue(prefix);
+            const hiddenInput = document.getElementById(`${prefix}_time`);
+            if (hiddenInput && value) {
+                hiddenInput.value = value;
+                hiddenInput.defaultValue = value;
+                hiddenInput.setAttribute('value', value);
+            }
+            return value;
+        }
+
+        function syncBookingTimeFields() {
+            return {
+                start: syncTimeFieldValue('start'),
+                end: syncTimeFieldValue('end'),
+            };
+        }
+
         function getSelectedRecurrenceDays() {
             return Array.from(document.querySelectorAll('input[name="recurrence_days[]"]:checked'))
                 .map(input => input.value);
@@ -1615,8 +1631,7 @@
             const recurringTimeRange = document.getElementById('recurring-time-range');
             const recurringLabName = document.getElementById('recurring-lab-name');
             const bookingDate = document.getElementById('booking_date').value;
-            const startTime = document.getElementById('start_time').value;
-            const endTime = document.getElementById('end_time').value;
+            const { start: startTime, end: endTime } = syncBookingTimeFields();
             const labSelect = document.getElementById('labSelect');
             const isNonFixedRecurring = selectedBookingType === 'perkuliahan_tidak_tetap'
                 && document.querySelector('input[name="schedule_frequency"]:checked')?.value === 'multiple';
@@ -1761,16 +1776,21 @@
             const startTime = document.getElementById('start_time');
             const endTime = document.getElementById('end_time');
             const labSelect = document.getElementById('labSelect');
+            selectedLabId = labSelect.value;
 
             [bookingDate, participantCount, startTime, endTime].forEach(field => {
                 field.addEventListener('change', function() {
-                    if (selectedBookingType !== 'pribadi') fetchAvailableLabs();
+                    if (selectedBookingType !== 'pribadi') {
+                        fetchAvailableLabs();
+                        checkCapacityWarning();
+                    }
                     updateRecurrenceControls();
                     validateStep3();
                 });
             });
 
             labSelect.addEventListener('change', function() {
+                selectedLabId = labSelect.value;
                 validateStep3();
                 checkCapacityWarning();
                 updateRecurrenceControls();
@@ -1793,8 +1813,7 @@
         function validateStep3() {
             const bookingDate = document.getElementById('booking_date').value;
             const participantCount = document.getElementById('participant_count').value;
-            const startTime = document.getElementById('start_time').value;
-            const endTime = document.getElementById('end_time').value;
+            const { start: startTime, end: endTime } = syncBookingTimeFields();
             const lab = document.getElementById('labSelect').value;
             const sundayWarning = document.getElementById('sunday-warning');
             const timeError = document.getElementById('time-error');
@@ -1872,11 +1891,16 @@
                 // Disable and clear lab select
                 labSelect.disabled = true;
                 labSelect.value = '';
+                selectedLabId = '';
+                labSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 labSelect.removeAttribute('required');
                 document.getElementById('booking-calendar-panel')?.classList.add('hidden');
             } else {
                 // Show lab selection for other types
                 labContainer.classList.remove('hidden');
+                // The same field is used by the calendar and the submission.
+                // It must be usable before date/time details are complete.
+                labSelect.disabled = false;
                 labSelect.setAttribute('required', 'required');
                 document.getElementById('booking-calendar-panel')?.classList.remove('hidden');
             }
@@ -1891,14 +1915,14 @@
 
             const bookingDate = document.getElementById('booking_date').value;
             const participantCount = document.getElementById('participant_count').value;
-            const startTime = document.getElementById('start_time').value;
-            const endTime = document.getElementById('end_time').value;
+            const { start: startTime, end: endTime } = syncBookingTimeFields();
 
             if (!bookingDate || !participantCount || !startTime || !endTime) return;
 
             const labSelect = document.getElementById('labSelect');
             const availabilityStatus = document.getElementById('lab-availability-status');
-            const preferredLabId = window.bookingCalendarPreferredLabId || labSelect.value;
+            // Preserve the current choice while availability is recalculated.
+            const preferredLabId = selectedLabId || labSelect.value;
 
             availabilityController?.abort();
             availabilityController = new AbortController();
@@ -1940,6 +1964,7 @@
                 if (labs.length === 0) {
                     labSelect.innerHTML = '<option value="">Tidak ada lab tersedia</option>';
                     labSelect.disabled = true;
+                    selectedLabId = '';
                     if (availabilityStatus) {
                         availabilityStatus.textContent = 'Tidak ada laboratorium yang tersedia pada kombinasi tanggal, jam, dan jumlah peserta ini. Coba ubah salah satu pilihan.';
                         availabilityStatus.className = 'text-red-700 text-sm mt-2';
@@ -1960,13 +1985,16 @@
                         labSelect.appendChild(option);
                     });
                     labSelect.disabled = false;
-                    if (preferredLabId && Array.from(labSelect.options).some(option => option.value === String(preferredLabId))) {
+                    const preferredLabIsAvailable = preferredLabId
+                        && Array.from(labSelect.options).some(option => option.value === String(preferredLabId));
+                    if (preferredLabIsAvailable) {
                         labSelect.value = String(preferredLabId);
                         labSelect.dispatchEvent(new Event('change', { bubbles: true }));
                     }
-                    window.bookingCalendarPreferredLabId = null;
                     if (availabilityStatus) {
-                        availabilityStatus.textContent = `${labs.length} laboratorium tersedia. Pilih salah satu untuk melanjutkan.`;
+                        availabilityStatus.textContent = preferredLabIsAvailable
+                            ? `${labs.length} laboratorium tersedia. Pilihan Anda tetap dipertahankan.`
+                            : `${labs.length} laboratorium tersedia. Pilih salah satu untuk melanjutkan.`;
                         availabilityStatus.className = 'text-green-700 text-sm mt-2';
                     }
                 }
@@ -2024,8 +2052,19 @@
             });
             document.getElementById('btn-next-2').addEventListener('click', () => goToStep(3));
             document.getElementById('btn-next-3').addEventListener('click', () => {
+                // The visible hour/minute controls are the user-facing source
+                // of truth. Sync them before building the summary and before
+                // the final form submission can happen.
+                syncBookingTimeFields();
                 generateSummary();
                 goToStep(4);
+            });
+
+            document.getElementById('btn-submit').addEventListener('click', () => {
+                // Click runs before the browser's native form validation.
+                // This guarantees the named hidden fields contain the values
+                // selected in the custom time controls.
+                syncBookingTimeFields();
             });
 
             document.getElementById('btn-prev-2').addEventListener('click', () => goToStep(1));
@@ -2195,7 +2234,8 @@
             }
 
             summary.push(summaryRow('Tanggal', formatIndoDate(new Date(`${document.getElementById('booking_date').value}T00:00:00`))));
-            summary.push(summaryRow('Waktu', `${document.getElementById('start_time').value} - ${document.getElementById('end_time').value} WIB`));
+            const { start: summaryStartTime, end: summaryEndTime } = syncBookingTimeFields();
+            summary.push(summaryRow('Waktu', `${summaryStartTime} - ${summaryEndTime} WIB`));
             summary.push(summaryRow('Peserta', `${document.getElementById('participant_count').value} orang`));
 
             // Recurrence display for both lecture variants.
@@ -2357,14 +2397,10 @@
                 const hiddenInput = document.getElementById(prefix + '_time');
 
                 function updateHiddenInput() {
-                    if (hourSelect.value && minuteSelect.value) {
-                        hiddenInput.value = `${hourSelect.value}:${minuteSelect.value}`;
+                    const value = syncTimeFieldValue(prefix);
 
-                        // Trigger change event manually for fetchAvailableLabs and validation
-                        hiddenInput.dispatchEvent(new Event('change'));
-                    } else {
-                        hiddenInput.value = '';
-                    }
+                    // Trigger change event manually for availability and validation.
+                    hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
 
                 // Initialize from hidden input (e.g. old value)
@@ -2378,6 +2414,24 @@
                 minuteSelect.addEventListener('change', updateHiddenInput);
             });
         }
+
+        // FullCalendar writes the visible time controls programmatically.
+        // Reconcile the named form fields after that interaction as well.
+        document.addEventListener('booking-calendar:time-selected', (event) => {
+            const selectedTimes = event.detail || {};
+
+            ['start', 'end'].forEach(prefix => {
+                const value = selectedTimes[prefix];
+                const hiddenInput = document.getElementById(`${prefix}_time`);
+                if (!hiddenInput || !value) return;
+
+                hiddenInput.value = value;
+                hiddenInput.defaultValue = value;
+                hiddenInput.setAttribute('value', value);
+            });
+
+            syncBookingTimeFields();
+        });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -2563,6 +2617,13 @@
                    this.initOptions();
                 });
 
+                // Calendar selections update the underlying value directly;
+                // refresh only the custom trigger without running form logic.
+                this.originalSelect.addEventListener('custom-select:sync', () => {
+                    this.updateTrigger();
+                    this.initOptions();
+                });
+
                 // Mutation Observer for dynamic changes (attributes AND childList/options)
                 this.observer = new MutationObserver((mutations) => {
                     let shouldUpdateTrigger = false;
@@ -2705,7 +2766,7 @@
             toggleDropdown() {
                 const isHidden = this.optionsContainer.classList.contains('hidden');
                 // Close others
-                document.querySelectorAll('.custom-select-wrapper .options-container').forEach(el => {
+                document.querySelectorAll('.custom-select-wrapper .custom-select-options').forEach(el => {
                     if (!el.classList.contains('hidden') && el !== this.optionsContainer) {
                         el.classList.add('hidden');
                         const otherChevron = el.parentElement.querySelector('svg');
