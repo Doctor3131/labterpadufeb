@@ -1,0 +1,102 @@
+# Dev dengan hot reload (Compose Watch). Cara pakai dari root repo:
+#   docker compose -f compose.yaml -f compose.override.yaml up --watch --build
+# - Service `app` di-override ke target `build` (ada composer + node + vendor).
+# - Source di-bind agar edit lokal langsung masuk container; Watch melakukan
+#   `sync` untuk kode dan `rebuild` saat lockfile berubah (tanpa rebuild penuh).
+# - Vite HMR di port 5173 (lihat VITE_DEV_SERVER_PORT di vite.config.js).
+# - Tetap memakai service `db` yang sama dari compose.yaml.
+services:
+  app:
+    build:
+      target: build
+    # Jangan pakai image GHCR di dev — selalu build lokal dari stage build.
+    image: labterpadu-app-dev
+    command: >
+      sh -c "composer install --no-interaction --no-progress
+      && php artisan serve --host=0.0.0.0 --port=3333"
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_HOST: db
+      DB_PORT: "3306"
+      LOG_CHANNEL: stderr
+    volumes:
+      # Source live (kecuali yang di-sync via watch — bind ini untuk file di luar watch path).
+      - type: bind
+        source: .
+        target: /var/www/html
+      # Pertahankan node_modules & vendor hasil build image agar tidak tertutup bind di atas.
+      - node-modules:/var/www/html/node_modules
+      - vendor-dev:/var/www/html/vendor
+      - type: bind
+        source: ${HOST_UPLOADS_DIR:-./data/uploads}
+        target: /var/www/html/storage/app/public
+      - type: bind
+        source: ${HOST_PRIVATE_DIR:-./data/private}
+        target: /var/www/html/storage/app/private
+    ports:
+      - "3333:3333"
+    develop:
+      watch:
+        - path: ./app
+          target: /var/www/html/app
+          action: sync
+        - path: ./resources
+          target: /var/www/html/resources
+          action: sync
+        - path: ./routes
+          target: /var/www/html/routes
+          action: sync
+        - path: ./config
+          target: /var/www/html/config
+          action: sync
+        - path: ./database
+          target: /var/www/html/database
+          action: sync
+        - path: ./composer.lock
+          action: rebuild
+        - path: ./package-lock.json
+          action: rebuild
+    # Di dev, longgarkan hardening agar composer/vite/file-watcher bebas bekerja.
+    read_only: false
+    cap_drop: []
+
+  vite:
+    image: node:22-alpine3.21
+    working_dir: /app
+    command: ["npm", "run", "dev"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      VITE_HMR_HOST: ${VITE_HMR_HOST:-localhost}
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - node-modules-vite:/app/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - labnet
+    depends_on:
+      - app
+    develop:
+      watch:
+        - path: ./resources
+          target: /app/resources
+          action: sync
+        - path: ./package-lock.json
+          action: rebuild
+    restart: unless-stopped
+
+volumes:
+  node-modules:
+    name: labterpadu_dev_node_modules
+  vendor-dev:
+    name: labterpadu_dev_vendor
+  node-modules-vite:
+    name: labterpadu_dev_node_modules_vite

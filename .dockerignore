@@ -1,0 +1,49 @@
+# Dependency & build artifact (di-install ulang / di-build di dalam image)
+node_modules/
+vendor/
+public/build/
+public/hot/
+public/storage/
+
+# Git & CI
+.git/
+.github/
+
+# Secret & env lokal (tidak pernah di-COPY ke image — via env_file saat run)
+.env
+.env.backup
+.env.production
+auth.json
+
+# Bootstrap cache hasil generate lokal (diregenerate via package:discover di entrypoint)
+bootstrap/cache/*.php
+
+# Data runtime user — dipersist via bind-mount ./data (compose.yaml), bukan baked ke image
+data/
+storage/app/public/*
+storage/app/private/*
+!storage/app/public/.gitignore
+!storage/app/private/.gitignore
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/*.key
+storage/pail/
+
+# Backup & PII (tidak boleh masuk image)
+backups/
+*.sql
+mahasiswa_feb.csv
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/
+.phpunit.cache/
+.phpunit.result.cache

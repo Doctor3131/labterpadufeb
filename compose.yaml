@@ -1,0 +1,109 @@
+# LabTerpaduFEB — production, single VM.
+# Pakai:  docker compose up -d --build   (pertama kali / setelah git pull)
+#         docker compose pull && docker compose up -d   (jika pakai image GHCR dari CI)
+# Restore dump manual (tanpa auto-seed):
+#   docker compose exec -T db mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$DB_DATABASE" < backup_current.sql
+#   docker compose exec app php artisan migrate --force
+name: labterpadu
+
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    image: ${IMAGE:-ghcr.io/doctor3131/labterpadufeb:latest}
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      # Paksa default production yang aman (menimpa .env lokal bila masih sqlite/database-driver):
+      APP_ENV: production
+      DB_HOST: db
+      DB_PORT: "3306"
+      # Lihat AGENTS.md: driver database untuk cache/session bermasalah saat restore dump —
+      # single instance tanpa queue worker aman pakai file.
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      FILESYSTEM_DISK: public
+      LOG_CHANNEL: stderr
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - labnet
+    # Upload user hidup di folder baremetal (repo ./data), BUKAN di dalam image.
+    # variable HOST_* bisa di-override di .env; default = opsi C (dalam repo).
+    volumes:
+      - type: bind
+        source: ${HOST_UPLOADS_DIR:-./data/uploads}
+        target: /var/www/html/storage/app/public
+      - type: bind
+        source: ${HOST_PRIVATE_DIR:-./data/private}
+        target: /var/www/html/storage/app/private
+      # Writable framework (tidak perlu di-backup manual, bukan data user).
+      - framework-cache:/var/www/html/storage/framework
+      - bootstrap-cache:/var/www/html/bootstrap/cache
+    tmpfs:
+      - /tmp
+      - /run
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    # HEALTHCHECK diwarisi dari Dockerfile (GET /up). Tidak diduplikasi di sini.
+
+  db:
+    image: mysql:8.0-oraclelinux9
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-labterpadu}
+      MYSQL_USER: ${DB_USERNAME:-labterpadu}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD di .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD di .env}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - labnet
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    # Tanpa `ports:` — DB hanya reachable dari network internal labnet.
+
+  proxy:
+    image: nginx:1.27.4-alpine3.21
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - labnet
+    volumes:
+      - type: bind
+        source: ./docker/nginx/default.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/nginx-health | grep -q ok"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    # TLS di-terminate di Cloudflare (edge) — origin cukup HTTP.
+
+networks:
+  labnet:
+    driver: bridge
+
+volumes:
+  # Tanpa `name:` agar ter-prefix nama project (labterpadu_* vs labtest_*):
+  # isolasi antar project + antar environment.
+  db_data:
+  framework-cache:
+  bootstrap-cache:

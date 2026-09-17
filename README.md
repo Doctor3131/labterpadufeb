@@ -10,10 +10,10 @@ This is a Laravel-based web application for managing the integrated laboratory o
 
 ## Requirements
 
--   PHP >= 8.1
+-   PHP >= 8.2 (lockfile saat ini butuh >= 8.4; image Docker memakai PHP 8.4)
 -   Composer
 -   Node.js & NPM
--   MySQL/PostgreSQL
+-   MySQL 8.0 (production)
 
 ## Installation
 
@@ -32,6 +32,42 @@ php artisan migrate
 # Start development server
 php artisan serve
 npm run dev
+```
+
+## Docker
+
+Production-style setup: `app` (Laravel 12, `artisan serve` port 3333, non-root, read-only FS)
++ `db` (MySQL 8.0, named volume) + `proxy` (Nginx port 80; TLS di-terminate di Cloudflare).
+
+```bash
+# 1. Wajib di .env: DB_PASSWORD, MYSQL_ROOT_PASSWORD,
+#    APP_KEY (php artisan key:generate --show | grep base64:), APP_URL
+# 2. Kepemilikan folder upload (di-bind ke container, bukan bagian image)
+sudo chown -R 10000:10000 ./data
+# 3. Jalan
+docker compose up -d --build
+curl http://localhost/up   # 200 = sehat (nginx -> app -> DB)
+```
+
+Catatan:
+
+- Entrypoint menunggu DB healthy lalu `migrate --force` (hanya migration pending,
+  idempotent — tidak pernah `fresh`). Tanpa seed otomatis.
+- File upload user hidup di `./data/{uploads,private}` di host; image steril dari data user.
+- `CACHE_STORE`/`SESSION_DRIVER`/`QUEUE_CONNECTION` dipaksa `file/sync` via compose.
+- Gagal-boot cepat bila `APP_KEY` invalid atau bind-mount tidak writable (lihat log `entrypoint:`).
+
+Dev dengan hot reload (Compose Watch, DB yang sama):
+
+```bash
+docker compose -f compose.yaml -f compose.override.yaml up --watch --build
+```
+
+Restore dump DB (manual, tanpa auto-seed):
+
+```bash
+docker compose exec -T db mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$DB_DATABASE" < backup.sql
+docker compose exec app php artisan migrate --force
 ```
 
 ## License

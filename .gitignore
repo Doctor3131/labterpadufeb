@@ -31,3 +31,10 @@ yarn-error.log
 
 # Student PII (NIM/nama/prodi) — never commit; upload to the server out-of-band
 mahasiswa_feb.csv
+
+# Docker bind-mounts for user uploads (opsi C: dalam repo, bukan di image).
+# Isi file user tidak di-commit; folder dipertahankan via .gitkeep.
+/data/uploads/*
+/data/private/*
+!/data/uploads/.gitkeep
+!/data/private/.gitkeep
