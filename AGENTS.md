@@ -74,7 +74,7 @@ pm2 startOrReload ecosystem.config.json --update-env
 ```
 
 - **Seeding:** `db:seed` runs only when `bookings` is empty (same guard that used to live in the Docker entrypoint) — run it manually on a fresh DB so dump-restored data stays authoritative. Similarly, `import:mahasiswa` should only run when `mahasiswa_feb` is empty.
-- **Backup / restore:** plain `mysqldump` / `mysql` against MySQL (see Commands). `backups/` holds the gzip dumps; add the mysqldump line to cron. Restoring a dump is a destructive overwrite of the current DB.
+- **Backup / restore:** plain `mysqldump` / `mysql` against MySQL (see Commands). `backups/` holds the gzip dumps; add the mysqldump line to cron. Restoring a dump is a destructive overwrite of the current DB. After any restore, verify the transient Laravel tables exist (`SHOW TABLES LIKE 'cache%'` / `sessions`); if a dump lacks them, recreate `cache` and `cache_locks` matching `0001_01_01_000001_create_cache_table` — `migrate --force` won't, once the record is already in the `migrations` table.
 - **`mahasiswa_feb.csv`** ships out-of-band to the server (student PII — never in the repo). On a fresh server, copy it into the project root and run `php artisan import:mahasiswa` once.
 
 ## Gotchas
@@ -82,6 +82,7 @@ pm2 startOrReload ecosystem.config.json --update-env
 - `backups/` and `labterpadu-*.sql` dumps live in the repo root — never commit fresh dumps or treat them as source of truth. (`backups/` may already contain old `backup_labterpadu_*.sql` files from an earlier scheme — ignore/rotate them, don't commit.)
 - **`mahasiswa_feb.csv` is not in the repo** (purged from history; never re-add). For local dev, regenerate it from the DB (`SELECT nim,nama,prodi INTO OUTFILE ...`) or restore it from a DB backup.
 - **`config:cache` freezes DB settings.** On the server the app runs with `config:cache`; ad-hoc artisan commands against another database silently hit the cached config. Run `php artisan config:clear` first (or re-cache after).
+- **Caching driver must not be `database` on the server.** Deploys run `optimize:clear`/`cache:clear`; with the default `CACHE_STORE=database` that executes `delete from cache` and dies with "Table 'labterpadu.cache' doesn't exist" if the `cache`/`cache_locks` tables are missing (a dump restore or a migrations-table drift can drop them — `migrate --force` won't recreate a completed record). Server `.env` should set `CACHE_STORE=file` (single PM2 instance, no queue worker → file store is safe), then `php artisan config:clear && php artisan config:cache` so the change isn't frozen by cached config.
 - **`migrate --force` is idempotent** ("Nothing to migrate" on redeploy). The old "restart fragility" crash (`2026_02_03_215614`) was a stale-dump artifact: `labterpadu-10-05-2026.sql` predates the `2026_08_04/08_05` migrations, so dump-import + boot hit it. Check a dump's migration timestamp against the repo's before importing.
 - **MySQL `root` is `root@localhost` only** — TCP root auth is denied; the app connects as `labterpadu@'%'` (granted only on `labterpadu`). Creating a scratch DB requires `GRANT ALL ON <db>.* TO 'labterpadu'@'%'`.
 - **PHP 8.5 prints PDO deprecations to stdout** — when capturing `php artisan key:generate --show` output, grep for the `base64:` line to avoid deprecation noise.
