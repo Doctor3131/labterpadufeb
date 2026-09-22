@@ -5,18 +5,18 @@
 @section('content')
     <!-- Header -->
     <div class="mb-6">
-        <a href="{{ route('admin.refinitiv.index') }}" class="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{{ route('admin.refinitiv.index', ['status' => request()->query('status', 'pending'), 'q' => request()->query('q'), 'sort' => request()->query('sort', 'schedule_asc')]) }}" class="mb-4 inline-flex items-center gap-2 rounded-md text-sm font-medium text-slate-600 transition hover:text-amber-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
             Kembali ke Daftar
         </a>
         
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg">
+        <div class="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-100 p-5 shadow-sm md:p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Detail Permintaan Refinitiv</h1>
-                    <p class="text-blue-100">ID: #{{ $request->id }}</p>
+                    <h1 class="mb-1 text-xl font-bold text-slate-900 md:text-2xl">Detail Permintaan Refinitiv</h1>
+                    <p class="text-sm text-slate-600">ID permohonan: #{{ $request->id }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     @if($request->attendance_status === 'pending')
@@ -31,25 +31,13 @@
         </div>
     </div>
 
-    <!-- Success Message -->
-    @if(session('success'))
-        <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-4 rounded-r-lg">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Info -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Data Pemohon -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                     Data Pemohon
@@ -92,7 +80,7 @@
             <!-- Keperluan & Jadwal -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     Keperluan & Jadwal
@@ -122,7 +110,7 @@
             <!-- Variabel -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                     Variabel yang Dibutuhkan
@@ -135,7 +123,7 @@
             <!-- Dokumen -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Dokumen Pemohon
@@ -155,13 +143,15 @@
                             $isKtmImage = in_array($ktmExt, ['jpg', 'jpeg', 'png']);
                         @endphp
                         @if($isKtmImage)
-                        <div class="mb-3 border rounded-lg overflow-hidden bg-gray-50">
-                            <img src="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" alt="KTM" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}', 'KTM')">
+                        <div class="mb-3 overflow-hidden rounded-lg border bg-slate-50">
+                            <button type="button" data-image-preview data-preview-src="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" data-preview-title="KTM" aria-label="Perbesar pratinjau KTM" class="block w-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500">
+                                <img src="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" alt="Pratinjau KTM; pilih untuk memperbesar" class="max-h-64 w-full object-contain transition-opacity hover:opacity-90">
+                            </button>
                         </div>
                         @endif
                         <div class="flex gap-2">
-                            <a href="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" target="_blank"
-                               class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                            <a href="{{ route('admin.secure-file', ['path' => $request->ktm_file]) }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-900 transition-colors hover:bg-amber-200">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -196,13 +186,15 @@
                             $isStatementImage = in_array($statementExt, ['jpg', 'jpeg', 'png']);
                         @endphp
                         @if($isStatementImage)
-                        <div class="mb-3 border rounded-lg overflow-hidden bg-gray-50">
-                            <img src="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" alt="Surat Pernyataan" class="w-full max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('{{ route('admin.secure-file', ['path' => $request->statement_file]) }}', 'Surat Pernyataan')">
+                        <div class="mb-3 overflow-hidden rounded-lg border bg-slate-50">
+                            <button type="button" data-image-preview data-preview-src="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" data-preview-title="Surat Pernyataan" aria-label="Perbesar pratinjau surat pernyataan" class="block w-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500">
+                                <img src="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" alt="Pratinjau surat pernyataan; pilih untuk memperbesar" class="max-h-64 w-full object-contain transition-opacity hover:opacity-90">
+                            </button>
                         </div>
                         @endif
                         <div class="flex gap-2">
-                            <a href="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" target="_blank"
-                               class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                            <a href="{{ route('admin.secure-file', ['path' => $request->statement_file]) }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-900 transition-colors hover:bg-amber-200">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -244,7 +236,7 @@
                 
                 @if($request->attendance_status === 'pending')
                     <div class="space-y-3">
-                        <form action="{{ route('admin.refinitiv.hadir', $request) }}" method="POST">
+                        <form action="{{ route('admin.refinitiv.hadir', $request) }}" method="POST" onsubmit="return window.confirm('Tandai pemohon ini hadir?')">
                             @csrf
                             @method('PUT')
                             <button type="submit" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all flex items-center justify-center">
@@ -254,7 +246,7 @@
                                 Tandai Hadir
                             </button>
                         </form>
-                        <form action="{{ route('admin.refinitiv.tidak-hadir', $request) }}" method="POST">
+                        <form action="{{ route('admin.refinitiv.tidak-hadir', $request) }}" method="POST" onsubmit="return window.confirm('Tandai pemohon ini tidak hadir?')">
                             @csrf
                             @method('PUT')
                             <button type="submit" class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all flex items-center justify-center">
@@ -280,7 +272,7 @@
                             </p>
                         @endif
                     </div>
-                    <form action="{{ route('admin.refinitiv.reset', $request) }}" method="POST">
+                    <form action="{{ route('admin.refinitiv.reset', $request) }}" method="POST" onsubmit="return window.confirm('Reset status kehadiran pemohon ini ke Menunggu?')">
                         @csrf
                         @method('PUT')
                         <button type="submit" class="w-full px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-all flex items-center justify-center">
@@ -310,46 +302,78 @@
         </div>
     </div>
 
-    <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80" onclick="closeImageModal()">
-        <div class="relative max-w-4xl max-h-[90vh] m-4">
-            <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div id="imageModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 p-4" aria-hidden="true">
+        <div class="relative max-h-[90vh] max-w-5xl rounded-xl bg-slate-900 p-3 shadow-2xl sm:p-5" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+            <button id="closeImageModal" type="button" aria-label="Tutup pratinjau gambar" class="absolute -right-2 -top-12 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <img id="modalImage" src="" alt="" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl">
-            <p id="modalTitle" class="text-white text-center mt-3 text-lg font-medium"></p>
+            <img id="modalImage" src="" alt="" class="max-h-[78vh] max-w-full rounded-lg object-contain">
+            <p id="modalTitle" class="mt-3 text-center text-sm font-medium text-white"></p>
         </div>
     </div>
 @endsection
 
 @push('scripts')
 <script>
-    function openImageModal(src, title) {
+    (() => {
         const modal = document.getElementById('imageModal');
+        const dialog = modal?.querySelector('[role="dialog"]');
+        const closeButton = document.getElementById('closeImageModal');
         const image = document.getElementById('modalImage');
-        const titleEl = document.getElementById('modalTitle');
-        
-        image.src = src;
-        titleEl.textContent = title;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
-    
-    function closeImageModal() {
-        const modal = document.getElementById('imageModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-    
-    // Close modal on Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeImageModal();
-        }
-    });
+        const title = document.getElementById('modalTitle');
+        let activeTrigger = null;
+        let previousBodyOverflow = '';
+
+        if (!modal || !dialog || !closeButton || !image || !title) return;
+
+        const close = () => {
+            if (modal.classList.contains('hidden')) return;
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute('aria-hidden', 'true');
+            image.removeAttribute('src');
+            document.body.style.overflow = previousBodyOverflow;
+            activeTrigger?.focus();
+            activeTrigger = null;
+        };
+
+        document.querySelectorAll('[data-image-preview]').forEach((trigger) => {
+            trigger.addEventListener('click', () => {
+                activeTrigger = trigger;
+                previousBodyOverflow = document.body.style.overflow;
+                image.src = trigger.dataset.previewSrc;
+                image.alt = `Pratinjau ${trigger.dataset.previewTitle}`;
+                title.textContent = trigger.dataset.previewTitle;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                closeButton.focus();
+            });
+        });
+
+        closeButton.addEventListener('click', close);
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) close();
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (modal.classList.contains('hidden')) return;
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                close();
+                return;
+            }
+
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                closeButton.focus();
+            }
+        });
+    })();
 </script>
 @endpush
