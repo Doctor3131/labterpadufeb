@@ -45,7 +45,7 @@
             </a>
         </div>
 
-        <header class="mb-5 flex flex-col gap-4 rounded-xl border border-blue-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5" data-motion-item>
+        <header class="mb-5 flex flex-col gap-4 rounded-xl border border-blue-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
             <div class="min-w-0">
                 <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Layanan data · Refinitiv</p>
                 <div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -63,7 +63,7 @@
 
         <div class="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_20rem]">
             <main class="space-y-4">
-                <section class="refinitiv-motion-item rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-applicant-heading" data-motion-item>
+                <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-applicant-heading">
                     <div class="mb-4 flex items-center gap-2.5">
                         <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700" aria-hidden="true">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -108,7 +108,7 @@
                     </dl>
                 </section>
 
-                <section class="refinitiv-motion-item rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-schedule-heading" data-motion-item>
+                <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-schedule-heading">
                     <div class="mb-4 flex items-center gap-2.5">
                         <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700" aria-hidden="true">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -143,7 +143,7 @@
                     </div>
                 </section>
 
-                <section class="refinitiv-motion-item rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-documents-heading" data-motion-item>
+                <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-documents-heading">
                     <div class="mb-4 flex items-center gap-2.5">
                         <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700" aria-hidden="true">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9v10a2 2 0 01-2 2z"/></svg>
@@ -222,7 +222,7 @@
             </main>
 
             <aside class="order-first space-y-4 lg:sticky lg:top-24 lg:order-none" aria-label="Tindakan dan riwayat permohonan">
-                <section class="refinitiv-motion-item rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-attendance-heading" data-motion-item>
+                <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-attendance-heading">
                     <div class="mb-4">
                         <h2 id="refinitiv-attendance-heading" class="text-base font-semibold text-slate-900">Kehadiran</h2>
                         <p class="mt-1 text-sm text-slate-600">Catat hasil sesi Refinitiv ini.</p>
@@ -277,7 +277,7 @@
                     @endif
                 </section>
 
-                <section class="refinitiv-motion-item rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-history-heading" data-motion-item>
+                <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-history-heading">
                     <h2 id="refinitiv-history-heading" class="text-sm font-semibold text-slate-900">Riwayat permohonan</h2>
                     <dl class="mt-3 space-y-3 text-sm">
                         <div>

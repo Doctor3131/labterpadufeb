@@ -23,10 +23,39 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ->assertSee('<table', false)
             ->assertSee('Daftar permohonan data Refinitiv')
             ->assertSee('data-refinitiv-sort-trigger', false)
+            ->assertSee('data-refinitiv-admin', false)
+            ->assertSee('data-refinitiv-status="pending"', false)
+            ->assertSee('id="refinitiv-results-region"', false)
             ->assertSee('Filter otomatis')
             ->assertSee('Nadia Refinitiv')
             ->assertSee('Hadir')
             ->assertDontSee('Terapkan');
+    }
+
+    public function test_admin_refinitiv_ajax_filter_returns_only_the_results_fragment(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->createRequest(['name' => 'Nadia AJAX', 'attendance_status' => 'hadir']);
+        $this->createRequest(['name' => 'Bima AJAX', 'attendance_status' => 'pending']);
+
+        $response = $this->actingAs($admin)
+            ->withHeaders([
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ])
+            ->get(route('admin.refinitiv.index', [
+                'status' => 'hadir',
+                'q' => 'Nadia',
+                'sort' => 'name_asc',
+            ]));
+
+        $response->assertOk()->assertJsonStructure(['html', 'total']);
+
+        $this->assertSame(1, $response->json('total'));
+        $this->assertStringContainsString('Nadia AJAX', $response->json('html'));
+        $this->assertStringNotContainsString('Bima AJAX', $response->json('html'));
+        $this->assertStringNotContainsString('refinitiv-status-tabs', $response->json('html'));
+        $this->assertStringNotContainsString('<html', $response->json('html'));
     }
 
     public function test_admin_refinitiv_detail_keeps_actions_and_previews_uploaded_documents(): void
@@ -54,7 +83,8 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ->assertSee('data-preview-type="pdf"', false)
             ->assertSee('Tandai hadir')
             ->assertSee('Tandai tidak hadir')
-            ->assertSee('@view-transition');
+            ->assertSee('@view-transition')
+            ->assertDontSee('data-motion-item', false);
     }
 
     public function test_admin_can_combine_attendance_status_and_search(): void
