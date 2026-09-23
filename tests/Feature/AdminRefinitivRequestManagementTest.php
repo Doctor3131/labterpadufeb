@@ -29,6 +29,34 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ->assertDontSee('Terapkan');
     }
 
+    public function test_admin_refinitiv_detail_keeps_actions_and_previews_uploaded_documents(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $request = $this->createRequest([
+            'name' => 'Nadia Detail',
+            'ktm_file' => 'refinitiv/ktm-nadia.jpg',
+            'statement_file' => 'refinitiv/pernyataan-nadia.pdf',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.refinitiv.show', [
+                'request' => $request,
+                'status' => 'pending',
+                'q' => 'Nadia',
+                'sort' => 'name_asc',
+            ]))
+            ->assertOk()
+            ->assertSee('refinitiv-detail-page')
+            ->assertSee('Data pemohon')
+            ->assertSee('Keperluan dan jadwal')
+            ->assertSee('Dokumen pemohon')
+            ->assertSee('data-preview-type="image"', false)
+            ->assertSee('data-preview-type="pdf"', false)
+            ->assertSee('Tandai hadir')
+            ->assertSee('Tandai tidak hadir')
+            ->assertSee('@view-transition');
+    }
+
     public function test_admin_can_combine_attendance_status_and_search(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

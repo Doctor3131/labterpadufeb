@@ -493,6 +493,89 @@
     color: #1e40af;
 }
 
+.refinitiv-page,
+.refinitiv-detail-page {
+    view-transition-name: refinitiv-content;
+}
+
+@keyframes refinitiv-view-enter {
+    from { opacity: 0; transform: translateY(0.4rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes refinitiv-view-exit {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-0.2rem); }
+}
+
+@keyframes refinitiv-section-enter {
+    from { opacity: 0; transform: translateY(0.45rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@supports selector(::view-transition-new(refinitiv-content)) {
+    ::view-transition-old(refinitiv-content) {
+        animation: 130ms ease-out both refinitiv-view-exit;
+    }
+
+    ::view-transition-new(refinitiv-content) {
+        animation: 210ms cubic-bezier(0.2, 0.7, 0.2, 1) both refinitiv-view-enter;
+    }
+}
+
+@supports not selector(::view-transition-new(refinitiv-content)) {
+    .refinitiv-page,
+    .refinitiv-detail-page {
+        animation: 210ms cubic-bezier(0.2, 0.7, 0.2, 1) both refinitiv-view-enter;
+    }
+}
+
+.refinitiv-detail-page [data-motion-item] {
+    animation: 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both refinitiv-section-enter;
+}
+
+.refinitiv-detail-page main [data-motion-item]:nth-child(2) { animation-delay: 35ms; }
+.refinitiv-detail-page main [data-motion-item]:nth-child(3) { animation-delay: 70ms; }
+.refinitiv-detail-page aside [data-motion-item]:nth-child(2) { animation-delay: 35ms; }
+
+.refinitiv-file-modal {
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+
+.refinitiv-file-modal.is-open { opacity: 1; }
+.refinitiv-file-modal.is-closing { pointer-events: none; }
+
+.refinitiv-preview-panel {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.99);
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.refinitiv-file-modal.is-open .refinitiv-preview-panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .refinitiv-page *,
+    .refinitiv-page *::before,
+    .refinitiv-page *::after,
+    .refinitiv-detail-page *,
+    .refinitiv-detail-page *::before,
+    .refinitiv-detail-page *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    ::view-transition-old(refinitiv-content),
+    ::view-transition-new(refinitiv-content) {
+        animation: none !important;
+    }
+}
+
 /* Custom date picker used by admin schedule forms. */
 .schedule-date-picker {
     position: relative;
