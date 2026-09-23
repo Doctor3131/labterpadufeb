@@ -62,7 +62,14 @@ class RefinitivRequestController extends Controller
 
         $requests = $query->paginate(15)->withQueryString();
 
-        // Get counts for tabs
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.refinitiv.partials.results', compact('requests', 'status', 'search', 'sort'))->render(),
+                'total' => $requests->total(),
+            ]);
+        }
+
+        // These counts are only needed for the initial page; AJAX filtering keeps the existing tabs in place.
         $counts = [
             'all' => RefinitivRequest::count(),
             'pending' => RefinitivRequest::where('attendance_status', 'pending')->count(),
@@ -91,7 +98,7 @@ class RefinitivRequestController extends Controller
             'attendance_marked_at' => now(),
             'handled_by' => Auth::id(),
         ]);
-        
+
         return redirect()->back()->with('success', 'Status kehadiran berhasil diubah menjadi HADIR.');
     }
 
@@ -105,7 +112,7 @@ class RefinitivRequestController extends Controller
             'attendance_marked_at' => now(),
             'handled_by' => Auth::id(),
         ]);
-        
+
         return redirect()->back()->with('success', 'Status kehadiran berhasil diubah menjadi TIDAK HADIR.');
     }
 
@@ -119,7 +126,7 @@ class RefinitivRequestController extends Controller
             'attendance_marked_at' => null,
             'handled_by' => null,
         ]);
-        
+
         return redirect()->back()->with('success', 'Status kehadiran berhasil direset.');
     }
 }
