@@ -12,6 +12,23 @@ class AdminRefinitivRequestManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_refinitiv_list_uses_an_accessible_table_and_automatic_filters(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->createRequest(['name' => 'Nadia Refinitiv']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.refinitiv.index', ['status' => 'pending']))
+            ->assertOk()
+            ->assertSee('<table', false)
+            ->assertSee('Daftar permohonan data Refinitiv')
+            ->assertSee('data-refinitiv-sort-trigger', false)
+            ->assertSee('Filter otomatis')
+            ->assertSee('Nadia Refinitiv')
+            ->assertSee('Hadir')
+            ->assertDontSee('Terapkan');
+    }
+
     public function test_admin_can_combine_attendance_status_and_search(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
