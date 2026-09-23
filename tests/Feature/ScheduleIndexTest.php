@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lab;
 use App\Models\Schedule;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -153,12 +154,14 @@ class ScheduleIndexTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $lab = Lab::create(['name' => 'Lab Kalender', 'capacity' => 40, 'status' => 'available']);
+        $occurrenceDate = today()->next(Carbon::WEDNESDAY);
+        $targetDate = $occurrenceDate->copy()->addDay();
         $schedule = Schedule::create([
             'lab_id' => $lab->id,
             'day' => 'Senin',
             'recurrence_days' => ['Senin', 'Rabu'],
-            'start_date' => '2026-09-07',
-            'end_date' => '2026-09-30',
+            'start_date' => today()->copy()->subMonth()->toDateString(),
+            'end_date' => today()->copy()->addMonths(3)->toDateString(),
             'start_time' => '08:00',
             'end_time' => '10:00',
             'course' => 'Kelas Kalender',
@@ -171,8 +174,8 @@ class ScheduleIndexTest extends TestCase
             [
                 'action' => 'move',
                 'scope' => 'future',
-                'occurrence_date' => '2026-09-16',
-                'target_date' => '2026-09-17',
+                'occurrence_date' => $occurrenceDate->toDateString(),
+                'target_date' => $targetDate->toDateString(),
                 'lab_id' => $lab->id,
                 'start_time' => '08:00',
                 'end_time' => '10:00',
@@ -185,7 +188,7 @@ class ScheduleIndexTest extends TestCase
         $response->assertJsonPath('message', 'Rangkaian masa depan berhasil diperbarui.');
         $revision = Schedule::query()
             ->where('parent_schedule_id', $schedule->id)
-            ->whereDate('start_date', '2026-09-17')
+            ->whereDate('start_date', $targetDate->toDateString())
             ->first();
 
         $this->assertNotNull($revision);
