@@ -2,6 +2,12 @@
 
 @section('title', 'Kelola Permintaan Refinitiv - Admin')
 
+@push('styles')
+    <style>
+        @@view-transition { navigation: auto; }
+    </style>
+@endpush
+
 @section('content')
     @php
         $search = $search ?? (string) request()->query('q', '');
