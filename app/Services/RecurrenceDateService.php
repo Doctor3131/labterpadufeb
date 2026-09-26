@@ -96,11 +96,50 @@ class RecurrenceDateService
 
     public function datesForSchedule(Schedule $schedule, Carbon $rangeStart, Carbon $rangeEnd): Collection
     {
-        return $this->datesBetween(
-            $schedule->start_date && $schedule->start_date->gt($rangeStart) ? $schedule->start_date : $rangeStart,
-            $schedule->end_date && $schedule->end_date->lt($rangeEnd) ? $schedule->end_date : $rangeEnd,
+        $start = $schedule->start_date && $schedule->start_date->gt($rangeStart)
+            ? $schedule->start_date
+            : $rangeStart;
+        $end = $schedule->end_date && $schedule->end_date->lt($rangeEnd)
+            ? $schedule->end_date
+            : $rangeEnd;
+
+        return $this->datesForScheduleTypeRange(
+            $schedule->type,
+            $start,
+            $end,
             $schedule->recurrence_days,
-            $schedule->day
+            $schedule->day,
+            $schedule->start_date,
+            $schedule->end_date
+        );
+    }
+
+    /**
+     * Expand dates using the semantics of a schedule type.
+     *
+     * Multi-day non-perkuliahan activities happen on every lab operating day
+     * (Monday through Saturday) in their date range. Lecture schedules keep
+     * their selected weekly recurrence pattern.
+     */
+    public function datesForScheduleTypeRange(
+        string $type,
+        Carbon $rangeStart,
+        Carbon $rangeEnd,
+        ?array $recurrenceDays = null,
+        ?string $fallbackDay = null,
+        ?Carbon $seriesStartDate = null,
+        ?Carbon $seriesEndDate = null
+    ): Collection {
+        $isMultiDayActivity = $type === 'non_perkuliahan'
+            && $seriesStartDate
+            && $seriesEndDate
+            && ! $seriesStartDate->isSameDay($seriesEndDate);
+
+        return $this->datesBetween(
+            $rangeStart,
+            $rangeEnd,
+            $isMultiDayActivity ? DayHelper::SCHEDULE_DAYS : $recurrenceDays,
+            $fallbackDay
         );
     }
 

@@ -234,11 +234,9 @@ class ScheduleCalendarService
             return $schedule->start_date?->isSameDay($date) ?? false;
         }
 
-        return in_array(
-            DayHelper::fromDate($date),
-            $this->recurrenceDates->normaliseDays($schedule->recurrence_days, $schedule->day),
-            true
-        );
+        return $this->recurrenceDates
+            ->datesForSchedule($schedule, $date, $date)
+            ->isNotEmpty();
     }
 
     private function baseOccurrenceDates(Schedule $schedule, Carbon $rangeStart, Carbon $rangeEnd): Collection
@@ -254,10 +252,19 @@ class ScheduleCalendarService
         return $this->recurrenceDates->datesForSchedule($schedule, $rangeStart, $rangeEnd);
     }
 
+    /**
+     * Whether this schedule expands to multiple independently manageable dates.
+     */
     public function isRecurringSchedule(Schedule $schedule): bool
     {
         if ($schedule->type === 'perkuliahan_tetap') {
             return true;
+        }
+
+        if ($schedule->type === 'non_perkuliahan') {
+            return $schedule->start_date
+                && $schedule->end_date
+                && ! $schedule->start_date->isSameDay($schedule->end_date);
         }
 
         if ($schedule->type !== 'perkuliahan_tidak_tetap') {

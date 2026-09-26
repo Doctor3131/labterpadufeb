@@ -36,7 +36,10 @@
                 @php
                     $isRecurring = $calendarService->isRecurringSchedule($schedule);
                     $courseName = trim((string) $schedule->course) ?: 'Jadwal laboratorium';
-                    $daysLabel = $schedule->recurrence_days ? implode(', ', $schedule->recurrence_days) : ($schedule->day ?: 'Hari belum ditentukan');
+                    $isMultiDayActivity = $schedule->type === 'non_perkuliahan' && $isRecurring;
+                    $daysLabel = $isMultiDayActivity
+                        ? 'Setiap hari (Senin–Sabtu)'
+                        : ($schedule->recurrence_days ? implode(', ', $schedule->recurrence_days) : ($schedule->day ?: 'Hari belum ditentukan'));
                     $timeLabel = \Carbon\Carbon::parse($schedule->start_time)->format('H:i').'–'.\Carbon\Carbon::parse($schedule->end_time)->format('H:i');
                     $startDateLabel = $schedule->start_date?->format('d M Y') ?? 'Tanpa tanggal mulai';
                     $endDateLabel = $schedule->end_date?->format('d M Y') ?? 'Tanpa batas akhir';
@@ -69,7 +72,7 @@
                         <div class="text-sm font-semibold text-gray-800">{{ $startDateLabel }}</div>
                         <div class="mt-0.5 text-xs text-gray-500">s.d. {{ $endDateLabel }}</div>
                         <span class="mt-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold text-gray-600">
-                            {{ $isRecurring ? 'Berulang' : 'Sekali' }}
+                            {{ $isMultiDayActivity ? 'Multi-hari' : ($isRecurring ? 'Berulang' : 'Sekali') }}
                         </span>
                     </td>
                     <td class="px-4 py-4">
@@ -134,7 +137,10 @@
         @php
             $isRecurring = $calendarService->isRecurringSchedule($schedule);
             $courseName = trim((string) $schedule->course) ?: 'Jadwal laboratorium';
-            $daysLabel = $schedule->recurrence_days ? implode(', ', $schedule->recurrence_days) : ($schedule->day ?: 'Hari belum ditentukan');
+            $isMultiDayActivity = $schedule->type === 'non_perkuliahan' && $isRecurring;
+            $daysLabel = $isMultiDayActivity
+                ? 'Setiap hari (Senin–Sabtu)'
+                : ($schedule->recurrence_days ? implode(', ', $schedule->recurrence_days) : ($schedule->day ?: 'Hari belum ditentukan'));
             $timeLabel = \Carbon\Carbon::parse($schedule->start_time)->format('H:i').'–'.\Carbon\Carbon::parse($schedule->end_time)->format('H:i');
             $startDateLabel = $schedule->start_date?->format('d M Y') ?? 'Tanpa tanggal mulai';
             $endDateLabel = $schedule->end_date?->format('d M Y') ?? 'Tanpa batas akhir';
@@ -182,7 +188,7 @@
                 </div>
                 <div>
                     <div class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Periode</div>
-                    <div class="mt-1 text-sm font-semibold text-gray-800">{{ $isRecurring ? 'Berulang' : 'Sekali' }}</div>
+                    <div class="mt-1 text-sm font-semibold text-gray-800">{{ $isMultiDayActivity ? 'Multi-hari' : ($isRecurring ? 'Berulang' : 'Sekali') }}</div>
                     <div class="text-xs text-gray-500">{{ $startDateLabel }}–{{ $endDateLabel }}</div>
                 </div>
                 <div>

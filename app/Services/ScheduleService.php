@@ -218,15 +218,23 @@ class ScheduleService
     /**
      * Check for schedule conflicts
      */
-    public static function checkConflict($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId = null, ?array $recurrenceDays = null)
+    public static function checkConflict($labId, $day, $startTime, $endTime, $startDate, $endDate, $excludeScheduleId = null, ?array $recurrenceDays = null, ?string $type = null)
     {
         if ($startDate) {
-            $dates = app(RecurrenceDateService::class)->datesBetween(
-                Carbon::parse($startDate),
-                Carbon::parse($endDate ?? $startDate),
-                $recurrenceDays,
-                $day
-            );
+            $rangeStart = Carbon::parse($startDate);
+            $rangeEnd = Carbon::parse($endDate ?? $startDate);
+            $recurrenceDates = app(RecurrenceDateService::class);
+            $dates = $type
+                ? $recurrenceDates->datesForScheduleTypeRange(
+                    $type,
+                    $rangeStart,
+                    $rangeEnd,
+                    $recurrenceDays,
+                    $day,
+                    $rangeStart,
+                    $rangeEnd
+                )
+                : $recurrenceDates->datesBetween($rangeStart, $rangeEnd, $recurrenceDays, $day);
 
             foreach ($dates as $dateString) {
                 $date = Carbon::parse($dateString);

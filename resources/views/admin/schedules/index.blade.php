@@ -1298,6 +1298,10 @@
                     tooltipParts.push(startTimeStr + ' - ' + endTimeStr);
                     const safeTooltip = ttEscHtml(tooltipParts.join('\n'));
                     const scheduleLabel = ttEscHtml(`${s.course || 'Jadwal'} · ${startTimeStr}–${endTimeStr}`);
+                    const occurrenceEditQuery = s.is_recurring && s.occurrence_date
+                        ? `?scope=single&occurrence_date=${encodeURIComponent(s.occurrence_date)}&target_date=${encodeURIComponent(s.date)}`
+                        : '';
+                    const occurrenceEditUrl = `${TT_BASE_URL}/${scheduleId}/edit${occurrenceEditQuery}`;
 
                     html += `
                         <div class="tt-schedule-block ${colors.bg} ${colors.border} group"
@@ -1306,8 +1310,8 @@
                                 role="button"
                                 tabindex="0"
                                 aria-label="Edit ${scheduleLabel}"
-                                onclick="ttOpenSchedule(${scheduleId})"
-                                onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault();ttOpenSchedule(${scheduleId})}">
+                                onclick="ttOpenSchedule(${scheduleId}, '${s.date}')"
+                                onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault();ttOpenSchedule(${scheduleId}, '${s.date}')}">
                             <div class="tt-schedule-content">
                                 <div class="flex min-w-0 items-center gap-1.5">
                                     <span class="tt-schedule-dot ${colors.accent}" aria-hidden="true"></span>
@@ -1329,7 +1333,7 @@
 
                             <!-- Admin Action Overlay -->
                             <div class="tt-schedule-actions" aria-label="Aksi jadwal">
-                                <a href="${TT_BASE_URL}/${scheduleId}/edit" onclick="event.stopPropagation()" class="schedule-primary-button rounded-md p-1.5 transition-colors" title="Edit detail jadwal" aria-label="Edit detail jadwal">
+                                <a href="${occurrenceEditUrl}" onclick="event.stopPropagation()" class="schedule-primary-button rounded-md p-1.5 transition-colors" title="Edit detail jadwal" aria-label="Edit detail jadwal">
                                     <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </a>
                                 <a href="${TT_BASE_URL}/${scheduleId}/print" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="schedule-secondary-button rounded-md p-1.5 transition-colors" title="Cetak jadwal" aria-label="Cetak jadwal">
@@ -1354,9 +1358,21 @@
             container.innerHTML = html;
         }
 
-        function ttOpenSchedule(scheduleId) {
+        function ttOpenSchedule(scheduleId, occurrenceDate = null) {
             if (!scheduleId) return;
-            window.location.href = `${TT_BASE_URL}/${scheduleId}/edit`;
+
+            const schedule = (ttWeekData?.schedules || []).find(item =>
+                Number(item.schedule_id) === Number(scheduleId) && item.date === occurrenceDate
+            );
+            const url = new URL(`${TT_BASE_URL}/${scheduleId}/edit`, window.location.origin);
+
+            if (schedule?.is_recurring && schedule.occurrence_date) {
+                url.searchParams.set('scope', 'single');
+                url.searchParams.set('occurrence_date', schedule.occurrence_date);
+                url.searchParams.set('target_date', schedule.date);
+            }
+
+            window.location.href = url.toString();
         }
 
         // ==================== DELETE HANDLER ====================

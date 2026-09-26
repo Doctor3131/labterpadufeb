@@ -213,11 +213,14 @@ class ScheduleChangeService
             Lab::query()->lockForUpdate()->findOrFail($schedule->lab_id);
 
             if ($schedule->end_date && $endDate->gt($schedule->end_date)) {
-                $dates = $this->recurrenceDates->datesBetween(
+                $dates = $this->recurrenceDates->datesForScheduleTypeRange(
+                    $schedule->type,
                     $schedule->end_date->copy()->addDay(),
                     $endDate,
                     $schedule->recurrence_days,
-                    $schedule->day
+                    $schedule->day,
+                    $schedule->start_date,
+                    $endDate
                 );
 
                 foreach ($dates as $dateString) {
@@ -288,11 +291,14 @@ class ScheduleChangeService
         Carbon $endDate,
         array $changes
     ): void {
-        $dates = $this->recurrenceDates->datesBetween(
+        $dates = $this->recurrenceDates->datesForScheduleTypeRange(
+            $changes['type'] ?? $schedule->type,
             $newStartDate,
             $endDate,
             $changes['recurrence_days'] ?? $schedule->recurrence_days,
-            $changes['day'] ?? $schedule->day
+            $changes['day'] ?? $schedule->day,
+            $newStartDate,
+            $endDate
         );
 
         foreach ($dates as $dateString) {

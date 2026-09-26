@@ -752,6 +752,7 @@
                     end_time: endTime,
                     start_date: startDate || null,
                     end_date: endDate || null,
+                    type: typeSelect.value,
                     recurrence_days: getSelectedRecurrenceDays(),
                     exclude_schedule_id: excludeScheduleId
                 })
@@ -835,6 +836,10 @@
             document.getElementById('end-date-required')?.classList.toggle('hidden', !requiresEndDate);
             const startDateHelp = document.getElementById('start-date-help');
             const endDateHelp = document.getElementById('end-date-help');
+            const isMultiDayActivity = selectedType === 'non_perkuliahan'
+                && startDateEl.value
+                && endDateEl.value
+                && startDateEl.value !== endDateEl.value;
             if (startDateHelp) {
                 startDateHelp.textContent = isNonfixed
                     ? 'Wajib untuk menentukan tanggal pelaksanaan.'
@@ -845,7 +850,11 @@
                     ? 'Pilih tanggal akhir rangkaian; maksimal 60 pertemuan.'
                     : selectedType === 'perkuliahan_tetap'
                         ? 'Wajib untuk membatasi periode jadwal perkuliahan tetap.'
-                        : 'Untuk jadwal sekali, tanggal selesai akan disamakan dengan tanggal mulai.';
+                        : isMultiDayActivity
+                            ? 'Kegiatan berlangsung setiap hari operasional (Senin–Sabtu) dalam rentang tanggal ini.'
+                            : selectedType === 'non_perkuliahan'
+                                ? 'Tanggal akhir opsional. Jika berbeda dari tanggal mulai, kegiatan tampil setiap hari operasional dalam rentang.'
+                                : 'Untuk jadwal sekali, tanggal selesai akan disamakan dengan tanggal mulai.';
             }
             
             // Smart field transfer when switching types
@@ -1485,12 +1494,16 @@
             document.querySelectorAll('.admin-schedule-page select').forEach(select => new CustomSelect(select));
         });
 
-        // Lingkup Perubahan (recurring edit) - toggle occurrence date field
+        // Scope updates for multi-occurrence schedules and multi-day activities.
         document.addEventListener('DOMContentLoaded', function() {
             const scopeInputs = document.querySelectorAll('input[name="scope"]');
             const occurrenceField = document.getElementById('occurrence-date-field');
             const occurrenceInput = document.getElementById('occurrence_date');
             const scheduleDay = @json($schedule->day ?? null);
+            const scheduleStartDate = @json($schedule?->start_date?->format('Y-m-d'));
+            const scheduleEndDate = @json($schedule?->end_date?->format('Y-m-d'));
+            const isMultiDayActivity = @json($isEdit && $schedule->type === 'non_perkuliahan' && $isRecurringEdit);
+            const recurringDays = @json($schedule ? ($schedule->recurrence_days ?: [$schedule->day]) : []);
 
             if (!scopeInputs.length || !occurrenceField) return;
 
@@ -1505,15 +1518,31 @@
                 }
             }
 
-            // Default the occurrence date to the schedule's next upcoming weekday
-            if (occurrenceInput && scheduleDay) {
+            // Keep the occurrence selected from the calendar; otherwise select
+            // the next date that actually belongs to this schedule.
+            if (occurrenceInput && !occurrenceInput.value && (scheduleDay || isMultiDayActivity)) {
                 const dayMap = {'Senin':1,'Selasa':2,'Rabu':3,'Kamis':4,'Jumat':5,'Sabtu':6};
-                const target = dayMap[scheduleDay];
                 const now = new Date();
-                const daysAhead = (target - now.getDay() + 7) % 7 || 7;
-                const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysAhead);
-                const pad = n => String(n).padStart(2, '0');
-                occurrenceInput.value = `${next.getFullYear()}-${pad(next.getMonth()+1)}-${pad(next.getDate())}`;
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const parseDate = value => value
+                    ? new Date(`${value}T00:00:00`)
+                    : null;
+                const start = parseDate(scheduleStartDate);
+                const end = parseDate(scheduleEndDate);
+                let next = start && start > today ? start : today;
+                const allowedDays = isMultiDayActivity
+                    ? [1, 2, 3, 4, 5, 6]
+                    : recurringDays.map(day => dayMap[day]).filter(Boolean);
+                const lastDate = end || new Date(next.getFullYear() + 10, next.getMonth(), next.getDate());
+
+                while (next <= lastDate && !allowedDays.includes(next.getDay())) {
+                    next.setDate(next.getDate() + 1);
+                }
+
+                if (next <= lastDate) {
+                    const pad = n => String(n).padStart(2, '0');
+                    occurrenceInput.value = `${next.getFullYear()}-${pad(next.getMonth()+1)}-${pad(next.getDate())}`;
+                }
             }
 
             scopeInputs.forEach(input => input.addEventListener('change', updateScopeUI));

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lab;
 use App\Models\Schedule;
 use App\Models\ScheduleChangeLog;
+use App\Models\ScheduleOccurrence;
 use App\Services\ScheduleCalendarService;
 use App\Services\ScheduleChangeService;
 use App\Services\ScheduleService;
@@ -78,6 +79,100 @@ class ScheduleFlexibilityTest extends TestCase
             'Koreksi tanpa audit khusus',
             null
         );
+    }
+
+    public function test_non_perkuliahan_date_range_appears_on_each_operating_day(): void
+    {
+        [$lab] = $this->labs();
+        $schedule = Schedule::create([
+            'lab_id' => $lab->id,
+            'day' => 'Senin',
+            'start_date' => '2026-09-14',
+            'end_date' => '2026-09-17',
+            'start_time' => '07:00',
+            'end_time' => '16:00',
+            'course' => 'Pelatihan Tendik FEB',
+            'type' => 'non_perkuliahan',
+            'student_count' => 20,
+        ]);
+
+        $events = app(ScheduleCalendarService::class)->events(
+            Carbon::parse('2026-09-14'),
+            Carbon::parse('2026-09-17')
+        );
+
+        $this->assertSame(
+            ['2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17'],
+            $events->pluck('date')->all()
+        );
+        $this->assertTrue($events->every(fn (array $event) => $event['is_recurring']));
+        $this->assertTrue(app(ScheduleCalendarService::class)->isOccurrenceDate($schedule, Carbon::parse('2026-09-16')));
+    }
+
+    public function test_non_perkuliahan_range_can_cancel_one_day_without_removing_the_rest(): void
+    {
+        [$lab] = $this->labs();
+        $schedule = Schedule::create([
+            'lab_id' => $lab->id,
+            'day' => 'Senin',
+            'start_date' => '2026-09-14',
+            'end_date' => '2026-09-17',
+            'start_time' => '07:00',
+            'end_time' => '16:00',
+            'course' => 'Pelatihan Tendik FEB',
+            'type' => 'non_perkuliahan',
+            'student_count' => 20,
+        ]);
+
+        app(ScheduleChangeService::class)->cancelOccurrence(
+            $schedule,
+            Carbon::parse('2026-09-15'),
+            'Kegiatan hari ini dibatalkan',
+            null
+        );
+
+        $events = app(ScheduleCalendarService::class)->events(
+            Carbon::parse('2026-09-14'),
+            Carbon::parse('2026-09-17')
+        );
+
+        $this->assertSame(['2026-09-14', '2026-09-16', '2026-09-17'], $events->pluck('date')->all());
+        $this->assertTrue(ScheduleOccurrence::query()
+            ->where('schedule_id', $schedule->id)
+            ->whereDate('occurrence_date', '2026-09-15')
+            ->where('type', 'cancelled')
+            ->exists());
+    }
+
+    public function test_non_perkuliahan_range_checks_conflicts_on_each_operating_day(): void
+    {
+        [$lab] = $this->labs();
+        Schedule::create([
+            'lab_id' => $lab->id,
+            'day' => 'Selasa',
+            'recurrence_days' => ['Selasa'],
+            'start_date' => '2026-09-15',
+            'end_date' => '2026-09-15',
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'course' => 'Jadwal hari Selasa',
+            'type' => 'perkuliahan_tidak_tetap',
+            'student_count' => 20,
+        ]);
+
+        $conflict = ScheduleService::checkConflict(
+            $lab->id,
+            'Senin',
+            '08:00',
+            '10:00',
+            '2026-09-14',
+            '2026-09-17',
+            null,
+            null,
+            'non_perkuliahan'
+        );
+
+        $this->assertSame('Jadwal hari Selasa pada 15/09/2026', $conflict);
     }
 
     public function test_moving_an_occurrence_again_updates_its_existing_override(): void
