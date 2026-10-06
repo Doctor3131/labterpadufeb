@@ -6,6 +6,7 @@ use App\Models\RefinitivRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class AdminRefinitivRequestManagementTest extends TestCase
@@ -22,10 +23,16 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ->assertOk()
             ->assertSee('<table', false)
             ->assertSee('Daftar permohonan data Refinitiv')
-            ->assertSee('data-refinitiv-sort-trigger', false)
+            ->assertSee('data-refinitiv-custom-trigger', false)
+            ->assertSee('refinitiv-period', false)
+            ->assertSee('data-refinitiv-bulk-toolbar', false)
+            ->assertSee('refinitiv-attendance-confirm', false)
             ->assertSee('data-refinitiv-admin', false)
             ->assertSee('data-refinitiv-status="pending"', false)
             ->assertSee('id="refinitiv-results-region"', false)
+            ->assertSee('Kalender peminjaman Refinitiv')
+            ->assertSee('Jumlah pemohon per hari dan sesi')
+            ->assertSee('data-refinitiv-calendar-session="sesi_1"', false)
             ->assertSee('Filter otomatis')
             ->assertSee('Nadia Refinitiv')
             ->assertSee('Hadir')
@@ -83,6 +90,8 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ->assertSee('data-preview-type="pdf"', false)
             ->assertSee('Tandai hadir')
             ->assertSee('Tandai tidak hadir')
+            ->assertSee('data-refinitiv-confirm', false)
+            ->assertSee('Riwayat status kehadiran')
             ->assertSee('@view-transition')
             ->assertDontSee('data-motion-item', false);
     }
@@ -160,6 +169,231 @@ class AdminRefinitivRequestManagementTest extends TestCase
                 return $requests->getCollection()->modelKeys() === [$case['expectedId']];
             });
         }
+    }
+
+    public function test_search_also_matches_request_purpose_variables_program_and_lecturer(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $matching = $this->createRequest([
+            'name' => 'Pemohon Cari Lanjutan',
+            'purpose' => 'lainnya',
+            'purpose_other' => 'Studi pasar saham',
+            'variables' => 'Kode sektor energi dan emiten.',
+            'lecturer_name' => 'Dr. Sinta Dosen',
+            'study_program' => 'S1- Ekonomi Islam',
+            'affiliation' => 'internal_undip',
+            'session' => 'sesi_2',
+        ]);
+        $this->createRequest(['name' => 'Tidak cocok', 'purpose' => 'lomba', 'affiliation' => 'internal_undip', 'session' => 'sesi_2']);
+
+        foreach (['pasar saham', 'emiten', 'Sinta Dosen', 'Ekonomi Islam'] as $term) {
+            $this->actingAs($admin)
+                ->get(route('admin.refinitiv.index', ['status' => 'all', 'q' => $term]))
+                ->assertOk()
+                ->assertViewHas('requests', fn (LengthAwarePaginator $requests): bool => $requests->getCollection()->modelKeys() === [$matching->id]);
+        }
+
+        $labelMatch = $this->createRequest([
+            'name' => 'Pemohon Label',
+            'purpose' => 'skripsi',
+            'affiliation' => 'internal_feb',
+            'session' => 'sesi_1',
+        ]);
+
+        foreach (['Skripsi', 'Internal FEB Undip', '08.00 - 10.00 WIB'] as $term) {
+            $response = $this->actingAs($admin)
+                ->get(route('admin.refinitiv.index', ['status' => 'all', 'q' => $term]))
+                ->assertOk();
+
+            $this->assertSame([$labelMatch->id], $response->viewData('requests')->getCollection()->modelKeys(), "Search failed for display label: {$term}");
+        }
+    }
+
+    public function test_period_filters_return_expected_usage_dates(): void
+    {
+        Carbon::setTestNow('2026-09-23 10:00:00');
+        try {
+            $admin = User::factory()->create(['role' => 'admin']);
+            $today = $this->createRequest(['name' => 'Hari ini', 'usage_date' => '2026-09-23']);
+            $week = $this->createRequest(['name' => 'Minggu ini', 'usage_date' => '2026-09-29']);
+            $outsideWeek = $this->createRequest(['name' => 'Lebih dari seminggu', 'usage_date' => '2026-09-30']);
+            $overdue = $this->createRequest(['name' => 'Sudah lewat', 'usage_date' => '2026-09-22']);
+            $this->assertSame('2026-09-29', $week->usage_date->toDateString());
+
+            $cases = [
+                'today' => [$today->id],
+                'next_7_days' => [$today->id, $week->id],
+                'overdue' => [$overdue->id],
+            ];
+
+            foreach ($cases as $period => $expectedIds) {
+                $response = $this->actingAs($admin)
+                    ->get(route('admin.refinitiv.index', ['status' => 'all', 'period' => $period]))
+                    ->assertOk()
+                    ->assertViewHas('period', $period);
+
+                $requests = $response->viewData('requests');
+                $this->assertSame($expectedIds, $requests->getCollection()->modelKeys(), "Unexpected records for period filter: {$period}");
+                $this->assertNotContains($outsideWeek->id, $requests->getCollection()->modelKeys());
+            }
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_calendar_summarizes_all_month_requests_by_day_and_session_even_when_list_status_is_filtered(): void
+    {
+        Carbon::setTestNow('2026-09-24 10:00:00');
+        try {
+            $admin = User::factory()->create(['role' => 'admin']);
+            $this->createRequest(['name' => 'Pemohon Jumat Menunggu', 'usage_date' => '2026-09-25', 'session' => 'sesi_1', 'attendance_status' => 'pending']);
+            $this->createRequest(['name' => 'Pemohon Jumat Hadir', 'usage_date' => '2026-09-25', 'session' => 'sesi_3', 'attendance_status' => 'hadir']);
+            $this->createRequest(['name' => 'Pemohon Kamis', 'usage_date' => '2026-09-24', 'session' => 'sesi_2', 'attendance_status' => 'pending']);
+            $this->createRequest(['name' => 'Bulan Depan', 'usage_date' => '2026-10-01', 'session' => 'sesi_1']);
+
+            $response = $this->actingAs($admin)
+                ->get(route('admin.refinitiv.index', ['status' => 'pending', 'month' => '2026-09', 'date' => '2026-09-25']))
+                ->assertOk()
+                ->assertSee('13.30–15.30 WIB')
+                ->assertViewHas('calendarSummary', function (array $summary): bool {
+                    return $summary['total'] === 3
+                        && $summary['active_days'] === 2
+                        && $summary['session_totals']['sesi_1'] === 1
+                        && $summary['session_totals']['sesi_2'] === 1
+                        && $summary['session_totals']['sesi_3'] === 1;
+                })
+                ->assertViewHas('calendarSelectedDay', fn (array $day): bool => $day['total'] === 2
+                    && $day['statuses']['pending'] === 1
+                    && $day['statuses']['hadir'] === 1);
+
+            $this->assertSame(1, $response->viewData('requests')->total());
+            $this->assertSame('sesi_1', $response->viewData('calendarSummary')['busiest_session']);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_calendar_date_filter_overrides_period_and_returns_all_attendance_status_counts_for_that_date(): void
+    {
+        Carbon::setTestNow('2026-09-24 10:00:00');
+        try {
+            $admin = User::factory()->create(['role' => 'admin']);
+            $this->createRequest(['name' => 'Jumat Menunggu', 'usage_date' => '2026-09-25', 'attendance_status' => 'pending']);
+            $this->createRequest(['name' => 'Jumat Hadir', 'usage_date' => '2026-09-25', 'attendance_status' => 'hadir']);
+            $this->createRequest(['name' => 'Kamis Menunggu', 'usage_date' => '2026-09-24', 'attendance_status' => 'pending']);
+
+            $response = $this->actingAs($admin)
+                ->withHeaders(['Accept' => 'application/json', 'X-Requested-With' => 'XMLHttpRequest'])
+                ->get(route('admin.refinitiv.index', [
+                    'status' => 'all',
+                    'period' => 'today',
+                    'month' => '2026-09',
+                    'date' => '2026-09-25',
+                ]));
+
+            $response->assertOk()->assertJsonStructure(['html', 'total', 'counts' => ['all', 'pending', 'hadir', 'tidak_hadir']]);
+            $this->assertSame(2, $response->json('total'));
+            $this->assertSame(['all' => 2, 'pending' => 1, 'hadir' => 1, 'tidak_hadir' => 0], $response->json('counts'));
+            $this->assertStringContainsString('Jumat Menunggu', $response->json('html'));
+            $this->assertStringContainsString('Jumat Hadir', $response->json('html'));
+            $this->assertStringNotContainsString('Kamis Menunggu', $response->json('html'));
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_search_period_and_status_counts_are_reflected_in_ajax_response(): void
+    {
+        Carbon::setTestNow('2026-09-23 10:00:00');
+        try {
+            $admin = User::factory()->create(['role' => 'admin']);
+            $this->createRequest(['name' => 'Nadia minggu', 'usage_date' => '2026-09-25', 'attendance_status' => 'pending']);
+            $this->createRequest(['name' => 'Nadia hadir', 'usage_date' => '2026-09-26', 'attendance_status' => 'hadir']);
+            $this->createRequest(['name' => 'Bima minggu', 'usage_date' => '2026-09-27', 'attendance_status' => 'pending']);
+
+            $response = $this->actingAs($admin)
+                ->withHeaders(['Accept' => 'application/json', 'X-Requested-With' => 'XMLHttpRequest'])
+                ->get(route('admin.refinitiv.index', ['status' => 'pending', 'q' => 'Nadia', 'period' => 'next_7_days']));
+
+            $response->assertOk()->assertJsonStructure(['html', 'total', 'counts' => ['all', 'pending', 'hadir', 'tidak_hadir']]);
+            $this->assertSame(1, $response->json('total'));
+            $this->assertSame(['all' => 2, 'pending' => 1, 'hadir' => 1, 'tidak_hadir' => 0], $response->json('counts'));
+            $this->assertStringContainsString('Nadia minggu', $response->json('html'));
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_attendance_changes_and_resets_are_recorded_without_losing_previous_events(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $request = $this->createRequest();
+
+        $this->actingAs($admin)
+            ->from(route('admin.refinitiv.show', $request))
+            ->put(route('admin.refinitiv.hadir', $request), ['note' => 'Kehadiran diverifikasi'])
+            ->assertRedirect(route('admin.refinitiv.show', $request));
+
+        $this->assertDatabaseHas('refinitiv_attendance_events', [
+            'refinitiv_request_id' => $request->id,
+            'from_status' => 'pending',
+            'to_status' => 'hadir',
+            'changed_by' => $admin->id,
+            'note' => 'Kehadiran diverifikasi',
+        ]);
+
+        $this->put(route('admin.refinitiv.reset', $request), ['note' => 'Perlu jadwalkan ulang'])
+            ->assertRedirect(route('admin.refinitiv.show', $request));
+
+        $this->assertDatabaseHas('refinitiv_requests', [
+            'id' => $request->id,
+            'attendance_status' => 'pending',
+            'attendance_marked_at' => null,
+            'handled_by' => null,
+        ]);
+        $this->assertDatabaseCount('refinitiv_attendance_events', 2);
+        $this->actingAs($admin)
+            ->get(route('admin.refinitiv.show', $request))
+            ->assertOk()
+            ->assertSee('Riwayat status kehadiran')
+            ->assertSee('Kehadiran diverifikasi')
+            ->assertSee('Perlu jadwalkan ulang');
+    }
+
+    public function test_bulk_attendance_marks_selected_pending_requests_and_logs_each_change(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $first = $this->createRequest(['name' => 'Pemohon Massal A']);
+        $second = $this->createRequest(['name' => 'Pemohon Massal B']);
+
+        $this->actingAs($admin)
+            ->from(route('admin.refinitiv.index'))
+            ->post(route('admin.refinitiv.bulk-hadir'), [
+                'ids' => [$first->id, $second->id],
+                'note' => 'Hadir pada sesi terjadwal',
+            ])
+            ->assertRedirect(route('admin.refinitiv.index'))
+            ->assertSessionHas('success', '2 permohonan berhasil ditandai Hadir.');
+
+        $this->assertDatabaseCount('refinitiv_attendance_events', 2);
+        $this->assertDatabaseHas('refinitiv_requests', ['id' => $first->id, 'attendance_status' => 'hadir', 'handled_by' => $admin->id]);
+        $this->assertDatabaseHas('refinitiv_attendance_events', ['refinitiv_request_id' => $second->id, 'to_status' => 'hadir', 'note' => 'Hadir pada sesi terjadwal']);
+    }
+
+    public function test_bulk_attendance_is_atomic_and_refuses_a_non_pending_selection(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $pending = $this->createRequest(['name' => 'Masih Menunggu']);
+        $present = $this->createRequest(['name' => 'Sudah Hadir', 'attendance_status' => 'hadir']);
+
+        $this->actingAs($admin)
+            ->from(route('admin.refinitiv.index'))
+            ->post(route('admin.refinitiv.bulk-hadir'), ['ids' => [$pending->id, $present->id]])
+            ->assertRedirect(route('admin.refinitiv.index'))
+            ->assertSessionHasErrors('ids');
+
+        $this->assertDatabaseHas('refinitiv_requests', ['id' => $pending->id, 'attendance_status' => 'pending']);
+        $this->assertDatabaseCount('refinitiv_attendance_events', 0);
     }
 
     public function test_supported_status_filters_and_counts_are_available_to_the_view(): void
@@ -274,11 +508,13 @@ class AdminRefinitivRequestManagementTest extends TestCase
     public function test_state_links_and_pagination_preserve_search_and_sort_parameters(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+        $selectedDate = today()->addDays(2);
 
         for ($index = 1; $index <= 16; $index++) {
             $this->createRequest([
                 'name' => sprintf('Pemohon Batch %02d', $index),
                 'attendance_status' => 'pending',
+                'usage_date' => $selectedDate->toDateString(),
                 'created_at' => now()->subDays($index),
             ]);
         }
@@ -287,6 +523,9 @@ class AdminRefinitivRequestManagementTest extends TestCase
             'status' => 'pending',
             'q' => 'Batch',
             'sort' => 'name_asc',
+            'period' => 'next_7_days',
+            'month' => $selectedDate->format('Y-m'),
+            'date' => $selectedDate->toDateString(),
         ]));
 
         $response->assertOk()
@@ -294,21 +533,65 @@ class AdminRefinitivRequestManagementTest extends TestCase
                 'status' => 'hadir',
                 'q' => 'Batch',
                 'sort' => 'name_asc',
+                'period' => 'next_7_days',
+                'month' => $selectedDate->format('Y-m'),
+                'date' => $selectedDate->toDateString(),
             ])), false)
             ->assertSee(e(route('admin.refinitiv.show', [
                 'request' => RefinitivRequest::query()->where('name', 'Pemohon Batch 01')->firstOrFail(),
                 'status' => 'pending',
                 'q' => 'Batch',
                 'sort' => 'name_asc',
+                'period' => 'next_7_days',
+                'month' => $selectedDate->format('Y-m'),
+                'date' => $selectedDate->toDateString(),
             ])), false)
-            ->assertViewHas('requests', function (LengthAwarePaginator $requests): bool {
+            ->assertViewHas('requests', function (LengthAwarePaginator $requests) use ($selectedDate): bool {
                 $nextPageUrl = $requests->nextPageUrl();
 
                 return $nextPageUrl !== null
                     && str_contains($nextPageUrl, 'status=pending')
                     && str_contains($nextPageUrl, 'q=Batch')
-                    && str_contains($nextPageUrl, 'sort=name_asc');
+                    && str_contains($nextPageUrl, 'sort=name_asc')
+                    && str_contains($nextPageUrl, 'period=next_7_days')
+                    && str_contains($nextPageUrl, 'month='.$selectedDate->format('Y-m'))
+                    && str_contains($nextPageUrl, 'date='.$selectedDate->toDateString());
             });
+    }
+
+    public function test_refinitiv_detail_returns_to_the_same_filtered_page(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $selectedDate = today()->addDays(2);
+        $requests = collect();
+
+        for ($index = 1; $index <= 16; $index++) {
+            $requests->push($this->createRequest([
+                'name' => sprintf('Pemohon Halaman %02d', $index),
+                'attendance_status' => 'pending',
+                'usage_date' => $selectedDate->toDateString(),
+            ]));
+        }
+
+        $filters = [
+            'status' => 'pending',
+            'q' => 'Halaman',
+            'sort' => 'name_asc',
+            'period' => 'next_7_days',
+            'month' => $selectedDate->format('Y-m'),
+            'date' => $selectedDate->toDateString(),
+            'page' => 2,
+        ];
+        $detail = $requests->last();
+
+        $this->actingAs($admin)
+            ->get(route('admin.refinitiv.index', $filters))
+            ->assertOk()
+            ->assertSee(e(route('admin.refinitiv.show', array_merge($filters, ['request' => $detail]))), false);
+
+        $this->get(route('admin.refinitiv.show', array_merge($filters, ['request' => $detail])))
+            ->assertOk()
+            ->assertSee(e(route('admin.refinitiv.index', $filters)), false);
     }
 
     private function createRequest(array $overrides = []): RefinitivRequest

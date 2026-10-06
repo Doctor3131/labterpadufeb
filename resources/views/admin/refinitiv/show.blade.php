@@ -19,6 +19,10 @@
             'status' => request()->query('status', 'pending'),
             'q' => request()->query('q'),
             'sort' => request()->query('sort', 'schedule_asc'),
+            'period' => request()->query('period', 'all'),
+            'month' => request()->query('month'),
+            'date' => request()->query('date'),
+            'page' => request()->query('page'),
         ]);
         $documents = [];
 
@@ -30,7 +34,7 @@
         }
 
         $documents[] = [
-            'title' => 'Surat Pernyataan Kesanggupan',
+            'title' => 'Surat Keperluan Penelitian atau Tugas',
             'path' => $request->statement_file,
         ];
     @endphp
@@ -234,7 +238,7 @@
                             Menunggu pencatatan
                         </div>
                         <div class="space-y-2.5">
-                            <form action="{{ route('admin.refinitiv.hadir', $request) }}" method="POST" onsubmit="return window.confirm('Tandai pemohon ini hadir?')">
+                            <form action="{{ route('admin.refinitiv.hadir', $request) }}" method="POST" data-refinitiv-confirm data-confirm-action="Tandai hadir" data-confirm-name="{{ $request->name }}" data-confirm-date="{{ $request->usage_date->locale('id')->isoFormat('dddd, D MMMM Y') }}" data-confirm-session="{{ $request->session_label }}">
                                 @csrf
                                 @method('PUT')
                                 <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2">
@@ -242,7 +246,7 @@
                                     Tandai hadir
                                 </button>
                             </form>
-                            <form action="{{ route('admin.refinitiv.tidak-hadir', $request) }}" method="POST" onsubmit="return window.confirm('Tandai pemohon ini tidak hadir?')">
+                            <form action="{{ route('admin.refinitiv.tidak-hadir', $request) }}" method="POST" data-refinitiv-confirm data-confirm-action="Catat tidak hadir" data-confirm-name="{{ $request->name }}" data-confirm-date="{{ $request->usage_date->locale('id')->isoFormat('dddd, D MMMM Y') }}" data-confirm-session="{{ $request->session_label }}">
                                 @csrf
                                 @method('PUT')
                                 <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:-translate-y-0.5 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
@@ -266,7 +270,7 @@
                                 </p>
                             @endif
                         </div>
-                        <form action="{{ route('admin.refinitiv.reset', $request) }}" method="POST" onsubmit="return window.confirm('Reset status kehadiran pemohon ini ke Menunggu?')">
+                        <form action="{{ route('admin.refinitiv.reset', $request) }}" method="POST" data-refinitiv-confirm data-confirm-action="Kembalikan ke Menunggu" data-confirm-name="{{ $request->name }}" data-confirm-date="{{ $request->usage_date->locale('id')->isoFormat('dddd, D MMMM Y') }}" data-confirm-session="Status saat ini: {{ $request->attendance_status_label }}">
                             @csrf
                             @method('PUT')
                             <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
@@ -274,6 +278,35 @@
                                 Kembalikan ke menunggu
                             </button>
                         </form>
+                    @endif
+                </section>
+
+                <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-attendance-history-heading">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h2 id="refinitiv-attendance-history-heading" class="text-sm font-semibold text-slate-900">Riwayat status kehadiran</h2>
+                            <p class="mt-1 text-xs leading-5 text-slate-500">Setiap perubahan sejak fitur riwayat aktif dicatat di sini.</p>
+                        </div>
+                        <span class="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-800">{{ $request->attendanceEvents->count() }}</span>
+                    </div>
+
+                    @if($request->attendanceEvents->isNotEmpty())
+                        <ol class="mt-4 space-y-4 border-l border-slate-200 pl-4">
+                            @foreach($request->attendanceEvents as $event)
+                                <li class="relative">
+                                    <span class="absolute -left-[1.32rem] top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-blue-600 ring-1 ring-blue-200" aria-hidden="true"></span>
+                                    <p class="text-sm font-semibold text-slate-900">
+                                        {{ $event->from_status ? (\App\Models\RefinitivRequest::ATTENDANCE_STATUSES[$event->from_status] ?? $event->from_status) : 'Status awal' }}
+                                        <span class="font-normal text-slate-400" aria-hidden="true">→</span>
+                                        {{ \App\Models\RefinitivRequest::ATTENDANCE_STATUSES[$event->to_status] ?? $event->to_status }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-slate-600">{{ $event->recorded_at->locale('id')->isoFormat('D MMM Y, HH:mm') }} WIB · {{ $event->actor?->name ?? 'Akun admin tidak tersedia' }}</p>
+                                    @if($event->note)<p class="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-700">{{ $event->note }}</p>@endif
+                                </li>
+                            @endforeach
+                        </ol>
+                    @else
+                        <p class="mt-3 rounded-lg bg-slate-50 px-3 py-2.5 text-xs leading-5 text-slate-600">Belum ada riwayat perubahan baru. Catatan status lama tidak diubah atau dibuat ulang.</p>
                     @endif
                 </section>
 
@@ -313,6 +346,7 @@
                 </div>
             </section>
         </div>
+        @include('admin.refinitiv.partials.attendance-confirm-dialog')
     </div>
 @endsection
 
@@ -329,6 +363,7 @@
             let activeTrigger = null;
             let previousBodyOverflow = '';
             let closeTimer;
+            const closeMotionDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 320;
 
             if (!modal || !dialog || !closeButton || !image || !pdf || !title || !openInNewTab) return;
 
@@ -354,7 +389,7 @@
                     pdf.removeAttribute('src');
                     openInNewTab.href = '#';
                     activeTrigger = null;
-                }, 180);
+                }, closeMotionDuration);
             };
 
             document.querySelectorAll('[data-file-preview]').forEach((trigger) => {

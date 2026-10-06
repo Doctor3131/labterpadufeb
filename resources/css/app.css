@@ -512,6 +512,44 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes refinitiv-calendar-panel-change {
+    from { opacity: 0.55; transform: translateY(0.25rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.refinitiv-calendar-day {
+    border-color: #e2e8f0;
+    transition: background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.refinitiv-calendar-day:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 3px 10px rgba(30, 64, 175, 0.08);
+    transform: translateY(-1px);
+}
+
+.refinitiv-calendar-day.is-selected {
+    border-color: #2563eb;
+    box-shadow: inset 0 0 0 1px #2563eb, 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.refinitiv-calendar-day.is-today:not(.is-selected) {
+    border-color: #93c5fd;
+}
+
+.refinitiv-calendar-day:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+}
+
+.refinitiv-calendar-day-panel.is-changing {
+    animation: 380ms cubic-bezier(0.22, 1, 0.36, 1) both refinitiv-calendar-panel-change;
+}
+
 @supports selector(::view-transition-new(refinitiv-content)) {
     :root:has(.refinitiv-page)::view-transition-group(root),
     :root:has(.refinitiv-page)::view-transition-image-pair(root),
@@ -525,41 +563,41 @@
     }
 
     :root:has(.refinitiv-page)::view-transition-old(refinitiv-content) {
-        animation: 150ms cubic-bezier(0.4, 0, 1, 1) both refinitiv-view-exit;
+        animation: 270ms cubic-bezier(0.32, 0, 0.67, 0) both refinitiv-view-exit;
     }
 
     :root:has(.refinitiv-page)::view-transition-new(refinitiv-content) {
-        animation: 260ms cubic-bezier(0.16, 1, 0.3, 1) both refinitiv-view-enter;
+        animation: 440ms cubic-bezier(0.22, 1, 0.36, 1) both refinitiv-view-enter;
     }
 }
 
 @supports not selector(::view-transition-new(refinitiv-content)) {
     .refinitiv-page {
-        animation: 260ms cubic-bezier(0.16, 1, 0.3, 1) both refinitiv-view-enter;
+        animation: 440ms cubic-bezier(0.22, 1, 0.36, 1) both refinitiv-view-enter;
     }
 }
 
 .refinitiv-results-region {
-    transition: opacity 150ms ease;
+    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .refinitiv-results-region.is-loading {
-    opacity: 0.58;
+    opacity: 0.66;
     cursor: progress;
 }
 
 .refinitiv-results-region.is-entering [data-refinitiv-result-item] {
-    animation: 220ms cubic-bezier(0.16, 1, 0.3, 1) both refinitiv-result-enter;
+    animation: 360ms cubic-bezier(0.22, 1, 0.36, 1) both refinitiv-result-enter;
 }
 
-.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(2) { animation-delay: 18ms; }
-.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(3) { animation-delay: 36ms; }
-.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(4) { animation-delay: 54ms; }
-.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(5) { animation-delay: 72ms; }
+.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(2) { animation-delay: 35ms; }
+.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(3) { animation-delay: 70ms; }
+.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(4) { animation-delay: 105ms; }
+.refinitiv-results-region.is-entering tbody [data-refinitiv-result-item]:nth-child(5) { animation-delay: 140ms; }
 
 .refinitiv-file-modal {
     opacity: 0;
-    transition: opacity 180ms ease;
+    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .refinitiv-file-modal.is-open { opacity: 1; }
@@ -568,10 +606,29 @@
 .refinitiv-preview-panel {
     opacity: 0;
     transform: translateY(0.5rem) scale(0.99);
-    transition: opacity 180ms ease, transform 180ms ease;
+    transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1), transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .refinitiv-file-modal.is-open .refinitiv-preview-panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.refinitiv-confirm-modal {
+    opacity: 0;
+    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.refinitiv-confirm-modal.is-open { opacity: 1; }
+.refinitiv-confirm-modal.is-closing { pointer-events: none; }
+
+.refinitiv-confirm-panel {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.99);
+    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1), transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.refinitiv-confirm-modal.is-open .refinitiv-confirm-panel {
     opacity: 1;
     transform: translateY(0) scale(1);
 }
