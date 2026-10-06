@@ -81,6 +81,57 @@ class ScheduleFlexibilityTest extends TestCase
         );
     }
 
+    public function test_existing_moved_occurrence_can_be_moved_again_after_its_source_date_passes(): void
+    {
+        [$sourceLab, $targetLab] = $this->labs();
+        $schedule = $this->schedule($sourceLab);
+        ScheduleOccurrence::create([
+            'schedule_id' => $schedule->id,
+            'occurrence_date' => '2026-09-07',
+            'override_date' => '2026-09-09',
+            'type' => ScheduleOccurrence::TYPE_MOVED,
+            'lab_id' => $targetLab->id,
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'change_reason' => 'Pindah ke Rabu',
+        ]);
+
+        app(ScheduleChangeService::class)->moveOccurrence(
+            $schedule,
+            Carbon::parse('2026-09-07'),
+            Carbon::parse('2026-09-10'),
+            $targetLab->id,
+            '11:00',
+            '13:00',
+            'Penyesuaian kedua',
+            null
+        );
+
+        $this->assertSame(
+            '2026-09-10',
+            $schedule->occurrences()->whereDate('occurrence_date', '2026-09-07')->first()->override_date->toDateString()
+        );
+    }
+
+    public function test_occurrence_cannot_be_moved_into_a_past_date(): void
+    {
+        [$sourceLab, $targetLab] = $this->labs();
+        $schedule = $this->schedule($sourceLab);
+
+        $this->expectException(ValidationException::class);
+
+        app(ScheduleChangeService::class)->moveOccurrence(
+            $schedule,
+            Carbon::parse('2026-09-14'),
+            Carbon::parse('2026-09-07'),
+            $targetLab->id,
+            '10:00',
+            '12:00',
+            'Tidak boleh pindah ke masa lalu',
+            null
+        );
+    }
+
     public function test_non_perkuliahan_date_range_appears_on_each_operating_day(): void
     {
         [$lab] = $this->labs();
@@ -230,7 +281,7 @@ class ScheduleFlexibilityTest extends TestCase
         );
 
         $schedule->refresh();
-        $this->assertSame('2026-09-14', $schedule->end_date->toDateString());
+        $this->assertSame('2026-09-20', $schedule->end_date->toDateString());
         $this->assertSame($schedule->series_uuid, $revision->series_uuid);
         $this->assertSame($schedule->id, $revision->parent_schedule_id);
         $this->assertSame(2, $revision->revision_number);
@@ -243,6 +294,105 @@ class ScheduleFlexibilityTest extends TestCase
         $this->assertNotNull($events->firstWhere('date', '2026-09-14'));
         $this->assertSame($targetLab->id, $events->firstWhere('date', '2026-09-22')['lab_id']);
         $this->assertSame(2, ScheduleChangeLog::where('series_uuid', $schedule->series_uuid)->count());
+    }
+
+    public function test_future_change_keeps_earlier_weekday_occurrences_in_the_split_week(): void
+    {
+        [$lab] = $this->labs();
+        $schedule = Schedule::create([
+            'lab_id' => $lab->id,
+            'day' => 'Senin',
+            'recurrence_days' => ['Senin', 'Rabu'],
+            'start_date' => '2026-09-07',
+            'end_date' => '2026-09-30',
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'course' => 'Kelas Multi Hari',
+            'type' => 'perkuliahan_tidak_tetap',
+        ]);
+
+        app(ScheduleChangeService::class)->changeFuture(
+            $schedule,
+            Carbon::parse('2026-09-09'),
+            Carbon::parse('2026-09-09'),
+            ['end_date' => '2026-10-30'],
+            'Perubahan mulai sesi terpilih',
+            null
+        );
+
+        $this->assertSame('2026-09-08', $schedule->fresh()->end_date->toDateString());
+        $events = app(ScheduleCalendarService::class)->events(Carbon::parse('2026-09-07'), Carbon::parse('2026-09-16'));
+        $this->assertContains('2026-09-07', $events->pluck('date')->all());
+        $this->assertContains('2026-09-09', $events->pluck('date')->all());
+    }
+
+    public function test_future_change_places_a_selected_moved_occurrence_on_the_new_start_date(): void
+    {
+        [$sourceLab, $targetLab] = $this->labs();
+        $schedule = $this->schedule($sourceLab);
+        ScheduleOccurrence::create([
+            'schedule_id' => $schedule->id,
+            'occurrence_date' => '2026-09-14',
+            'override_date' => '2026-09-15',
+            'type' => ScheduleOccurrence::TYPE_MOVED,
+            'lab_id' => $targetLab->id,
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'change_reason' => 'Pindah sehari',
+        ]);
+
+        $revision = app(ScheduleChangeService::class)->changeFuture(
+            $schedule,
+            Carbon::parse('2026-09-14'),
+            Carbon::parse('2026-09-16'),
+            ['end_date' => '2026-10-26'],
+            'Ubah mulai pertemuan ini',
+            null
+        );
+
+        $occurrence = $revision->occurrences()->firstOrFail();
+        $this->assertSame('2026-09-16', $occurrence->occurrence_date->toDateString());
+        $this->assertSame('2026-09-16', $occurrence->override_date->toDateString());
+    }
+
+    public function test_future_change_detects_a_retained_moved_occurrence_from_the_old_segment(): void
+    {
+        [$lab] = $this->labs();
+        $schedule = Schedule::create([
+            'lab_id' => $lab->id,
+            'day' => 'Senin',
+            'recurrence_days' => ['Senin', 'Rabu'],
+            'start_date' => '2026-09-07',
+            'end_date' => '2026-09-30',
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'course' => 'Kelas Multi Hari',
+            'type' => 'perkuliahan_tidak_tetap',
+        ]);
+        ScheduleOccurrence::create([
+            'schedule_id' => $schedule->id,
+            'occurrence_date' => '2026-09-07',
+            'override_date' => '2026-09-09',
+            'type' => ScheduleOccurrence::TYPE_MOVED,
+            'lab_id' => $lab->id,
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'change_reason' => 'Pindah ke tanggal lain',
+        ]);
+
+        try {
+            app(ScheduleChangeService::class)->changeFuture(
+                $schedule,
+                Carbon::parse('2026-09-09'),
+                Carbon::parse('2026-09-09'),
+                ['recurrence_days' => ['Rabu'], 'end_date' => '2026-10-30'],
+                'Perubahan rangkaian',
+                null
+            );
+            $this->fail('The retained moved event should conflict with the new series.');
+        } catch (ValidationException) {
+            $this->assertSame('2026-09-30', $schedule->fresh()->end_date->toDateString());
+        }
     }
 
     public function test_moved_occurrence_blocks_its_target_slot(): void
@@ -326,6 +476,69 @@ class ScheduleFlexibilityTest extends TestCase
             'Perpanjangan semester',
             null
         );
+    }
+
+    public function test_extending_end_date_detects_a_moved_event_from_the_same_schedule(): void
+    {
+        [$lab] = $this->labs();
+        $schedule = $this->schedule($lab);
+        $schedule->update(['end_date' => '2026-09-14']);
+        ScheduleOccurrence::create([
+            'schedule_id' => $schedule->id,
+            'occurrence_date' => '2026-09-14',
+            'override_date' => '2026-09-21',
+            'type' => ScheduleOccurrence::TYPE_MOVED,
+            'lab_id' => $lab->id,
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+            'change_reason' => 'Pindah ke minggu berikutnya',
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        app(ScheduleChangeService::class)->changeEndDate(
+            $schedule,
+            Carbon::parse('2026-09-28'),
+            'Perpanjangan semester',
+            null
+        );
+    }
+
+    public function test_shortening_end_date_audits_moved_occurrences_after_the_new_end(): void
+    {
+        [$sourceLab, $targetLab] = $this->labs();
+        $schedule = $this->schedule($sourceLab);
+        $moved = ScheduleOccurrence::create([
+            'schedule_id' => $schedule->id,
+            'occurrence_date' => '2026-09-14',
+            'override_date' => '2026-09-16',
+            'type' => ScheduleOccurrence::TYPE_MOVED,
+            'lab_id' => $targetLab->id,
+            'start_time' => '10:00',
+            'end_time' => '12:00',
+            'change_reason' => 'Pindah ke Rabu',
+        ]);
+
+        app(ScheduleChangeService::class)->changeEndDate(
+            $schedule,
+            Carbon::parse('2026-09-14'),
+            'Rangkaian dipersingkat',
+            null
+        );
+
+        $this->assertDatabaseHas('schedule_occurrences', [
+            'id' => $moved->id,
+            'type' => ScheduleOccurrence::TYPE_CANCELLED,
+            'override_date' => null,
+        ]);
+        $this->assertDatabaseHas('schedule_change_logs', [
+            'schedule_occurrence_id' => $moved->id,
+            'action' => 'cancel',
+        ]);
+        $this->assertTrue(app(ScheduleCalendarService::class)->events(
+            Carbon::parse('2026-09-15'),
+            Carbon::parse('2026-09-16')
+        )->isEmpty());
     }
 
     public function test_non_fixed_schedule_can_expand_across_multiple_weekdays(): void
