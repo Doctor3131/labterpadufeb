@@ -149,7 +149,9 @@ const initBulkSelection = () => {
             toolbar.classList.toggle('hidden', selected.length === 0);
             toolbar.classList.toggle('flex', selected.length > 0);
         }
-        if (count) count.textContent = String(selected.length);
+        const selectedCount = String(selected.length);
+        // The observer watches this subtree; writing identical text would re-trigger it indefinitely.
+        if (count && count.textContent !== selectedCount) count.textContent = selectedCount;
         if (submit) submit.disabled = selected.length === 0;
         if (selectPage) {
             selectPage.checked = checks.length > 0 && selected.length === checks.length;
