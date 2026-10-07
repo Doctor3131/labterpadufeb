@@ -183,24 +183,20 @@ const initBulkSelection = () => {
 };
 
 const initRefinitivCalendar = () => {
-    const calendar = document.querySelector('[data-refinitiv-admin] .refinitiv-calendar');
-    const dataElement = calendar?.querySelector('[data-refinitiv-calendar-data]');
+    const calendarRegion = document.querySelector('[data-refinitiv-calendar-region]');
     const form = document.getElementById('refinitiv-filters');
-    const panel = calendar?.querySelector('[data-refinitiv-calendar-panel]');
-    const selectedLabel = calendar?.querySelector('[data-refinitiv-selected-date-label]');
-    const filterHint = calendar?.querySelector('[data-refinitiv-day-filter-hint]');
-    const clearDateButton = calendar?.querySelector('[data-refinitiv-clear-date]');
     const periodSelect = form?.querySelector('[name="period"]');
 
-    if (!calendar || !dataElement || !form || !panel || !selectedLabel) return;
+    if (!calendarRegion || !form) return;
 
-    let days = {};
-    try {
-        days = JSON.parse(dataElement.textContent || '{}');
-    } catch {
-        return;
-    }
-
+    const getCalendar = () => calendarRegion.querySelector('.refinitiv-calendar');
+    const getDays = () => {
+        try {
+            return JSON.parse(calendarRegion.querySelector('[data-refinitiv-calendar-data]')?.textContent || '{}');
+        } catch {
+            return {};
+        }
+    };
     const statuses = ['pending', 'hadir', 'tidak_hadir'];
     const sessions = ['sesi_1', 'sesi_2', 'sesi_3'];
     const zeroStatusCounts = () => Object.fromEntries(statuses.map((status) => [status, 0]));
@@ -208,39 +204,45 @@ const initRefinitivCalendar = () => {
     let dateFilterCleared = false;
 
     const renderSelectedDate = (button, { filterResults = true, animate = true } = {}) => {
+        const calendar = getCalendar();
+        const panel = calendar?.querySelector('[data-refinitiv-calendar-panel]');
+        const selectedLabel = calendar?.querySelector('[data-refinitiv-selected-date-label]');
+        if (!calendar || !panel || !selectedLabel) return;
+
         const date = button.dataset.refinitivCalendarDay;
-        const day = days[date] ?? { total: 0, statuses: zeroStatusCounts(), sessions: {} };
+        const day = getDays()[date] ?? { total: 0, statuses: zeroStatusCounts(), sessions: {} };
         const dateLabel = button.dataset.refinitivCalendarLabel ?? date;
-        const localDate = new Date(`${date}T12:00:00`);
+        const localDate = new Date(date + 'T12:00:00');
         const isFriday = localDate.getDay() === 5;
 
         form.elements.date.value = date;
         calendar.querySelectorAll('[data-refinitiv-calendar-day]').forEach((dayButton) => {
-            const selected = dayButton.dataset.refinitivCalendarDay === form.elements.date.value;
+            const selected = dayButton.dataset.refinitivCalendarDay === date;
             dayButton.classList.toggle('is-selected', selected);
             dayButton.setAttribute('aria-pressed', String(selected));
         });
-        if (clearDateButton) clearDateButton.hidden = !form.elements.date.value;
+        const clearDateButton = calendar.querySelector('[data-refinitiv-clear-date]');
+        if (clearDateButton) clearDateButton.hidden = false;
         selectedLabel.textContent = dateLabel;
         const totalLabel = calendar.querySelector('[data-refinitiv-day-total]');
         if (totalLabel) totalLabel.textContent = String(day.total ?? 0);
 
         statuses.forEach((status) => {
-            const count = calendar.querySelector(`[data-refinitiv-day-status="${status}"]`);
+            const count = calendar.querySelector('[data-refinitiv-day-status="' + status + '"]');
             if (count) count.textContent = String(day.statuses?.[status] ?? 0);
         });
 
         sessions.forEach((session, index) => {
-            const row = calendar.querySelector(`[data-refinitiv-calendar-session="${session}"]`);
+            const row = calendar.querySelector('[data-refinitiv-calendar-session="' + session + '"]');
             const sessionData = day.sessions?.[session] ?? { total: 0, statuses: zeroStatusCounts() };
             const total = row?.querySelector('[data-refinitiv-session-total]');
             if (total) total.textContent = String(sessionData.total ?? 0);
             statuses.forEach((status) => {
-                const count = row?.querySelector(`[data-refinitiv-session-status="${status}"]`);
+                const count = row?.querySelector('[data-refinitiv-session-status="' + status + '"]');
                 if (count) count.textContent = String(sessionData.statuses?.[status] ?? 0);
             });
             if (index === 2) {
-                const time = row?.querySelector(`[data-refinitiv-session-time="${session}"]`);
+                const time = row?.querySelector('[data-refinitiv-session-time="' + session + '"]');
                 if (time) time.textContent = isFriday ? '13.30–15.30 WIB' : '13.00–15.00 WIB';
             }
         });
@@ -254,6 +256,7 @@ const initRefinitivCalendar = () => {
             });
         }
 
+        const filterHint = calendar.querySelector('[data-refinitiv-day-filter-hint]');
         if (filterHint) filterHint.textContent = 'Daftar di samping difilter berdasarkan tanggal ini.';
         if (periodSelect && periodSelect.value !== 'all') {
             periodSelect.value = 'all';
@@ -263,7 +266,7 @@ const initRefinitivCalendar = () => {
         const resultsRegion = document.getElementById('refinitiv-results-region');
         const statusMessage = document.getElementById('refinitiv-filter-status');
         if (filterResults) {
-            if (statusMessage) statusMessage.textContent = `Memfilter permohonan pada ${dateLabel}.`;
+            if (statusMessage) statusMessage.textContent = 'Memfilter permohonan pada ' + dateLabel + '.';
             if (resultsRegion) {
                 resultsRegion.classList.add('is-loading');
                 resultsRegion.setAttribute('aria-busy', 'true');
@@ -277,38 +280,52 @@ const initRefinitivCalendar = () => {
 
         dateFilterCleared = true;
         form.elements.date.value = '';
-        calendar.querySelectorAll('[data-refinitiv-calendar-day]').forEach((dayButton) => {
+        const calendar = getCalendar();
+        calendar?.querySelectorAll('[data-refinitiv-calendar-day]').forEach((dayButton) => {
             dayButton.classList.remove('is-selected');
             dayButton.setAttribute('aria-pressed', 'false');
         });
+        const clearDateButton = calendar?.querySelector('[data-refinitiv-clear-date]');
         if (clearDateButton) clearDateButton.hidden = true;
+        const filterHint = calendar?.querySelector('[data-refinitiv-day-filter-hint]');
         if (filterHint) filterHint.textContent = 'Filter tanggal dihapus. Daftar menampilkan semua tanggal.';
 
-        panel.classList.remove('is-changing');
-        window.clearTimeout(animationTimer);
-        requestAnimationFrame(() => {
-            panel.classList.add('is-changing');
-            animationTimer = window.setTimeout(() => panel.classList.remove('is-changing'), 430);
-        });
+        const panel = calendar?.querySelector('[data-refinitiv-calendar-panel]');
+        if (panel) {
+            panel.classList.remove('is-changing');
+            window.clearTimeout(animationTimer);
+            requestAnimationFrame(() => {
+                panel.classList.add('is-changing');
+                animationTimer = window.setTimeout(() => panel.classList.remove('is-changing'), 430);
+            });
+        }
 
         form.requestSubmit();
     };
 
-    calendar.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-refinitiv-calendar-day]');
-        if (button) {
-            if (form.elements.date.value === button.dataset.refinitivCalendarDay) {
-                clearDateFilter();
-                return;
-            }
-
-            renderSelectedDate(button);
+    calendarRegion.addEventListener('click', (event) => {
+        const clearButton = event.target.closest('[data-refinitiv-clear-date]');
+        if (clearButton) {
+            clearDateFilter();
+            return;
         }
+
+        const button = event.target.closest('[data-refinitiv-calendar-day]');
+        if (!button) return;
+        if (form.elements.date.value === button.dataset.refinitivCalendarDay) {
+            clearDateFilter();
+            return;
+        }
+
+        renderSelectedDate(button);
     });
-    clearDateButton?.addEventListener('click', clearDateFilter);
 
     form.addEventListener('refinitiv:filters-synced', () => {
+        const calendar = getCalendar();
+        if (!calendar) return;
         const date = form.elements.date?.value ?? '';
+        const filterHint = calendar.querySelector('[data-refinitiv-day-filter-hint]');
+        const clearDateButton = calendar.querySelector('[data-refinitiv-clear-date]');
         if (!date) {
             calendar.querySelectorAll('[data-refinitiv-calendar-day]').forEach((dayButton) => {
                 dayButton.classList.remove('is-selected');
@@ -326,7 +343,7 @@ const initRefinitivCalendar = () => {
 
         if (filterHint) filterHint.textContent = 'Daftar di samping difilter berdasarkan tanggal ini.';
         if (clearDateButton) clearDateButton.hidden = false;
-        const selectedButton = calendar.querySelector(`[data-refinitiv-calendar-day="${date}"]`);
+        const selectedButton = calendar.querySelector('[data-refinitiv-calendar-day="' + date + '"]');
         const activeButton = calendar.querySelector('[data-refinitiv-calendar-day][aria-pressed="true"]');
         if (selectedButton && selectedButton !== activeButton) {
             renderSelectedDate(selectedButton, { filterResults: false, animate: false });
@@ -344,7 +361,7 @@ const initRefinitivCalendar = () => {
             option.querySelector('svg')?.remove();
         });
         if (periodSelect && selectedOption) {
-            const option = wrapper?.querySelector(`[role="option"][data-value="${periodSelect.value}"]`);
+            const option = wrapper?.querySelector('[role="option"][data-value="' + periodSelect.value + '"]');
             if (option) {
                 const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 check.setAttribute('class', 'h-4 w-4 text-blue-700');
@@ -360,7 +377,6 @@ const initRefinitivCalendar = () => {
         wrapper?.querySelector('.custom-select-options')?.classList.add('hidden');
     });
 };
-
 const initRefinitivAdmin = () => {
     initAttendanceConfirmation();
     initBulkSelection();
@@ -371,9 +387,11 @@ const initRefinitivAdmin = () => {
     const search = document.getElementById('refinitiv-search');
     const statusNav = document.getElementById('refinitiv-status-tabs');
     const resultsRegion = document.getElementById('refinitiv-results-region');
+    const calendarRegion = document.querySelector('[data-refinitiv-calendar-region]');
     const resetLink = document.getElementById('refinitiv-reset');
     const totalCount = document.getElementById('refinitiv-total-count');
     const statusMessage = document.getElementById('refinitiv-filter-status');
+    const filterError = document.getElementById('refinitiv-filter-error');
 
     if (!root || !form || !search || !statusNav || !resultsRegion) return;
 
@@ -507,10 +525,13 @@ const initRefinitivAdmin = () => {
         && !event.shiftKey
         && !event.altKey;
 
-    const updateResults = async (target, { historyMode = 'push', focusSummary = false } = {}) => {
+    const updateResults = async (target, { historyMode = 'push', focusSummary = false, refreshCalendar = false } = {}) => {
         const url = new URL(target, window.location.href);
         const indexUrl = new URL(form.action, window.location.href);
         if (url.origin !== window.location.origin || url.pathname !== indexUrl.pathname) return;
+
+        const requestUrl = new URL(url);
+        if (refreshCalendar) requestUrl.searchParams.set('calendar_fragment', '1');
 
         activeController?.abort();
         const controller = new AbortController();
@@ -518,10 +539,14 @@ const initRefinitivAdmin = () => {
         const sequence = ++requestSequence;
         resultsRegion.classList.add('is-loading');
         resultsRegion.setAttribute('aria-busy', 'true');
+        calendarRegion?.classList.remove('is-entering');
+        calendarRegion?.classList.toggle('is-loading', refreshCalendar);
+        calendarRegion?.setAttribute('aria-busy', refreshCalendar ? 'true' : 'false');
+        if (filterError) filterError.hidden = true;
         if (statusMessage) statusMessage.textContent = 'Memperbarui hasil permohonan.';
 
         try {
-            const response = await fetch(url, {
+            const response = await fetch(requestUrl, {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 signal: controller.signal,
@@ -530,9 +555,14 @@ const initRefinitivAdmin = () => {
 
             const payload = await response.json();
             if (typeof payload.html !== 'string') throw new Error('Filter response is missing the results fragment.');
+            if (refreshCalendar && typeof payload.calendarHtml !== 'string') throw new Error('Filter response is missing the calendar fragment.');
             if (sequence !== requestSequence) return;
 
             resultsRegion.innerHTML = payload.html;
+            if (refreshCalendar && calendarRegion) {
+                calendarRegion.innerHTML = payload.calendarHtml;
+                calendarRegion.classList.add('is-entering');
+            }
             resultsRegion.classList.remove('is-loading');
             resultsRegion.classList.add('is-entering');
             resultsRegion.setAttribute('aria-busy', 'false');
@@ -549,15 +579,24 @@ const initRefinitivAdmin = () => {
             if (focusSummary) resultsRegion.querySelector('[data-refinitiv-results-summary]')?.focus({ preventScroll: true });
 
             window.setTimeout(() => {
-                if (sequence === requestSequence) resultsRegion.classList.remove('is-entering');
+                if (sequence === requestSequence) {
+                    resultsRegion.classList.remove('is-entering');
+                    calendarRegion?.classList.remove('is-entering');
+                }
             }, 520);
         } catch (error) {
             if (error.name === 'AbortError') return;
-            window.location.assign(url.href);
+            if (filterError) {
+                filterError.textContent = 'Hasil belum berhasil diperbarui. Periksa koneksi lalu coba lagi.';
+                filterError.hidden = false;
+            }
+            if (statusMessage) statusMessage.textContent = 'Pembaruan gagal. Hasil sebelumnya tetap ditampilkan.';
         } finally {
             if (sequence === requestSequence) {
                 resultsRegion.classList.remove('is-loading');
                 resultsRegion.setAttribute('aria-busy', 'false');
+                calendarRegion?.classList.remove('is-loading');
+                calendarRegion?.setAttribute('aria-busy', 'false');
                 activeController = null;
             }
         }
@@ -666,6 +705,23 @@ const initRefinitivAdmin = () => {
     });
 
     root.addEventListener('click', (event) => {
+        const monthLink = event.target.closest('a[data-refinitiv-calendar-nav]');
+        if (monthLink && isPlainNavigation(event)) {
+            event.preventDefault();
+            window.clearTimeout(searchTimer);
+            const target = makeFormUrl();
+            const month = monthLink.dataset.month;
+            const previousMonth = form.elements.month?.value;
+            const hadSelectedDate = Boolean(form.elements.date?.value);
+            if (month) target.searchParams.set('month', month);
+            target.searchParams.delete('date');
+            updateResults(target, {
+                historyMode: 'push',
+                refreshCalendar: Boolean(month && (month !== previousMonth || hadSelectedDate)),
+            });
+            return;
+        }
+
         const reset = event.target.closest('[data-refinitiv-reset-link]');
         if (reset && isPlainNavigation(event)) {
             event.preventDefault();
@@ -694,8 +750,9 @@ const initRefinitivAdmin = () => {
     window.addEventListener('popstate', () => {
         window.clearTimeout(searchTimer);
         const url = new URL(window.location.href);
-        syncControls(url);
-        updateResults(url, { historyMode: 'none' });
+        const targetMonth = url.searchParams.get('month') ?? form.elements.month?.defaultValue;
+        const refreshCalendar = Boolean(targetMonth && targetMonth !== form.elements.month?.value);
+        updateResults(url, { historyMode: 'none', refreshCalendar });
     });
 
     syncControls(new URL(window.location.href));

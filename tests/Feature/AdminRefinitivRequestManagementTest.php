@@ -28,6 +28,8 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ->assertSee('data-refinitiv-bulk-toolbar', false)
             ->assertSee('refinitiv-attendance-confirm', false)
             ->assertSee('data-refinitiv-admin', false)
+            ->assertSee('data-refinitiv-calendar-region', false)
+            ->assertSee('minmax(0,3fr)', false)
             ->assertSee('data-refinitiv-status="pending"', false)
             ->assertSee('id="refinitiv-results-region"', false)
             ->assertSee('data-refinitiv-clear-date', false)
@@ -58,12 +60,41 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ]));
 
         $response->assertOk()->assertJsonStructure(['html', 'total']);
+        $this->assertArrayNotHasKey('calendarHtml', $response->json());
 
         $this->assertSame(1, $response->json('total'));
         $this->assertStringContainsString('Nadia AJAX', $response->json('html'));
         $this->assertStringNotContainsString('Bima AJAX', $response->json('html'));
         $this->assertStringNotContainsString('refinitiv-status-tabs', $response->json('html'));
         $this->assertStringNotContainsString('<html', $response->json('html'));
+    }
+
+    public function test_calendar_month_navigation_returns_only_the_calendar_fragment_over_ajax(): void
+    {
+        Carbon::setTestNow('2026-09-24 10:00:00');
+        try {
+            $admin = User::factory()->create(['role' => 'admin']);
+            $this->createRequest(['name' => 'Pemohon Oktober', 'usage_date' => '2026-10-08']);
+
+            $response = $this->actingAs($admin)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'X-Requested-With' => 'XMLHttpRequest',
+                ])
+                ->get(route('admin.refinitiv.index', [
+                    'status' => 'all',
+                    'month' => '2026-10',
+                    'calendar_fragment' => 1,
+                ]));
+
+            $response->assertOk()->assertJsonStructure(['html', 'total', 'counts', 'calendarHtml']);
+            $this->assertStringContainsString('Oktober 2026', $response->json('calendarHtml'));
+            $this->assertStringContainsString('2026-10-08', $response->json('calendarHtml'));
+            $this->assertStringContainsString('data-refinitiv-calendar-nav', $response->json('calendarHtml'));
+            $this->assertStringNotContainsString('<html', $response->json('calendarHtml'));
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_admin_refinitiv_calendar_shows_a_clear_action_for_an_active_date_filter(): void

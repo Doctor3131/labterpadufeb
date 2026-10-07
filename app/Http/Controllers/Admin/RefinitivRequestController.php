@@ -28,6 +28,7 @@ class RefinitivRequestController extends Controller
             'period' => ['nullable', 'in:all,today,next_7_days,overdue'],
             'month' => ['nullable', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
             'date' => ['nullable', 'date_format:Y-m-d'],
+            'calendar_fragment' => ['sometimes', 'boolean'],
         ]);
 
         $status = $filters['status'] ?? 'pending';
@@ -44,92 +45,96 @@ class RefinitivRequestController extends Controller
         $today = today()->toDateString();
         $tomorrow = today()->copy()->addDay()->toDateString();
         $weekEndExclusive = today()->copy()->addDays(7)->toDateString();
-        $calendarMonthStart = Carbon::parse($calendarMonth.'-01', config('app.timezone'))->startOfMonth();
-        $calendarMonthEndExclusive = $calendarMonthStart->copy()->addMonth()->toDateString();
         $selectedDateEndExclusive = $date !== '' ? Carbon::parse($date, config('app.timezone'))->addDay()->toDateString() : null;
+        $includeCalendar = ! $request->ajax() || $request->boolean('calendar_fragment');
 
-        $calendarRows = RefinitivRequest::query()
-            ->where('usage_date', '>=', $calendarMonthStart->toDateString())
-            ->where('usage_date', '<', $calendarMonthEndExclusive)
-            ->select('usage_date', 'session', 'attendance_status')
-            ->selectRaw('COUNT(*) as total')
-            ->groupBy('usage_date', 'session', 'attendance_status')
-            ->get();
+        if ($includeCalendar) {
+            $calendarMonthStart = Carbon::parse($calendarMonth.'-01', config('app.timezone'))->startOfMonth();
+            $calendarMonthEndExclusive = $calendarMonthStart->copy()->addMonth()->toDateString();
 
-        $calendarDays = [];
-        $sessionTotals = array_fill_keys(array_keys(RefinitivRequest::SESSIONS), 0);
+            $calendarRows = RefinitivRequest::query()
+                ->where('usage_date', '>=', $calendarMonthStart->toDateString())
+                ->where('usage_date', '<', $calendarMonthEndExclusive)
+                ->select('usage_date', 'session', 'attendance_status')
+                ->selectRaw('COUNT(*) as total')
+                ->groupBy('usage_date', 'session', 'attendance_status')
+                ->get();
 
-        foreach ($calendarRows as $row) {
-            $day = Carbon::parse($row->usage_date)->toDateString();
-            $session = $row->session;
-            $attendanceStatus = $row->attendance_status;
-            $total = (int) $row->total;
+            $calendarDays = [];
+            $sessionTotals = array_fill_keys(array_keys(RefinitivRequest::SESSIONS), 0);
 
-            $calendarDays[$day] ??= [
+            foreach ($calendarRows as $row) {
+                $day = Carbon::parse($row->usage_date)->toDateString();
+                $session = $row->session;
+                $attendanceStatus = $row->attendance_status;
+                $total = (int) $row->total;
+
+                $calendarDays[$day] ??= [
+                    'total' => 0,
+                    'statuses' => array_fill_keys(array_keys(RefinitivRequest::ATTENDANCE_STATUSES), 0),
+                    'sessions' => [],
+                ];
+                $calendarDays[$day]['sessions'][$session] ??= [
+                    'total' => 0,
+                    'statuses' => array_fill_keys(array_keys(RefinitivRequest::ATTENDANCE_STATUSES), 0),
+                ];
+                $calendarDays[$day]['sessions'][$session]['total'] += $total;
+                $calendarDays[$day]['total'] += $total;
+                $sessionTotals[$session] = ($sessionTotals[$session] ?? 0) + $total;
+
+                if (array_key_exists($attendanceStatus, RefinitivRequest::ATTENDANCE_STATUSES)) {
+                    $calendarDays[$day]['sessions'][$session]['statuses'][$attendanceStatus] += $total;
+                    $calendarDays[$day]['statuses'][$attendanceStatus] += $total;
+                }
+            }
+
+            $calendarSummary = [
+                'total' => array_sum(array_column($calendarDays, 'total')),
+                'active_days' => count($calendarDays),
+                'busiest_session' => null,
+                'busiest_session_total' => 0,
+                'session_totals' => $sessionTotals,
+            ];
+
+            if ($calendarSummary['total'] > 0) {
+                $calendarSummary['busiest_session'] = array_search(max($sessionTotals), $sessionTotals, true);
+                $calendarSummary['busiest_session_total'] = max($sessionTotals);
+            }
+
+            $calendarMonthLabel = $calendarMonthStart->locale('id')->isoFormat('MMMM Y');
+            $calendarCells = array_merge(
+                array_fill(0, $calendarMonthStart->isoWeekday() - 1, null),
+                range(1, $calendarMonthStart->daysInMonth),
+            );
+            while (count($calendarCells) % 7 !== 0) {
+                $calendarCells[] = null;
+            }
+
+            $calendarToday = today()->toDateString();
+            $calendarSelectedDate = $date !== ''
+                ? $date
+                : (str_starts_with($calendarToday, $calendarMonth) ? $calendarToday : $calendarMonthStart->toDateString());
+            $emptyCalendarDay = [
                 'total' => 0,
                 'statuses' => array_fill_keys(array_keys(RefinitivRequest::ATTENDANCE_STATUSES), 0),
                 'sessions' => [],
             ];
-            $calendarDays[$day]['sessions'][$session] ??= [
-                'total' => 0,
-                'statuses' => array_fill_keys(array_keys(RefinitivRequest::ATTENDANCE_STATUSES), 0),
-            ];
-            $calendarDays[$day]['sessions'][$session]['total'] += $total;
-            $calendarDays[$day]['total'] += $total;
-            $sessionTotals[$session] = ($sessionTotals[$session] ?? 0) + $total;
-
-            if (array_key_exists($attendanceStatus, RefinitivRequest::ATTENDANCE_STATUSES)) {
-                $calendarDays[$day]['sessions'][$session]['statuses'][$attendanceStatus] += $total;
-                $calendarDays[$day]['statuses'][$attendanceStatus] += $total;
+            $calendarSelectedDay = $calendarDays[$calendarSelectedDate] ?? $emptyCalendarDay;
+            foreach (array_keys(RefinitivRequest::SESSIONS) as $session) {
+                $calendarSelectedDay['sessions'][$session] ??= [
+                    'total' => 0,
+                    'statuses' => array_fill_keys(array_keys(RefinitivRequest::ATTENDANCE_STATUSES), 0),
+                ];
             }
-        }
-
-        $calendarSummary = [
-            'total' => array_sum(array_column($calendarDays, 'total')),
-            'active_days' => count($calendarDays),
-            'busiest_session' => null,
-            'busiest_session_total' => 0,
-            'session_totals' => $sessionTotals,
-        ];
-
-        if ($calendarSummary['total'] > 0) {
-            $calendarSummary['busiest_session'] = array_search(max($sessionTotals), $sessionTotals, true);
-            $calendarSummary['busiest_session_total'] = max($sessionTotals);
-        }
-
-        $calendarMonthLabel = $calendarMonthStart->locale('id')->isoFormat('MMMM Y');
-        $calendarCells = array_merge(
-            array_fill(0, $calendarMonthStart->isoWeekday() - 1, null),
-            range(1, $calendarMonthStart->daysInMonth),
-        );
-        while (count($calendarCells) % 7 !== 0) {
-            $calendarCells[] = null;
-        }
-
-        $calendarToday = today()->toDateString();
-        $calendarSelectedDate = $date !== ''
-            ? $date
-            : (str_starts_with($calendarToday, $calendarMonth) ? $calendarToday : $calendarMonthStart->toDateString());
-        $emptyCalendarDay = [
-            'total' => 0,
-            'statuses' => array_fill_keys(array_keys(RefinitivRequest::ATTENDANCE_STATUSES), 0),
-            'sessions' => [],
-        ];
-        $calendarSelectedDay = $calendarDays[$calendarSelectedDate] ?? $emptyCalendarDay;
-        foreach (array_keys(RefinitivRequest::SESSIONS) as $session) {
-            $calendarSelectedDay['sessions'][$session] ??= [
-                'total' => 0,
-                'statuses' => array_fill_keys(array_keys(RefinitivRequest::ATTENDANCE_STATUSES), 0),
+            $calendarSessionNames = array_map(fn (string $label): string => Str::before($label, ':'), RefinitivRequest::SESSIONS);
+            $calendarSessionTimes = [
+                'sesi_1' => '08.00–10.00 WIB',
+                'sesi_2' => '10.00–12.00 WIB',
+                'sesi_3' => Carbon::parse($calendarSelectedDate, config('app.timezone'))->isFriday() ? '13.30–15.30 WIB' : '13.00–15.00 WIB',
             ];
+            $previousCalendarMonth = $calendarMonthStart->copy()->subMonth()->format('Y-m');
+            $nextCalendarMonth = $calendarMonthStart->copy()->addMonth()->format('Y-m');
         }
-        $calendarSessionNames = array_map(fn (string $label): string => Str::before($label, ':'), RefinitivRequest::SESSIONS);
-        $calendarSessionTimes = [
-            'sesi_1' => '08.00–10.00 WIB',
-            'sesi_2' => '10.00–12.00 WIB',
-            'sesi_3' => Carbon::parse($calendarSelectedDate, config('app.timezone'))->isFriday() ? '13.30–15.30 WIB' : '13.00–15.00 WIB',
-        ];
-        $previousCalendarMonth = $calendarMonthStart->copy()->subMonth()->format('Y-m');
-        $nextCalendarMonth = $calendarMonthStart->copy()->addMonth()->format('Y-m');
 
         $baseQuery = RefinitivRequest::query()
             ->when($search !== '', function (Builder $query) use ($search) {
@@ -221,11 +226,22 @@ class RefinitivRequestController extends Controller
         $requests = $query->paginate(15)->withQueryString();
 
         if ($request->ajax()) {
-            return response()->json([
+            $response = [
                 'html' => view('admin.refinitiv.partials.results', compact('requests', 'status', 'search', 'sort', 'period', 'date', 'calendarMonth'))->render(),
                 'total' => $requests->total(),
                 'counts' => $counts,
-            ]);
+            ];
+
+            if ($includeCalendar) {
+                $response['calendarHtml'] = view('admin.refinitiv.partials.calendar', compact(
+                    'status', 'search', 'sort', 'period', 'date', 'calendarMonth', 'calendarDays', 'calendarSummary',
+                    'calendarMonthLabel', 'calendarCells', 'calendarSelectedDate', 'calendarSelectedDay',
+                    'calendarSessionNames', 'calendarSessionTimes', 'calendarToday', 'previousCalendarMonth',
+                    'nextCalendarMonth',
+                ))->render();
+            }
+
+            return response()->json($response);
         }
 
         return view('admin.refinitiv.index', compact(
