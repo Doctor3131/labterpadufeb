@@ -60,78 +60,78 @@
             </div>
         </header>
 
-        <section class="refinitiv-calendar mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-calendar-title">
-            <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div class="min-w-0 flex-1">
-                    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Jadwal penggunaan</p>
-                            <h2 id="refinitiv-calendar-title" class="mt-1 text-lg font-semibold text-slate-900">Kalender peminjaman Refinitiv</h2>
-                            <p class="mt-1 text-sm text-slate-600">Jumlah pemohon per hari dan sesi. Pilih tanggal untuk melihat rincian dan memfilter daftar.</p>
-                        </div>
-                        <div class="flex shrink-0 items-center gap-1.5" aria-label="Navigasi bulan kalender">
-                            <a href="{{ $calendarMonthLink($previousCalendarMonth) }}" aria-label="Bulan sebelumnya" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 18-6-6 6-6"/></svg>
-                            </a>
-                            <span class="min-w-36 text-center text-sm font-semibold capitalize text-slate-900" data-refinitiv-calendar-month>{{ $calendarMonthLabel }}</span>
-                            <a href="{{ $calendarMonthLink($nextCalendarMonth) }}" aria-label="Bulan berikutnya" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/></svg>
-                            </a>
-                            <a href="{{ $calendarCurrentMonthLink }}" class="ml-1 inline-flex min-h-9 items-center justify-center rounded-lg border border-blue-200 px-3 text-xs font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Bulan ini</a>
-                        </div>
-                    </div>
-
-                    <div class="mb-3 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:gap-2" aria-hidden="true">
-                        @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $weekday)
-                            <span class="py-1">{{ $weekday }}</span>
-                        @endforeach
-                    </div>
-                    <div class="grid grid-cols-7 gap-1 sm:gap-2" role="group" aria-label="Tanggal pada {{ $calendarMonthLabel }}">
-                        @foreach ($calendarCells as $cell)
-                            @if ($cell === null)
-                                <span class="min-h-[3.65rem] rounded-lg sm:min-h-[4.1rem]" aria-hidden="true"></span>
-                            @else
-                                @php
-                                    $cellDate = \Illuminate\Support\Carbon::parse($calendarMonth.'-'.str_pad((string) $cell, 2, '0', STR_PAD_LEFT), config('app.timezone'));
-                                    $cellDateString = $cellDate->toDateString();
-                                    $cellData = $calendarDays[$cellDateString] ?? ['total' => 0];
-                                    $cellSelected = $calendarSelectedDate === $cellDateString;
-                                    $cellToday = $calendarToday === $cellDateString;
-                                    $cellIntensity = $cellData['total'] === 0 ? 'bg-white' : ($cellData['total'] < 4 ? 'bg-blue-50' : ($cellData['total'] < 8 ? 'bg-blue-100' : 'bg-blue-200'));
-                                @endphp
-                                <button type="button" data-refinitiv-calendar-day="{{ $cellDateString }}" data-refinitiv-calendar-total="{{ $cellData['total'] }}" data-refinitiv-calendar-label="{{ $cellDate->locale('id')->isoFormat('dddd, D MMMM Y') }}" aria-pressed="{{ $cellSelected ? 'true' : 'false' }}" aria-label="{{ $cellDate->locale('id')->isoFormat('dddd, D MMMM Y') }}, {{ $cellData['total'] }} pemohon" class="refinitiv-calendar-day {{ $cellIntensity }} {{ $cellSelected ? 'is-selected' : '' }} {{ $cellToday ? 'is-today' : '' }} min-h-[3.65rem] rounded-lg border p-1.5 text-left transition sm:min-h-[4.1rem] sm:p-2">
-                                    <span class="flex items-center justify-between gap-1">
-                                        <span class="text-xs font-semibold text-slate-800 sm:text-sm">{{ $cell }}</span>
-                                        @if ($cellToday)<span class="hidden text-[9px] font-semibold uppercase tracking-wide text-blue-700 sm:inline">Hari ini</span>@endif
-                                    </span>
-                                    <span class="mt-1 block truncate text-[10px] font-medium text-slate-500 sm:text-xs" data-refinitiv-calendar-cell-count>{{ $cellData['total'] > 0 ? $cellData['total'].' pemohon' : '—' }}</span>
-                                </button>
-                            @endif
-                        @endforeach
-                    </div>
+        <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,0.94fr)_minmax(0,1.26fr)] 2xl:gap-6">
+        <section class="refinitiv-calendar min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="refinitiv-calendar-title">
+            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="min-w-0">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Jadwal penggunaan</p>
+                    <h2 id="refinitiv-calendar-title" class="mt-1 text-lg font-semibold text-slate-900">Kalender peminjaman Refinitiv</h2>
+                    <p class="mt-1 text-sm text-slate-600">Pilih tanggal untuk melihat sesi dan memfilter daftar di samping.</p>
                 </div>
+                <div class="flex shrink-0 items-center gap-1.5" aria-label="Navigasi bulan kalender">
+                    <a href="{{ $calendarMonthLink($previousCalendarMonth) }}" aria-label="Bulan sebelumnya" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 18-6-6 6-6"/></svg>
+                    </a>
+                    <span class="min-w-36 text-center text-sm font-semibold capitalize text-slate-900" data-refinitiv-calendar-month>{{ $calendarMonthLabel }}</span>
+                    <a href="{{ $calendarMonthLink($nextCalendarMonth) }}" aria-label="Bulan berikutnya" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/></svg>
+                    </a>
+                    <a href="{{ $calendarCurrentMonthLink }}" class="ml-1 inline-flex min-h-9 items-center justify-center rounded-lg border border-blue-200 px-3 text-xs font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Bulan ini</a>
+                </div>
+            </div>
 
-                <aside class="refinitiv-calendar-insights grid shrink-0 grid-cols-2 gap-2 border-t border-slate-100 pt-4 xl:w-64 xl:grid-cols-1 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0" aria-label="Ringkasan peminjaman bulan ini">
-                    <div class="rounded-lg bg-blue-50 px-3 py-2.5">
-                        <p class="text-xs font-medium text-blue-800">Total pemohon</p>
-                        <p class="mt-0.5 text-xl font-semibold tabular-nums text-blue-950">{{ $calendarSummary['total'] }}</p>
-                        <p class="text-[11px] text-blue-700">pada {{ $calendarSummary['active_days'] }} hari aktif</p>
-                    </div>
-                    <div class="rounded-lg border border-slate-200 px-3 py-2.5">
-                        <p class="text-xs font-medium text-slate-600">Sesi terpadat</p>
-                        <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ $calendarSummary['busiest_session'] ? $calendarSessionNames[$calendarSummary['busiest_session']] : 'Belum ada data' }}</p>
-                        @if($calendarSummary['busiest_session'])<p class="text-[11px] text-slate-500">{{ $calendarSummary['busiest_session_total'] }} pemohon bulan ini</p>@endif
-                    </div>
-                </aside>
+            <div class="mb-4 grid grid-cols-2 gap-2" aria-label="Ringkasan peminjaman bulan ini">
+                <div class="rounded-lg bg-blue-50 px-3 py-2.5">
+                    <p class="text-xs font-medium text-blue-800">Total pemohon</p>
+                    <p class="mt-0.5 text-xl font-semibold tabular-nums text-blue-950">{{ $calendarSummary['total'] }}</p>
+                    <p class="text-[11px] text-blue-700">pada {{ $calendarSummary['active_days'] }} hari aktif</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 px-3 py-2.5">
+                    <p class="text-xs font-medium text-slate-600">Sesi terpadat</p>
+                    <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ $calendarSummary['busiest_session'] ? $calendarSessionNames[$calendarSummary['busiest_session']] : 'Belum ada data' }}</p>
+                    @if($calendarSummary['busiest_session'])<p class="text-[11px] text-slate-500">{{ $calendarSummary['busiest_session_total'] }} pemohon bulan ini</p>@endif
+                </div>
+            </div>
+
+            <div class="mb-3 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:gap-2" aria-hidden="true">
+                @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $weekday)
+                    <span class="py-1">{{ $weekday }}</span>
+                @endforeach
+            </div>
+            <div class="grid grid-cols-7 gap-1 sm:gap-2" role="group" aria-label="Tanggal pada {{ $calendarMonthLabel }}">
+                @foreach ($calendarCells as $cell)
+                    @if ($cell === null)
+                        <span class="min-h-[3.65rem] rounded-lg sm:min-h-[4.1rem]" aria-hidden="true"></span>
+                    @else
+                        @php
+                            $cellDate = \Illuminate\Support\Carbon::parse($calendarMonth.'-'.str_pad((string) $cell, 2, '0', STR_PAD_LEFT), config('app.timezone'));
+                            $cellDateString = $cellDate->toDateString();
+                            $cellData = $calendarDays[$cellDateString] ?? ['total' => 0];
+                            $cellSelected = $date !== '' && $calendarSelectedDate === $cellDateString;
+                            $cellToday = $calendarToday === $cellDateString;
+                            $cellIntensity = $cellData['total'] === 0 ? 'bg-white' : ($cellData['total'] < 4 ? 'bg-blue-50' : ($cellData['total'] < 8 ? 'bg-blue-100' : 'bg-blue-200'));
+                        @endphp
+                        <button type="button" data-refinitiv-calendar-day="{{ $cellDateString }}" data-refinitiv-calendar-total="{{ $cellData['total'] }}" data-refinitiv-calendar-label="{{ $cellDate->locale('id')->isoFormat('dddd, D MMMM Y') }}" aria-pressed="{{ $cellSelected ? 'true' : 'false' }}" aria-label="{{ $cellDate->locale('id')->isoFormat('dddd, D MMMM Y') }}, {{ $cellData['total'] }} pemohon" class="refinitiv-calendar-day {{ $cellIntensity }} {{ $cellSelected ? 'is-selected' : '' }} {{ $cellToday ? 'is-today' : '' }} min-h-[3.65rem] rounded-lg border p-1.5 text-left transition sm:min-h-[4.1rem] sm:p-2">
+                            <span class="flex items-center justify-between gap-1">
+                                <span class="text-xs font-semibold text-slate-800 sm:text-sm">{{ $cell }}</span>
+                                @if ($cellToday)<span class="hidden text-[9px] font-semibold uppercase tracking-wide text-blue-700 sm:inline">Hari ini</span>@endif
+                            </span>
+                            <span class="mt-1 block truncate text-[10px] font-medium text-slate-500 sm:text-xs" data-refinitiv-calendar-cell-count>{{ $cellData['total'] > 0 ? $cellData['total'].' pemohon' : '—' }}</span>
+                        </button>
+                    @endif
+                @endforeach
             </div>
 
             <div class="refinitiv-calendar-day-panel mt-4 border-t border-slate-100 pt-4" data-refinitiv-calendar-panel aria-live="polite" aria-atomic="false">
                 <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
                     <div>
                         <h3 class="text-sm font-semibold text-slate-900" data-refinitiv-selected-date-label>{{ \Illuminate\Support\Carbon::parse($calendarSelectedDate, config('app.timezone'))->locale('id')->isoFormat('dddd, D MMMM Y') }}</h3>
-                        <p class="mt-0.5 text-xs text-slate-500" data-refinitiv-day-filter-hint>{{ $date !== '' ? 'Daftar sedang difilter berdasarkan tanggal ini.' : 'Pilih tanggal untuk melihat pemohon dan mempersempit daftar di bawah.' }}</p>
+                        <p class="mt-0.5 text-xs text-slate-500" data-refinitiv-day-filter-hint>{{ $date !== '' ? 'Daftar di samping difilter berdasarkan tanggal ini.' : 'Ringkasan tanggal ini. Pilih tanggal untuk memfilter daftar di samping.' }}</p>
                     </div>
-                    <p class="text-xs font-semibold text-blue-800"><span data-refinitiv-day-total>{{ $calendarSelectedDay['total'] }}</span> pemohon pada tanggal ini</p>
+                    <div class="flex items-center gap-3">
+                        <p class="text-xs font-semibold text-blue-800"><span data-refinitiv-day-total>{{ $calendarSelectedDay['total'] }}</span> pemohon</p>
+                        <button type="button" data-refinitiv-clear-date @if($date === '') hidden @endif class="inline-flex min-h-9 items-center justify-center rounded-lg border border-blue-200 px-2.5 text-xs font-semibold text-blue-800 transition hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Hapus filter tanggal</button>
+                    </div>
                 </div>
                 <div class="mb-3 flex flex-wrap gap-2" aria-label="Ringkasan status pada tanggal terpilih">
                     @foreach ($calendarStatusLabels as $statusKey => $statusLabel)
@@ -162,7 +162,8 @@
             <script type="application/json" data-refinitiv-calendar-data>@json($calendarDays)</script>
         </section>
 
-        <section class="relative z-10 mb-5 rounded-xl border border-slate-200 bg-white shadow-sm" aria-label="Filter permohonan Refinitiv">
+        <div class="min-w-0">
+        <section class="relative z-10 mb-4 rounded-xl border border-slate-200 bg-white shadow-sm" aria-label="Filter permohonan Refinitiv">
             <nav id="refinitiv-status-tabs" class="flex overflow-x-auto border-b border-slate-200" aria-label="Filter status kehadiran">
                 <a href="{{ $tabLink('all') }}" data-refinitiv-status="all" data-active-classes="border-blue-600 bg-blue-50 text-blue-900" data-inactive-classes="border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900" @if($status === 'all') aria-current="page" @endif
                    class="inline-flex min-w-fit flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition first:rounded-tl-xl last:rounded-tr-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 {{ $status === 'all' ? 'border-blue-600 bg-blue-50 text-blue-900' : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
@@ -182,7 +183,7 @@
                 </a>
             </nav>
 
-            <form id="refinitiv-filters" action="{{ route('admin.refinitiv.index') }}" method="GET" class="grid grid-cols-1 gap-4 p-4 md:grid-cols-[minmax(0,1fr)_minmax(10rem,0.32fr)_minmax(14rem,0.42fr)_auto] md:items-end">
+            <form id="refinitiv-filters" action="{{ route('admin.refinitiv.index') }}" method="GET" class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.4fr)_minmax(10rem,0.8fr)_minmax(10rem,0.8fr)_auto] md:items-end">
                 <input type="hidden" name="status" value="{{ $status }}">
                 <input type="hidden" name="month" value="{{ $calendarMonth }}">
                 <input type="hidden" name="date" value="{{ $date }}">
@@ -277,6 +278,8 @@
 
         <div id="refinitiv-results-region" class="refinitiv-results-region" aria-busy="false">
             @include('admin.refinitiv.partials.results')
+        </div>
+        </div>
         </div>
         @include('admin.refinitiv.partials.attendance-confirm-dialog')
     </div>

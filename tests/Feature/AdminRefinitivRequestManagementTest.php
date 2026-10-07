@@ -30,8 +30,9 @@ class AdminRefinitivRequestManagementTest extends TestCase
             ->assertSee('data-refinitiv-admin', false)
             ->assertSee('data-refinitiv-status="pending"', false)
             ->assertSee('id="refinitiv-results-region"', false)
+            ->assertSee('data-refinitiv-clear-date', false)
             ->assertSee('Kalender peminjaman Refinitiv')
-            ->assertSee('Jumlah pemohon per hari dan sesi')
+            ->assertSee('memfilter daftar di samping')
             ->assertSee('data-refinitiv-calendar-session="sesi_1"', false)
             ->assertSee('Filter otomatis')
             ->assertSee('Nadia Refinitiv')
@@ -63,6 +64,24 @@ class AdminRefinitivRequestManagementTest extends TestCase
         $this->assertStringNotContainsString('Bima AJAX', $response->json('html'));
         $this->assertStringNotContainsString('refinitiv-status-tabs', $response->json('html'));
         $this->assertStringNotContainsString('<html', $response->json('html'));
+    }
+
+    public function test_admin_refinitiv_calendar_shows_a_clear_action_for_an_active_date_filter(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.refinitiv.index', [
+                'status' => 'all',
+                'q' => 'Nadia',
+                'date' => '2026-09-25',
+            ]))
+            ->assertOk()
+            ->assertSee('data-refinitiv-clear-date', false)
+            ->assertSee('Hapus filter tanggal')
+            ->assertSee('Daftar di samping difilter berdasarkan tanggal ini.')
+            ->assertSee('value="Nadia"', false)
+            ->assertSee('value="2026-09-25"', false);
     }
 
     public function test_admin_refinitiv_detail_keeps_actions_and_previews_uploaded_documents(): void

@@ -189,6 +189,7 @@ const initRefinitivCalendar = () => {
     const panel = calendar?.querySelector('[data-refinitiv-calendar-panel]');
     const selectedLabel = calendar?.querySelector('[data-refinitiv-selected-date-label]');
     const filterHint = calendar?.querySelector('[data-refinitiv-day-filter-hint]');
+    const clearDateButton = calendar?.querySelector('[data-refinitiv-clear-date]');
     const periodSelect = form?.querySelector('[name="period"]');
 
     if (!calendar || !dataElement || !form || !panel || !selectedLabel) return;
@@ -204,6 +205,7 @@ const initRefinitivCalendar = () => {
     const sessions = ['sesi_1', 'sesi_2', 'sesi_3'];
     const zeroStatusCounts = () => Object.fromEntries(statuses.map((status) => [status, 0]));
     let animationTimer;
+    let dateFilterCleared = false;
 
     const renderSelectedDate = (button, { filterResults = true, animate = true } = {}) => {
         const date = button.dataset.refinitivCalendarDay;
@@ -212,11 +214,13 @@ const initRefinitivCalendar = () => {
         const localDate = new Date(`${date}T12:00:00`);
         const isFriday = localDate.getDay() === 5;
 
+        form.elements.date.value = date;
         calendar.querySelectorAll('[data-refinitiv-calendar-day]').forEach((dayButton) => {
-            const selected = dayButton === button;
+            const selected = dayButton.dataset.refinitivCalendarDay === form.elements.date.value;
             dayButton.classList.toggle('is-selected', selected);
             dayButton.setAttribute('aria-pressed', String(selected));
         });
+        if (clearDateButton) clearDateButton.hidden = !form.elements.date.value;
         selectedLabel.textContent = dateLabel;
         const totalLabel = calendar.querySelector('[data-refinitiv-day-total]');
         if (totalLabel) totalLabel.textContent = String(day.total ?? 0);
@@ -250,8 +254,7 @@ const initRefinitivCalendar = () => {
             });
         }
 
-        if (filterHint) filterHint.textContent = 'Daftar di bawah sedang difilter berdasarkan tanggal ini.';
-        form.elements.date.value = date;
+        if (filterHint) filterHint.textContent = 'Daftar di samping difilter berdasarkan tanggal ini.';
         if (periodSelect && periodSelect.value !== 'all') {
             periodSelect.value = 'all';
             periodSelect.dispatchEvent(new Event('refinitiv:selection-sync', { bubbles: true }));
@@ -269,18 +272,60 @@ const initRefinitivCalendar = () => {
         }
     };
 
+    const clearDateFilter = () => {
+        if (!form.elements.date?.value) return;
+
+        dateFilterCleared = true;
+        form.elements.date.value = '';
+        calendar.querySelectorAll('[data-refinitiv-calendar-day]').forEach((dayButton) => {
+            dayButton.classList.remove('is-selected');
+            dayButton.setAttribute('aria-pressed', 'false');
+        });
+        if (clearDateButton) clearDateButton.hidden = true;
+        if (filterHint) filterHint.textContent = 'Filter tanggal dihapus. Daftar menampilkan semua tanggal.';
+
+        panel.classList.remove('is-changing');
+        window.clearTimeout(animationTimer);
+        requestAnimationFrame(() => {
+            panel.classList.add('is-changing');
+            animationTimer = window.setTimeout(() => panel.classList.remove('is-changing'), 430);
+        });
+
+        form.requestSubmit();
+    };
+
     calendar.addEventListener('click', (event) => {
         const button = event.target.closest('[data-refinitiv-calendar-day]');
-        if (button) renderSelectedDate(button);
+        if (button) {
+            if (form.elements.date.value === button.dataset.refinitivCalendarDay) {
+                clearDateFilter();
+                return;
+            }
+
+            renderSelectedDate(button);
+        }
     });
+    clearDateButton?.addEventListener('click', clearDateFilter);
 
     form.addEventListener('refinitiv:filters-synced', () => {
         const date = form.elements.date?.value ?? '';
-        if (filterHint) filterHint.textContent = date
-            ? 'Daftar di bawah sedang difilter berdasarkan tanggal ini.'
-            : 'Pilih tanggal untuk melihat pemohon dan mempersempit daftar di bawah.';
+        if (!date) {
+            calendar.querySelectorAll('[data-refinitiv-calendar-day]').forEach((dayButton) => {
+                dayButton.classList.remove('is-selected');
+                dayButton.setAttribute('aria-pressed', 'false');
+            });
+            if (clearDateButton) clearDateButton.hidden = true;
+            if (filterHint) {
+                filterHint.textContent = dateFilterCleared
+                    ? 'Filter tanggal dihapus. Daftar menampilkan semua tanggal.'
+                    : 'Ringkasan tanggal ini. Pilih tanggal untuk memfilter daftar di samping.';
+            }
+            dateFilterCleared = false;
+            return;
+        }
 
-        if (!date) return;
+        if (filterHint) filterHint.textContent = 'Daftar di samping difilter berdasarkan tanggal ini.';
+        if (clearDateButton) clearDateButton.hidden = false;
         const selectedButton = calendar.querySelector(`[data-refinitiv-calendar-day="${date}"]`);
         const activeButton = calendar.querySelector('[data-refinitiv-calendar-day][aria-pressed="true"]');
         if (selectedButton && selectedButton !== activeButton) {
