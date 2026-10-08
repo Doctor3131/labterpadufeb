@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Lab;
 use App\Models\Schedule;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -251,6 +252,8 @@ class ScheduleIndexTest extends TestCase
 
     public function test_calendar_future_move_updates_the_recurrence_pattern(): void
     {
+        $this->travelTo(Carbon::parse('2026-09-01 00:00:00'));
+
         $admin = User::factory()->create(['role' => 'admin']);
         $lab = Lab::create(['name' => 'Lab Kalender', 'capacity' => 40, 'status' => 'available']);
         $schedule = Schedule::create([

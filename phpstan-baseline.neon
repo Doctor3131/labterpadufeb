@@ -1,0 +1,637 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Variable \$nim in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Console/Commands/ImportMahasiswaFeb.php
+
+		-
+			message: '#^Variable \$row in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Console/Commands/ImportMahasiswaFeb.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/UpdateItemCategories.php
+
+		-
+			message: '#^Relation ''creator'' is not found in App\\Models\\Announcement model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/AnnouncementController.php
+
+		-
+			message: '#^Relation ''subData'' is not found in App\\Models\\BpsMasterData model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/BpsMasterDataController.php
+
+		-
+			message: '#^Relation ''handler'' is not found in App\\Models\\BpsRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Admin/BpsRequestController.php
+
+		-
+			message: '#^Relation ''subData'' is not found in App\\Models\\BpsRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Admin/BpsRequestController.php
+
+		-
+			message: '#^Relation ''variables'' is not found in App\\Models\\BpsRequest model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/BpsRequestController.php
+
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/ExternalTransferController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Admin/ItemController.php
+
+		-
+			message: '#^Relation ''bookings'' is not found in App\\Models\\Lab model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/LabController.php
+
+		-
+			message: '#^Relation ''schedules'' is not found in App\\Models\\Lab model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/LabController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$assetUnits\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Admin/LabInventoryController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/LabInventoryController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$inventoryBalances\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Admin/LabInventoryController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$item\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Admin/LabInventoryController.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, \(float\|int\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/LabInventoryController.php
+
+		-
+			message: '#^Relation ''handler'' is not found in App\\Models\\Booking model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/PersonalBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$lab\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ReportController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Schedule\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Admin/ReportController.php
+
+		-
+			message: '#^Relation ''lab'' is not found in App\\Models\\Booking model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/ReportController.php
+
+		-
+			message: '#^Relation ''lab'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/ReportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$document\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Schedule\>\:\:\$booking\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Schedule\>\:\:\$document\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Relation ''booking'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Relation ''bookings'' is not found in App\\Models\\Lab model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Relation ''document'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Relation ''lab'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Relation ''schedules'' is not found in App\\Models\\Lab model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Admin/ScheduleController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Booking\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Booking\>\:\:\$schedule\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\AdminController\:\:checkScheduleConflict\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''handler'' is not found in App\\Models\\Booking model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Relation ''lab'' is not found in App\\Models\\Booking model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/AdminController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$asset_unit_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$inventory_balance_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$assetUnit\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$asset_unit_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$batch_number\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$inventory_balance_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$item\.$#'
+			identifier: property.notFound
+			count: 7
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$item_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 7
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Anonymous function has an unused use \$reservedByItemNoBalance\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_values contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\InventoryBalance\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\AssetUnit\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\InventoryBalance\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),array\<string, mixed\>\>\:\:filter\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>asset_tag" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AssetBorrowingController.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/BookingController.php
+
+		-
+			message: '#^Relation ''bookings'' is not found in App\\Models\\Lab model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BookingController.php
+
+		-
+			message: '#^Relation ''handler'' is not found in App\\Models\\Booking model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BookingController.php
+
+		-
+			message: '#^Relation ''lab'' is not found in App\\Models\\Booking model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/BookingController.php
+
+		-
+			message: '#^Relation ''schedules'' is not found in App\\Models\\Lab model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BookingController.php
+
+		-
+			message: '#^Relation ''activeSubData'' is not found in App\\Models\\BpsMasterData model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/BpsRequestController.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Controllers/BpsRequestController.php
+
+		-
+			message: '#^Match arm comparison between ''cancelled'' and ''cancelled'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 2
+			path: app/Models/AssetBorrowing.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$transaction\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/AssetUnit.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:hasIndividualUnits\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/Batch.php
+
+		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 2
+			path: app/Models/BloombergRequest.php
+
+		-
+			message: '#^Offset ''disertasi''\|''explore''\|''lainnya''\|''lomba''\|''penelitian_dosen''\|''sertifikasi…''\|''skripsi''\|''thesis''\|''tugas_mk'' on array\{skripsi\: ''Skripsi'', thesis\: ''Thesis'', disertasi\: ''Disertasi'', sertifikasi_bloomberg\: ''Sertifikasi…'', lomba\: ''Lomba'', tugas_mk\: ''Tugas Mata Kuliah'', penelitian_dosen\: ''Penelitian/Project…'', explore\: ''Explore \(Ingin…'', \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/BloombergRequest.php
+
+		-
+			message: '#^Offset ''dosen_non_undip''\|''dosen_undip''\|''mahasiswa'' on array\{mahasiswa\: ''Mahasiswa'', dosen_undip\: ''Dosen Undip'', dosen_non_undip\: ''Non Undip''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/BloombergRequest.php
+
+		-
+			message: '#^Offset ''reservasi''\|''walk_in'' on array\{reservasi\: ''Reservasi'', walk_in\: ''Kunjungan Langsung''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/BloombergRequest.php
+
+		-
+			message: '#^Offset ''sesi_1''\|''sesi_2'' on array\{sesi_1\: ''Sesi 1\: 09\.00 \- 12…'', sesi_2\: ''Sesi 2\: 13\.00 \- 15…''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/BloombergRequest.php
+
+		-
+			message: '#^Offset ''sesi_1''\|''sesi_2'' on array\{sesi_1\: ''Sesi 1\: 09\.00 \- 12…'', sesi_2\: ''Sesi 2\: 13\.30 \- 15…''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/BloombergRequest.php
+
+		-
+			message: '#^Offset ''sesi_1''\|''sesi_2'' on array\{sesi_1\: array\{start\: ''09\:00'', end\: ''12\:00''\}, sesi_2\: array\{start\: ''13\:00''\|''13\:30'', end\: ''15\:00''\}\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/BloombergRequest.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$assetUnits\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/Item.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$inventoryBalances\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/Item.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:assetUnits\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/Item.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:inventoryBalances\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/Item.php
+
+		-
+			message: '#^Offset ''disertasi''\|''lainnya''\|''lomba''\|''penelitian_dosen''\|''skripsi''\|''thesis''\|''tugas_mk'' on array\{skripsi\: ''Skripsi'', thesis\: ''Thesis'', disertasi\: ''Disertasi'', lomba\: ''Lomba'', tugas_mk\: ''Tugas Mata Kuliah'', penelitian_dosen\: ''Penelitian/Project…'', lainnya\: ''Lainnya''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/RefinitivRequest.php
+
+		-
+			message: '#^Offset ''eksternal''\|''internal_feb''\|''internal_undip'' on array\{internal_feb\: ''Internal FEB Undip'', internal_undip\: ''Internal Undip \(Di…'', eksternal\: ''Eksternal Undip …''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/RefinitivRequest.php
+
+		-
+			message: '#^Offset ''hadir''\|''pending''\|''tidak_hadir'' on array\{pending\: ''Menunggu'', hadir\: ''Hadir'', tidak_hadir\: ''Tidak Hadir''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/RefinitivRequest.php
+
+		-
+			message: '#^Offset ''sesi_1''\|''sesi_2''\|''sesi_3'' on array\{sesi_1\: ''Sesi 1\: 08\.00 \- 10…'', sesi_2\: ''Sesi 2\: 10\.00 \- 12…'', sesi_3\: ''Sesi 3\: 13\.00 \- 15…''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/RefinitivRequest.php
+
+		-
+			message: '#^Offset ''sesi_1''\|''sesi_2''\|''sesi_3'' on array\{sesi_1\: array\{start\: ''08\:00'', end\: ''10\:00''\}, sesi_2\: array\{start\: ''10\:00'', end\: ''12\:00''\}, sesi_3\: array\{start\: ''13\:00'', end\: ''15\:00''\}\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/RefinitivRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$booking\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Models/Schedule.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$occurrences\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Schedule.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#3 \$default \(string\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 1
+			path: app/Models/ServiceSetting.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Services/InventoryService.php
+
+		-
+			message: '#^Method App\\Services\\InventoryService\:\:generateCodesFromPrefix\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/InventoryService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{id\: mixed, name\: mixed, category\: mixed, image_path\: mixed, tracking_mode\: mixed, conditions\: array\{BAIK\: \(float\|int\), RUSAK\: \(float\|int\), HILANG\: \(float\|int\), MAINTENANCE\: \(float\|int\)\}, total\: \(float\|int\<1, max\>\)\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/InventoryService.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Services/InventoryService.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/InventoryService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/InventoryService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$booking\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$lab\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$occurrences\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Relation ''booking'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Relation ''lab'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Relation ''occurrences'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>booking_type" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>end_time" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>lab_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>start_time" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ScheduleCalendarService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Schedule\:\:\$document\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/ScheduleChangeService.php
+
+		-
+			message: '#^Relation ''booking'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/ScheduleChangeService.php
+
+		-
+			message: '#^Relation ''document'' is not found in App\\Models\\Schedule model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/ScheduleChangeService.php
