@@ -182,6 +182,53 @@ const initBulkSelection = () => {
     sync();
 };
 
+const initRefinitivCalendarLayout = () => {
+    const root = document.querySelector('[data-refinitiv-admin]');
+    const layout = root?.querySelector('[data-refinitiv-calendar-layout]');
+    const calendarRegion = root?.querySelector('[data-refinitiv-calendar-region]');
+    const status = root?.querySelector('[data-refinitiv-layout-status]');
+    const buttons = [...(root?.querySelectorAll('[data-refinitiv-layout-state]') ?? [])];
+    const validStates = new Set(['hidden', 'standard', 'expanded']);
+
+    if (!layout || !calendarRegion || buttons.length === 0) return;
+
+    const messages = {
+        hidden: 'Panel kalender disembunyikan. Daftar permohonan menggunakan seluruh lebar.',
+        standard: 'Tampilan standar aktif. Kalender dan daftar ditampilkan berdampingan.',
+        expanded: 'Panel kalender diperlebar. Lebar daftar menyesuaikan ruang yang tersedia.',
+    };
+
+    const setLayout = (state, announce = true) => {
+        if (!validStates.has(state)) return;
+
+        const isHidden = state === 'hidden';
+        layout.dataset.refinitivCalendarLayout = state;
+        calendarRegion.setAttribute('aria-hidden', String(isHidden));
+        calendarRegion.toggleAttribute('inert', isHidden);
+
+        buttons.forEach((button) => {
+            const isActive = button.dataset.refinitivLayoutState === state;
+            const activeClasses = (button.dataset.activeClasses ?? '').split(/\s+/).filter(Boolean);
+            const inactiveClasses = (button.dataset.inactiveClasses ?? '').split(/\s+/).filter(Boolean);
+
+            button.classList.remove(...activeClasses, ...inactiveClasses);
+            button.classList.add(...(isActive ? activeClasses : inactiveClasses));
+            button.setAttribute('aria-pressed', String(isActive));
+        });
+
+        if (announce && status) status.textContent = messages[state];
+    };
+
+    root.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-refinitiv-layout-state]');
+        if (!button || !root.contains(button)) return;
+
+        setLayout(button.dataset.refinitivLayoutState);
+    });
+
+    setLayout(layout.dataset.refinitivCalendarLayout, false);
+};
+
 const initRefinitivCalendar = () => {
     const calendarRegion = document.querySelector('[data-refinitiv-calendar-region]');
     const form = document.getElementById('refinitiv-filters');
@@ -380,6 +427,7 @@ const initRefinitivCalendar = () => {
 const initRefinitivAdmin = () => {
     initAttendanceConfirmation();
     initBulkSelection();
+    initRefinitivCalendarLayout();
     initRefinitivCalendar();
 
     const root = document.querySelector('[data-refinitiv-admin]');

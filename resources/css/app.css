@@ -586,14 +586,48 @@
     cursor: progress;
 }
 
+.refinitiv-admin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+    transition: grid-template-columns 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .refinitiv-calendar-region {
     min-width: 0;
-    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1), transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.refinitiv-admin-layout[data-refinitiv-calendar-layout="hidden"] > .refinitiv-calendar-region {
+    display: none;
 }
 
 .refinitiv-calendar-region.is-loading {
     opacity: 0.66;
     cursor: progress;
+}
+
+@media (min-width: 1280px) {
+    .refinitiv-admin-layout {
+        grid-template-columns: minmax(18rem, 1fr) minmax(0, 3fr);
+    }
+
+    .refinitiv-admin-layout[data-refinitiv-calendar-layout="expanded"] {
+        grid-template-columns: minmax(24rem, 2fr) minmax(0, 3fr);
+    }
+
+    .refinitiv-admin-layout[data-refinitiv-calendar-layout="hidden"] {
+        grid-template-columns: minmax(0, 0fr) minmax(0, 1fr);
+    }
+
+    .refinitiv-admin-layout[data-refinitiv-calendar-layout="hidden"] > .refinitiv-calendar-region {
+        display: block;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-0.5rem);
+    }
 }
 
 @keyframes refinitiv-calendar-enter {
@@ -671,6 +705,7 @@
 
     .refinitiv-results-region,
     .refinitiv-results-region *,
+    .refinitiv-admin-layout,
     .refinitiv-calendar-region,
     .refinitiv-calendar-region * {
         animation: none !important;

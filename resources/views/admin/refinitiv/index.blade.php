@@ -51,7 +51,26 @@
             </div>
         </header>
 
-        <div class="grid items-start gap-5 xl:grid-cols-[minmax(18rem,1fr)_minmax(0,3fr)] 2xl:gap-6">
+        <div class="mb-3 flex flex-wrap items-center justify-end gap-3">
+            <span class="text-xs font-semibold text-slate-500">Tampilan kalender</span>
+            <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Atur lebar panel kalender">
+                <button type="button" data-refinitiv-layout-state="hidden" data-active-classes="bg-white text-blue-800 shadow-sm" data-inactive-classes="text-slate-600 hover:bg-white/70" aria-pressed="false" aria-controls="refinitiv-calendar-region" class="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 sm:px-3">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M9 3v18m8-12-3 3 3 3"/></svg>
+                    <span>Sembunyikan</span>
+                </button>
+                <button type="button" data-refinitiv-layout-state="standard" data-active-classes="bg-white text-blue-800 shadow-sm" data-inactive-classes="text-slate-600 hover:bg-white/70" aria-pressed="true" aria-controls="refinitiv-calendar-region" class="inline-flex min-h-9 items-center gap-1.5 rounded-md bg-white px-2.5 text-xs font-semibold text-blue-800 shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 sm:px-3">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M9 3v18m6-18v18"/></svg>
+                    <span>Standar</span>
+                </button>
+                <button type="button" data-refinitiv-layout-state="expanded" data-active-classes="bg-white text-blue-800 shadow-sm" data-inactive-classes="text-slate-600 hover:bg-white/70" aria-pressed="false" aria-controls="refinitiv-calendar-region" class="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 sm:px-3">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M10 3v18m4-9h5m-2-2 2 2-2 2"/></svg>
+                    <span>Lebarkan</span>
+                </button>
+            </div>
+            <span class="sr-only" data-refinitiv-layout-status role="status" aria-live="polite" aria-atomic="true"></span>
+        </div>
+
+        <div class="refinitiv-admin-layout" data-refinitiv-calendar-layout="standard">
             <div id="refinitiv-calendar-region" data-refinitiv-calendar-region class="refinitiv-calendar-region min-w-0" aria-busy="false">
                 @include('admin.refinitiv.partials.calendar')
             </div>
