@@ -6,7 +6,9 @@ use App\Models\Booking;
 use App\Models\Lab;
 use App\Models\Schedule;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AdminBookingWorkflowTest extends TestCase
@@ -66,6 +68,127 @@ class AdminBookingWorkflowTest extends TestCase
         $this->assertDatabaseMissing('schedules', ['booking_id' => $booking->id]);
     }
 
+    public function test_processed_booking_cannot_be_approved_or_rejected_again(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $booking = $this->createPendingBooking();
+
+        $this->actingAs($admin)->post(route('admin.booking.approve', $booking));
+
+        $this->actingAs($admin)
+            ->post(route('admin.booking.approve', $booking))
+            ->assertSessionHas('error');
+        $this->actingAs($admin)
+            ->post(route('admin.booking.reject', $booking), ['rejection_reason' => 'Terlambat'])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->id,
+            'status' => 'approved',
+            'rejection_reason' => null,
+        ]);
+        $this->assertDatabaseCount('schedules', 1);
+    }
+
+    public function test_rejection_requires_a_reason_and_preserves_pending_state(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $booking = $this->createPendingBooking();
+
+        $this->actingAs($admin)
+            ->from(route('admin.booking.show', $booking))
+            ->post(route('admin.booking.reject', $booking))
+            ->assertRedirect(route('admin.booking.show', $booking))
+            ->assertSessionHasErrors('rejection_reason');
+
+        $this->assertDatabaseHas('bookings', [
+            'id' => $booking->id,
+            'status' => 'pending',
+            'handled_by' => null,
+        ]);
+    }
+
+    public function test_recurring_booking_approval_preserves_the_series_schedule(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $booking = $this->createPendingBooking([
+            'is_recurring' => true,
+            'recurrence_days' => ['Senin', 'Rabu'],
+            'end_date' => '2026-10-28',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.booking.approve', $booking))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('schedules', [
+            'booking_id' => $booking->id,
+            'type' => 'perkuliahan_tidak_tetap',
+            'start_date' => '2026-10-12 00:00:00',
+            'end_date' => '2026-10-28 00:00:00',
+        ]);
+        $schedule = Schedule::where('booking_id', $booking->id)->firstOrFail();
+        $this->assertSame(['Senin', 'Rabu'], $schedule->recurrence_days);
+    }
+
+    public function test_approval_rolls_back_when_schedule_persistence_fails(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $booking = $this->createPendingBooking();
+        DB::statement(<<<'SQL'
+            CREATE TRIGGER fail_schedule_insert
+            BEFORE INSERT ON schedules
+            BEGIN
+                SELECT RAISE(FAIL, 'Simulated schedule persistence failure.');
+            END
+            SQL);
+        $caughtException = null;
+
+        try {
+            $this->withoutExceptionHandling()
+                ->actingAs($admin)
+                ->post(route('admin.booking.approve', $booking));
+        } catch (QueryException $exception) {
+            $caughtException = $exception;
+        } finally {
+            DB::statement('DROP TRIGGER fail_schedule_insert');
+        }
+
+        $this->assertInstanceOf(QueryException::class, $caughtException);
+
+        $booking->refresh();
+        $this->assertSame('pending', $booking->status);
+        $this->assertNull($booking->handled_by);
+        $this->assertNull($booking->handled_at);
+        $this->assertDatabaseMissing('schedules', ['booking_id' => $booking->id]);
+    }
+
+    public function test_multi_day_activity_approval_preserves_the_full_date_range(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $booking = $this->createPendingBooking([
+            'booking_type' => 'non_perkuliahan',
+            'course_name' => null,
+            'lecturer_name' => null,
+            'lecturer_nip' => null,
+            'activity_name' => 'Workshop Data',
+            'activity_type' => 'Workshop',
+            'end_date' => '2026-10-14',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.booking.approve', $booking))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('schedules', [
+            'booking_id' => $booking->id,
+            'type' => 'non_perkuliahan',
+            'start_date' => '2026-10-12 00:00:00',
+            'end_date' => '2026-10-14 00:00:00',
+            'course' => 'Workshop Data',
+        ]);
+    }
+
     public function test_admin_rejection_records_the_reason_without_creating_a_schedule(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -74,7 +197,7 @@ class AdminBookingWorkflowTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.booking.reject', $booking), [
                 'rejection_reason' => 'Dokumen belum lengkap.',
-                'return_status' => 'pending',
+                'return_status' => 'not-a-real-status',
             ])
             ->assertRedirect(route('admin.lab.bookings', ['status' => 'pending']));
 
@@ -87,7 +210,7 @@ class AdminBookingWorkflowTest extends TestCase
         $this->assertDatabaseMissing('schedules', ['booking_id' => $booking->id]);
     }
 
-    private function createPendingBooking(): Booking
+    private function createPendingBooking(array $overrides = []): Booking
     {
         $lab = Lab::create([
             'name' => 'Lab Persetujuan',
@@ -95,7 +218,7 @@ class AdminBookingWorkflowTest extends TestCase
             'status' => 'available',
         ]);
 
-        return Booking::create([
+        return Booking::create(array_merge([
             'lab_id' => $lab->id,
             'booking_type' => 'perkuliahan_tidak_tetap',
             'unit_type' => 's1_tembalang',
@@ -113,6 +236,6 @@ class AdminBookingWorkflowTest extends TestCase
             'participant_count' => 20,
             'is_recurring' => false,
             'tracking_token' => str_repeat('a', 32),
-        ]);
+        ], $overrides));
     }
 }
