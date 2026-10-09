@@ -9,6 +9,7 @@ use App\Models\AssetBorrowingItem;
 use App\Models\AssetTypeCode;
 use App\Models\AssetUnit;
 use App\Models\Batch;
+use App\Models\InventoryBalance;
 use App\Models\Item;
 use App\Models\Lab;
 use App\Models\User;
@@ -248,6 +249,206 @@ class InventoryAndBorrowingTest extends TestCase
         ]);
         $this->assertDatabaseHas('asset_units', [
             'id' => $unit->id,
+            'is_available' => false,
+        ]);
+    }
+
+    public function test_invalid_borrowing_transitions_preserve_the_current_state(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $lab = Lab::create(['name' => 'Lab Uji', 'capacity' => 40, 'status' => 'available']);
+        $borrowing = AssetBorrowing::create([
+            'borrower_name' => 'Peminjam Uji',
+            'borrower_type' => 'Mahasiswa',
+            'phone_number' => '081234567890',
+            'lab_id' => $lab->id,
+            'purpose' => 'Kegiatan akademik',
+            'borrow_date' => '2026-10-12',
+            'return_date' => '2026-10-14',
+            'tracking_token' => 'state12345',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.asset-borrowings.handout', $borrowing))
+            ->assertSessionHas('error');
+        $this->assertSame('pending', $borrowing->fresh()->status);
+
+        $this->actingAs($admin)->post(route('admin.asset-borrowings.approve', $borrowing));
+        $this->actingAs($admin)
+            ->post(route('admin.asset-borrowings.approve', $borrowing))
+            ->assertSessionHas('error');
+        $this->actingAs($admin)
+            ->post(route('admin.asset-borrowings.reject', $borrowing), [
+                'rejection_reason' => 'Sudah diproses',
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('asset_borrowings', [
+            'id' => $borrowing->id,
+            'status' => 'approved',
+            'rejection_reason' => null,
+        ]);
+    }
+
+    public function test_handout_rejects_an_unavailable_unit_without_advancing_state(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $lab = Lab::create(['name' => 'Lab Uji', 'capacity' => 40, 'status' => 'available']);
+        $item = Item::create([
+            'name' => 'Laptop Uji',
+            'tracking_mode' => TrackingModeEnum::STRUCTURED_TAG,
+        ]);
+        $batch = Batch::create([
+            'item_id' => $item->id,
+            'proc_source_code' => '01',
+            'arrival_mmyy' => '0926',
+        ]);
+        $unit = AssetUnit::create([
+            'batch_id' => $batch->id,
+            'lab_id' => $lab->id,
+            'asset_tag' => '01.0926.L1.LABUJI.009',
+            'condition' => ConditionEnum::BAIK,
+            'is_available' => false,
+        ]);
+        $borrowing = AssetBorrowing::create([
+            'borrower_name' => 'Peminjam Uji',
+            'borrower_type' => 'Mahasiswa',
+            'phone_number' => '081234567890',
+            'lab_id' => $lab->id,
+            'purpose' => 'Kegiatan akademik',
+            'borrow_date' => '2026-10-12',
+            'return_date' => '2026-10-14',
+            'tracking_token' => 'unavail123',
+        ]);
+        $borrowing->status = 'approved';
+        $borrowing->save();
+        $borrowingItem = AssetBorrowingItem::create([
+            'asset_borrowing_id' => $borrowing->id,
+            'item_id' => $item->id,
+            'quantity' => 1,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.asset-borrowings.handout', $borrowing), [
+                'unit_assignments' => [$borrowingItem->id => [$unit->id]],
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertSame('approved', $borrowing->fresh()->status);
+        $this->assertNull($borrowingItem->fresh()->asset_unit_id);
+        $this->assertFalse($unit->fresh()->is_available);
+    }
+
+    public function test_aggregate_handout_and_good_return_restore_the_original_balance(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $lab = Lab::create(['name' => 'Lab Uji', 'capacity' => 40, 'status' => 'available']);
+        $item = Item::create([
+            'name' => 'Kabel HDMI',
+            'tracking_mode' => TrackingModeEnum::AGGREGATE,
+        ]);
+        $batch = Batch::create([
+            'item_id' => $item->id,
+            'proc_source_code' => '01',
+            'arrival_mmyy' => '0926',
+        ]);
+        $balance = InventoryBalance::create([
+            'batch_id' => $batch->id,
+            'lab_id' => $lab->id,
+            'condition' => ConditionEnum::BAIK,
+            'quantity' => 5,
+        ]);
+        $borrowing = AssetBorrowing::create([
+            'borrower_name' => 'Peminjam Uji',
+            'borrower_type' => 'Mahasiswa',
+            'phone_number' => '081234567890',
+            'lab_id' => $lab->id,
+            'purpose' => 'Kegiatan akademik',
+            'borrow_date' => '2026-10-12',
+            'return_date' => '2026-10-14',
+            'tracking_token' => 'aggregate1',
+        ]);
+        $borrowing->status = 'approved';
+        $borrowing->save();
+        $borrowingItem = AssetBorrowingItem::create([
+            'asset_borrowing_id' => $borrowing->id,
+            'item_id' => $item->id,
+            'inventory_balance_id' => $balance->id,
+            'quantity' => 2,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.asset-borrowings.handout', $borrowing))
+            ->assertRedirect();
+        $this->assertSame(3, $balance->fresh()->quantity);
+        $this->assertSame('borrowed', $borrowing->fresh()->status);
+
+        $this->actingAs($admin)
+            ->post(route('admin.asset-borrowings.receive', $borrowing), [
+                'item_conditions' => [
+                    $borrowingItem->id => ['condition' => 'BAIK'],
+                ],
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(5, $balance->fresh()->quantity);
+        $this->assertSame('returned', $borrowing->fresh()->status);
+        $this->assertSame('BAIK', $borrowingItem->fresh()->return_condition);
+    }
+
+    public function test_heavily_damaged_return_marks_the_unit_unavailable(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $lab = Lab::create(['name' => 'Lab Uji', 'capacity' => 40, 'status' => 'available']);
+        $item = Item::create([
+            'name' => 'Laptop Uji',
+            'tracking_mode' => TrackingModeEnum::STRUCTURED_TAG,
+        ]);
+        $batch = Batch::create([
+            'item_id' => $item->id,
+            'proc_source_code' => '01',
+            'arrival_mmyy' => '0926',
+        ]);
+        $unit = AssetUnit::create([
+            'batch_id' => $batch->id,
+            'lab_id' => $lab->id,
+            'asset_tag' => '01.0926.L1.LABUJI.010',
+            'condition' => ConditionEnum::BAIK,
+            'is_available' => false,
+        ]);
+        $borrowing = AssetBorrowing::create([
+            'borrower_name' => 'Peminjam Uji',
+            'borrower_type' => 'Mahasiswa',
+            'phone_number' => '081234567890',
+            'lab_id' => $lab->id,
+            'purpose' => 'Kegiatan akademik',
+            'borrow_date' => '2026-10-12',
+            'return_date' => '2026-10-14',
+            'tracking_token' => 'damage1234',
+        ]);
+        $borrowing->status = 'borrowed';
+        $borrowing->save();
+        $borrowingItem = AssetBorrowingItem::create([
+            'asset_borrowing_id' => $borrowing->id,
+            'item_id' => $item->id,
+            'asset_unit_id' => $unit->id,
+            'quantity' => 1,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.asset-borrowings.receive', $borrowing), [
+                'item_conditions' => [
+                    $borrowingItem->id => [
+                        'condition' => 'RUSAK_BERAT',
+                        'notes' => 'Tidak dapat digunakan.',
+                    ],
+                ],
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('asset_units', [
+            'id' => $unit->id,
+            'condition' => 'RUSAK',
             'is_available' => false,
         ]);
     }
