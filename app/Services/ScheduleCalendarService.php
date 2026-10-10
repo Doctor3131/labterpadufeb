@@ -31,7 +31,8 @@ class ScheduleCalendarService
                         $q->whereNull('end_date')->orWhereDate('end_date', '>=', $start);
                     });
                 })->orWhereHas('occurrences', function ($occurrences) use ($start, $end) {
-                    $occurrences->whereBetween('override_date', [$start->toDateString(), $end->toDateString()]);
+                    $occurrences->whereDate('override_date', '>=', $start->toDateString())
+                        ->whereDate('override_date', '<=', $end->toDateString());
                 });
             })
             ->get();
@@ -65,7 +66,6 @@ class ScheduleCalendarService
         // An occurrence may originate outside the requested range and be moved into it.
         $movedIntoRange = $schedule->occurrences
             ->filter(fn (ScheduleOccurrence $occurrence) => $occurrence->override_date
-                && $this->isOccurrenceDate($schedule, $occurrence->occurrence_date)
                 && $occurrence->override_date->betweenIncluded($start, $end))
             ->map(fn (ScheduleOccurrence $occurrence) => $occurrence->occurrence_date->toDateString());
 

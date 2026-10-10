@@ -317,7 +317,7 @@
         });
     </script>
 
-    <div class="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-7xl">
+    <div class="{{ request()->routeIs('admin.refinitiv.index') ? 'w-full max-w-none px-3 py-4 sm:px-5 lg:px-7 2xl:px-10 md:py-6' : 'container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-7xl' }}">
         @yield('content')
     </div>
 

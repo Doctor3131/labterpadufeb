@@ -346,26 +346,30 @@
                 <p id="delete-course" class="text-sm text-red-700"></p>
             </div>
             <div class="p-6 space-y-4">
-                <div id="delete-scope-all" class="flex items-start gap-3 cursor-pointer">
-                    <input type="radio" name="delete_scope" value="all" checked class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
-                    <div>
+                <div id="delete-scope-all" class="flex items-start gap-3">
+                    <input id="delete-scope-all-radio" type="radio" name="delete_scope" value="all" checked class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
+                    <label for="delete-scope-all-radio" class="cursor-pointer">
                         <p class="text-sm font-semibold text-gray-800">Batalkan seluruh jadwal mendatang</p>
                         <p class="text-xs text-gray-500">Pertemuan yang sudah terlaksana tetap utuh; jadwal mendatang dicatat sebagai dibatalkan.</p>
-                    </div>
+                    </label>
                 </div>
-                <div id="delete-scope-single" class="hidden items-start gap-3 cursor-pointer">
-                    <input type="radio" name="delete_scope" value="single" class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
+                <div id="delete-scope-single" class="hidden items-start gap-3">
+                    <input id="delete-scope-single-radio" type="radio" name="delete_scope" value="single" class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-800">Batalkan di hari itu saja</p>
-                        <p class="text-xs text-gray-500 mb-2">Membatalkan hanya satu pertemuan pada tanggal tertentu.</p>
+                        <label for="delete-scope-single-radio" class="block cursor-pointer">
+                            <span class="text-sm font-semibold text-gray-800">Batalkan di hari itu saja</span>
+                            <span class="mb-2 block text-xs text-gray-500">Membatalkan hanya satu pertemuan pada tanggal tertentu.</span>
+                        </label>
                         <input type="date" id="delete-single-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500">
                     </div>
                 </div>
-                <div id="delete-scope-future" class="hidden items-start gap-3 cursor-pointer">
-                    <input type="radio" name="delete_scope" value="future" class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
+                <div id="delete-scope-future" class="hidden items-start gap-3">
+                    <input id="delete-scope-future-radio" type="radio" name="delete_scope" value="future" class="mt-1 w-4 h-4 text-red-500 focus:ring-red-500">
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-800">Kelas ini &amp; selanjutnya</p>
-                        <p class="text-xs text-gray-500 mb-2">Membatalkan mulai tanggal terpilih hingga akhir rangkaian.</p>
+                        <label for="delete-scope-future-radio" class="block cursor-pointer">
+                            <span class="text-sm font-semibold text-gray-800">Kelas ini &amp; selanjutnya</span>
+                            <span class="mb-2 block text-xs text-gray-500">Membatalkan mulai tanggal terpilih hingga akhir rangkaian.</span>
+                        </label>
                         <input type="date" id="delete-future-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500">
                     </div>
                 </div>
@@ -393,6 +397,7 @@
         @method('DELETE')
         <input type="hidden" name="scope" id="delete-form-scope" value="all">
         <input type="hidden" name="occurrence_date" id="delete-form-date">
+        <input type="hidden" name="effective_date" id="delete-form-effective-date">
         <input type="hidden" name="change_reason" id="delete-form-reason">
     </form>
     <script>
@@ -1376,7 +1381,7 @@
         }
 
         // ==================== DELETE HANDLER ====================
-        function openDeleteModal(scheduleId, courseName, isRecurring, day, defaultDate) {
+        function openDeleteModal(scheduleId, courseName, isRecurring, day, defaultDate, sourceDate = null) {
             const modal = document.getElementById('delete-modal');
             const scopeAll = document.getElementById('delete-scope-all');
             const scopeSingle = document.getElementById('delete-scope-single');
@@ -1409,6 +1414,13 @@
                 const value = defaultDate || fallback;
                 singleDate.value = value;
                 futureDate.value = value;
+                document.getElementById('delete-form-date').value = sourceDate || value;
+                document.getElementById('delete-form-effective-date').value = value;
+                document.getElementById('delete-form-date').dataset.defaultEffectiveDate = value;
+                document.getElementById('delete-form-date').dataset.defaultSourceDate = sourceDate || value;
+            } else {
+                document.getElementById('delete-form-date').value = '';
+                document.getElementById('delete-form-effective-date').value = '';
             }
 
             modal.classList.remove('hidden');
@@ -1438,10 +1450,22 @@
                 return;
             }
 
-            document.getElementById('delete-form-date').value = date || '';
+            const sourceDate = document.getElementById('delete-form-date');
+            const defaultEffectiveDate = sourceDate.dataset.defaultEffectiveDate;
+            if (date) sourceDate.value = date === defaultEffectiveDate
+                ? sourceDate.dataset.defaultSourceDate
+                : date;
+            document.getElementById('delete-form-effective-date').value = date || '';
             document.getElementById('delete-form-reason').value = reason;
             form.submit();
         }
+
+        document.getElementById('delete-single-date').addEventListener('focus', function() {
+            document.getElementById('delete-scope-single-radio').checked = true;
+        });
+        document.getElementById('delete-future-date').addEventListener('focus', function() {
+            document.getElementById('delete-scope-future-radio').checked = true;
+        });
 
         function ttDeleteSchedule(scheduleId, btnEl, event) {
             event.stopPropagation();
@@ -1450,8 +1474,18 @@
             // Get course name from the block's title content (safe, no injection)
             const block = btnEl.closest('.group');
             const courseName = block ? block.querySelector('.text-xs.font-bold')?.textContent || '-' : '-';
+            const occurrence = (ttWeekData?.schedules || []).find(item =>
+                Number(item.schedule_id) === Number(scheduleId) && item.date === ttSelectedDate
+            );
 
-            openDeleteModal(scheduleId, courseName, true, ttSelectedDay, ttSelectedDate);
+            openDeleteModal(
+                scheduleId,
+                courseName,
+                Boolean(occurrence?.is_recurring),
+                occurrence?.day || ttSelectedDay,
+                occurrence?.date || ttSelectedDate,
+                occurrence?.occurrence_date || ttSelectedDate
+            );
         }
 
         // ==================== WEEK NAVIGATION ====================

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RefinitivRequest extends Model
 {
@@ -100,6 +101,13 @@ class RefinitivRequest extends Model
         return $this->belongsTo(User::class, 'handled_by');
     }
 
+    public function attendanceEvents(): HasMany
+    {
+        return $this->hasMany(RefinitivAttendanceEvent::class, 'refinitiv_request_id')
+            ->orderByDesc('recorded_at')
+            ->orderByDesc('id');
+    }
+
     /**
      * Check if applicant is a student
      */
@@ -132,6 +140,7 @@ class RefinitivRequest extends Model
         if ($this->purpose === 'lainnya' && $this->purpose_other) {
             return $this->purpose_other;
         }
+
         return self::PURPOSES[$this->purpose] ?? $this->purpose;
     }
 
@@ -161,7 +170,7 @@ class RefinitivRequest extends Model
             'sesi_2' => ['start' => '10:00', 'end' => '12:00'],
             'sesi_3' => ['start' => '13:00', 'end' => '15:00'], // Default, Friday is 13:30-15:30
         ];
-        
+
         return $times[$this->session] ?? ['start' => '08:00', 'end' => '10:00'];
     }
 
