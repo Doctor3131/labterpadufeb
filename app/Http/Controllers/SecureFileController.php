@@ -27,26 +27,28 @@ class SecureFileController extends Controller
         // Try public disk first (where existing files are stored)
         if (Storage::disk('public')->exists($path)) {
             $fullPath = Storage::disk('public')->path($path);
-            $mimeType = mime_content_type($fullPath) ?: 'application/octet-stream';
 
-            return response()->file($fullPath, [
-                'Content-Type' => $mimeType,
-                'Cache-Control' => 'private, no-cache, no-store',
-            ]);
+            return $this->privateFileResponse($fullPath);
         }
 
         // Try local/private disk (for future uploads)
         if (Storage::disk('local')->exists($path)) {
             $fullPath = Storage::disk('local')->path($path);
-            $mimeType = mime_content_type($fullPath) ?: 'application/octet-stream';
 
-            return response()->file($fullPath, [
-                'Content-Type' => $mimeType,
-                'Cache-Control' => 'private, no-cache, no-store',
-            ]);
+            return $this->privateFileResponse($fullPath);
         }
 
         Log::warning('Secure file not found', ['path' => $path]);
         abort(404, 'File tidak ditemukan.');
+    }
+
+    private function privateFileResponse(string $fullPath): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $response = response()->file($fullPath, [
+            'Content-Type' => mime_content_type($fullPath) ?: 'application/octet-stream',
+        ]);
+        $response->headers->set('Cache-Control', 'private, no-cache, no-store');
+
+        return $response;
     }
 }

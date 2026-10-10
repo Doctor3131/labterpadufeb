@@ -50,6 +50,8 @@ class BpsSubDataController extends Controller
      */
     public function edit(BpsMasterData $master, BpsSubData $subDatum)
     {
+        $this->ensureSubDataBelongsToMaster($master, $subDatum);
+
         return view('admin.bps.sub-data.edit', compact('master', 'subDatum'));
     }
 
@@ -58,6 +60,8 @@ class BpsSubDataController extends Controller
      */
     public function update(Request $request, BpsMasterData $master, BpsSubData $subDatum)
     {
+        $this->ensureSubDataBelongsToMaster($master, $subDatum);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
@@ -75,6 +79,8 @@ class BpsSubDataController extends Controller
      */
     public function destroy(BpsMasterData $master, BpsSubData $subDatum)
     {
+        $this->ensureSubDataBelongsToMaster($master, $subDatum);
+
         // Check if sub data is used in any requests
         if ($subDatum->requests()->count() > 0) {
             return back()->with('error', 'Tidak dapat menghapus. Data ini sudah digunakan dalam permintaan.');
@@ -91,8 +97,15 @@ class BpsSubDataController extends Controller
      */
     public function toggleStatus(BpsMasterData $master, BpsSubData $subDatum)
     {
+        $this->ensureSubDataBelongsToMaster($master, $subDatum);
+
         $subDatum->update(['is_active' => !$subDatum->is_active]);
 
         return back()->with('success', 'Status berhasil diubah!');
+    }
+
+    private function ensureSubDataBelongsToMaster(BpsMasterData $master, BpsSubData $subDatum): void
+    {
+        abort_unless((int) $subDatum->master_id === $master->id, 404);
     }
 }

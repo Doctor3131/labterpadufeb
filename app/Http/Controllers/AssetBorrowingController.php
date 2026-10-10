@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AssetBorrowing;
 use App\Models\AssetBorrowingItem;
+use App\Models\AssetTypeCode;
 use App\Models\Item;
 use App\Models\Lab;
 use App\Models\AssetUnit;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class AssetBorrowingController extends Controller
 {
@@ -112,6 +114,16 @@ class AssetBorrowingController extends Controller
             'items.*.condition_complete' => 'nullable|boolean',
             'items.*.remarks' => 'nullable|string|max:255',
         ]);
+
+        foreach ($validated['items'] as $index => $itemData) {
+            $item = Item::with('assetTypeCode')->findOrFail($itemData['item_id']);
+
+            if ($item->assetTypeCode instanceof AssetTypeCode && ! $item->assetTypeCode->is_borrowable) {
+                throw ValidationException::withMessages([
+                    "items.{$index}.item_id" => 'Jenis barang ini tidak dapat dipinjam.',
+                ]);
+            }
+        }
 
         // Custom validation: If same day, return time must be after borrow time
         if ($validated['borrow_date'] === $validated['return_date']) {
@@ -1031,7 +1043,7 @@ class AssetBorrowingController extends Controller
                             default => 'BAIK',
                         };
                         AssetUnit::where('id', $borrowingItem->asset_unit_id)->update([
-                            'is_available' => $condition !== 'HILANG',
+                            'is_available' => $condition === 'BAIK',
                             'condition' => $unitCondition,
                         ]);
                     }

@@ -47,6 +47,17 @@ class RefinitivRequestController extends Controller
         $weekEndExclusive = today()->copy()->addDays(7)->toDateString();
         $selectedDateEndExclusive = $date !== '' ? Carbon::parse($date, config('app.timezone'))->addDay()->toDateString() : null;
         $includeCalendar = ! $request->ajax() || $request->boolean('calendar_fragment');
+        $calendarDays = [];
+        $calendarSummary = [];
+        $calendarMonthLabel = '';
+        $calendarCells = [];
+        $calendarSelectedDate = '';
+        $calendarSelectedDay = [];
+        $calendarSessionNames = [];
+        $calendarSessionTimes = [];
+        $calendarToday = today()->toDateString();
+        $previousCalendarMonth = '';
+        $nextCalendarMonth = '';
 
         if ($includeCalendar) {
             $calendarMonthStart = Carbon::parse($calendarMonth.'-01', config('app.timezone'))->startOfMonth();
@@ -67,7 +78,7 @@ class RefinitivRequestController extends Controller
                 $day = Carbon::parse($row->usage_date)->toDateString();
                 $session = $row->session;
                 $attendanceStatus = $row->attendance_status;
-                $total = (int) $row->total;
+                $total = (int) $row->getAttribute('total');
 
                 $calendarDays[$day] ??= [
                     'total' => 0,
@@ -80,7 +91,7 @@ class RefinitivRequestController extends Controller
                 ];
                 $calendarDays[$day]['sessions'][$session]['total'] += $total;
                 $calendarDays[$day]['total'] += $total;
-                $sessionTotals[$session] = ($sessionTotals[$session] ?? 0) + $total;
+                $sessionTotals[$session] += $total;
 
                 if (array_key_exists($attendanceStatus, RefinitivRequest::ATTENDANCE_STATUSES)) {
                     $calendarDays[$day]['sessions'][$session]['statuses'][$attendanceStatus] += $total;

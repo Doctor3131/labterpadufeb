@@ -130,6 +130,45 @@ class BpsRequestController extends Controller
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
+        $validator->after(function ($validator) use ($request): void {
+            $selectedData = $request->input('selected_data', []);
+            if (is_array($selectedData)) {
+                $selectedSubIds = array_values(array_filter($selectedData, 'is_scalar'));
+                $inactiveSubIds = BpsSubData::query()
+                    ->whereIn('id', $selectedSubIds)
+                    ->where(function ($query) {
+                        $query->where('is_active', false)
+                            ->orWhereIn('master_id', BpsMasterData::query()
+                                ->where('is_active', false)
+                                ->select('id'));
+                    })
+                    ->pluck('id')
+                    ->map(fn ($id) => (string) $id)
+                    ->all();
+
+                foreach ($selectedData as $index => $subId) {
+                    if (is_scalar($subId) && in_array((string) $subId, $inactiveSubIds, true)) {
+                        $validator->errors()->add("selected_data.{$index}", 'Dataset ini tidak aktif.');
+                    }
+                }
+            }
+
+            $selectedMasters = $request->input('selected_master', []);
+            if (is_array($selectedMasters)) {
+                $inactiveMasterIds = BpsMasterData::query()
+                    ->whereIn('id', array_values(array_filter($selectedMasters, 'is_scalar')))
+                    ->where('is_active', false)
+                    ->pluck('id')
+                    ->map(fn ($id) => (string) $id)
+                    ->all();
+
+                foreach ($selectedMasters as $index => $masterId) {
+                    if (is_scalar($masterId) && in_array((string) $masterId, $inactiveMasterIds, true)) {
+                        $validator->errors()->add("selected_master.{$index}", 'Dataset ini tidak aktif.');
+                    }
+                }
+            }
+        });
 
         if ($validator->fails()) {
             Log::warning('BPS Request validation failed', [

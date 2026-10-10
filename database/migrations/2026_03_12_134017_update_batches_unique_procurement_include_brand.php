@@ -33,10 +33,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('batches', function (Blueprint $table) {
-            $table->index('item_id', 'batches_item_id_index');
-        });
-
-        Schema::table('batches', function (Blueprint $table) {
             $table->dropUnique('batches_unique_procurement');
             $table->unique(['item_id', 'proc_source_code', 'arrival_mmyy'], 'batches_unique_procurement');
             $table->dropIndex('batches_item_id_index');

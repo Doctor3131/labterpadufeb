@@ -252,6 +252,8 @@ class ScheduleIndexTest extends TestCase
 
     public function test_calendar_future_move_updates_the_recurrence_pattern(): void
     {
+        $this->travelTo(Carbon::parse('2026-09-01 00:00:00'));
+
         $admin = User::factory()->create(['role' => 'admin']);
         $lab = Lab::create(['name' => 'Lab Kalender', 'capacity' => 40, 'status' => 'available']);
         $occurrenceDate = today()->next(Carbon::WEDNESDAY);
