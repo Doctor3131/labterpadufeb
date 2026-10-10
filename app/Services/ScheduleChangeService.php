@@ -103,7 +103,7 @@ class ScheduleChangeService
         $this->assertEditableDate($effectiveDate);
         $this->assertValidOccurrence($schedule, $originalDate);
 
-        return DB::transaction(function () use ($schedule, $originalDate, $effectiveDate, $reason, $userId) {
+        return DB::transaction(function () use ($schedule, $originalDate, $reason, $userId) {
             $before = $schedule->occurrences()
                 ->whereDate('occurrence_date', $originalDate)
                 ->first()?->toArray();
@@ -208,7 +208,7 @@ class ScheduleChangeService
                     $occurrence->schedule_id = $newSchedule->id;
                     $occurrence->occurrence_date = $occurrence->occurrence_date->copy()->addDays($dateShift);
                     if ($isSelectedOccurrence && $occurrence->type === ScheduleOccurrence::TYPE_MOVED) {
-                        $occurrence->override_date = $newStartDate->toDateString();
+                        $occurrence->override_date = $newStartDate->copy();
                     } elseif ($occurrence->override_date) {
                         $occurrence->override_date = $occurrence->override_date->copy()->addDays($dateShift);
                     }

@@ -5,7 +5,7 @@
 | Command | Checks |
 | --- | --- |
 | `composer test` | Fast PHPUnit suite on in-memory SQLite |
-| `composer test:coverage` | Fast suite with app line coverage and a 53.18% minimum ratchet; requires Xdebug or PCOV |
+| `composer test:coverage` | Fast suite with app line coverage and a 53.35% minimum ratchet; requires Xdebug or PCOV |
 | `composer test:quality` | Fast suite, Larastan, then Pint check-only for test code |
 | `composer test:dusk` | Builds frontend assets, starts the local app, then runs Dusk in Chrome against MySQL |
 | `composer test:all` | Runs the fast suite, Larastan, Pint, then Dusk sequentially |
@@ -14,7 +14,7 @@
 
 Larastan analyzes `app/` at level 5. `phpstan-baseline.neon` records existing diagnostics so new ones fail the check; review any baseline updates rather than regenerating it automatically. Pint runs in check-only mode for `tests/`: app-wide Pint currently reports legacy formatting across production files, which this test-only phase intentionally does not reformat. Fast PHPUnit uses `phpunit.xml` with forced SQLite settings; Dusk uses a separate `phpunit.dusk.xml` so those overrides cannot redirect browser tests.
 
-`composer test:coverage` measures line coverage for `app/` from the fast PHPUnit suite and enforces a 53.18% minimum, above the original 28.3% baseline. It uses a separate temporary storage root and prints the coverage summary even when regression tests fail; the overall command still exits unsuccessfully when tests fail. Active defects are not excluded from the suite to produce a green report. Enable PCOV or Xdebug in the CLI PHP runtime before running it.
+`composer test:coverage` measures line coverage for `app/` from the fast PHPUnit suite and enforces a 53.35% minimum, above the original 28.3% baseline. The most recent accepted run measured 53.35% (3,529/6,615 lines). The floor is updated only after reviewing the suite and accepting a higher measured result. The runner uses a separate temporary storage root and prints the coverage summary even when tests fail; the overall command still exits unsuccessfully when tests fail. Regression tests remain active rather than being excluded to produce a green report. Enable PCOV or Xdebug in the CLI PHP runtime before running it.
 
 ## Dusk browser suite
 
@@ -44,6 +44,6 @@ This user can only modify the dedicated Dusk database. If the database or user a
 
 The Dusk runner checks the environment and database before starting the server. It refuses to run unless the connection is MySQL, the database name is exactly `labterpadu_dusk_test`, the database host is local, `APP_ENV=local`, and `APP_URL` is exactly `http://127.0.0.1:8001`. A read-only preflight also refuses any database that already has tables or views; this prevents migrations from deleting pre-existing data. It refuses to use port `8001` if another local process is listening there. It temporarily uses `.env.dusk.local`, starts Laravel on `127.0.0.1:8001`, runs Dusk, then stops the server and restores `.env`. It will not create the database or grant privileges.
 
-The runner creates a fresh temporary Laravel storage root for the web server and removes that temporary directory on exit, so Dusk uploads, generated PDFs, sessions, and logs cannot touch the app's existing `storage` files. After Dusk starts, the runner wipes only the dedicated database (which was verified empty before the run) and verifies it has no tables or views, including when a test fails. It does not roll migrations back: `2026_03_12_134017_update_batches_unique_procurement_include_brand::down()` currently fails on MySQL by re-adding the `batches_item_id_index` that its `up()` already created. The active regression test reports this product defect; the Dusk runner still cleans the isolated database afterward.
+The runner creates a fresh temporary Laravel storage root for the web server and removes that temporary directory on exit, so Dusk uploads, generated PDFs, sessions, and logs cannot touch the app's existing `storage` files. After Dusk starts, the runner cleans only the dedicated database (verified empty before the run) and verifies it has no tables or views, including when a test fails. The MySQL migration rollback regression is covered and currently passes. The latest guarded run passed all 7 browser/MySQL tests; the Dusk database was empty afterward and port 8001 was released.
 
 `.env.dusk.local` is ignored by Git. Never put production credentials in it. The browser journeys cover public booking submission/admin approval, asset-borrowing approval/handout, and an inventory condition update.

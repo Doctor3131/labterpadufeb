@@ -7,7 +7,7 @@ if [[ ! -f .env ]]; then
     cp .env.example .env
 fi
 
-coverage_floor=53.18
+coverage_floor=53.35
 test_storage=$(mktemp -d /tmp/labterpadu-coverage-storage.XXXXXX)
 coverage_report=$(mktemp /tmp/labterpadu-coverage-report.XXXXXX)
 mkdir -p "$test_storage/app/private" "$test_storage/app/public" \
