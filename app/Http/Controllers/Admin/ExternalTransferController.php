@@ -90,8 +90,27 @@ class ExternalTransferController extends Controller
                 $notes = "Transfer eksternal ke {$request->recipient}: " . ($request->notes ?? '');
 
                 if ($trackingMode !== 'AGGREGATE') {
-                    // Transfer individual units
-                    $unitIds = $request->unit_ids;
+                    // Only transfer units in Gudang that belong to the selected item.
+                    $unitIds = array_map('intval', $request->unit_ids);
+                    if (count($unitIds) !== count(array_unique($unitIds))) {
+                        throw new \Exception('Daftar unit transfer tidak boleh berisi duplikasi.');
+                    }
+
+                    $eligibleUnitIds = \App\Models\AssetUnit::query()
+                        ->whereIn('id', $unitIds)
+                        ->where('lab_id', $gudangLab->id)
+                        ->whereHas('batch', fn ($query) => $query->where('item_id', $item->id))
+                        ->lockForUpdate()
+                        ->pluck('id')
+                        ->map(fn ($id) => (int) $id)
+                        ->all();
+                    sort($eligibleUnitIds);
+                    sort($unitIds);
+
+                    if ($eligibleUnitIds !== $unitIds) {
+                        throw new \Exception('Semua unit harus berasal dari Gudang dan barang yang dipilih.');
+                    }
+
                     $this->inventoryService->transferUnitsToLab($unitIds, $eksternalLab->id, $notes);
 
                     // Log external transfer

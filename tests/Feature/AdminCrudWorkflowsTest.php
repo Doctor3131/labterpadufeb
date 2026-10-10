@@ -203,6 +203,49 @@ class AdminCrudWorkflowsTest extends TestCase
         $this->assertDatabaseCount('external_transfers', 0);
     }
 
+    public function test_external_transfer_rejects_a_unit_from_another_item_in_gudang(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $gudang = Lab::create(['name' => 'Gudang', 'capacity' => 100, 'status' => 'available']);
+        Lab::create(['name' => 'Eksternal', 'capacity' => 0, 'status' => 'available']);
+        $selectedItem = Item::create([
+            'name' => 'Laptop Pilihan',
+            'tracking_mode' => TrackingModeEnum::STRUCTURED_TAG,
+        ]);
+        $actualItem = Item::create([
+            'name' => 'Laptop Berbeda',
+            'tracking_mode' => TrackingModeEnum::STRUCTURED_TAG,
+        ]);
+        $batch = Batch::create([
+            'item_id' => $actualItem->id,
+            'proc_source_code' => '01',
+            'arrival_mmyy' => '0926',
+        ]);
+        $unit = AssetUnit::create([
+            'batch_id' => $batch->id,
+            'lab_id' => $gudang->id,
+            'asset_tag' => 'GUDANG-BEDA-001',
+            'condition' => ConditionEnum::BAIK,
+            'is_available' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.external-transfers.create'))
+            ->post(route('admin.external-transfers.store'), [
+                'item_id' => $selectedItem->id,
+                'recipient' => 'Mitra Eksternal',
+                'transfer_date' => '2026-10-12',
+                'tracking_mode' => TrackingModeEnum::STRUCTURED_TAG->value,
+                'unit_ids' => [$unit->id],
+            ])
+            ->assertRedirect(route('admin.external-transfers.create'))
+            ->assertSessionHas('error');
+
+        $this->assertSame($gudang->id, $unit->fresh()->lab_id);
+        $this->assertDatabaseCount('external_transfers', 0);
+        $this->assertDatabaseCount('inventory_transactions', 0);
+    }
+
     public function test_bps_sub_data_cannot_be_mutated_through_another_master_route(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
