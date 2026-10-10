@@ -270,6 +270,35 @@ class InventoryIntegrityTest extends TestCase
 
     public function test_admin_cannot_delete_a_unit_assigned_to_an_active_borrowing(): void
     {
+        [$admin, $lab, $item, $unit] = $this->createActivelyBorrowedUnit();
+
+        $this->actingAs($admin)
+            ->from(route('admin.labs.inventory.units', [$lab, $item]))
+            ->delete(route('admin.inventory.units.destroy', $unit))
+            ->assertRedirect(route('admin.labs.inventory.units', [$lab, $item]))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('asset_units', ['id' => $unit->id]);
+        $this->assertDatabaseHas('asset_borrowing_items', ['asset_unit_id' => $unit->id]);
+    }
+
+    public function test_bulk_delete_preserves_units_assigned_to_active_borrowings(): void
+    {
+        [$admin, $lab, $item, $unit] = $this->createActivelyBorrowedUnit();
+
+        $this->actingAs($admin)
+            ->from(route('admin.labs.inventory.units', [$lab, $item]))
+            ->post(route('admin.inventory.bulk-delete'), ['unit_ids' => [$unit->id]])
+            ->assertRedirect(route('admin.labs.inventory.units', [$lab, $item]))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('asset_units', ['id' => $unit->id]);
+        $this->assertDatabaseHas('asset_borrowing_items', ['asset_unit_id' => $unit->id]);
+    }
+
+    /** @return array{User, Lab, Item, AssetUnit} */
+    private function createActivelyBorrowedUnit(): array
+    {
         $admin = User::factory()->create(['role' => 'admin']);
         $lab = $this->createLab('Lab Pinjam');
         [$item, $batch] = $this->createItemAndBatch(TrackingModeEnum::STRUCTURED_TAG, 'Laptop');
@@ -298,14 +327,7 @@ class InventoryIntegrityTest extends TestCase
             'quantity' => 1,
         ]);
 
-        $this->actingAs($admin)
-            ->from(route('admin.labs.inventory.units', [$lab, $item]))
-            ->delete(route('admin.inventory.units.destroy', $unit))
-            ->assertRedirect(route('admin.labs.inventory.units', [$lab, $item]))
-            ->assertSessionHas('error');
-
-        $this->assertDatabaseHas('asset_units', ['id' => $unit->id]);
-        $this->assertDatabaseHas('asset_borrowing_items', ['asset_unit_id' => $unit->id]);
+        return [$admin, $lab, $item, $unit];
     }
 
     private function createLab(string $name): Lab

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryRequest;
 use App\Http\Requests\Inventory\TransferBalanceRequest;
 use App\Http\Requests\Inventory\UpdateConditionRequest;
+use App\Models\AssetBorrowingItem;
 use App\Models\AssetTypeCode;
 use App\Models\AssetUnit;
 use App\Models\Batch;
@@ -859,6 +860,10 @@ class LabInventoryController extends Controller
      */
     public function destroyUnit(AssetUnit $unit)
     {
+        if ($this->hasActiveBorrowingAssignment([$unit->id])) {
+            return back()->with('error', 'Unit tidak dapat dihapus karena masih terkait dengan peminjaman aktif.');
+        }
+
         try {
             $lab = $unit->lab;
             $item = $unit->batch->item;
@@ -895,6 +900,10 @@ class LabInventoryController extends Controller
             'unit_ids.*' => 'exists:asset_units,id',
         ]);
 
+        if ($this->hasActiveBorrowingAssignment($request->unit_ids)) {
+            return back()->with('error', 'Unit tidak dapat dihapus karena masih terkait dengan peminjaman aktif.');
+        }
+
         try {
             // Get first unit to determine lab and item for redirect
             $firstUnit = AssetUnit::with('batch.item', 'lab')->find($request->unit_ids[0]);
@@ -925,6 +934,20 @@ class LabInventoryController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus unit: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Check whether any selected unit is assigned to an active borrowing.
+     *
+     * @param  array<int, int|string>  $unitIds
+     */
+    private function hasActiveBorrowingAssignment(array $unitIds): bool
+    {
+        return AssetBorrowingItem::whereIn('asset_unit_id', $unitIds)
+            ->whereHas('borrowing', fn ($query) => $query->whereIn('status', [
+                'pending', 'approved', 'borrowed', 'overdue',
+            ]))
+            ->exists();
     }
 
     /**
