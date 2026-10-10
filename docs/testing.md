@@ -5,7 +5,7 @@
 | Command | Checks |
 | --- | --- |
 | `composer test` | Fast PHPUnit suite on in-memory SQLite |
-| `composer test:coverage` | Fast suite with coverage; requires Xdebug or PCOV |
+| `composer test:coverage` | Fast suite with app line coverage and a 53.18% minimum ratchet; requires Xdebug or PCOV |
 | `composer test:quality` | Fast suite, Larastan, then Pint check-only for test code |
 | `composer test:dusk` | Builds frontend assets, starts the local app, then runs Dusk in Chrome against MySQL |
 | `composer test:all` | Runs the fast suite, Larastan, Pint, then Dusk sequentially |
@@ -13,6 +13,8 @@
 `test:all` requires the Dusk database and Chrome setup below. It deliberately does not provision either one. The fast-suite wrapper forces `APP_ENV=testing`, SQLite `:memory:`, and a temporary Laravel storage root even if the developer's `.env` points to populated MySQL or uploaded files; its temporary storage is removed on exit. HTTP client calls are blocked unless a test explicitly fakes them. Browser tests block external host resolution and use local assets.
 
 Larastan analyzes `app/` at level 5. `phpstan-baseline.neon` records existing diagnostics so new ones fail the check; review any baseline updates rather than regenerating it automatically. Pint runs in check-only mode for `tests/`: app-wide Pint currently reports legacy formatting across production files, which this test-only phase intentionally does not reformat. Fast PHPUnit uses `phpunit.xml` with forced SQLite settings; Dusk uses a separate `phpunit.dusk.xml` so those overrides cannot redirect browser tests.
+
+`composer test:coverage` measures line coverage for `app/` from the fast PHPUnit suite and enforces a 53.18% minimum, above the original 28.3% baseline. It uses a separate temporary storage root and prints the coverage summary even when regression tests fail; the overall command still exits unsuccessfully when tests fail. Active defects are not excluded from the suite to produce a green report. Enable PCOV or Xdebug in the CLI PHP runtime before running it.
 
 ## Dusk browser suite
 
