@@ -86,3 +86,17 @@ pm2 startOrReload ecosystem.config.json --update-env
 - **MySQL `root` is `root@localhost` only** — TCP root auth is denied; the app connects as `labterpadu@'%'` (granted only on `labterpadu`). Creating a scratch DB requires `GRANT ALL ON <db>.* TO 'labterpadu'@'%'`.
 - **PHP 8.5 prints PDO deprecations to stdout** — when capturing `php artisan key:generate --show` output, grep for the `base64:` line to avoid deprecation noise.
 - **The Bash tool shell is zsh**, which does not word-split variables (`$VAR cmd` fails). Write multi-command test scripts as `bash file.sh`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues; use `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default five triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use the single-context layout. See `docs/agents/domain.md`.

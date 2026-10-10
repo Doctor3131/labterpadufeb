@@ -32,3 +32,6 @@ yarn-error.log
 
 # Student PII (NIM/nama/prodi) — never commit; upload to the server out-of-band
 mahasiswa_feb.csv
+
+# Agent tooling
+/.agents/
