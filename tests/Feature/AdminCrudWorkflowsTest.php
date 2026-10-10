@@ -214,10 +214,22 @@ class AdminCrudWorkflowsTest extends TestCase
         ]);
 
         $this->actingAs($admin)
+            ->get(route('admin.bps.sub-data.edit', [$firstMaster, $subData]))
+            ->assertNotFound();
+
+        $this->actingAs($admin)
             ->put(route('admin.bps.sub-data.update', [$firstMaster, $subData]), [
                 'name' => 'Mutasi Tidak Sah',
                 'description' => 'Tidak boleh berpindah konteks.',
             ])
+            ->assertNotFound();
+
+        $this->actingAs($admin)
+            ->post(route('admin.bps.sub-data.toggle-status', [$firstMaster, $subData]))
+            ->assertNotFound();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.bps.sub-data.destroy', [$firstMaster, $subData]))
             ->assertNotFound();
 
         $this->assertDatabaseHas('bps_sub_data', [
