@@ -186,7 +186,9 @@ class ScheduleService
             // One-time booking
             $scheduleData['type'] = $booking->booking_type;
             $scheduleData['start_date'] = $bookingDate->toDateString();
-            $scheduleData['end_date'] = $bookingDate->toDateString();
+            $scheduleData['end_date'] = $booking->booking_type === 'non_perkuliahan' && $booking->end_date
+                ? $booking->end_date->toDateString()
+                : $bookingDate->toDateString();
 
             if ($booking->booking_type === 'perkuliahan_tidak_tetap') {
                 $scheduleData['course'] = $booking->course_name;
