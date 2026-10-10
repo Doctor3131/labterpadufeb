@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AssetBorrowing;
 use App\Models\AssetBorrowingItem;
+use App\Models\AssetTypeCode;
 use App\Models\Item;
 use App\Models\Lab;
 use App\Models\AssetUnit;
@@ -117,7 +118,7 @@ class AssetBorrowingController extends Controller
         foreach ($validated['items'] as $index => $itemData) {
             $item = Item::with('assetTypeCode')->findOrFail($itemData['item_id']);
 
-            if ($item->assetTypeCode && ! $item->assetTypeCode->is_borrowable) {
+            if ($item->assetTypeCode instanceof AssetTypeCode && ! $item->assetTypeCode->is_borrowable) {
                 throw ValidationException::withMessages([
                     "items.{$index}.item_id" => 'Jenis barang ini tidak dapat dipinjam.',
                 ]);
