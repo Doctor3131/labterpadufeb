@@ -1031,7 +1031,7 @@ class AssetBorrowingController extends Controller
                             default => 'BAIK',
                         };
                         AssetUnit::where('id', $borrowingItem->asset_unit_id)->update([
-                            'is_available' => $condition !== 'HILANG',
+                            'is_available' => $condition === 'BAIK',
                             'condition' => $unitCondition,
                         ]);
                     }
