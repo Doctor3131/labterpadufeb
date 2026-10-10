@@ -531,6 +531,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     )->name('admin.bps.sub-data.toggle-status');
 
     // Admin Refinitiv Data Management
+    Route::post('/admin/refinitiv/bulk/hadir', [
+        App\Http\Controllers\Admin\RefinitivRequestController::class,
+        'markManyHadir',
+    ])->name('admin.refinitiv.bulk-hadir');
     Route::get('/admin/refinitiv', [
         App\Http\Controllers\Admin\RefinitivRequestController::class,
         'index',

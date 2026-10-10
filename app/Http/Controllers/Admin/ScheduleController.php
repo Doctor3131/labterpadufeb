@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class ScheduleController extends Controller
 {
@@ -454,12 +455,12 @@ class ScheduleController extends Controller
     }
 
     /**
-     * Remove the specified schedule.
+     * Cancel the specified schedule without deleting its historical record.
      *
      * Accepts an optional scope:
-     *  - all    (default): remove the entire series + mark booking deleted.
-     *  - single          : cancel a single occurrence on the given date.
-     *  - future          : cancel the given occurrence and everything after it.
+     *  - all    (default): cancel every upcoming occurrence.
+     *  - single          : cancel one occurrence on the given date.
+     *  - future          : cancel from the given date onward.
      */
     public function destroy(Request $request, $id)
     {
@@ -467,50 +468,75 @@ class ScheduleController extends Controller
 
         $validated = $request->validate([
             'scope' => 'nullable|in:all,single,future',
-            'occurrence_date' => 'nullable|date',
+            'occurrence_date' => 'nullable|required_if:scope,single,future|date',
+            'effective_date' => 'nullable|date',
             'change_reason' => 'required|string|max:1000',
+        ], [
+            'occurrence_date.required_if' => 'Pilih tanggal pertemuan yang akan dibatalkan.',
         ]);
 
         $scope = $validated['scope'] ?? 'all';
-        $occurrenceDate = $validated['occurrence_date'] ?? null;
         $isRecurring = app(ScheduleCalendarService::class)->isRecurringSchedule($schedule);
 
-        $info = $schedule->course.' ('.$schedule->day.')';
-
-        $changes = app(ScheduleChangeService::class);
-        if ($isRecurring) {
-            $date = $occurrenceDate
-                ? Carbon::parse($occurrenceDate)
-                : $this->nextOccurrenceOnOrAfter($schedule, now('Asia/Jakarta')->startOfDay());
-
-            if (! $date) {
-                return back()->withErrors(['scope' => 'Tidak ada pertemuan mendatang yang dapat dibatalkan.']);
-            }
-
-            if ($scope === 'single') {
-                $changes->cancelOccurrence($schedule, $date, $validated['change_reason'], Auth::id());
-            } else {
-                $changes->cancelFuture($schedule, $date, $validated['change_reason'], Auth::id());
-            }
-        } else {
-            $date = $schedule->start_date;
-            if (! $date || $date->lt(now('Asia/Jakarta')->startOfDay())) {
-                return back()->withErrors(['scope' => 'Jadwal historis tidak dapat dihapus.']);
-            }
-            $changes->cancelOccurrence($schedule, $date, $validated['change_reason'], Auth::id());
-        }
-
-        if ($scope === 'all' && $schedule->booking) {
-            $schedule->booking->update([
-                'status' => 'deleted',
-                'handled_at' => now(),
-                'handled_by' => Auth::id(),
+        if (! $isRecurring && $scope !== 'all') {
+            throw ValidationException::withMessages([
+                'scope' => 'Untuk jadwal sekali jalan, pilih pembatalan seluruh jadwal.',
             ]);
         }
 
+        $info = $schedule->course.' ('.$schedule->day.')';
+
+        $date = DB::transaction(function () use ($schedule, $scope, $isRecurring, $validated) {
+            $changes = app(ScheduleChangeService::class);
+            if ($isRecurring) {
+                if ($scope === 'all') {
+                    $effectiveDate = $this->nextEffectiveOccurrenceOnOrAfter($schedule, now('Asia/Jakarta')->startOfDay());
+
+                    if (! $effectiveDate) {
+                        throw ValidationException::withMessages([
+                            'scope' => 'Tidak ada pertemuan mendatang yang dapat dibatalkan.',
+                        ]);
+                    }
+
+                    $changes->cancelAllFuture($schedule, $effectiveDate, $validated['change_reason'], Auth::id());
+                } else {
+                    $originalDate = Carbon::parse($validated['occurrence_date']);
+                    $effectiveDate = isset($validated['effective_date'])
+                        ? Carbon::parse($validated['effective_date'])
+                        : $this->effectiveOccurrenceDate($schedule, $originalDate);
+
+                    if ($scope === 'single') {
+                        $changes->cancelOccurrence($schedule, $originalDate, $validated['change_reason'], Auth::id(), $effectiveDate);
+                    } else {
+                        $changes->cancelFuture($schedule, $originalDate, $validated['change_reason'], Auth::id(), $effectiveDate);
+                    }
+                }
+            } else {
+                $effectiveDate = $schedule->start_date;
+                if (! $effectiveDate || $effectiveDate->lt(now('Asia/Jakarta')->startOfDay())) {
+                    throw ValidationException::withMessages([
+                        'scope' => 'Jadwal historis tidak dapat dibatalkan.',
+                    ]);
+                }
+                $changes->cancelOccurrence($schedule, $effectiveDate, $validated['change_reason'], Auth::id());
+            }
+
+            if ($scope === 'all' && $schedule->booking) {
+                // Booking status/audit fields are intentionally not mass assignable
+                // through public request data, so set these trusted admin values explicitly.
+                $schedule->booking->forceFill([
+                    'status' => 'deleted',
+                    'handled_at' => now(),
+                    'handled_by' => Auth::id(),
+                ])->save();
+            }
+
+            return $effectiveDate;
+        });
+
         $message = match ($scope) {
-            'single' => 'Pertemuan tanggal '.Carbon::parse($occurrenceDate)->format('d/m/Y').' dari jadwal "'.$info.'" berhasil dibatalkan!',
-            'future' => 'Jadwal "'.$info.'" dibatalkan mulai tanggal '.Carbon::parse($occurrenceDate)->format('d/m/Y').' dan seterusnya!',
+            'single' => 'Pertemuan tanggal '.$date->format('d/m/Y').' dari jadwal "'.$info.'" berhasil dibatalkan!',
+            'future' => 'Jadwal "'.$info.'" dibatalkan mulai tanggal '.$date->format('d/m/Y').' dan seterusnya!',
             default => 'Jadwal "'.$info.'" berhasil dibatalkan tanpa menghapus histori!',
         };
 
@@ -591,6 +617,33 @@ class ScheduleController extends Controller
         }
 
         return null;
+    }
+
+    private function nextEffectiveOccurrenceOnOrAfter(Schedule $schedule, Carbon $date): ?Carbon
+    {
+        $movedDate = $schedule->occurrences()
+            ->where('type', 'moved')
+            ->whereNotNull('override_date')
+            ->whereDate('override_date', '>=', $date->toDateString())
+            ->min('override_date');
+        $candidates = array_filter([
+            $this->nextOccurrenceOnOrAfter($schedule, $date),
+            $movedDate ? Carbon::parse($movedDate) : null,
+        ]);
+
+        usort($candidates, fn (Carbon $left, Carbon $right) => $left->getTimestamp() <=> $right->getTimestamp());
+
+        return $candidates[0] ?? null;
+    }
+
+    private function effectiveOccurrenceDate(Schedule $schedule, Carbon $originalDate): Carbon
+    {
+        $occurrence = $schedule->occurrences()
+            ->whereDate('occurrence_date', $originalDate->toDateString())
+            ->where('type', 'moved')
+            ->first();
+
+        return $occurrence?->override_date?->copy() ?? $originalDate;
     }
 
     private function nextDateForDay(Carbon $date, string $day): Carbon

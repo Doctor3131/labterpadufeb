@@ -65,13 +65,25 @@
                         </div>
                     </div>
                     <div class="mt-4 pt-4 border-t border-blue-200">
-                        <a href="https://bit.ly/SuratPernyataanKesanggupanMenjagaInformasi" target="_blank" 
-                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            Download Format Surat Pernyataan Kesanggupan
-                        </a>
+                        <p class="mb-3 text-sm font-semibold text-blue-900">Unduh format surat sesuai keperluan:</p>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <a href="https://docs.google.com/document/d/1mTqZmQLz7nkjlTzrDx2IvQptaT3g7HeD/edit?usp=sharing&amp;ouid=116852591645933169903&amp;rtpof=true&amp;sd=true"
+                               target="_blank" rel="noopener noreferrer"
+                               class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>Surat Keperluan Penelitian</span>
+                            </a>
+                            <a href="https://docs.google.com/document/d/1bOwgWpMdqATxTJ6lx262xnnH14Mm66Yr/edit?usp=sharing&amp;ouid=116852591645933169903&amp;rtpof=true&amp;sd=true"
+                               target="_blank" rel="noopener noreferrer"
+                               class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a2 2 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>Surat Keperluan Tugas</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -419,8 +431,8 @@
                                 <!-- Surat Pernyataan Upload -->
                                 <div>
                                     <label class="block text-gray-700 text-sm font-semibold mb-2">
-                                        Surat Pernyataan Kesanggupan <span class="text-red-500">*</span>
-                                        <span class="text-gray-500 font-normal text-xs block">*format surat dapat diunduh di atas. Maks 5 MB (PDF)</span>
+                                        Surat Keperluan Penelitian atau Tugas <span class="text-red-500">*</span>
+                                        <span class="text-gray-500 font-normal text-xs block">Pilih format yang sesuai di atas, lengkapi, lalu unggah dalam PDF. Maks 5 MB.</span>
                                     </label>
                                     <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
                                         <input type="file" name="statement_file" id="statement_file" accept=".pdf" required
@@ -905,7 +917,7 @@
                 // 3. Dokumen
                 // Statement File
                  if (document.getElementById('statement_file').files.length === 0) {
-                     showFieldError('statement_file', 'Surat pernyataan wajib diupload');
+                     showFieldError('statement_file', 'Surat Keperluan Penelitian atau Tugas wajib diunggah');
                      isValid = false;
                  }
 

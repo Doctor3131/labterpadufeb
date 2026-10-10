@@ -37,7 +37,15 @@ class ScheduleChangeService
         string $reason,
         ?int $userId
     ): ScheduleOccurrence {
-        $this->assertEditableDate($originalDate);
+        $existingOccurrence = $schedule->occurrences()
+            ->whereDate('occurrence_date', $originalDate->toDateString())
+            ->first();
+        $effectiveDate = $existingOccurrence?->type === ScheduleOccurrence::TYPE_MOVED && $existingOccurrence->override_date
+            ? $existingOccurrence->override_date
+            : $originalDate;
+
+        $this->assertEditableDate($effectiveDate);
+        $this->assertEditableDate($targetDate);
         $this->assertValidOccurrence($schedule, $originalDate);
         $this->assertOperatingDate($targetDate);
 
@@ -83,12 +91,19 @@ class ScheduleChangeService
         Schedule $schedule,
         Carbon $originalDate,
         string $reason,
-        ?int $userId
+        ?int $userId,
+        ?Carbon $effectiveDate = null
     ): ScheduleOccurrence {
-        $this->assertEditableDate($originalDate);
+        [$existingOccurrence, $originalDate] = $this->resolveCancellationOccurrence($schedule, $originalDate, $effectiveDate);
+        $effectiveDate ??= $existingOccurrence?->type === ScheduleOccurrence::TYPE_MOVED && $existingOccurrence->override_date
+            ? $existingOccurrence->override_date
+            : $originalDate;
+
+        $this->assertCancellationDateMatchesOccurrence($existingOccurrence, $originalDate, $effectiveDate);
+        $this->assertEditableDate($effectiveDate);
         $this->assertValidOccurrence($schedule, $originalDate);
 
-        return DB::transaction(function () use ($schedule, $originalDate, $reason, $userId) {
+        return DB::transaction(function () use ($schedule, $originalDate, $effectiveDate, $reason, $userId) {
             $before = $schedule->occurrences()
                 ->whereDate('occurrence_date', $originalDate)
                 ->first()?->toArray();
@@ -125,7 +140,15 @@ class ScheduleChangeService
             throw ValidationException::withMessages(['scope' => 'Perubahan rangkaian hanya tersedia untuk jadwal berulang.']);
         }
 
-        $this->assertEditableDate($originalDate);
+        $existingOccurrence = $schedule->occurrences()
+            ->whereDate('occurrence_date', $originalDate->toDateString())
+            ->first();
+        $effectiveDate = $existingOccurrence?->type === ScheduleOccurrence::TYPE_MOVED && $existingOccurrence->override_date
+            ? $existingOccurrence->override_date
+            : $originalDate;
+
+        $this->assertEditableDate($effectiveDate);
+        $this->assertEditableDate($newStartDate);
         $this->assertValidOccurrence($schedule, $originalDate);
         $this->assertOperatingDate($newStartDate);
 
@@ -145,7 +168,6 @@ class ScheduleChangeService
 
         return DB::transaction(function () use ($schedule, $originalDate, $newStartDate, $changes, $reason, $userId) {
             Lab::query()->lockForUpdate()->findOrFail((int) ($changes['lab_id'] ?? $schedule->lab_id));
-            $this->assertSeriesHasNoConflict($schedule, $originalDate, $newStartDate, Carbon::parse($changes['end_date']), $changes);
 
             /** @var Schedule $locked */
             $locked = Schedule::with(['document', 'booking'])->lockForUpdate()->findOrFail($schedule->id);
@@ -153,13 +175,22 @@ class ScheduleChangeService
 
             // No occurrence predates the split: updating in place cannot rewrite history.
             if ($locked->start_date && $originalDate->isSameDay($locked->start_date)) {
+                $this->assertSeriesHasNoConflict(
+                    $locked,
+                    $originalDate,
+                    $newStartDate,
+                    Carbon::parse($changes['end_date']),
+                    $changes,
+                    $locked->id
+                );
                 $locked->update($changes);
                 $this->log($locked, null, 'update', 'future', $originalDate, $before, Arr::only($locked->fresh()->toArray(), self::EDITABLE_FIELDS), $reason, $userId);
 
                 return $locked->fresh();
             }
 
-            $locked->update(['end_date' => $originalDate->copy()->subWeek()->toDateString()]);
+            // Preserve earlier occurrences in the same week before opening the new revision.
+            $locked->update(['end_date' => $originalDate->copy()->subDay()->toDateString()]);
 
             $newSchedule = $locked->replicate();
             $newSchedule->fill($changes);
@@ -172,14 +203,28 @@ class ScheduleChangeService
             $locked->occurrences()
                 ->whereDate('occurrence_date', '>=', $originalDate)
                 ->get()
-                ->each(function (ScheduleOccurrence $occurrence) use ($newSchedule, $dateShift) {
+                ->each(function (ScheduleOccurrence $occurrence) use ($newSchedule, $dateShift, $originalDate, $newStartDate) {
+                    $isSelectedOccurrence = $occurrence->occurrence_date->isSameDay($originalDate);
                     $occurrence->schedule_id = $newSchedule->id;
                     $occurrence->occurrence_date = $occurrence->occurrence_date->copy()->addDays($dateShift);
-                    if ($occurrence->override_date) {
+                    if ($isSelectedOccurrence && $occurrence->type === ScheduleOccurrence::TYPE_MOVED) {
+                        $occurrence->override_date = $newStartDate->toDateString();
+                    } elseif ($occurrence->override_date) {
                         $occurrence->override_date = $occurrence->override_date->copy()->addDays($dateShift);
                     }
                     $occurrence->save();
                 });
+
+            // The old segment is now truncated and moved exceptions have been transferred.
+            // Ignore the new revision itself while checking retained exceptions and other schedules.
+            $this->assertSeriesHasNoConflict(
+                $locked,
+                $originalDate,
+                $newStartDate,
+                Carbon::parse($changes['end_date']),
+                $changes,
+                $newSchedule->id
+            );
 
             if ($locked->document) {
                 $document = $locked->document->replicate();
@@ -211,26 +256,26 @@ class ScheduleChangeService
 
         return DB::transaction(function () use ($schedule, $endDate, $reason, $userId) {
             Lab::query()->lockForUpdate()->findOrFail($schedule->lab_id);
+            $locked = Schedule::lockForUpdate()->findOrFail($schedule->id);
 
-            if ($schedule->end_date && $endDate->gt($schedule->end_date)) {
+            if ($locked->end_date && $endDate->gt($locked->end_date)) {
                 $dates = $this->recurrenceDates->datesForScheduleTypeRange(
-                    $schedule->type,
-                    $schedule->end_date->copy()->addDay(),
+                    $locked->type,
+                    $locked->end_date->copy()->addDay(),
                     $endDate,
-                    $schedule->recurrence_days,
-                    $schedule->day,
-                    $schedule->start_date,
+                    $locked->recurrence_days,
+                    $locked->day,
+                    $locked->start_date,
                     $endDate
                 );
 
                 foreach ($dates as $dateString) {
                     $date = Carbon::parse($dateString);
                     $conflict = $this->calendar->findConflict(
-                        $schedule->lab_id,
+                        $locked->lab_id,
                         $date,
-                        $schedule->start_time,
-                        $schedule->end_time,
-                        $schedule->id
+                        $locked->start_time,
+                        $locked->end_time
                     );
 
                     if ($conflict) {
@@ -241,11 +286,44 @@ class ScheduleChangeService
                 }
             }
 
-            $before = ['end_date' => $schedule->end_date?->toDateString()];
-            $schedule->update(['end_date' => $endDate->toDateString()]);
-            $this->log($schedule, null, 'change_end_date', 'future', $endDate, $before, ['end_date' => $endDate->toDateString()], $reason, $userId);
+            $before = ['end_date' => $locked->end_date?->toDateString()];
+            $locked->update(['end_date' => $endDate->toDateString()]);
 
-            return $schedule->fresh();
+            if ($locked->end_date) {
+                $locked->occurrences()
+                    ->where('type', ScheduleOccurrence::TYPE_MOVED)
+                    ->whereNotNull('override_date')
+                    ->whereDate('override_date', '>', $locked->end_date->toDateString())
+                    ->get()
+                    ->each(function (ScheduleOccurrence $occurrence) use ($locked, $endDate, $reason, $userId) {
+                        $occurrenceBefore = $occurrence->toArray();
+                        $occurrence->fill([
+                            'type' => ScheduleOccurrence::TYPE_CANCELLED,
+                            'override_date' => null,
+                            'lab_id' => null,
+                            'start_time' => null,
+                            'end_time' => null,
+                            'change_reason' => $reason,
+                            'changed_by' => $userId,
+                        ])->save();
+
+                        $this->log(
+                            $locked,
+                            $occurrence,
+                            'cancel',
+                            'single',
+                            $endDate->copy()->addDay(),
+                            $occurrenceBefore,
+                            $occurrence->fresh()->toArray(),
+                            $reason,
+                            $userId
+                        );
+                    });
+            }
+
+            $this->log($locked, null, 'change_end_date', 'future', $endDate, $before, ['end_date' => $endDate->toDateString()], $reason, $userId);
+
+            return $locked->fresh();
         });
     }
 
@@ -253,27 +331,85 @@ class ScheduleChangeService
         Schedule $schedule,
         Carbon $originalDate,
         string $reason,
-        ?int $userId
+        ?int $userId,
+        ?Carbon $effectiveDate = null
     ): Schedule {
         if (! $this->calendar->isRecurringSchedule($schedule)) {
             throw ValidationException::withMessages(['scope' => 'Pembatalan rangkaian hanya tersedia untuk jadwal berulang.']);
         }
 
-        $this->assertEditableDate($originalDate);
+        [$existingOccurrence, $originalDate] = $this->resolveCancellationOccurrence($schedule, $originalDate, $effectiveDate);
+        $effectiveDate ??= $existingOccurrence?->type === ScheduleOccurrence::TYPE_MOVED && $existingOccurrence->override_date
+            ? $existingOccurrence->override_date
+            : $originalDate;
+
+        $this->assertCancellationDateMatchesOccurrence($existingOccurrence, $originalDate, $effectiveDate);
+        $this->assertEditableDate($effectiveDate);
         $this->assertValidOccurrence($schedule, $originalDate);
 
-        return DB::transaction(function () use ($schedule, $originalDate, $reason, $userId) {
+        return $this->truncateFutureFromDate($schedule, $effectiveDate, $reason, $userId);
+    }
+
+    /**
+     * Cancel every remaining occurrence, including moved meetings whose original
+     * recurrence date is already in the past.
+     */
+    public function cancelAllFuture(Schedule $schedule, Carbon $effectiveDate, string $reason, ?int $userId): Schedule
+    {
+        if (! $this->calendar->isRecurringSchedule($schedule)) {
+            throw ValidationException::withMessages(['scope' => 'Pembatalan rangkaian hanya tersedia untuk jadwal berulang.']);
+        }
+
+        $this->assertEditableDate($effectiveDate);
+
+        return $this->truncateFutureFromDate($schedule, $effectiveDate, $reason, $userId);
+    }
+
+    private function truncateFutureFromDate(Schedule $schedule, Carbon $effectiveDate, string $reason, ?int $userId): Schedule
+    {
+        return DB::transaction(function () use ($schedule, $effectiveDate, $reason, $userId) {
             $before = ['end_date' => $schedule->end_date?->toDateString()];
-            // Keep any earlier weekday occurrences in the same week intact.
-            $newEndDate = $originalDate->copy()->subDay();
+            $newEndDate = $effectiveDate->copy()->subDay();
             $schedule->update(['end_date' => $newEndDate->toDateString()]);
+
+            // Truncating the base series alone leaves moved exceptions visible.
+            // Convert every moved meeting on/after the cutoff into an audited cancellation.
+            $schedule->occurrences()
+                ->where('type', ScheduleOccurrence::TYPE_MOVED)
+                ->whereNotNull('override_date')
+                ->whereDate('override_date', '>=', $effectiveDate->toDateString())
+                ->get()
+                ->each(function (ScheduleOccurrence $occurrence) use ($schedule, $effectiveDate, $reason, $userId) {
+                    $occurrenceBefore = $occurrence->toArray();
+                    $occurrence->fill([
+                        'type' => ScheduleOccurrence::TYPE_CANCELLED,
+                        'override_date' => null,
+                        'lab_id' => null,
+                        'start_time' => null,
+                        'end_time' => null,
+                        'change_reason' => $reason,
+                        'changed_by' => $userId,
+                    ])->save();
+
+                    $this->log(
+                        $schedule,
+                        $occurrence,
+                        'cancel',
+                        'future',
+                        $effectiveDate,
+                        $occurrenceBefore,
+                        $occurrence->fresh()->toArray(),
+                        $reason,
+                        $userId
+                    );
+                });
 
             $this->log(
                 $schedule,
                 null,
                 'cancel',
                 'future',
-                $originalDate,
+                $effectiveDate,
                 $before,
                 ['end_date' => $newEndDate->toDateString()],
                 $reason,
@@ -289,7 +425,8 @@ class ScheduleChangeService
         Carbon $originalDate,
         Carbon $newStartDate,
         Carbon $endDate,
-        array $changes
+        array $changes,
+        ?int $excludeScheduleId = null
     ): void {
         $dates = $this->recurrenceDates->datesForScheduleTypeRange(
             $changes['type'] ?? $schedule->type,
@@ -308,8 +445,7 @@ class ScheduleChangeService
                 $date,
                 $changes['start_time'] ?? $schedule->start_time,
                 $changes['end_time'] ?? $schedule->end_time,
-                $schedule->id,
-                null
+                $excludeScheduleId
             );
 
             if ($conflict) {
@@ -326,6 +462,51 @@ class ScheduleChangeService
         if ($date->lt(now('Asia/Jakarta')->startOfDay())) {
             throw ValidationException::withMessages(['occurrence_date' => 'Jadwal yang sudah lewat tidak dapat diubah.']);
         }
+    }
+
+    private function assertCancellationDateMatchesOccurrence(
+        ?ScheduleOccurrence $occurrence,
+        Carbon $originalDate,
+        Carbon $effectiveDate
+    ): void {
+        $expectedEffectiveDate = $occurrence?->type === ScheduleOccurrence::TYPE_MOVED
+            ? $occurrence->override_date
+            : $originalDate;
+
+        if (! $expectedEffectiveDate || ! $expectedEffectiveDate->isSameDay($effectiveDate)) {
+            throw ValidationException::withMessages([
+                'occurrence_date' => 'Tanggal pertemuan sudah berubah. Muat ulang kalender, lalu pilih jadwal kembali.',
+            ]);
+        }
+    }
+
+    /**
+     * Resolve the original recurrence for a moved event selected by its visible
+     * calendar date. Existing callers may still send the original recurrence date.
+     *
+     * @return array{0: ScheduleOccurrence|null, 1: Carbon}
+     */
+    private function resolveCancellationOccurrence(
+        Schedule $schedule,
+        Carbon $originalDate,
+        ?Carbon $effectiveDate
+    ): array {
+        $occurrence = $schedule->occurrences()
+            ->whereDate('occurrence_date', $originalDate)
+            ->first();
+
+        if (! $occurrence && $effectiveDate?->isSameDay($originalDate)) {
+            $occurrence = $schedule->occurrences()
+                ->where('type', ScheduleOccurrence::TYPE_MOVED)
+                ->whereDate('override_date', $effectiveDate)
+                ->first();
+
+            if ($occurrence) {
+                $originalDate = $occurrence->occurrence_date->copy();
+            }
+        }
+
+        return [$occurrence, $originalDate];
     }
 
     private function assertValidOccurrence(Schedule $schedule, Carbon $date): void
