@@ -115,16 +115,29 @@ class AuthenticationAndSecureFilesTest extends TestCase
         $this->get(route('admin.secure-file', ['path' => 'booking/public-document.txt']))
             ->assertRedirect(route('login'));
 
-        $this->actingAs($admin)
+        $publicResponse = $this->actingAs($admin)
             ->get(route('admin.secure-file', ['path' => 'booking/public-document.txt']))
-            ->assertOk()
-            ->assertHeader('Cache-Control', 'private, no-cache, no-store')
-            ->assertContent('public contents');
+            ->assertOk();
 
-        $this->actingAs($admin)
+        $this->assertPrivateNoStoreCacheControl($publicResponse->headers->get('Cache-Control'));
+        $this->assertSame('public contents', $publicResponse->baseResponse->getFile()->getContent());
+
+        $privateResponse = $this->actingAs($admin)
             ->get(route('admin.secure-file', ['path' => 'requests/private-document.txt']))
-            ->assertOk()
-            ->assertContent('private contents');
+            ->assertOk();
+
+        $this->assertPrivateNoStoreCacheControl($privateResponse->headers->get('Cache-Control'));
+        $this->assertSame('private contents', $privateResponse->baseResponse->getFile()->getContent());
+    }
+
+    private function assertPrivateNoStoreCacheControl(?string $header): void
+    {
+        $directives = array_map('trim', explode(',', strtolower($header ?? '')));
+
+        $this->assertContains('private', $directives);
+        $this->assertContains('no-cache', $directives);
+        $this->assertContains('no-store', $directives);
+        $this->assertNotContains('public', $directives);
     }
 
     public function test_secure_file_endpoint_rejects_missing_files_and_directory_traversal(): void
