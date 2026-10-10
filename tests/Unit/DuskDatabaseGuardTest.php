@@ -87,6 +87,20 @@ class DuskDatabaseGuardTest extends TestCase
         ]);
     }
 
+    public function test_rejects_staging_environment(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Dusk stopped before accessing the database.');
+
+        DuskDatabaseGuard::assertEnvironment([
+            'APP_ENV' => 'staging',
+            'APP_URL' => DuskDatabaseGuard::APP_URL,
+            'DB_CONNECTION' => 'mysql',
+            'DB_DATABASE' => DuskDatabaseGuard::DATABASE,
+            'DB_HOST' => '127.0.0.1',
+        ]);
+    }
+
     public function test_rejects_a_non_local_application_url(): void
     {
         $this->expectException(RuntimeException::class);
