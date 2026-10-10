@@ -32,10 +32,18 @@ class BookingController extends Controller
      */
     public function getAvailableLabs(Request $request)
     {
-        $participantCount = $request->participant_count;
-        $date = $request->booking_date;
-        $startTime = $request->start_time;
-        $endTime = $request->end_time;
+        $validated = $request->validate([
+            'booking_type' => ['nullable', 'in:'.implode(',', Booking::BOOKING_TYPES)],
+            'participant_count' => ['required', 'integer', 'min:1'],
+            'booking_date' => ['required', 'date_format:Y-m-d'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
+        ]);
+
+        $participantCount = (int) $validated['participant_count'];
+        $date = $validated['booking_date'];
+        $startTime = $validated['start_time'];
+        $endTime = $validated['end_time'];
 
         $startDate = Carbon::parse($date);
         $datesToCheck = collect([$startDate->toDateString()]);
@@ -56,6 +64,7 @@ class BookingController extends Controller
         // Get all labs with eager loading to prevent N+1 queries
         // Only get labs that are available (not in maintenance)
         $labs = Lab::where('status', 'available')
+            ->where('capacity', '>=', $participantCount)
             ->with(['schedules', 'bookings' => function ($query) use ($date) {
                 $query->where('booking_date', $date)->where('status', 'pending');
             }])->orderBy('capacity', 'asc')->get();

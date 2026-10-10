@@ -35,6 +35,7 @@ class BookingPublicContractTest extends TestCase
 
     public function test_available_labs_excludes_rooms_below_the_requested_capacity(): void
     {
+        $utilityLab = Lab::create(['name' => 'Lokasi Utilitas', 'capacity' => 0, 'status' => 'available']);
         $smallLab = Lab::create(['name' => 'Lab Kecil', 'capacity' => 10, 'status' => 'available']);
         $largeLab = Lab::create(['name' => 'Lab Besar', 'capacity' => 40, 'status' => 'available']);
 
@@ -47,6 +48,7 @@ class BookingPublicContractTest extends TestCase
             'end_time' => '10:00',
         ])
             ->assertOk()
+            ->assertJsonMissing(['id' => $utilityLab->id])
             ->assertJsonMissing(['id' => $smallLab->id])
             ->assertJsonFragment(['id' => $largeLab->id]);
     }
@@ -56,11 +58,23 @@ class BookingPublicContractTest extends TestCase
         Lab::create(['name' => 'Lab Uji', 'capacity' => 40, 'status' => 'available']);
 
         $this->postJson(route('booking.available-labs'), [
+            'booking_type' => 'perkuliahan_tidak_tetap',
             'participant_count' => 20,
             'booking_date' => 'not-a-date',
+            'start_time' => '08:00',
+            'end_time' => '10:00',
+        ])->assertUnprocessable()->assertJsonValidationErrors('booking_date');
+    }
+
+    public function test_available_labs_rejects_a_reversed_time_range(): void
+    {
+        $this->postJson(route('booking.available-labs'), [
+            'booking_type' => 'perkuliahan_tidak_tetap',
+            'participant_count' => 20,
+            'booking_date' => '2026-10-12',
             'start_time' => '10:00',
             'end_time' => '08:00',
-        ])->assertUnprocessable();
+        ])->assertUnprocessable()->assertJsonValidationErrors('end_time');
     }
 
     public function test_calendar_availability_rejects_ranges_longer_than_sixty_three_days(): void
