@@ -45,14 +45,24 @@ class DataServiceConstraintsTest extends TestCase
     {
         Storage::fake('public');
         $master = BpsMasterData::create([
-            'name' => 'Sensus Nonaktif',
-            'code' => 'OFF',
-            'is_active' => false,
+            'name' => 'Sensus Aktif',
+            'code' => 'ON',
+            'is_active' => true,
         ]);
         $subData = BpsSubData::create([
             'master_id' => $master->id,
             'name' => 'Data Nonaktif',
             'is_active' => false,
+        ]);
+        $inactiveMaster = BpsMasterData::create([
+            'name' => 'Sensus Nonaktif',
+            'code' => 'OFF',
+            'is_active' => false,
+        ]);
+        $childOfInactiveMaster = BpsSubData::create([
+            'master_id' => $inactiveMaster->id,
+            'name' => 'Data Dari Master Nonaktif',
+            'is_active' => true,
         ]);
 
         $this->from(route('bps.create'))
@@ -63,7 +73,8 @@ class DataServiceConstraintsTest extends TestCase
                 'phone' => '081234567890',
                 'purpose' => 'Riset',
                 'has_lecturer_collaboration' => '0',
-                'selected_data' => [$subData->id],
+                'selected_data' => [$subData->id, $childOfInactiveMaster->id],
+                'selected_master' => [$inactiveMaster->id],
                 'variables' => [$subData->id => 'A1'],
                 'statement_letter' => UploadedFile::fake()->create('surat.pdf', 10, 'application/pdf'),
                 'agreement_accepted' => '1',
@@ -72,7 +83,7 @@ class DataServiceConstraintsTest extends TestCase
                 'ktm' => UploadedFile::fake()->create('ktm.pdf', 10, 'application/pdf'),
             ])
             ->assertRedirect(route('bps.create'))
-            ->assertSessionHasErrors('selected_data.0');
+            ->assertSessionHasErrors(['selected_data.0', 'selected_data.1', 'selected_master.0']);
 
         $this->assertDatabaseCount('bps_requests', 0);
     }
