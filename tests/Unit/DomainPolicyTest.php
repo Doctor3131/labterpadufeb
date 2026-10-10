@@ -97,7 +97,7 @@ class DomainPolicyTest extends TestCase
     public function test_borrowing_overdue_and_replacement_boundaries_follow_current_date(): void
     {
         $this->travelTo('2026-10-15 09:00:00');
-        $borrowing = new AssetBorrowing();
+        $borrowing = new AssetBorrowing;
         $borrowing->forceFill([
             'status' => 'borrowed',
             'return_date' => '2026-10-14',
