@@ -16,7 +16,11 @@ class RefinitivRequestController extends Controller
     public function create()
     {
         return view('refinitiv.create', [
-            'affiliations' => RefinitivRequest::AFFILIATIONS,
+            'affiliations' => array_filter(
+                RefinitivRequest::AFFILIATIONS,
+                fn (string $key) => $key !== 'eksternal',
+                ARRAY_FILTER_USE_KEY,
+            ),
             'studyPrograms' => RefinitivRequest::STUDY_PROGRAMS,
             'purposes' => RefinitivRequest::PURPOSES,
             'sessions' => RefinitivRequest::SESSIONS,
@@ -35,7 +39,7 @@ class RefinitivRequestController extends Controller
         $rules = [
             'name' => 'required|string|max:255|regex:/^[a-zA-Z\s\.\']+$/',
             'whatsapp' => ['required', 'string', 'regex:/^08[0-9]{8,13}$/'],
-            'affiliation' => 'required|in:internal_feb,internal_undip,eksternal',
+            'affiliation' => 'required|in:internal_feb,internal_undip',
             'applicant_type' => 'required|in:dosen,mahasiswa',
             'purpose' => 'required|in:skripsi,thesis,disertasi,lomba,tugas_mk,penelitian_dosen,lainnya',
             'usage_date' => [
