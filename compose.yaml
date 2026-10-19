@@ -142,7 +142,7 @@ services:
         - -q
         - -O
         - /dev/null
-        - http://127.0.0.1:8080/up
+        - http://127.0.0.1:8080/status
       interval: 15s
       timeout: 5s
       retries: 6

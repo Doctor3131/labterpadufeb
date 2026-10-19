@@ -61,7 +61,7 @@ existing rehearsal secrets are server-local and must not be copied into Git.
 4. Build the images, then start the rehearsal web service. Compose waits for the
    database health check, runs migrations against the selected Docker database,
    and only then starts PHP-FPM and Nginx.
-5. Verify `/up`, the home page, CSS/JS assets, login, admin pages, document
+5. Verify `/status`, the home page, CSS/JS assets, login, admin pages, document
    previews, and a representative form. Use test data only. Check logs for
    attempted external delivery and inspect memory/disk while the full stack is
    active. The image intentionally does not run the test suite.
@@ -82,7 +82,7 @@ docker compose --env-file compose.env config -q
 docker compose --env-file compose.env build
 docker compose --env-file compose.env up -d --wait --wait-timeout 180 web
 docker compose --env-file compose.env ps
-curl -fsS http://127.0.0.1:3334/up
+curl -fsS http://127.0.0.1:3334/status
 ```
 
 The database is not exposed beyond loopback, and Nginx is not exposed beyond
