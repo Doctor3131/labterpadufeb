@@ -5,27 +5,13 @@
             "script": "artisan",
             "args": [
                 "serve",
-                "--host=0.0.0.0",
+                "--host=127.0.0.1",
                 "--port=3333",
                 "--no-reload"
             ],
             "instances": 1,
             "autorestart": true,
             "interpreter": "php"
-        },
-        {
-            "name": "labterpadu-vite",
-            "script": "bun",
-            "args": [
-                "run",
-                "dev"
-            ],
-            "instances": 1,
-            "autorestart": true,
-            "interpreter": "none",
-            "env": {
-                "NODE_ENV": "development"
-            }
         }
     ]
 }
