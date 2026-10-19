@@ -4,6 +4,36 @@ The Docker stack consists of MariaDB, Laravel/PHP-FPM, and Nginx. Proxmox,
 Tailscale, Cloudflared, Apache, and PM2 remain host-managed. PM2 is retained as
 an application fallback; it is not a database fallback after cutover.
 
+## Current production topology (verified 2026-10-20)
+
+- Compose project: `labterpadu-prod-docker-20261020`, deployed from the
+  `infra/docker-production` source at image tag `11ce309`.
+- Docker Nginx listens on `127.0.0.1:3333`; Docker MariaDB listens on
+  `127.0.0.1:3306`. The production database is in the external volume
+  `labterpadu-prod-db-20261020`.
+- PM2 remains enabled as an application fallback on `127.0.0.1:3335`. It was
+  checked against the same MariaDB database and production storage used by
+  Docker. A fallback still depends on Docker/MariaDB and is not database HA.
+- Host MariaDB is disabled, not removed. Its files and the previous Docker
+  volumes are retained for recovery; do not start host MariaDB while Docker
+  owns port 3306.
+- Laravel's persistent `storage/app` is still the production directory at
+  `/home/fadil/LabterpaduFEB/storage/app`; it is bind-mounted into the app.
+- The backend Compose network is currently internal. Keep it that way unless
+  a reviewed application feature requires outbound network access. The current
+  application source has no runtime HTTP, SMTP, or notification integration
+  calls; recheck this before adding one.
+- Cloudflared is host-managed with a remotely managed tunnel configuration,
+  not a route file in this repository. The public site and the local Docker
+  origin were both checked after cutover. Verify the public URL after any
+  origin or port change; do not infer or silently change the tunnel route.
+- The 2026-10-20 Proxmox VM backup was restored to an isolated, no-network test
+  VM. The clone booted, all three Docker services became healthy, Laravel
+  migrations were present, and home/login plus CSS/JS assets responded. The
+  test clone was then removed. The backup is on the Proxmox node's local
+  storage, so it protects against guest-level deployment failures but is not
+  an off-node disaster-recovery copy.
+
 ## Configuration and secrets
 
 - Keep `.env.app`, `compose.env`, and `docker/secrets/` out of Git.
@@ -18,14 +48,15 @@ an application fallback; it is not a database fallback after cutover.
 - `LABTERPADU_IMAGE_TAG` should be the exact source commit used to build the
   images. Avoid `latest` or a reusable production tag.
 - `LABTERPADU_WEB_PUBLISHED_PORT` controls the loopback-only Nginx port. Use
-  `3334` for rehearsal; use `3333` in production only after PM2 releases it.
+  `3334` for rehearsal. The current production value is `3333`; PM2's fallback
+  uses `3335`.
 - PHP, Node, Composer, Nginx, and MariaDB base images are pinned by immutable
   registry digests; Composer and npm dependencies use their lockfiles.
-- `LABTERPADU_BACKEND_INTERNAL=true` isolates PHP and migration containers from
-  outbound network access during rehearsal. Nginx and MariaDB each have a
-  separate non-internal network so Docker can publish their loopback-only host
-  ports. Set the backend to `false` only for production after reviewing the
-  application's required integrations.
+- `LABTERPADU_BACKEND_INTERNAL=true` isolates PHP and migration containers
+  from outbound network access. Nginx and MariaDB each have a separate
+  non-internal network so Docker can publish their loopback-only host ports.
+  Production currently retains this isolation; change it only after reviewing
+  a specific integration requirement.
 
 Create the secrets directory and files with restrictive permissions. The PHP
 container runs as UID 1000 and must be able to read only the application DB
@@ -86,8 +117,8 @@ curl -fsS http://127.0.0.1:3334/status
 ```
 
 The database is not exposed beyond loopback, and Nginx is not exposed beyond
-loopback. Cloudflared remains pointed at the existing PM2 origin until a
-separate, approved cutover.
+loopback. Cloudflared is managed separately from Compose; changing a published
+port does not update the remotely managed tunnel route.
 
 ## Production cutover gates
 
@@ -105,14 +136,16 @@ Do not switch public traffic until all of these are true:
   verify there is no stale `public/hot` file. PM2 is valid JSON, starts
   successfully, and has been tested against the same Docker database and
   production storage that Docker uses.
-- A read-only origin check confirmed Cloudflared currently reaches
-  `127.0.0.1:3333`. Keep that route unchanged; set
-  `LABTERPADU_WEB_PUBLISHED_PORT=3333` only after PM2 stops listening there.
-  For app rollback, stop the Docker web service and restart PM2 on the same
-  loopback port, still connected to the Docker database.
+- Confirm the actual Cloudflared/Apache origin chain before changing a port.
+  The current production layout keeps Docker Nginx on `3333` and PM2 on `3335`;
+  do not move either listener without updating and verifying the external
+  routing path. For app rollback, route traffic to PM2 while keeping it on the
+  same Docker database and production storage.
 - RAM and disk headroom remain acceptable with all containers running.
 
-At cutover, keep the host MariaDB and all old Docker volumes intact. Rollback to
-PM2 is only an application rollback: PM2 must continue using the Docker DB so
-that writes made after cutover are not lost. Do not point PM2 back to the old
-host MariaDB unless a separate data-reconciliation procedure is approved.
+Keep the host MariaDB files and all old Docker volumes intact. Rollback to PM2
+is only an application rollback: PM2 must continue using the Docker DB so that
+writes made after cutover are not lost. Do not point PM2 back to the old host
+MariaDB unless a separate data-reconciliation procedure is approved. Maintain
+an additional off-node backup before treating this deployment as protected
+against Proxmox host or storage failure.
