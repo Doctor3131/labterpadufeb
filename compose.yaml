@@ -1,0 +1,167 @@
+name: labterpadu-production
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-laravel: &laravel
+  image: labterpadu-app:${LABTERPADU_IMAGE_TAG:?Set LABTERPADU_IMAGE_TAG in compose.env}
+  build:
+    context: .
+    target: app
+  environment:
+    APP_ENV: production
+    APP_DEBUG: "false"
+    LOG_CHANNEL: stderr
+    DB_CONNECTION: mysql
+    DB_HOST: db
+    DB_PORT: "3306"
+    DB_DATABASE: labterpadu
+    DB_USERNAME: labterpadu
+    DB_PASSWORD_FILE: /run/secrets/db_password
+    DB_SOCKET: ""
+    DB_URL: ""
+  secrets:
+    - db_password
+  volumes:
+    - type: bind
+      source: ./.env.app
+      target: /var/www/html/.env
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: ${LABTERPADU_STORAGE_APP_PATH:?Set LABTERPADU_STORAGE_APP_PATH in compose.env}
+      target: /var/www/html/storage/app
+      bind:
+        create_host_path: false
+  logging: *logging
+
+services:
+  db:
+    image: mariadb:11.8.6@sha256:78a5047d3ba33975f183f183c2464cc7f1eab13ec8667e57cc9a5821d6da7577
+    restart: unless-stopped
+    networks:
+      - db-host
+      - backend
+    environment:
+      MARIADB_DATABASE: labterpadu
+      MARIADB_USER: labterpadu
+      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MARIADB_ROOT_HOST: localhost
+    secrets:
+      - db_password
+      - db_root_password
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:3307:3306"
+    command:
+      - "--innodb-buffer-pool-size=256M"
+      - "--max-connections=75"
+    mem_limit: 768m
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    logging: *logging
+
+  migrate:
+    <<: *laravel
+    restart: "no"
+    networks:
+      - backend
+    mem_limit: 512m
+    depends_on:
+      db:
+        condition: service_healthy
+    command:
+      - php
+      - artisan
+      - migrate
+      - --force
+      - --no-interaction
+
+  app:
+    <<: *laravel
+    restart: unless-stopped
+    networks:
+      - backend
+    mem_limit: 1g
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - php
+        - -r
+        - "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  web:
+    image: labterpadu-web:${LABTERPADU_IMAGE_TAG:?Set LABTERPADU_IMAGE_TAG in compose.env}
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    networks:
+      - ingress
+      - backend
+    mem_limit: 128m
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3334:8080"
+    volumes:
+      - type: bind
+        source: ${LABTERPADU_STORAGE_APP_PATH:?Set LABTERPADU_STORAGE_APP_PATH in compose.env}/public
+        target: /var/www/html/storage/app/public
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - -O
+        - /dev/null
+        - http://127.0.0.1:8080/status
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    logging: *logging
+
+volumes:
+  db_data:
+    external: true
+    name: ${LABTERPADU_DB_VOLUME_NAME:?Set LABTERPADU_DB_VOLUME_NAME in compose.env}
+
+secrets:
+  db_password:
+    file: ./docker/secrets/db_password
+  db_root_password:
+    file: ./docker/secrets/db_root_password
+
+networks:
+  backend:
+    internal: ${LABTERPADU_BACKEND_INTERNAL:?Set LABTERPADU_BACKEND_INTERNAL in compose.env}
+  db-host: {}
+  ingress: {}
