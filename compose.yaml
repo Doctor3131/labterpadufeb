@@ -127,7 +127,7 @@ services:
       app:
         condition: service_healthy
     ports:
-      - "127.0.0.1:3334:8080"
+      - "127.0.0.1:${LABTERPADU_WEB_PUBLISHED_PORT:-3334}:8080"
     volumes:
       - type: bind
         source: ${LABTERPADU_STORAGE_APP_PATH:?Set LABTERPADU_STORAGE_APP_PATH in compose.env}/public

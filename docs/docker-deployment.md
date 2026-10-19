@@ -17,6 +17,8 @@ an application fallback; it is not a database fallback after cutover.
   volume. Keep the rehearsal volume and production volume distinct.
 - `LABTERPADU_IMAGE_TAG` should be the exact source commit used to build the
   images. Avoid `latest` or a reusable production tag.
+- `LABTERPADU_WEB_PUBLISHED_PORT` controls the loopback-only Nginx port. Use
+  `3334` for rehearsal; use `3333` in production only after PM2 releases it.
 - PHP, Node, Composer, Nginx, and MariaDB base images are pinned by immutable
   registry digests; Composer and npm dependencies use their lockfiles.
 - `LABTERPADU_BACKEND_INTERNAL=true` isolates PHP and migration containers from
@@ -101,8 +103,11 @@ Do not switch public traffic until all of these are true:
   verify there is no stale `public/hot` file. PM2 is valid JSON, starts
   successfully, and has been tested against the same Docker database and
   production storage that Docker uses.
-- The Cloudflared origin can be changed to the loopback Nginx port `3334`, and
-  the existing origin can be restored quickly if the app layer fails.
+- A read-only origin check confirmed Cloudflared currently reaches
+  `127.0.0.1:3333`. Keep that route unchanged; set
+  `LABTERPADU_WEB_PUBLISHED_PORT=3333` only after PM2 stops listening there.
+  For app rollback, stop the Docker web service and restart PM2 on the same
+  loopback port, still connected to the Docker database.
 - RAM and disk headroom remain acceptable with all containers running.
 
 At cutover, keep the host MariaDB and all old Docker volumes intact. Rollback to
