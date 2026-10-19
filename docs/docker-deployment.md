@@ -53,7 +53,9 @@ existing rehearsal secrets are server-local and must not be copied into Git.
    by UID 1000; do not recursively change permissions on production storage.
 3. Confirm the Compose config resolves to the rehearsal storage path, rehearsal
    database volume, and loopback-only ports (`127.0.0.1:3307` and
-   `127.0.0.1:3334`). Confirm only the backend network is internal and that
+   `127.0.0.1:3334`). In production, Docker MariaDB uses `127.0.0.1:3306` only
+   after host MariaDB stops; this keeps the PM2 fallback connected to the same
+   Docker database. Confirm only the backend network is internal and that
    Nginx/DB are attached to their separate port-publishing networks. Do not
    start `app`, `migrate`, or `web` before this check.
 4. Build the images, then start the rehearsal web service. Compose waits for the

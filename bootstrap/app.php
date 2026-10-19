@@ -1,14 +1,9 @@
 <?php
 
-use App\Http\Middleware\EnsureAdmin;
-use App\Http\Middleware\EnsureSuperAdmin;
-use Illuminate\Auth\Middleware\Authenticate;
-use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Database\QueryException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,12 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
+	$middleware->trustProxies(at: '*');
         $middleware->alias([
-            'auth' => Authenticate::class,
-            'guest' => RedirectIfAuthenticated::class,
-            'admin' => EnsureAdmin::class,
-            'super_admin' => EnsureSuperAdmin::class,
+            'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
+            'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -43,12 +38,12 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->with('error', $message);
         });
 
-        $exceptions->renderable(function (PostTooLargeException $e, $request) {
+        $exceptions->renderable(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, $request) {
             $errorMessage = 'File yang Anda upload terlalu besar. Maksimal ukuran file adalah 5MB. Silakan compress file PDF Anda terlebih dahulu.';
 
             if ($request->is('booking*')) {
                 return back()->withErrors([
-                    'document' => $errorMessage,
+                    'document' => $errorMessage
                 ])->withInput();
             }
 
@@ -61,12 +56,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($request->is('bps*')) {
                 return back()->withErrors([
-                    'document' => $errorMessage,
+                    'document' => $errorMessage
                 ])->withInput();
             }
 
             return back()->withErrors([
-                'file' => $errorMessage,
+                'file' => $errorMessage
             ])->withInput();
         });
     })->create();
