@@ -31,6 +31,15 @@ class AuthenticationAndSecureFilesTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
+    public function test_guest_redirect_uses_host_when_forwarded_host_is_absent(): void
+    {
+        $this->withServerVariables([
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+        ])
+            ->get('https://labterpadu.example.test/admin/dashboard')
+            ->assertRedirect('https://labterpadu.example.test/login');
+    }
+
     public function test_invalid_credentials_do_not_create_an_authenticated_session(): void
     {
         $admin = User::factory()->create([
