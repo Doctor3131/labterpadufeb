@@ -3,60 +3,25 @@
 @section('title', 'Kelola Tanggal Blokir Bloomberg - Admin')
 
 @section('content')
-    <!-- Back Button -->
-    <div class="mb-4">
-        <a href="{{ route('admin.bloomberg.index') }}" class="inline-flex items-center text-sm text-gray-600 hover:text-indigo-600 transition-colors">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-5">
+        <a href="{{ route('admin.bloomberg.index') }}" class="inline-flex items-center gap-2 rounded-md text-sm font-medium text-slate-600 transition hover:text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
             Kembali ke Reservasi Bloomberg
         </a>
     </div>
 
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl p-4 md:p-6 shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Tanggal Blokir Bloomberg</h1>
-                    <p class="text-sm text-indigo-100">Kelola tanggal yang tidak tersedia untuk reservasi Bloomberg Terminal</p>
-                </div>
-                <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Messages -->
-    @if(session('success'))
-        <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-4 rounded-r-lg shadow-sm">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-r-lg shadow-sm">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <span>{{ session('error') }}</span>
-            </div>
-        </div>
-    @endif
+    <header class="mb-6">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-wide text-indigo-700">Layanan data</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Tanggal blokir Bloomberg</h1>
+        <p class="mt-1 text-sm text-slate-600">Atur hari atau sesi yang tidak tersedia untuk reservasi Bloomberg Terminal.</p>
+    </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left: Add Form -->
         <div>
-            <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -83,8 +48,8 @@
                         <select id="blocked_session" name="blocked_session"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             <option value="" {{ old('blocked_session') === null ? 'selected' : '' }}>Semua Sesi (Blokir 1 hari penuh)</option>
-                            <option value="sesi_1" {{ old('blocked_session') === 'sesi_1' ? 'selected' : '' }}>Sesi 1 saja (09.00 - 12.00)</option>
-                            <option value="sesi_2" {{ old('blocked_session') === 'sesi_2' ? 'selected' : '' }}>Sesi 2 saja (13.00 - 15.00)</option>
+                            <option value="sesi_1" {{ old('blocked_session') === 'sesi_1' ? 'selected' : '' }}>{{ $sessions['sesi_1'] }}</option>
+                            <option value="sesi_2" {{ old('blocked_session') === 'sesi_2' ? 'selected' : '' }}>{{ $sessions['sesi_2'] }}</option>
                         </select>
                         <p class="text-xs text-gray-500 mt-1">Pilih "Semua Sesi" untuk memblokir satu hari penuh, atau pilih sesi tertentu.</p>
                     </div>
@@ -111,7 +76,7 @@
             </div>
 
             <!-- Info Card -->
-            <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-6 mt-6">
+            <div class="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
                 <h3 class="font-bold text-indigo-900 mb-2 flex items-center text-sm">
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
@@ -127,8 +92,8 @@
 
         <!-- Right: List -->
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="p-6 border-b border-gray-100">
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 p-5">
                     <h2 class="text-lg font-bold text-gray-800 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -156,7 +121,7 @@
                                         </p>
                                         @if($blocked->blocked_session)
                                             <span class="inline-block px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-bold rounded mt-1">
-                                                {{ $blocked->blocked_session === 'sesi_1' ? 'Sesi 1 (09.00 - 12.00)' : 'Sesi 2 (13.00 - 15.00)' }}
+                                                {{ ($blocked->blocked_date->isFriday() ? $sessionsFriday : $sessions)[$blocked->blocked_session] ?? $blocked->blocked_session }}
                                             </span>
                                         @else
                                             <span class="inline-block px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded mt-1">
@@ -187,7 +152,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="p-8 md:p-16 text-center">
+                    <div class="p-8 text-center">
                         <div class="inline-block p-4 bg-gray-100 rounded-full mb-4">
                             <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>

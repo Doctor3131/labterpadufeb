@@ -3,45 +3,20 @@
 @section('title', 'Pengaturan Bloomberg - Admin')
 
 @section('content')
-    <!-- Back Button -->
-    <div class="mb-4">
-        <a href="{{ route('admin.bloomberg.index') }}" class="inline-flex items-center text-sm text-gray-600 hover:text-indigo-600 transition-colors">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-5">
+        <a href="{{ route('admin.bloomberg.index') }}" class="inline-flex items-center gap-2 rounded-md text-sm font-medium text-slate-600 transition hover:text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
             Kembali ke Reservasi Bloomberg
         </a>
     </div>
 
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl p-4 md:p-6 shadow-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-white mb-1">Pengaturan Bloomberg</h1>
-                    <p class="text-sm text-indigo-100">Atur kapasitas dan form kunjungan langsung</p>
-                </div>
-                <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Messages -->
-    @if(session('success'))
-        <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-6 py-4 rounded-r-lg shadow-sm">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
+    <header class="mb-6">
+        <p class="mb-1 text-sm font-semibold uppercase tracking-wide text-indigo-700">Layanan data</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Pengaturan Bloomberg</h1>
+        <p class="mt-1 text-sm text-slate-600">Atur kapasitas sesi dan ketersediaan kunjungan langsung.</p>
+    </header>
 
     <form action="{{ route('admin.bloomberg.settings.update') }}" method="POST">
         @csrf
@@ -49,7 +24,7 @@
 
         <div class="max-w-2xl">
             <!-- Capacity Setting -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="mb-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 class="text-lg font-bold text-gray-800 mb-1 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -71,7 +46,7 @@
             </div>
 
             <!-- Walk-in Toggle -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="mb-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 class="text-lg font-bold text-gray-800 mb-1 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -99,7 +74,7 @@
             </div>
 
             <!-- Save Button -->
-            <button type="submit" class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center">
+            <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>

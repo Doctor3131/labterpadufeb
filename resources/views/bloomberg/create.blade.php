@@ -7,14 +7,29 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         .step-indicator { transition: all 0.3s ease; }
-        .step-active { background: linear-gradient(135deg, #6366f1, #818cf8); color: white; }
-        .step-completed { background: #22c55e; color: white; }
+        .step-active { background: linear-gradient(135deg, #4f46e5, #818cf8); color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
+        .step-completed { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
         .step-inactive { background: #e5e7eb; color: #9ca3af; }
         .form-step { display: none; }
         .form-step.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .radio-card { transition: all 0.2s ease; }
-        .radio-card:has(input:checked) { border-color: #6366f1; background-color: #eef2ff; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3); }
+        .radio-card { transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease; }
+        .radio-card:has(input:checked) { border-color: #6366f1; background-color: #eef2ff; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+        .radio-card:focus-within { outline: 2px solid rgba(99, 102, 241, 0.45); outline-offset: 2px; }
+        #bloomberg-form input[type="radio"] { accent-color: #4f46e5; }
+        #bloomberg-form input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):focus,
+        #bloomberg-form textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); caret-color: #4f46e5; }
+        .bloomberg-date-trigger { min-height: 48px; border: 1px solid #cbd5e1; transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease; }
+        .bloomberg-date-trigger:hover { border-color: #818cf8; }
+        .bloomberg-date-trigger:focus-visible { outline: 3px solid rgba(99, 102, 241, 0.25); outline-offset: 2px; border-color: #6366f1; }
+        .bloomberg-date-trigger[aria-invalid="true"] { border-color: #ef4444; }
+        .bloomberg-date-popover { z-index: 30; width: min(20rem, calc(100vw - 2.5rem)); border: 1px solid #e2e8f0; box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16); animation: datePopoverIn 0.16s ease-out; }
+        @keyframes datePopoverIn { from { opacity: 0; transform: translateY(-4px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .bloomberg-calendar-day { min-height: 2.25rem; transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
+        .bloomberg-calendar-day.is-selected { color: white; background: #4f46e5; font-weight: 700; }
+        .bloomberg-calendar-day[aria-current="date"]:not(.is-selected) { color: #4338ca; border-color: #a5b4fc; background: #eef2ff; font-weight: 700; }
+        .bloomberg-calendar-day:disabled { color: #cbd5e1; cursor: not-allowed; background: transparent; }
+        @media (prefers-reduced-motion: reduce) { .step-indicator, .radio-card, .bloomberg-date-popover, .bloomberg-calendar-day { animation: none; transition: none; } }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 min-h-screen">
@@ -252,10 +267,37 @@
 
                     <!-- Usage Date -->
                     <div class="mb-6">
-                        <label for="usage_date_input" class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Penggunaan <span class="text-red-500">*</span></label>
-                        <input type="date" id="usage_date_input" name="usage_date" value="{{ old('usage_date') }}" required
-                               min="{{ date('Y-m-d') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        <p id="usage-date-label" class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Penggunaan <span class="text-red-500">*</span></p>
+                        <input type="hidden" id="usage_date_input" name="usage_date" value="{{ old('usage_date') }}">
+                        <div class="relative max-w-sm" id="usage-date-picker">
+                            <button type="button" id="usage-date-trigger" class="bloomberg-date-trigger w-full rounded-xl bg-white px-4 text-left text-sm text-slate-700 flex items-center justify-between gap-3" aria-haspopup="dialog" aria-expanded="false" aria-controls="usage-date-calendar" aria-labelledby="usage-date-label usage-date-trigger-text">
+                                <span class="flex min-w-0 items-center gap-3">
+                                    <svg class="h-5 w-5 flex-shrink-0 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 012 2v13a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                                    </svg>
+                                    <span id="usage-date-trigger-text" class="truncate text-slate-400">Pilih tanggal</span>
+                                </span>
+                                <svg class="h-4 w-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6" />
+                                </svg>
+                            </button>
+                            <div id="usage-date-calendar" class="bloomberg-date-popover absolute left-0 top-full mt-2 hidden rounded-2xl bg-white p-4" role="dialog" aria-label="Pilih tanggal penggunaan" aria-modal="false">
+                                <div class="mb-4 flex items-center justify-between">
+                                    <button type="button" id="usage-date-prev" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500" aria-label="Bulan sebelumnya">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 18-6-6 6-6" /></svg>
+                                    </button>
+                                    <h4 id="usage-date-month" class="text-sm font-semibold text-slate-800" aria-live="polite"></h4>
+                                    <button type="button" id="usage-date-next" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500" aria-label="Bulan berikutnya">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6" /></svg>
+                                    </button>
+                                </div>
+                                <div class="mb-1 grid grid-cols-7 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400" aria-hidden="true">
+                                    <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
+                                </div>
+                                <div id="usage-date-days" class="grid grid-cols-7 gap-1 text-center" aria-label="Tanggal dalam bulan"></div>
+                                <p id="usage-date-hint" class="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">Minggu dan tanggal yang diblokir tidak tersedia.</p>
+                            </div>
+                        </div>
                         <div id="sunday-warning" class="hidden mt-2 text-red-600 text-sm flex items-center">
                             <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -284,14 +326,14 @@
                                 <div class="flex items-center">
                                     <input type="radio" name="session" value="sesi_1" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
                                            {{ old('session') === 'sesi_1' ? 'checked' : '' }}>
-                                    <span class="ml-3 font-medium text-gray-700" id="session1-label">Sesi 1: 09.00 - 12.00 WIB</span>
+                                    <span class="ml-3 font-medium text-gray-700" id="session1-label">{{ $sessions['sesi_1'] }}</span>
                                 </div>
                             </label>
                             <label class="radio-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-indigo-300 block">
                                 <div class="flex items-center">
                                     <input type="radio" name="session" value="sesi_2" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
                                            {{ old('session') === 'sesi_2' ? 'checked' : '' }}>
-                                    <span class="ml-3 font-medium text-gray-700" id="session2-label">Sesi 2: 13.00 - 15.00 WIB</span>
+                                    <span class="ml-3 font-medium text-gray-700" id="session2-label">{{ $sessions['sesi_2'] }}</span>
                                 </div>
                             </label>
                         </div>
@@ -353,6 +395,23 @@
                         <input type="text" id="research_title_input" name="research_title" value="{{ old('research_title') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                placeholder="Masukkan judul penelitian atau nama lomba">
+                    </div>
+
+                    <!-- Variables/data (for selected research purposes or Non-UNDIP applicants) -->
+                    <div id="variables-field" class="mb-6 hidden">
+                        <label for="variables_input" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Variabel/data yang dicari <span class="text-red-500">*</span>
+                        </label>
+                        <p id="variables-hint" class="text-xs text-gray-500 mb-2">
+                            Sebutkan variabel dan cakupan data yang dibutuhkan.
+                        </p>
+                        <textarea id="variables_input" name="variables" rows="3" maxlength="2000" disabled
+                                  aria-describedby="variables-hint"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                  placeholder="Contoh: ROA, ROE, dan harga saham harian perusahaan sektor perbankan Indonesia periode 2020–2025">{{ old('variables') }}</textarea>
+                        @error('variables')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Subject Name (for tugas_mk) -->
@@ -515,7 +574,27 @@
         const blockedDates = @json($blockedDates ?? []);
         const isWalkIn = @json($isWalkIn ?? false);
         const totalCapacity = @json($capacity ?? 12);
+        const purposesRequiringVariables = @json($purposesRequiringVariables);
+        const variablesField = document.getElementById('variables-field');
+        const variablesInput = document.getElementById('variables_input');
         let currentStep = 1;
+
+        function requiresVariables() {
+            const applicantType = document.querySelector('input[name="applicant_type"]:checked');
+            const purpose = document.querySelector('input[name="purpose"]:checked');
+
+            return applicantType?.value === 'dosen_non_undip'
+                || purposesRequiringVariables.includes(purpose?.value);
+        }
+
+        function updateVariablesField() {
+            const shouldShow = requiresVariables();
+
+            variablesField.classList.toggle('hidden', !shouldShow);
+            variablesInput.disabled = !shouldShow;
+            variablesInput.required = shouldShow;
+            variablesInput.setAttribute('aria-required', String(shouldShow));
+        }
 
         function goToStep(step) {
             // Validate current step before moving forward
@@ -544,8 +623,8 @@
             }
 
             // Update connectors
-            document.getElementById('connector-1-2').style.backgroundColor = step >= 2 ? '#22c55e' : '#d1d5db';
-            document.getElementById('connector-2-3').style.backgroundColor = step >= 3 ? '#22c55e' : '#d1d5db';
+            document.getElementById('connector-1-2').style.backgroundColor = step >= 2 ? '#818cf8' : '#d1d5db';
+            document.getElementById('connector-2-3').style.backgroundColor = step >= 3 ? '#818cf8' : '#d1d5db';
 
             currentStep = step;
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -630,6 +709,11 @@
 
             if (!purpose) { alert('Keperluan kunjungan wajib dipilih.'); return false; }
 
+            if (requiresVariables() && !variablesInput.value.trim()) {
+                alert('Variabel/data yang dicari wajib diisi.');
+                return false;
+            }
+
             // Validate conditional fields
             const purposeVal = purpose.value;
             if (['skripsi', 'thesis', 'disertasi', 'lomba'].includes(purposeVal)) {
@@ -699,9 +783,13 @@
         }
 
         applicantRadios.forEach(radio => {
-            radio.addEventListener('change', updateFormForApplicantType);
+            radio.addEventListener('change', () => {
+                updateFormForApplicantType();
+                updateVariablesField();
+            });
         });
         updateFormForApplicantType();
+        updateVariablesField();
 
         // === Study Program "Lainnya" Toggle (Mahasiswa only) ===
         const studyProgramRadios = document.querySelectorAll('input[name="study_program"]');
@@ -725,10 +813,170 @@
 
         // === Sunday Validation, Blocked Dates & Friday Session ===
         const usageDateInput = document.getElementById('usage_date_input');
+        const datePicker = document.getElementById('usage-date-picker');
+        const dateTrigger = document.getElementById('usage-date-trigger');
+        const dateTriggerText = document.getElementById('usage-date-trigger-text');
+        const dateCalendar = document.getElementById('usage-date-calendar');
+        const dateMonthLabel = document.getElementById('usage-date-month');
+        const dateDays = document.getElementById('usage-date-days');
         const sundayWarning = document.getElementById('sunday-warning');
         const blockedDateWarning = document.getElementById('blocked-date-warning');
         const fridayNotice = document.getElementById('friday-notice');
         const session2Label = document.getElementById('session2-label');
+
+        const minimumUsageDate = @json(date('Y-m-d'));
+        const dateLabelFormatter = new Intl.DateTimeFormat('id-ID', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+        const dateMonthFormatter = new Intl.DateTimeFormat('id-ID', {
+            month: 'long', year: 'numeric'
+        });
+
+        function parseLocalDate(dateString) {
+            const [year, month, day] = dateString.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        function toLocalDateString(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+
+            return `${year}-${month}-${day}`;
+        }
+
+        function isFullDayBlocked(dateString) {
+            return blockedDates.find(block => block.date === dateString && block.blocked_session === null);
+        }
+
+        let visibleCalendarMonth = parseLocalDate(usageDateInput.value || minimumUsageDate);
+        visibleCalendarMonth.setDate(1);
+
+        function updateDateTrigger() {
+            if (usageDateInput.value) {
+                dateTriggerText.textContent = dateLabelFormatter.format(parseLocalDate(usageDateInput.value));
+                dateTriggerText.classList.remove('text-slate-400');
+                dateTriggerText.classList.add('text-slate-700', 'font-medium');
+            } else {
+                dateTriggerText.textContent = 'Pilih tanggal';
+                dateTriggerText.classList.add('text-slate-400');
+                dateTriggerText.classList.remove('text-slate-700', 'font-medium');
+            }
+        }
+
+        function focusCalendarDate() {
+            const focusableDay = dateDays.querySelector('.is-selected:not(:disabled)')
+                || dateDays.querySelector('button:not(:disabled)');
+            focusableDay?.focus();
+        }
+
+        function renderDateCalendar() {
+            const year = visibleCalendarMonth.getFullYear();
+            const month = visibleCalendarMonth.getMonth();
+            const firstDayOffset = (new Date(year, month, 1).getDay() + 6) % 7;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const minimumMonth = parseLocalDate(minimumUsageDate);
+            const monthIsAtMinimum = year === minimumMonth.getFullYear() && month === minimumMonth.getMonth();
+            const monthIsBeforeMinimum = new Date(year, month, 1) < new Date(minimumMonth.getFullYear(), minimumMonth.getMonth(), 1);
+
+            dateMonthLabel.textContent = dateMonthFormatter.format(visibleCalendarMonth);
+            dateDays.replaceChildren();
+
+            for (let blank = 0; blank < firstDayOffset; blank++) {
+                const spacer = document.createElement('span');
+                spacer.setAttribute('aria-hidden', 'true');
+                dateDays.appendChild(spacer);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = toLocalDateString(date);
+                const blocked = isFullDayBlocked(dateString);
+                const unavailable = dateString < minimumUsageDate || date.getDay() === 0 || Boolean(blocked);
+                const button = document.createElement('button');
+
+                button.type = 'button';
+                button.className = 'bloomberg-calendar-day mx-auto flex w-full items-center justify-center rounded-lg border border-transparent text-sm text-slate-700 hover:border-indigo-200 hover:bg-indigo-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500';
+                button.textContent = String(day);
+                const dateLabel = dateLabelFormatter.format(date);
+                const isSelectedDate = dateString === usageDateInput.value;
+                button.setAttribute('aria-label', isSelectedDate ? `Tanggal dipilih, ${dateLabel}` : dateLabel);
+                if (isSelectedDate) button.classList.add('is-selected');
+
+                if (dateString === minimumUsageDate) {
+                    button.setAttribute('aria-current', 'date');
+                }
+
+                if (unavailable) {
+                    button.disabled = true;
+                    button.classList.remove('text-slate-700', 'hover:border-indigo-200', 'hover:bg-indigo-50');
+                    button.title = blocked ? `Tanggal diblokir${blocked.reason ? `: ${blocked.reason}` : ''}` : (date.getDay() === 0 ? 'Reservasi tidak tersedia pada hari Minggu' : 'Tanggal sudah lewat');
+                }
+
+                button.addEventListener('click', () => {
+                    usageDateInput.value = dateString;
+                    updateDateTrigger();
+                    dateDays.querySelector('.is-selected')?.classList.remove('is-selected');
+                    button.classList.add('is-selected');
+                    usageDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    closeDateCalendar(true);
+                });
+
+                dateDays.appendChild(button);
+            }
+
+            document.getElementById('usage-date-prev').disabled = monthIsAtMinimum || monthIsBeforeMinimum;
+        }
+
+        function openDateCalendar() {
+            if (!dateCalendar.classList.contains('hidden')) return;
+
+            dateCalendar.classList.remove('hidden');
+            dateTrigger.setAttribute('aria-expanded', 'true');
+            renderDateCalendar();
+            focusCalendarDate();
+        }
+
+        function closeDateCalendar(restoreFocus = false) {
+            if (dateCalendar.classList.contains('hidden')) return;
+
+            dateCalendar.classList.add('hidden');
+            dateTrigger.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) dateTrigger.focus();
+        }
+
+        dateTrigger.addEventListener('click', () => {
+            if (dateCalendar.classList.contains('hidden')) {
+                openDateCalendar();
+            } else {
+                closeDateCalendar();
+            }
+        });
+
+        document.getElementById('usage-date-prev').addEventListener('click', () => {
+            visibleCalendarMonth = new Date(visibleCalendarMonth.getFullYear(), visibleCalendarMonth.getMonth() - 1, 1);
+            renderDateCalendar();
+            focusCalendarDate();
+        });
+
+        document.getElementById('usage-date-next').addEventListener('click', () => {
+            visibleCalendarMonth = new Date(visibleCalendarMonth.getFullYear(), visibleCalendarMonth.getMonth() + 1, 1);
+            renderDateCalendar();
+            focusCalendarDate();
+        });
+
+        document.addEventListener('pointerdown', event => {
+            if (!datePicker.contains(event.target)) closeDateCalendar();
+        });
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !dateCalendar.classList.contains('hidden')) {
+                closeDateCalendar(true);
+            }
+        });
+
+        updateDateTrigger();
+        renderDateCalendar();
 
         /**
          * Check blocked status for a given date and optionally a specific session.
@@ -752,13 +1000,17 @@
             return { isBlocked: false, reason: null, type: null };
         }
 
+        const session2RegularLabel = @json($sessions['sesi_2']);
+        const session2FridayLabel = @json($sessionsFriday['sesi_2']);
+
         function validateDate() {
             if (!usageDateInput.value) {
                 sundayWarning.classList.add('hidden');
                 blockedDateWarning.classList.add('hidden');
                 fridayNotice.classList.add('hidden');
-                usageDateInput.classList.remove('border-red-500');
-                session2Label.textContent = 'Sesi 2: 13.00 - 15.00 WIB';
+                dateTrigger.classList.remove('border-red-500');
+                dateTrigger.setAttribute('aria-invalid', 'false');
+                session2Label.textContent = session2RegularLabel;
                 updateSessionBlockedState();
                 return;
             }
@@ -774,7 +1026,8 @@
             // Sunday check
             if (isSunday) {
                 sundayWarning.classList.remove('hidden');
-                usageDateInput.classList.add('border-red-500');
+                dateTrigger.classList.add('border-red-500');
+                dateTrigger.setAttribute('aria-invalid', 'true');
             } else {
                 sundayWarning.classList.add('hidden');
             }
@@ -788,23 +1041,25 @@
                     </svg>
                     <span>Tanggal ini tidak tersedia untuk reservasi Bloomberg. <strong>Alasan: ${blockedInfo.reason || '-'}</strong></span>
                 `;
-                usageDateInput.classList.add('border-red-500');
+                dateTrigger.classList.add('border-red-500');
+                dateTrigger.setAttribute('aria-invalid', 'true');
             } else {
                 blockedDateWarning.classList.add('hidden');
             }
 
             // Remove red border only if neither Sunday nor blocked
             if (!isSunday && blockedInfo.type !== 'full') {
-                usageDateInput.classList.remove('border-red-500');
+                dateTrigger.classList.remove('border-red-500');
+                dateTrigger.setAttribute('aria-invalid', 'false');
             }
 
             // Friday session adjustment
             if (isFriday) {
                 fridayNotice.classList.remove('hidden');
-                session2Label.textContent = 'Sesi 2: 13.30 - 15.00 WIB';
+                session2Label.textContent = session2FridayLabel;
             } else {
                 fridayNotice.classList.add('hidden');
-                session2Label.textContent = 'Sesi 2: 13.00 - 15.00 WIB';
+                session2Label.textContent = session2RegularLabel;
             }
 
             // Update per-session blocked indicators
@@ -972,6 +1227,8 @@
                 } else if (this.value === 'lainnya') {
                     purposeOtherField.classList.remove('hidden');
                 }
+
+                updateVariablesField();
             });
         });
 

@@ -22,6 +22,7 @@ class BloombergRequest extends Model
         'session',
         'purpose',
         'purpose_other',
+        'variables',
         'research_title',
         'subject_name',
         'lecturer_name',
@@ -82,15 +83,17 @@ class BloombergRequest extends Model
         'lainnya' => 'Lainnya',
     ];
 
+    const PURPOSES_REQUIRING_VARIABLES = ['skripsi', 'thesis', 'disertasi'];
+
     // Constants for sessions
     const SESSIONS = [
-        'sesi_1' => 'Sesi 1: 09.00 - 12.00 WIB',
+        'sesi_1' => 'Sesi 1: 08.00 - 12.00 WIB',
         'sesi_2' => 'Sesi 2: 13.00 - 15.00 WIB',
     ];
 
     // Session label for Friday
     const SESSIONS_FRIDAY = [
-        'sesi_1' => 'Sesi 1: 09.00 - 12.00 WIB',
+        'sesi_1' => 'Sesi 1: 08.00 - 12.00 WIB',
         'sesi_2' => 'Sesi 2: 13.30 - 15.00 WIB',
     ];
 
@@ -173,11 +176,11 @@ class BloombergRequest extends Model
         $isFriday = $this->usage_date && $this->usage_date->isFriday();
 
         $times = [
-            'sesi_1' => ['start' => '09:00', 'end' => '12:00'],
+            'sesi_1' => ['start' => '08:00', 'end' => '12:00'],
             'sesi_2' => ['start' => $isFriday ? '13:30' : '13:00', 'end' => '15:00'],
         ];
 
-        return $times[$this->session] ?? ['start' => '09:00', 'end' => '12:00'];
+        return $times[$this->session] ?? ['start' => '08:00', 'end' => '12:00'];
     }
 
     /**

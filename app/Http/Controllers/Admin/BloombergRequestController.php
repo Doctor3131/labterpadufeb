@@ -6,19 +6,37 @@ use App\Http\Controllers\Controller;
 use App\Models\BloombergRequest;
 use App\Models\BlockedDate;
 use App\Models\ServiceSetting;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BloombergRequestController extends Controller
 {
-    /**
-     * Display a listing of Bloomberg requests, filtered by type.
-     */
+    /** Display a searchable, filterable listing of Bloomberg requests. */
     public function index(Request $request)
     {
-        $type = in_array($request->get('type'), ['reservasi', 'walk_in', 'all']) 
-            ? $request->get('type') 
-            : 'all';
+        $filters = $request->validate([
+            'type' => ['nullable', 'in:reservasi,walk_in,all'],
+            'q' => ['nullable', 'string', 'max:100'],
+            'applicant_type' => ['nullable', 'in:all,'.implode(',', array_keys(BloombergRequest::APPLICANT_TYPES))],
+            'purpose' => ['nullable', 'in:all,'.implode(',', array_keys(BloombergRequest::PURPOSES))],
+            'period' => ['nullable', 'in:all,upcoming,today,past'],
+        ]);
+
+        $type = $filters['type'] ?? 'all';
+        $search = trim($filters['q'] ?? '');
+        $applicantType = $filters['applicant_type'] ?? 'all';
+        $purpose = $filters['purpose'] ?? 'all';
+        $period = $filters['period'] ?? 'all';
+        $today = today()->toDateString();
+
+        $activeFilters = array_filter([
+            'q' => $search !== '' ? $search : null,
+            'applicant_type' => $applicantType !== 'all' ? $applicantType : null,
+            'purpose' => $purpose !== 'all' ? $purpose : null,
+            'period' => $period !== 'all' ? $period : null,
+        ], static fn ($value) => $value !== null);
 
         $query = BloombergRequest::orderBy('usage_date', 'desc')
             ->orderBy('session', 'asc');
@@ -27,7 +45,61 @@ class BloombergRequestController extends Controller
             $query->where('type', $type);
         }
 
-        $requests = $query->paginate(15);
+        if ($search !== '') {
+            $term = "%{$search}%";
+            $matchingApplicantTypes = array_keys(array_filter(
+                BloombergRequest::APPLICANT_TYPES,
+                static fn (string $label): bool => Str::contains(Str::lower($label), Str::lower($search)),
+            ));
+            $matchingPurposes = array_keys(array_filter(
+                BloombergRequest::PURPOSES,
+                static fn (string $label): bool => Str::contains(Str::lower($label), Str::lower($search)),
+            ));
+
+            $query->where(static function (Builder $searchQuery) use ($search, $term, $matchingApplicantTypes, $matchingPurposes): void {
+                $searchQuery
+                    ->where('name', 'like', $term)
+                    ->orWhere('nim_nip', 'like', $term)
+                    ->orWhere('phone', 'like', $term)
+                    ->orWhere('university', 'like', $term)
+                    ->orWhere('study_program', 'like', $term)
+                    ->orWhere('purpose', 'like', $term)
+                    ->orWhere('purpose_other', 'like', $term)
+                    ->orWhere('research_title', 'like', $term)
+                    ->orWhere('subject_name', 'like', $term)
+                    ->orWhere('lecturer_name', 'like', $term)
+                    ->orWhere('variables', 'like', $term);
+
+                if ($matchingApplicantTypes !== []) {
+                    $searchQuery->orWhereIn('applicant_type', $matchingApplicantTypes);
+                }
+
+                if ($matchingPurposes !== []) {
+                    $searchQuery->orWhereIn('purpose', $matchingPurposes);
+                }
+
+                if (ctype_digit($search)) {
+                    $searchQuery->orWhere('id', (int) $search);
+                }
+            });
+        }
+
+        if ($applicantType !== 'all') {
+            $query->where('applicant_type', $applicantType);
+        }
+
+        if ($purpose !== 'all') {
+            $query->where('purpose', $purpose);
+        }
+
+        match ($period) {
+            'upcoming' => $query->whereDate('usage_date', '>=', $today),
+            'today' => $query->whereDate('usage_date', $today),
+            'past' => $query->whereDate('usage_date', '<', $today),
+            default => null,
+        };
+
+        $requests = $query->paginate(15)->withQueryString();
 
         // Get counts for tabs
         $counts = [
@@ -36,7 +108,20 @@ class BloombergRequestController extends Controller
             'all' => BloombergRequest::count(),
         ];
 
-        return view('admin.bloomberg.index', compact('requests', 'type', 'counts'));
+        $hasActiveFilters = $activeFilters !== [];
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.bloomberg.partials.results', compact(
+                    'requests', 'type', 'search', 'applicantType', 'purpose', 'period', 'hasActiveFilters',
+                ))->render(),
+                'total' => $requests->total(),
+            ]);
+        }
+
+        return view('admin.bloomberg.index', compact(
+            'requests', 'type', 'counts', 'search', 'applicantType', 'purpose', 'period', 'hasActiveFilters',
+        ));
     }
 
     /**
@@ -57,7 +142,11 @@ class BloombergRequestController extends Controller
             ->orderBy('blocked_date', 'asc')
             ->get();
 
-        return view('admin.bloomberg.blocked-dates', compact('blockedDates'));
+        return view('admin.bloomberg.blocked-dates', [
+            'blockedDates' => $blockedDates,
+            'sessions' => BloombergRequest::SESSIONS,
+            'sessionsFriday' => BloombergRequest::SESSIONS_FRIDAY,
+        ]);
     }
 
     /**

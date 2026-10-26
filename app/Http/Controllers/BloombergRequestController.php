@@ -25,6 +25,7 @@ class BloombergRequestController extends Controller
             'applicantTypes' => BloombergRequest::APPLICANT_TYPES,
             'studyPrograms' => BloombergRequest::STUDY_PROGRAMS,
             'purposes' => BloombergRequest::PURPOSES,
+            'purposesRequiringVariables' => BloombergRequest::PURPOSES_REQUIRING_VARIABLES,
             'sessions' => BloombergRequest::SESSIONS,
             'sessionsFriday' => BloombergRequest::SESSIONS_FRIDAY,
             'blockedDates' => $blockedDates,
@@ -49,6 +50,7 @@ class BloombergRequestController extends Controller
             'applicantTypes' => BloombergRequest::APPLICANT_TYPES,
             'studyPrograms' => BloombergRequest::STUDY_PROGRAMS,
             'purposes' => BloombergRequest::PURPOSES,
+            'purposesRequiringVariables' => BloombergRequest::PURPOSES_REQUIRING_VARIABLES,
             'sessions' => BloombergRequest::SESSIONS,
             'sessionsFriday' => BloombergRequest::SESSIONS_FRIDAY,
             'blockedDates' => $blockedDates,
@@ -139,6 +141,12 @@ class BloombergRequestController extends Controller
             $rules['purpose_other'] = 'required|string|max:255';
         }
 
+        $requiresVariables = $isNonUndip
+            || in_array($purpose, BloombergRequest::PURPOSES_REQUIRING_VARIABLES, true);
+        $rules['variables'] = $requiresVariables
+            ? 'required|string|max:2000'
+            : 'prohibited';
+
         $validated = $request->validate($rules, [
             'name.required' => 'Nama wajib diisi',
             'name.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, dan apostrof',
@@ -160,6 +168,9 @@ class BloombergRequestController extends Controller
             'subject_name.required' => 'Nama mata kuliah wajib diisi',
             'lecturer_name.required' => 'Nama dosen wajib diisi',
             'purpose_other.required' => 'Keperluan lainnya wajib diisi',
+            'variables.required' => 'Variabel atau data yang dicari wajib diisi.',
+            'variables.max' => 'Variabel atau data yang dicari maksimal 2.000 karakter.',
+            'variables.prohibited' => 'Variabel atau data hanya diisi untuk skripsi, thesis, disertasi, atau pemohon Non-UNDIP.',
             'statement_file.required' => 'Surat Pengantar wajib diupload',
             'statement_file.mimes' => 'File surat harus berupa PDF',
             'statement_file.max' => 'Ukuran file surat maksimal 5MB',
@@ -222,6 +233,7 @@ class BloombergRequestController extends Controller
                     'session' => $validated['session'],
                     'purpose' => $validated['purpose'],
                     'purpose_other' => $validated['purpose_other'] ?? null,
+                    'variables' => $validated['variables'] ?? null,
                     'research_title' => $validated['research_title'] ?? null,
                     'subject_name' => $validated['subject_name'] ?? null,
                     'lecturer_name' => $validated['lecturer_name'] ?? null,
